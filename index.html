@@ -3,72 +3,238 @@
 <title>GenPlayer — Chia đội bóng sân 7</title>
 <style>
 :root{
-  --bg:#f1f5f9; --surface:#fff; --line:#e6eaf1; --line2:#eef2f7;
-  --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
-  --brand:#16a34a; --brand-d:#15803d; --brand-soft:#dcfce7;
-  --blue:#2563eb; --blue-soft:#dbeafe; --amber:#d97706; --amber-soft:#fef3c7; --slate-soft:#e2e8f0;
-  --red:#dc2626;
-  --r:16px; --r-sm:10px;
-  --sh:0 1px 2px rgba(15,23,42,.04),0 6px 16px rgba(15,23,42,.06);
-  --sh-sm:0 1px 2px rgba(15,23,42,.06);
+  --bg:#0a0e1a; --bg2:#070a12; --surface:#141b2e; --surface2:#1a2236; --surface3:#222c45;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.05);
+  --text:#e8ecf6; --muted:#93a0ba; --faint:#67728f;
+  --brand:#16a34a; --brand-d:#15803d; --brand-soft:rgba(22,163,74,.16);
+  --blue:#3d8bff; --blue-soft:rgba(61,139,255,.16); --amber:#f3b13f; --amber-soft:rgba(243,177,63,.16); --slate-soft:rgba(255,255,255,.08);
+  --gold:#f3b13f; --red:#ff5168;
+  --cb1:#6f9bff; --cb2:#3a52cf;
+  --r:18px; --r-sm:11px;
+  --sh:0 2px 6px rgba(0,0,0,.3),0 14px 34px rgba(0,0,0,.4);
+  --sh-sm:0 1px 2px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(125% 80% at 50% -8%,#15203a 0%,var(--bg) 52%) no-repeat fixed,var(--bg)}
 input,button,select{font-family:inherit}
-input[type=checkbox],input[type=radio]{accent-color:var(--brand);width:16px;height:16px}
+input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;height:16px}
 .screen{display:none;max-width:920px;margin:0 auto;padding:18px 16px 40px}
+.home-screen{max-width:1120px}
 /* app bar */
-.appbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(10px);
+.appbar{position:sticky;top:0;z-index:30;background:rgba(10,14,26,.82);backdrop-filter:saturate(160%) blur(12px);
   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:11px 16px}
-.ab-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);
+.ab-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
-.ab-back:hover{background:#f8fafc;border-color:#cbd5e1}
+.ab-back:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 .ab-title{font-weight:800;font-size:17px;letter-spacing:-.01em}
 .ab-brand{color:var(--brand)}
-/* hero + menu */
-.hero{text-align:center;padding:28px 10px 22px}
-.hero .logo{width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,var(--brand),#22c55e);
-  display:inline-flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 10px 24px rgba(22,163,74,.32)}
-.hero h1{font-size:24px;margin-top:14px;letter-spacing:-.02em}
-.hero p{color:var(--muted);font-size:14px;margin-top:5px}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
-.menu-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 16px;text-align:left;
-  cursor:pointer;box-shadow:var(--sh);transition:.16s;display:flex;flex-direction:column;gap:10px}
-.menu-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(15,23,42,.10);border-color:#d7deea}
-.menu-card:active{transform:translateY(-1px)}
-.menu-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px}
-.ic-green{background:var(--brand-soft)}.ic-blue{background:var(--blue-soft)}.ic-amber{background:var(--amber-soft)}.ic-slate{background:var(--slate-soft)}
-.menu-card .t{font-weight:800;font-size:16px}
-.menu-card .d{font-size:12.5px;color:var(--muted);line-height:1.4}
+/* ===== dashboard layout ===== */
+.dash-top{display:grid;grid-template-columns:1.62fr 1fr;gap:16px}
+.dash-main{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;margin-top:16px;align-items:start}
+.dash-left,.dash-right{min-width:0}
+@media(max-width:860px){.dash-top,.dash-main{grid-template-columns:1fr}}
+/* page banner */
+.page-banner{position:relative;width:100%;height:240px;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:16px;
+  background:radial-gradient(120% 100% at 50% 0%,#2a1840,#10162a)}
+.page-banner img{width:100%;height:100%;object-fit:cover;object-position:center 16%;display:block}
+.page-banner .pb-fade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,transparent 52%,rgba(8,10,20,.5))}
+@media(max-width:560px){.page-banner{height:150px}}
+/* hero featured */
+.hero-feat{position:relative;overflow:hidden;border-radius:var(--r);min-height:248px;padding:22px 24px;
+  display:flex;flex-direction:column;justify-content:flex-end;color:#fff;box-shadow:var(--sh)}
+.hf-bg{position:absolute;inset:0;z-index:0;background:
+  radial-gradient(120% 110% at 80% 16%,rgba(255,92,140,.55),transparent 55%),
+  radial-gradient(120% 120% at 28% 92%,rgba(108,58,210,.62),transparent 60%),
+  linear-gradient(125deg,#3a1733 0%,#241433 45%,#15172e 100%)}
+.hf-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(95deg,rgba(8,10,20,.8) 0%,rgba(8,10,20,.28) 55%,transparent 100%)}
+.hero-feat>*{position:relative;z-index:1}
+.hf-logos{position:absolute;top:18px;left:22px;display:flex}
+.hf-logos .tlogo{width:38px;height:38px;border-radius:12px;border:2px solid rgba(255,255,255,.18);box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.hf-logos .tlogo+.tlogo{margin-left:-12px}
+.hf-top{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;color:#dfe4f2;margin-bottom:8px;flex-wrap:wrap}
+.hf-live{display:inline-flex;align-items:center;gap:7px;color:var(--red);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.hf-live::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(255,81,104,.25)}
+.hf-title{font-size:33px;line-height:1.05;font-weight:800;letter-spacing:.01em;text-shadow:0 2px 14px rgba(0,0,0,.55)}
+.hf-play{position:absolute;right:22px;bottom:22px;z-index:2;width:54px;height:54px;border-radius:16px;border:0;cursor:pointer;
+  background:rgba(255,255,255,.92);color:#11162a;font-size:18px;display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.45);transition:.15s}
+.hf-play:hover{transform:scale(1.07);background:#fff}
+.hf-fx{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.hf-ball{position:absolute;right:26px;top:24%;font-size:64px;opacity:.16;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));animation:hfbob 4.5s ease-in-out infinite}
+@keyframes hfbob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-16px) rotate(14deg)}}
+.spark{position:absolute;bottom:-12px;width:7px;height:7px;border-radius:50%;opacity:0;
+  background:radial-gradient(circle,#ffe48a,#ff8a3d);box-shadow:0 0 8px rgba(255,180,80,.7);animation:hfrise 5s linear infinite}
+.spark.s2,.spark.s4{background:radial-gradient(circle,#fff,#9fd0ff);box-shadow:0 0 8px rgba(150,200,255,.7)}
+.spark.s1{left:16%;animation-delay:0s}.spark.s2{left:33%;animation-delay:1.2s}.spark.s3{left:50%;animation-delay:2.3s}
+.spark.s4{left:67%;animation-delay:.7s}.spark.s5{left:82%;animation-delay:3.1s}.spark.s6{left:44%;animation-delay:3.9s}
+@keyframes hfrise{0%{opacity:0;transform:translateY(0) scale(.5)}15%{opacity:.95}82%{opacity:.6}100%{opacity:0;transform:translateY(-190px) scale(1.05)}}
+/* action panel (blue) */
+.action-panel{position:relative;overflow:hidden;border-radius:var(--r);padding:22px 22px 20px;color:#fff;box-shadow:var(--sh);
+  background:linear-gradient(140deg,var(--cb1) 0%,#4f74f0 48%,var(--cb2) 100%)}
+.action-panel::before{content:'';position:absolute;right:-36px;top:-46px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.13)}
+.ap-title{font-size:23px;font-weight:800;letter-spacing:.01em;position:relative}
+.ap-sub{font-size:13px;color:rgba(255,255,255,.82);margin:5px 0 16px;position:relative}
+.ap-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative}
+.ap-btn{display:flex;align-items:center;gap:10px;padding:15px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;text-align:left}
+.ap-btn:hover{background:rgba(255,255,255,.24);transform:translateY(-2px)}
+.ap-btn:active{transform:translateY(0)}
+.ap-btn svg{width:21px;height:21px;flex:0 0 auto}
+/* league + match rows */
+.league-head{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;margin:2px 0 13px}
+.league-head .lg-ic{width:30px;height:30px;border-radius:9px;background:var(--surface3);display:grid;place-items:center;font-size:15px}
+.m-list{display:flex;flex-direction:column;gap:10px}
+.m-row{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 16px;cursor:pointer;transition:.14s}
+.m-row:hover{background:var(--surface2);border-color:rgba(255,255,255,.15);transform:translateY(-1px)}
+.m-time{width:74px;font-size:12px;line-height:1.3;color:var(--muted);flex:0 0 auto}
+.m-time b{color:var(--text);display:block;font-size:12.5px}
+.m-icos{display:flex;gap:6px;flex:0 0 auto}
+.m-ico{width:30px;height:30px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+.m-ico svg{width:15px;height:15px}
+.m-team{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+.m-team.l{justify-content:flex-end;text-align:right}
+.m-team .nm{font-weight:700;font-size:13.5px;line-height:1.15}
+.m-vs{color:var(--faint);font-weight:800;font-size:11px;flex:0 0 auto}
+.m-bets{flex:0 0 auto;border:1px solid var(--line);border-radius:11px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--muted);min-width:74px;text-align:center}
+.tlogo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff;flex:0 0 auto}
+.ring{--p:70;--c:var(--gold);position:relative;width:46px;height:46px;flex:0 0 auto;display:grid;place-items:center}
+.ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*3.6deg),rgba(255,255,255,.1) 0)}
+.ring::after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--surface)}
+.m-row:hover .ring::after{background:var(--surface2)}
+.ring b{position:relative;z-index:1;font-size:13px;font-weight:800}
+/* popular / spotlight */
+.pop-head{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:800;margin:2px 0 13px}
+.pop-head a{font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer;text-decoration:none}
+.pop-head a:hover{text-decoration:underline}
+.spot-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--sh-sm)}
+.spot-user{display:flex;align-items:center;gap:11px}
+.spot-user .avatar{width:40px;height:40px;font-size:14px}
+.su-name{font-weight:800;font-size:14.5px}
+.su-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+.spot-league{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);margin-top:14px;padding-top:13px}
+.spot-line{display:flex;align-items:center;gap:11px;margin:13px 0;font-size:14px}
+.spot-line .avatar{width:34px;height:34px;font-size:12px}
+.spot-line b{color:var(--text)}
+.spot-stats{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:13px 0}
+.spot-stats>div{flex:1;text-align:center;padding:12px 4px}
+.spot-stats>div+div{border-left:1px solid var(--line)}
+.spot-stats .sv{font-size:18px;font-weight:800}
+.spot-stats .sk{font-size:11px;color:var(--muted);margin-top:3px}
+.bet-against{width:100%;background:#fff;color:#0e1322;border:0;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;transition:.14s}
+.bet-against:hover{background:#e9eefb}
+/* ===== player cards ===== */
+.pc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pc-bar-title{font-size:18px;font-weight:800}
+.pc-bar-title span{color:var(--muted);font-weight:600;font-size:14px}
+.pcard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.pcard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.pcard-grid{grid-template-columns:1fr}}
+.pcard{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:256px;padding:16px 18px;border-radius:18px;
+  border:1px solid var(--line);box-shadow:var(--sh);cursor:pointer;transition:.15s;
+  background:radial-gradient(120% 90% at 72% 8%,#243049 0%,#0f1426 62%)}
+.pcard:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+.pcard .stripe{position:absolute;top:-10%;bottom:-10%;left:50%;width:72px;transform:skewX(-9deg);z-index:0;
+  background:linear-gradient(180deg,var(--cc) 0%,transparent 85%);opacity:.5}
+.pc-top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-start}
+.pc-badge{min-width:38px;height:38px;padding:0 8px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:12px;color:#fff}
+.pc-star{color:var(--gold)}
+.pc-ov{text-align:right}
+.pc-ov .n{font-size:34px;font-weight:800;line-height:1}
+.pc-ov .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.pc-avatar{position:absolute;right:16px;top:50%;transform:translateY(-64%);width:112px;height:112px;border-radius:50%;z-index:1;
+  display:grid;place-items:center;font-size:38px;font-weight:800;color:#fff;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.pc-mid{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+.pc-name{font-size:19px;font-weight:800;line-height:1.08;text-transform:uppercase;max-width:62%}.pc-pos{color:var(--muted);font-size:12.5px;margin-top:4px}
+.pc-foot{position:relative;z-index:2;display:flex;border-top:1px solid var(--line);margin-top:14px;padding-top:11px}
+.pc-foot>div{flex:1;text-align:center}
+.pc-foot .sv{font-weight:800;font-size:15px}
+.pc-foot .sk{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+/* ===== player detail (FM-style) ===== */
+.pm-overlay{position:fixed;inset:0;z-index:60;background:rgba(4,7,15,.74);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
+.pm-overlay.on{display:flex}
+.pm-panel{width:100%;max-width:940px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+.pm-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pm-close{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:14px;cursor:pointer}
+.pm-close:hover{background:var(--surface3)}
+.pm-head{display:flex;align-items:center;gap:16px;padding:20px;background:linear-gradient(120deg,#1b2236,#11162a)}
+.pm-ava{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;font-size:27px;font-weight:800;color:#fff;flex:0 0 auto;box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.pm-h-name{font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.05}
+.pm-h-sub{color:var(--muted);font-size:13px;margin-top:7px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pm-h-ov{color:var(--text);font-weight:800}
+.pm-grid{display:grid;grid-template-columns:300px 1fr}
+@media(max-width:680px){.pm-grid{grid-template-columns:1fr}}
+.pm-left{padding:20px;border-right:1px solid var(--line)}
+@media(max-width:680px){.pm-left{border-right:0;border-bottom:1px solid var(--line)}}
+.pm-right{padding:20px}
+.pm-sec{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.mini-pitch{position:relative;height:172px;border:1.5px solid rgba(255,255,255,.16);border-radius:10px;overflow:hidden;
+  background:repeating-linear-gradient(90deg,#163420 0 28px,#15301d 28px 56px)}
+.mini-pitch .mid{position:absolute;left:50%;top:0;bottom:0;border-left:1.5px solid rgba(255,255,255,.16)}
+.mini-pitch .circ{position:absolute;left:50%;top:50%;width:48px;height:48px;border:1.5px solid rgba(255,255,255,.16);border-radius:50%;transform:translate(-50%,-50%)}
+.mini-pitch .dot{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 5px rgba(34,224,122,.28);transform:translate(-50%,-50%)}
+.pm-pos-lbl{text-align:center;margin-top:13px;font-weight:800;font-size:15px}
+.pm-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px 30px}
+@media(max-width:520px){.pm-cols{grid-template-columns:1fr}}
+.pm-attr{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line2)}
+.pm-attr .lab{color:#c7d0e0;font-size:13.5px}
+.pm-attr .val{font-weight:800;font-size:14.5px}
+/* edit form */
+.pm-edit{padding:20px}
+.pe-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.pe-name{flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px}
+.pe-name span{font-size:12px;color:var(--muted);font-weight:700}
+.pe-name-val{font-size:16px;font-weight:800;padding:7px 0}.pe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:560px){.pe-grid{grid-template-columns:repeat(2,1fr)}}
+.pe-cell{display:flex;flex-direction:column;gap:4px}
+.pe-cell span{font-size:12px;color:var(--muted)}
+.pe-cell .pe-lab{font-weight:700;color:var(--text);font-size:12.5px}
+.pe-cell .pe-hint{font-size:10.5px;color:var(--faint);line-height:1.32;min-height:28px}
+.pe-note{font-size:12px;color:var(--muted);margin:-4px 0 14px}
+.pe-pos{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px}
+@media(max-width:560px){.pe-pos{grid-template-columns:1fr}}
+.pe-pos-group{display:flex;flex-direction:column;gap:8px}
+.pos-chips{display:flex;flex-wrap:wrap;gap:7px}
+.pos-chip{cursor:pointer;position:relative}
+.pos-chip input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.pos-chip span{display:inline-block;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);font-size:12.5px;color:var(--muted);transition:.12s}
+.pos-chip:hover span{border-color:rgba(255,255,255,.22)}
+.pos-chip input:checked+span{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.pos-chip.sec input:checked+span{background:var(--blue);border-color:var(--blue)}
+.mini-pitch .dot.sec{background:transparent;border:2px solid var(--gold);box-shadow:none;width:18px;height:18px;opacity:.85}
+.pm-pos-sec{text-align:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.pm-edit input{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text);font-size:14px}
+.pe-cell input{text-align:center}
+.pm-edit input:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
+.pe-actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.pe-del{margin-left:auto;color:#ff6b6b}
 /* card / panel */
 .card-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
 .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
 /* roster */
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .pl-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--line);border-radius:12px;
-  cursor:pointer;user-select:none;background:#fff;transition:.12s}
-.pl-item:hover{border-color:#cbd5e1}
-.pl-item.on{border-color:var(--brand);background:#f0fdf4}
-.pl-item.off{opacity:.5}
+  cursor:pointer;user-select:none;background:var(--surface2);transition:.12s}
+.pl-item:hover{border-color:rgba(255,255,255,.2)}
+.pl-item.on{border-color:var(--brand);background:rgba(22,163,74,.14)}
+.pl-item.off{opacity:.45}
 .avatar{width:32px;height:32px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .pl-name{font-size:13.5px;font-weight:600;flex:1;display:flex;align-items:center;gap:5px;min-width:0}
-.pl-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lp-dot{width:8px;height:8px;border-radius:50%;background:#3b82f6;flex:0 0 auto}
-.ovb{font-size:11px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:20px;padding:2px 8px;flex:0 0 auto}
+.pl-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ovb{font-size:11px;font-weight:800;color:var(--text);background:var(--surface3);border-radius:20px;padding:2px 8px;flex:0 0 auto}
 .pl-item input{margin-left:2px}
 .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .count{color:var(--muted);font-size:13px;margin-left:auto}.count b{color:var(--text)}
 .status{text-align:center;color:var(--muted);font-size:13px;margin:14px 0 0}
 /* buttons */
 .btn{background:var(--brand);color:#fff;border:0;border-radius:11px;padding:11px 20px;font-size:14.5px;font-weight:700;
-  cursor:pointer;box-shadow:0 4px 12px rgba(22,163,74,.25);transition:.14s}
-.btn:hover{background:var(--brand-d)}.btn:active{transform:scale(.98)}.btn:disabled{opacity:.55;cursor:default;box-shadow:none}
-.btn.alt{background:#fff;color:var(--text);border:1px solid var(--line);box-shadow:var(--sh-sm)}
-.btn.alt:hover{background:#f8fafc;border-color:#cbd5e1}
-.btn.dark{background:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.2)}.btn.dark:hover{background:#1e293b}
+  cursor:pointer;box-shadow:0 4px 12px rgba(22,163,74,.28);transition:.14s}
+.btn:hover{background:var(--brand-d)}.btn:active{transform:scale(.98)}.btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+.btn.alt{background:var(--surface2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn.alt:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
+.btn.dark{background:linear-gradient(135deg,var(--cb1),var(--cb2));box-shadow:0 4px 14px rgba(58,82,207,.4)}.btn.dark:hover{filter:brightness(1.08)}
 .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
 /* pitch */
-.pred{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#14532d}
+.pred{background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.32);border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#a7f3c4}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
 .mhead{display:flex;overflow:hidden}
@@ -92,69 +258,61 @@ input[type=checkbox],input[type=radio]{accent-color:var(--brand);width:16px;heig
 .sub{color:#f4fff7;font-size:8px;margin-top:0;text-shadow:0 1px 3px #000b;opacity:.95}
 .star{color:#ffe14d}
 .benchrow{display:flex}
-.benchcol{flex:1;background:#fff;padding:9px 12px;font-size:11px;color:#475569;border-top:1px solid var(--line)}
+.benchcol{flex:1;background:var(--surface);padding:9px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
 .benchcol.l{border-right:1px solid var(--line)}
 .subs-lbl{color:var(--muted);font-weight:700;margin-right:4px}
-.subchip{display:inline-block;background:#f1f5f9;border:1px solid var(--line);padding:2px 8px;border-radius:20px;color:#334155;margin:2px 3px;font-size:11px}
+.subchip{display:inline-block;background:var(--surface2);border:1px solid var(--line);padding:2px 8px;border-radius:20px;color:#cbd5e1;margin:2px 3px;font-size:11px}
 .report{max-width:832px;margin:22px auto 0}
 .report h2{font-size:15px;margin:20px 0 10px;letter-spacing:-.01em}
-.persuade{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 15px;margin:2px 0 12px;font-size:13.5px;line-height:1.6;color:#334155}
+.persuade{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 15px;margin:2px 0 12px;font-size:13.5px;line-height:1.6;color:#c7d0e0}
 .cards{display:flex;gap:14px;flex-wrap:wrap}
 .card{flex:1;min-width:260px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.55;box-shadow:var(--sh-sm)}
 .card h3{font-size:14px;margin-bottom:8px;letter-spacing:-.01em}
 .card .ul{margin:2px 0 0;padding-left:18px}.card li{margin:5px 0;line-height:1.5}
-.wk{margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);color:#b45309;font-size:12.5px;line-height:1.5}
-.pl-win{margin-top:6px;color:var(--brand-d);font-size:12.5px;line-height:1.5}
+.wk{margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);color:#fbbf24;font-size:12.5px;line-height:1.5}
+.pl-win{margin-top:6px;color:#4ade80;font-size:12.5px;line-height:1.5}
 table.stat{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border-radius:12px;overflow:hidden;box-shadow:var(--sh-sm)}
 table.stat th,table.stat td{padding:9px 13px;border-bottom:1px solid var(--line2);text-align:center}
 table.stat tr:last-child td{border-bottom:0}
-table.stat td:first-child{text-align:left;color:#475569}table.stat th{background:#f8fafc;color:#475569;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+table.stat td:first-child{text-align:left;color:var(--muted)}table.stat th{background:var(--surface2);color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
 table.stat td:not(:first-child){font-weight:700}
 .foot{text-align:center;color:var(--faint);font-size:12px;margin-top:24px}
 /* editor */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .hint{font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5}
-.editor-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line);box-shadow:var(--sh-sm);background:#fff}
+.editor-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line);box-shadow:var(--sh-sm);background:var(--surface)}
 table.edit{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}
-table.edit th{background:#f8fafc;color:#475569;padding:9px 4px;font-weight:700;border-bottom:1px solid var(--line);position:sticky;top:0}
+table.edit th{background:var(--surface2);color:var(--muted);padding:9px 4px;font-weight:700;border-bottom:1px solid var(--line);position:sticky;top:0}
 table.edit td{border-bottom:1px solid var(--line2);padding:5px 4px;text-align:center}
-table.edit tr:hover td{background:#fafbfc}
-table.edit input[type=number]{width:38px;padding:5px 2px;border:1px solid var(--line);border-radius:7px;text-align:center;font-size:12px}
-table.edit input[type=number]:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft)}
-table.edit input[type=text]{width:128px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
-table.edit input[type=text]:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft)}
-.iconbtn{background:#f1f5f9;border:0;cursor:pointer;font-size:14px;padding:5px 7px;border-radius:8px;transition:.12s}
-.iconbtn:hover{background:#e2e8f0}
+table.edit tr:hover td{background:var(--surface2)}
+table.edit input[type=number]{width:38px;padding:5px 2px;border:1px solid var(--line);border-radius:7px;text-align:center;font-size:12px;background:var(--surface2);color:var(--text)}
+table.edit input[type=number]:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
+table.edit input[type=text]{width:128px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:var(--surface2);color:var(--text)}
+table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
+.iconbtn{background:var(--surface2);border:0;cursor:pointer;font-size:14px;padding:5px 7px;border-radius:8px;transition:.12s}
+.iconbtn:hover{background:var(--surface3)}
 /* modal */
-.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{position:fixed;inset:0;background:rgba(4,7,15,.66);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal.on{display:flex}
-.modal-box{background:#fff;border-radius:18px;padding:20px;max-width:390px;width:100%;box-shadow:0 24px 60px rgba(15,23,42,.3)}
+.modal-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:390px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
 .modal-box h3{margin-bottom:14px;font-size:17px;letter-spacing:-.01em}
-.mrow{margin:12px 0;font-size:13px}.mrow .lbl{font-weight:700;color:#475569;margin-bottom:6px;display:block}
+.mrow{margin:12px 0;font-size:13px}.mrow .lbl{font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
 .mrow label{display:inline-flex;align-items:center;gap:5px;margin-right:14px;cursor:pointer}
-.modal-box select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;width:100%}
+.modal-box select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;width:100%;background:var(--surface2);color:var(--text)}
 /* history */
 .history-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh-sm)}
 .history-item .h-ic{width:40px;height:40px;border-radius:11px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
 .history-item .meta{flex:1;min-width:0}.history-item .dt{font-weight:700}.history-item .sub2{font-size:12px;color:var(--muted)}
-.empty{text-align:center;color:var(--muted);padding:46px 16px;font-size:14px;line-height:1.7;background:#fff;border:1px dashed var(--line);border-radius:16px}
+.empty{text-align:center;color:var(--muted);padding:46px 16px;font-size:14px;line-height:1.7;background:var(--surface);border:1px dashed var(--line);border-radius:16px}
 .empty .big{font-size:40px;display:block;margin-bottom:10px;opacity:.7}
-/* dashboard stats + tab bar */
-body{padding-bottom:78px}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:var(--sh-sm)}
-.stat .v{font-size:25px;font-weight:800;letter-spacing:-.02em}
-.stat .k{font-size:12px;color:var(--muted);margin-top:2px}
-.stat.accent{background:linear-gradient(135deg,var(--brand),#22c55e);border:0;color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.28)}
+/* dashboard stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:var(--sh-sm)}
+.stat .v{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.stat .k{font-size:11.5px;color:var(--muted);margin-top:2px}
+.stat.accent{background:linear-gradient(135deg,var(--brand),#22c55e);border:0;color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.3)}
 .stat.accent .k{color:#dcfce7}
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(12px);
-  border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:7px 4px 8px}
-.tab{flex:1;max-width:130px;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:5px 2px;border-radius:11px;color:var(--faint);font-size:10.5px;font-weight:600;transition:.12s}
-.tab .ti{font-size:19px;line-height:1}
-.tab.on{color:var(--brand)}.tab.on .ti{transform:translateY(-1px)}
-.tab:hover{color:var(--muted)}
-@media(min-width:760px){.tabbar{max-width:580px;margin:0 auto;border:1px solid var(--line);border-radius:20px;bottom:16px;box-shadow:var(--sh)}}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
 
 <header class="appbar">
@@ -164,18 +322,31 @@ body{padding-bottom:78px}
 </header>
 
 <!-- ====== MENU ====== -->
-<div id="home" class="screen">
-  <div class="hero">
-    <span class="logo">⚽</span>
-    <h1>Chia đội bóng sân 7</h1>
-    <p>Cân bằng tự động · công bằng cho mọi người</p>
+<div id="home" class="screen home-screen">
+  <div class="page-banner"><img src="banner.jpg" alt="GenPlayer" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
+  <div class="dash-top">
+    <section class="hero-feat" id="heroFeat"></section>
+    <section class="action-panel">
+      <div class="ap-title">Tạo đội</div>
+      <div class="ap-sub">Chia 2 đội cân bằng & quản lý cầu thủ</div>
+      <div class="ap-grid">
+        <button class="ap-btn" onclick="show('screen-create')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tạo đội</span></button>
+        <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-week')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg><span>Tuần này</span></button>
+        <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
+      </div>
+    </section>
   </div>
-  <div class="stats" id="homeStats"></div>
-  <div class="menu">
-    <button class="menu-card" onclick="show('screen-create')"><span class="menu-ic ic-green">⚽</span><span class="t">Tạo đội</span><span class="d">Chọn người có mặt → chia 2 đội cân</span></button>
-    <button class="menu-card" onclick="show('screen-players')"><span class="menu-ic ic-blue">✏️</span><span class="t">Cập nhật cầu thủ</span><span class="d">Sửa điểm · thêm / xóa người</span></button>
-    <button class="menu-card" onclick="show('screen-week')"><span class="menu-ic ic-amber">📋</span><span class="t">Đội tuần này</span><span class="d">Đội đã lưu gần nhất</span></button>
-    <button class="menu-card" onclick="show('screen-history')"><span class="menu-ic ic-slate">🕐</span><span class="t">Lịch sử</span><span class="d">Các đội đã lưu trước đây</span></button>
+  <div class="dash-main">
+    <div class="dash-left">
+      <div class="stats" id="homeStats"></div>
+      <div class="league-head"><span class="lg-ic">🕐</span>Lịch sử đội đã lưu</div>
+      <div id="matchList"></div>
+    </div>
+    <aside class="dash-right">
+      <div class="pop-head">Cầu thủ nổi bật <a onclick="show('screen-players')">Xem thêm</a></div>
+      <div id="spotlight"></div>
+    </aside>
   </div>
 </div>
 
@@ -198,18 +369,24 @@ body{padding-bottom:78px}
 
 <!-- ====== CAP NHAT CAU THU ====== -->
 <div id="screen-players" class="screen">
+  <div class="pc-bar">
+    <div class="pc-bar-title">Cầu thủ <span id="pcCount"></span></div>
+    <button class="btn alt sm" id="editToggle" onclick="toggleEdit()">✏️ Sửa điểm</button>
+  </div>
+  <div id="players-cards" class="pcard-grid"></div>
+  <div id="players-editor" style="display:none">
   <div class="toolbar">
     <button class="btn sm" onclick="savePlayersFromEditor()">💾 Lưu</button>
     <button class="btn alt sm" onclick="addPlayerRow()">➕ Thêm</button>
-    <button class="btn alt sm" onclick="exportPlayers()">⬇️ Xuất JSON</button>
     <label class="btn alt sm" style="cursor:pointer">⬆️ Nhập JSON<input type="file" id="impFile" accept=".json" hidden></label>
     <button class="btn alt sm" onclick="resetPlayers()">↺ Mặc định</button>
   </div>
-  <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · ☑ ưu tiên dự bị · nhớ bấm <b>Lưu</b> sau khi sửa</div>
+  <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
   <div class="editor-wrap">
     <table class="edit"><thead><tr>
-      <th>Dự bị</th><th style="text-align:left;padding-left:10px">Tên</th><th>KT</th><th>CH</th><th>DĐ</th><th>PN</th><th>TC</th><th>TL</th><th>ĐN</th><th>TD</th><th>TM</th><th></th><th></th>
+      <th style="text-align:left;padding-left:10px">Tên</th><th>KT</th><th>CH</th><th>DĐ</th><th>PN</th><th>TC</th><th>TL</th><th>ĐN</th><th>TD</th><th>TM</th><th></th><th></th>
     </tr></thead><tbody id="editor-body"></tbody></table>
+  </div>
   </div>
 </div>
 
@@ -221,7 +398,6 @@ body{padding-bottom:78px}
 
 <!-- ====== LICH SU ====== -->
 <div id="screen-history" class="screen">
-  <div class="toolbar"><button class="btn alt sm" onclick="exportHistory()">⬇️ Xuất lịch sử JSON</button></div>
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
 </div>
@@ -242,13 +418,17 @@ body{padding-bottom:78px}
   </div>
 </div>
 
-<nav class="tabbar">
-  <button class="tab" data-s="home" onclick="show('home')"><span class="ti">🏠</span>Tổng quan</button>
-  <button class="tab" data-s="screen-create" onclick="show('screen-create')"><span class="ti">⚽</span>Tạo đội</button>
-  <button class="tab" data-s="screen-players" onclick="show('screen-players')"><span class="ti">👥</span>Cầu thủ</button>
-  <button class="tab" data-s="screen-week" onclick="show('screen-week')"><span class="ti">📋</span>Tuần này</button>
-  <button class="tab" data-s="screen-history" onclick="show('screen-history')"><span class="ti">🕐</span>Lịch sử</button>
-</nav>
+
+<!-- ====== CHI TIET CAU THU ====== -->
+<div class="pm-overlay" id="playerModal" onclick="if(event.target===this)closePlayer()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <button class="pm-close" onclick="closePlayer()">✕</button>
+      <button class="btn alt sm" id="pmEdit" onclick="editPlayer()">✏️ Chỉnh sửa</button>
+    </div>
+    <div id="pmBody"></div>
+  </div>
+</div>
 
 <!-- Firebase (chỉ dùng khi đồng bộ; lỗi mạng/không có config thì tự về chế độ cục bộ) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -257,7 +437,6 @@ body{padding-bottom:78px}
 // Port tu team_builder.py
 (function(global){
   const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // 1-3-3
-  const PEN = 3.0;   // phat vi tri ngoai san cho nguoi "uu tien du bi" (p.lp)
 
   function fit(s, p){
     const KT=s.KT,CH=s.CH,DD=s.DD,PN=s.PN,TC=s.TC,TL=s.TL,DN=s.DN,TD=s.TD,TM=s.TM;
@@ -346,9 +525,15 @@ body{padding-bottom:78px}
     const N=players.length;
     if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
     const overall=players.map(overallOf);
-    const lp=players.map(p=>!!p.lp);   // cau thu danh dau "uu tien du bi"
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
-    const fitPen=fitT.map((row,i)=>row.map((vv,c)=> vv-((lp[i]&&c>=1)?PEN:0)));
+    // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
+    const PRI=2.5, SEC=1.0, OFF=3.0;
+    const fitPen=fitT.map((row,i)=>{
+      const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
+      if(!pr) return row;                                   // chua chon vi tri -> trung tinh
+      return row.map((v,c)=>{ const sl=SLOTS[c];
+        return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)); });
+    });
     const TM=players.map(p=>p.TM);
     const ctx={players,overall,fitT,fitPen};
     const sizeA=Math.ceil(N/2), even=(N%2===0);
@@ -392,7 +577,7 @@ body{padding-bottom:78px}
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
 <script>
-const DEFAULT_PLAYERS = [{"n": "Cris Dao", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 8, "TL": 6, "DN": 3, "TD": 6, "TM": 0, "lp": false}, {"n": "Doan Ha", "KT": 7, "CH": 5, "DD": 7, "PN": 4, "TC": 4, "TL": 7, "DN": 8, "TD": 6, "TM": 0, "lp": false}, {"n": "Duy Hùng", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 5, "TD": 5, "TM": 0, "lp": true}, {"n": "Hoàng Duy", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0, "lp": false}, {"n": "Hoàng Thiên", "KT": 10, "CH": 8, "DD": 10, "PN": 7, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 8, "lp": false}, {"n": "Hưng", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 4, "TL": 8, "DN": 8, "TD": 8, "TM": 0, "lp": false}, {"n": "Huy Hoàng", "KT": 9, "CH": 9, "DD": 8, "PN": 9, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 0, "lp": false}, {"n": "Mạnh Khắc", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 4, "TL": 6, "DN": 3, "TD": 6, "TM": 0, "lp": false}, {"n": "Mạnh Tiến", "KT": 5, "CH": 6, "DD": 4, "PN": 7, "TC": 8, "TL": 6, "DN": 8, "TD": 6, "TM": 5, "lp": true}, {"n": "Nam Khắc", "KT": 7, "CH": 7, "DD": 6, "PN": 9, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0, "lp": false}, {"n": "Nguyễn Danh Tuyên", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0, "lp": false}, {"n": "Nguyễn Khắc Trọng", "KT": 5, "CH": 6, "DD": 4, "PN": 7, "TC": 4, "TL": 6, "DN": 8, "TD": 6, "TM": 5, "lp": false}, {"n": "Nguyen Quy Bong", "KT": 9, "CH": 9, "DD": 9, "PN": 8, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 0, "lp": false}, {"n": "Nguyễn Văn Quyền", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 3, "TD": 5, "TM": 0, "lp": false}, {"n": "Quang Minh", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 8, "TL": 6, "DN": 8, "TD": 6, "TM": 5, "lp": true}, {"n": "Quý Tàu", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 3, "TD": 5, "TM": 0, "lp": true}, {"n": "Quyết Nguyễn", "KT": 7, "CH": 7, "DD": 7, "PN": 7, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0, "lp": false}, {"n": "Trịnh Mạnh", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 4, "TL": 6, "DN": 8, "TD": 6, "TM": 0, "lp": true}, {"n": "Trịnh Tuấn Anh", "KT": 7, "CH": 7, "DD": 7, "PN": 7, "TC": 8, "TL": 8, "DN": 8, "TD": 7, "TM": 0, "lp": false}, {"n": "Văn Thanh", "KT": 9, "CH": 8, "DD": 9, "PN": 9, "TC": 4, "TL": 9, "DN": 9, "TD": 9, "TM": 0, "lp": false}];
+const DEFAULT_PLAYERS = [{"n": "Cris Dao", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 8, "TL": 6, "DN": 3, "TD": 6, "TM": 0}, {"n": "Doan Ha", "KT": 7, "CH": 5, "DD": 7, "PN": 4, "TC": 4, "TL": 7, "DN": 8, "TD": 6, "TM": 0}, {"n": "Duy Hùng", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 5, "TD": 5, "TM": 0}, {"n": "Hoàng Duy", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0}, {"n": "Hoàng Thiên", "KT": 10, "CH": 8, "DD": 10, "PN": 7, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 8}, {"n": "Hưng", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 4, "TL": 8, "DN": 8, "TD": 8, "TM": 0}, {"n": "Huy Hoàng", "KT": 9, "CH": 9, "DD": 8, "PN": 9, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 0}, {"n": "Mạnh Khắc", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 4, "TL": 6, "DN": 3, "TD": 6, "TM": 0}, {"n": "Mạnh Tiến", "KT": 5, "CH": 6, "DD": 4, "PN": 7, "TC": 8, "TL": 6, "DN": 8, "TD": 6, "TM": 5}, {"n": "Nam Khắc", "KT": 7, "CH": 7, "DD": 6, "PN": 9, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0}, {"n": "Nguyễn Danh Tuyên", "KT": 7, "CH": 8, "DD": 6, "PN": 8, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0}, {"n": "Nguyễn Khắc Trọng", "KT": 5, "CH": 6, "DD": 4, "PN": 7, "TC": 4, "TL": 6, "DN": 8, "TD": 6, "TM": 5}, {"n": "Nguyen Quy Bong", "KT": 9, "CH": 9, "DD": 9, "PN": 8, "TC": 9, "TL": 9, "DN": 9, "TD": 9, "TM": 0}, {"n": "Nguyễn Văn Quyền", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 3, "TD": 5, "TM": 0}, {"n": "Quang Minh", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 8, "TL": 6, "DN": 8, "TD": 6, "TM": 5}, {"n": "Quý Tàu", "KT": 4, "CH": 5, "DD": 3, "PN": 5, "TC": 3, "TL": 5, "DN": 3, "TD": 5, "TM": 0}, {"n": "Quyết Nguyễn", "KT": 7, "CH": 7, "DD": 7, "PN": 7, "TC": 8, "TL": 8, "DN": 8, "TD": 8, "TM": 0}, {"n": "Trịnh Mạnh", "KT": 6, "CH": 6, "DD": 5, "PN": 6, "TC": 4, "TL": 6, "DN": 8, "TD": 6, "TM": 0}, {"n": "Trịnh Tuấn Anh", "KT": 7, "CH": 7, "DD": 7, "PN": 7, "TC": 8, "TL": 8, "DN": 8, "TD": 7, "TM": 0}, {"n": "Văn Thanh", "KT": 9, "CH": 8, "DD": 9, "PN": 9, "TC": 4, "TL": 9, "DN": 9, "TD": 9, "TM": 0}];
 const FIREBASE_CONFIG = {
   "apiKey": "AIzaSyDQ5h2sSNPOmtc23fXaZdzxgjxiF_Mudho",
   "authDomain": "ai-gen-aa66f.firebaseapp.com",
@@ -447,7 +632,6 @@ function onCloudUpdate(){
   if(cur.id==="screen-week")showWeek();
   if(cur.id==="screen-history")showHistory();
 }
-function download(fn,obj){const a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(obj,null,1));a.download=fn;a.click();}
 
 // ---- quy diem nhanh ----
 function quickScores(tier,positions,spd,wr){
@@ -471,19 +655,80 @@ function show(id){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome();
   if(id==="screen-create") buildRoster();
-  if(id==="screen-players") buildEditor();
+  if(id==="screen-players") showPlayers();
   if(id==="screen-week") showWeek();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
 }
+const IC={
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 21V13M12 21V8M19 21V16"/></svg>'
+};
+function tlogo(name,bg){const dark=bg==="#fcba03";return `<span class="tlogo" style="background:${bg};color:${dark?'#11224f':'#fff'}">${initials(name)}</span>`;}
+function ring(p,c){return `<div class="ring" style="--p:${p};--c:${c}"><b>${p}</b></div>`;}
 function renderHome(){
-  const pl=getPlayers(), h=getHistory(), lp=pl.filter(p=>p.lp).length;
+  const pl=getPlayers(), h=getHistory(), stars=pl.filter(p=>ov(p)>=8).length;
   $("homeStats").innerHTML=`
     <div class="stat accent"><div class="v">${pl.length}</div><div class="k">Cầu thủ</div></div>
-    <div class="stat"><div class="v">${h.length}</div><div class="k">Đội đã lưu</div></div>
-    <div class="stat"><div class="v">${h.length?h[0].label.split(" ")[0]:"—"}</div><div class="k">Đội tuần này</div></div>
-    <div class="stat"><div class="v">${lp}</div><div class="k">Ưu tiên dự bị</div></div>`;
+    <div class="stat"><div class="v">${stars}</div><div class="k">Ngôi sao</div></div>`;
+  renderHeroFeat(h); renderMatchList(h); renderSpotlight(pl);
 }
+function renderHeroFeat(h){
+  const el=$("heroFeat"); if(!el)return;
+  const FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
+  if(h.length){
+    const r=h[0];
+    el.innerHTML=`<div class="hf-bg"></div>${FX}
+      <div class="hf-logos">${tlogo("Quỷ Đỏ",KIT_A.body)}${tlogo("Pháo Thủ",KIT_B.body)}</div>
+      <div class="hf-top"><span class="hf-live">Đội tuần này</span><span class="hf-league">${r.label} · ${r.n} người</span></div>
+      <h1 class="hf-title">QUỶ ĐỎ<br>PHÁO THỦ</h1>
+      <button class="hf-play" onclick="show('screen-week')" title="Xem đội tuần này">▶</button>`;
+  }else{
+    el.innerHTML=`<div class="hf-bg"></div>${FX}
+      <div class="hf-top"><span class="hf-live">Bắt đầu</span><span class="hf-league">Cân bằng tự động · công bằng cho mọi người</span></div>
+      <h1 class="hf-title">CHIA ĐỘI<br>BÓNG SÂN 7</h1>
+      <button class="hf-play" onclick="show('screen-create')" title="Tạo đội">▶</button>`;
+  }
+}
+function renderMatchList(h){
+  const box=$("matchList"); if(!box)return;
+  if(!h.length){box.innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có đội nào được lưu.<br>Vào <b>Tạo đội</b> rồi bấm <b>Lưu làm đội tuần này</b>.</div>`;return;}
+  box.innerHTML=`<div class="m-list">`+h.map(r=>{
+    const A=r.result&&r.result.evA, B=r.result&&r.result.evB;
+    const pA=A?Math.round(A.startFit*10):0, pB=B?Math.round(B.startFit*10):0;
+    const p=(r.label||"").split(" ");
+    return `<div class="m-row" onclick="openHistory(${r.id})">
+      <div class="m-time"><b>${p[0]||""}</b>${p[1]||""}</div>
+      <div class="m-icos"><span class="m-ico">${IC.play}</span><span class="m-ico">${IC.chart}</span></div>
+      ${ring(pA,"var(--gold)")}
+      <div class="m-team l"><span class="nm">Quỷ Đỏ</span>${tlogo("Quỷ Đỏ",KIT_A.body)}</div>
+      <span class="m-vs">VS</span>
+      <div class="m-team r">${tlogo("Pháo Thủ",KIT_B.body)}<span class="nm">Pháo Thủ</span></div>
+      ${ring(pB,"var(--blue)")}
+      <div class="m-bets">${r.n} người</div>
+    </div>`;
+  }).join("")+`</div>`;
+}
+function renderSpotlight(pl){
+  const box=$("spotlight"); if(!box)return;
+  if(!pl.length){box.innerHTML=`<div class="empty"><span class="big">👤</span>Chưa có cầu thủ.</div>`;return;}
+  const top=pl.slice().sort((a,b)=>ov(b)-ov(a))[0];
+  const o=ov(top).toFixed(1), atk=((top.DD+top.CH)/2).toFixed(1);
+  box.innerHTML=`<div class="spot-card">
+    <div class="spot-user"><span class="avatar" style="background:${avColor(top.n)}">${initials(top.n)}</span>
+      <div><div class="su-name">${top.n}</div><div class="su-sub">Cầu thủ điểm cao nhất</div></div></div>
+    <div class="spot-league"><span>⚽</span> ${pl.length} cầu thủ · ${pl.filter(x=>ov(x)>=8).length} ngôi sao (điểm ≥ 8)</div>
+    <div class="spot-line"><span class="avatar" style="background:${avColor(top.n)}">${initials(top.n)}</span>
+      <div><b>${top.n}</b> — điểm tổng <b>${o}</b>/10</div></div>
+    <div class="spot-stats">
+      <div><div class="sv">${o}</div><div class="sk">Tổng quan</div></div>
+      <div><div class="sv">${atk}</div><div class="sk">Tấn công</div></div>
+      <div><div class="sv">${top.PN}</div><div class="sk">Phòng ngự</div></div>
+    </div>
+    <button class="bet-against" onclick="show('screen-create')">Vào tạo đội</button>
+  </div>`;
+}
+function openHistory(id){show("screen-history");viewHistory(id);}
 
 // ============ VE SO DO ============
 function jersey(k){return `<svg class="jersey" viewBox="0 0 100 90" width="38" height="34"><path d="M30,8 L12,18 L4,40 L20,48 L26,40 L26,84 L74,84 L74,40 L80,48 L96,40 L88,18 L70,8 C70,8 64,20 50,20 C36,20 30,8 30,8 Z" fill="${k.body}" stroke="#00000055" stroke-width="2"/><path d="M30,8 L12,18 L4,40 L20,48 L26,38 L26,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M70,8 L88,18 L96,40 L80,48 L74,38 L74,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M34,9 Q50,21 66,9 L62,6 Q50,16 38,6 Z" fill="${k.trim}"/></svg>`;}
@@ -542,11 +787,11 @@ window.addEventListener("resize",fitMatch);
 // ============ TAO DOI ============
 let curPlayers=[], cstate={key:"",results:[],idx:0,subset:null};
 function buildRoster(){
-  curPlayers=getPlayers(); cstate={key:"",results:[],idx:0,subset:null};
+  curPlayers=getPlayers().sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on";
-    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span>${p.n}</span>${p.lp?'<span class="lp-dot" title="ưu tiên dự bị"></span>':''}</span><span class="ovb">${ov(p).toFixed(1)}</span><input type="checkbox" data-i="${i}" checked>`;
+    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span>${p.n}</span></span><span class="ovb">${ov(p).toFixed(1)}</span><input type="checkbox" data-i="${i}" checked>`;
     el.querySelector("input").addEventListener("change",e=>{el.classList.toggle("off",!e.target.checked);el.classList.toggle("on",e.target.checked);updateCount();});
     roster.appendChild(el);
   });
@@ -581,27 +826,157 @@ $("saveWeek").onclick=()=>{
 
 // ============ CAP NHAT CAU THU ============
 function rowHtml(p){
-  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,TM:0,lp:false};
+  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,TM:0};
   const num=k=>`<td><input type="number" min="0" max="10" data-k="${k}" value="${p[k]}"></td>`;
   return `<tr>
-    <td><input type="checkbox" class="lp" ${p.lp?"checked":""}></td>
     <td style="text-align:left"><input type="text" class="nm" value="${(p.n||"").replace(/"/g,'&quot;')}"></td>
     ${["KT","CH","DD","PN","TC","TL","DN","TD","TM"].map(num).join("")}
     <td><button class="iconbtn" title="Nhập nhanh" onclick="openQuick(this)">⚡</button></td>
     <td><button class="iconbtn" title="Xóa" onclick="this.closest('tr').remove()">🗑️</button></td>
   </tr>`;
 }
-function buildEditor(){$("editor-body").innerHTML=getPlayers().map(rowHtml).join("");}
+function buildEditor(){$("editor-body").innerHTML=getPlayers().sort((a,b)=>ov(b)-ov(a)).map(rowHtml).join("");}
+const POS_LIST=[["GK","Thủ môn"],["Thòng","Trung vệ"],["HV","Hậu vệ biên"],["TVtt","Tiền vệ giữa"],["TV","Tiền vệ cánh"],["TĐ","Tiền đạo"]];
+const POS_LABEL={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ biên",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
+const POSAB={GK:"GK","Thòng":"TrV",HV:"HV",TVtt:"TVg",TV:"TVc","TĐ":"TĐ"};
+const POS_X={GK:9,"Thòng":27,HV:33,TVtt:53,TV:58,"TĐ":82};
+function guessPosCode(p){
+  if((+p.TM||0)>=6)return "GK";
+  const def=+p.PN||0, att=+p.DD||0, mid=((+p.CH||0)+(+p.TD||0))/2, m=Math.max(def,att,mid);
+  if(m===att)return "TĐ";
+  if(m===def)return def>=7?"Thòng":"HV";
+  return (+p.TC||0)>=7?"TV":"TVtt";
+}
+function posCodeOf(p){return p.pos||guessPosCode(p);}
+function renderPlayersCards(){
+  const pl=getPlayers().sort((a,b)=>ov(b)-ov(a)), box=$("players-cards"); if(!box)return; pcards=pl;
+  if($("pcCount"))$("pcCount").textContent="· "+pl.length;
+  if(!pl.length){box.innerHTML=`<div class="empty"><span class="big">👤</span>Chưa có cầu thủ. Bấm <b>Sửa điểm</b> để thêm.</div>`;return;}
+  box.innerHTML=pl.map((p,i)=>{
+    const o=ov(p).toFixed(1), pos=posCodeOf(p), c=avColor(p.n), star=ov(p)>=8;
+    return `<div class="pcard" onclick="openPlayer(${i})" style="--cc:${c}">
+      <div class="stripe"></div>
+      <div class="pc-top"><div class="pc-badge">${POSAB[pos]||""}${star?' <span class="pc-star">★</span>':''}</div>
+        <div class="pc-ov"><div class="n">${o}</div><div class="l">Điểm</div></div></div>
+      <div class="pc-avatar" style="background:${c}">${initials(p.n)}</div>
+      <div class="pc-mid"><div class="pc-name">${p.n}</div><div class="pc-pos">${POS_LABEL[pos]}</div></div>
+      <div class="pc-foot">
+        <div><div class="sv">${p.DD}</div><div class="sk">Dứt điểm</div></div>
+        <div><div class="sv">${p.PN}</div><div class="sk">Phòng ngự</div></div>
+        <div><div class="sv">${p.TC}</div><div class="sk">Tốc độ</div></div>
+        <div><div class="sv">${p.CH}</div><div class="sk">Chuyền</div></div>
+      </div></div>`;
+  }).join("");
+}
+function showPlayers(){
+  const ed=$("players-editor"); if(ed)ed.style.display="none";
+  const cards=$("players-cards"); if(cards)cards.style.display="";
+  const t=$("editToggle"); if(t)t.textContent="✏️ Sửa điểm";
+  renderPlayersCards();
+}
+function toggleEdit(force){
+  const ed=$("players-editor"), cards=$("players-cards"), t=$("editToggle");
+  const goEdit = force===true ? true : (ed.style.display==="none");
+  if(goEdit){ buildEditor(); ed.style.display=""; cards.style.display="none"; if(t)t.textContent="🗂️ Xem thẻ"; window.scrollTo(0,0); }
+  else { setPlayers(collectEditor()); ed.style.display="none"; cards.style.display=""; if(t)t.textContent="✏️ Sửa điểm"; renderPlayersCards(); }
+}
+// ---- chi tiet cau thu (FM-style) ----
+let pcards=[], pmName=null;
+const ATTRS_TECH=[["KT","Kỹ thuật"],["CH","Chuyền"],["DD","Dứt điểm"],["PN","Phòng ngự"],["TM","Thủ môn"]];
+const ATTRS_PHYS=[["TC","Tốc độ"],["TL","Thể lực"],["DN","Độ nhiệt"],["TD","Tư duy"]];
+const ATTRS_ALL=ATTRS_TECH.concat(ATTRS_PHYS);
+const ATTR_HINT={
+  KT:"Rê dắt, xử lý bóng · 1–3 vụng · 4–7 ổn · 8–10 khéo",
+  CH:"Chuyền bóng · 1–3 hay hỏng · 4–7 ổn · 8–10 sắc",
+  DD:"Dứt điểm · 1–3 kém · 4–7 vừa · 8–10 sát thủ",
+  PN:"Tranh chấp, bọc lót · 1–3 yếu · 4–7 vừa · 8–10 chắc",
+  TM:"Bắt gôn · 0 không bắt · 1–7 tạm · 8–10 xịn",
+  TC:"Chạy nhanh · 1–3 chậm · 4–7 trung bình · 8–10 nhanh",
+  TL:"Sức bền · 1–3 mau mệt · 4–7 ổn · 8–10 bền cả trận",
+  DN:"Chịu chạy, máu lửa · 1–3 lười · 4–7 vừa · 8–10 nhiệt",
+  TD:"Đọc trận, chọn vị trí · 1–3 kém · 4–7 ổn · 8–10 nhạy",
+};
+function attrColor(v){v=+v||0;return v>=8?"#22e07a":(v>=6?"#e8ecf6":(v>=4?"#f5c451":"#ff6b6b"));}
+function pmFind(){return getPlayers().find(x=>x.n===pmName);}
+function openPlayer(i){const p=pcards[i];if(!p)return;pmName=p.n;renderPlayerProfile();$("playerModal").classList.add("on");}
+function closePlayer(){$("playerModal").classList.remove("on");}
+function attrRow(l,v){return `<div class="pm-attr"><span class="lab">${l}</span><span class="val" style="color:${attrColor(v)}">${v}</span></div>`;}
+function renderPlayerProfile(){
+  const p=pmFind(); if(!p){closePlayer();return;}
+  const o=ov(p).toFixed(1), pos=posCodeOf(p), c=avColor(p.n), star=ov(p)>=8;
+  const sec=(Array.isArray(p.pos2)?p.pos2:[]).filter(s=>POS_X[s]!=null);
+  const dots=`<div class="dot" style="left:${POS_X[pos]}%;top:50%"></div>`+sec.map(s=>`<div class="dot sec" style="left:${POS_X[s]}%;top:50%"></div>`).join("");
+  $("pmEdit").style.display="";
+  $("pmBody").innerHTML=`
+    <div class="pm-head">
+      <div class="pm-ava" style="background:${c}">${initials(p.n)}</div>
+      <div>
+        <div class="pm-h-name">${p.n}</div>
+        <div class="pm-h-sub"><span>${POS_LABEL[pos]}</span>·<span>Điểm tổng <span class="pm-h-ov">${o}</span>/10</span>${star?'<span class="pc-star">★ Ngôi sao</span>':''}</div>
+      </div>
+    </div>
+    <div class="pm-grid">
+      <div class="pm-left">
+        <div class="pm-sec">Vị trí</div>
+        <div class="mini-pitch"><div class="mid"></div><div class="circ"></div>${dots}</div>
+        <div class="pm-pos-lbl">${POS_LABEL[pos]}</div>
+        ${sec.length?`<div class="pm-pos-sec">Phụ: ${sec.map(s=>POS_LABEL[s]).join(", ")}</div>`:""}
+      </div>
+      <div class="pm-right"><div class="pm-cols">
+        <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+        <div><div class="pm-sec">Thể chất & tư duy</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+      </div></div>
+    </div>`;
+}
+function editPlayer(){
+  const p=pmFind(); if(!p)return;
+  $("pmEdit").style.display="none";
+  const cell=([k,l])=>`<label class="pe-cell"><span class="pe-lab">${l}</span><span class="pe-hint">${ATTR_HINT[k]||""}</span><input type="number" min="0" max="10" id="pe-${k}" value="${p[k]}"></label>`;
+  const curPos=posCodeOf(p), sec=(Array.isArray(p.pos2)?p.pos2:[]);
+  const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${curPos===k?"checked":""}><span>${l}</span></label>`;
+  const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${sec.includes(k)?"checked":""}><span>${l}</span></label>`;
+  $("pmBody").innerHTML=`
+    <div class="pm-edit">
+      <div class="pe-top">
+        <div class="pe-name"><span>Tên (không sửa được)</span><div class="pe-name-val">${p.n}</div></div>
+      </div>
+      <div class="pe-pos">
+        <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
+        <div class="pe-pos-group"><span class="pe-lab">Vị trí phụ (đá được)</span><div class="pos-chips" id="pe-pos2">${POS_LIST.map(secChip).join("")}</div></div>
+      </div>
+      <div class="pe-note">Chấm theo thang <b>0–10</b> · xem gợi ý dưới mỗi mục</div>
+      <div class="pe-grid">${ATTRS_ALL.map(cell).join("")}</div>
+      <div class="pe-actions">
+        <button class="btn sm" onclick="savePlayer()">💾 Lưu</button>
+        <button class="btn alt sm" onclick="renderPlayerProfile()">Hủy</button>
+        <button class="btn alt sm pe-del" onclick="deletePlayer()">🗑️ Xóa cầu thủ</button>
+      </div>
+    </div>`;
+}
+function savePlayer(){
+  const arr=getPlayers(), i=arr.findIndex(x=>x.n===pmName); if(i<0)return;
+  const o={n:pmName};   // tên không cho sửa
+  ATTRS_ALL.forEach(([k])=>o[k]=Math.max(0,Math.min(10,+$("pe-"+k).value||0)));
+  const pr=document.querySelector('input[name="pe-pos"]:checked'); o.pos=pr?pr.value:"";
+  o.pos2=[...document.querySelectorAll('#pe-pos2 input:checked')].map(c=>c.value).filter(v=>v!==o.pos);
+  arr[i]=o; setPlayers(arr); renderPlayerProfile(); renderPlayersCards();
+}
+function deletePlayer(){
+  const pw=prompt("Nhập mật khẩu để xóa cầu thủ \""+pmName+"\":");
+  if(pw===null) return;                                   // bấm Hủy
+  if(pw!=="12345"){ alert("❌ Sai mật khẩu — không thể xóa cầu thủ."); return; }
+  setPlayers(getPlayers().filter(x=>x.n!==pmName));
+  closePlayer(); renderPlayersCards();
+}
 function addPlayerRow(){$("editor-body").insertAdjacentHTML("beforeend",rowHtml());}
 function collectEditor(){
   return [...$("editor-body").querySelectorAll("tr")].map(tr=>{
-    const o={n:tr.querySelector(".nm").value.trim(),lp:tr.querySelector(".lp").checked};
+    const o={n:tr.querySelector(".nm").value.trim()};
     tr.querySelectorAll("input[type=number]").forEach(inp=>o[inp.dataset.k]=Math.max(0,Math.min(10,+inp.value||0)));
     return o;
   }).filter(o=>o.n);
 }
 function savePlayersFromEditor(){const a=collectEditor();setPlayers(a);alert("Đã lưu "+a.length+" cầu thủ.");}
-function exportPlayers(){download("players.json",collectEditor());}
 function resetPlayers(){if(confirm("Khôi phục danh sách mặc định? (mất chỉnh sửa)")){localStorage.removeItem(LS.players);buildEditor();}}
 $("impFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const a=JSON.parse(r.result);if(!Array.isArray(a))throw 0;setPlayers(a);buildEditor();alert("Đã nhập "+a.length+" cầu thủ.");}catch(err){alert("File JSON không hợp lệ.");}};r.readAsText(f);e.target.value="";};
 let quickRowBtn=null;
@@ -633,7 +1008,6 @@ function showHistory(){
 }
 function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail");$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
 function delHistory(id){if(!confirm("Xóa bản ghi này?"))return;setHistory(getHistory().filter(x=>x.id!==id));showHistory();}
-function exportHistory(){download("history.json",getHistory());}
 
 localLoad(); initCloud(); setCloudBadge(); show("home");
 </script>

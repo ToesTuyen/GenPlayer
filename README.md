@@ -19,7 +19,8 @@ Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho b�
 | `web_template.html` | Giao diện + bộ vẽ sơ đồ của trang web |
 | `build_xlsx.py` | Tạo template chấm điểm `BangDanhGia_CauThu.xlsx` (⚠️ chạy lại sẽ xoá điểm) |
 | `fill_tuyen.py` | Quy đổi đánh giá (trình độ + vị trí + tốc độ + độ nhiệt) → 9 điểm; có `OVERRIDES` để chỉnh tay |
-| `team_builder.py` | Bản Python đối chiếu (in ra console + `preview_static.html`) |
+| `firebase_config.json` | Cấu hình Firebase (đồng bộ real-time qua Firestore) |
+| `banner.jpg` | Ảnh banner đầu trang |
 | `BangDanhGia_CauThu.xlsx` | Bảng chấm điểm (3 người chấm) |
 | `HuongDan_ChamDiem.md` | Hướng dẫn cho người chấm |
 

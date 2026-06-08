@@ -6,7 +6,6 @@ from openpyxl import load_workbook
 BASE="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/"
 
 # 1) doc diem 20 cau thu tu xlsx
-LOWPRIO={"Duy Hùng","Quý Tàu","Trịnh Mạnh","Mạnh Tiến","Quang Minh"}   # uu tien du bi
 wb=load_workbook(BASE+"BangDanhGia_CauThu.xlsx",data_only=True); ws=wb["ChamDiem"]
 HR=next(r for r in range(1,40) if ws.cell(r,1).value=="STT"); FIRST=HR+1
 players=[]
@@ -15,7 +14,7 @@ for idx in range(20):
     nm=ws.cell(r,2).value
     KT,CH,DD,PN,TC,TL,DN,TD,TM=[ws.cell(r,c).value for c in range(8,17)]
     players.append({"n":nm,"KT":KT,"CH":CH,"DD":DD,"PN":PN,
-                    "TC":TC,"TL":TL,"DN":DN,"TD":TD,"TM":TM,"lp":nm in LOWPRIO})
+                    "TC":TC,"TL":TL,"DN":DN,"TD":TD,"TM":TM})
 players_js=json.dumps(players,ensure_ascii=False)
 
 # 2) doc optimizer.js, bo phan test node

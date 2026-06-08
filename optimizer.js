@@ -2,7 +2,6 @@
 // Port tu team_builder.py
 (function(global){
   const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // 1-3-3
-  const PEN = 3.0;   // phat vi tri ngoai san cho nguoi "uu tien du bi" (p.lp)
 
   function fit(s, p){
     const KT=s.KT,CH=s.CH,DD=s.DD,PN=s.PN,TC=s.TC,TL=s.TL,DN=s.DN,TD=s.TD,TM=s.TM;
@@ -91,9 +90,15 @@
     const N=players.length;
     if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
     const overall=players.map(overallOf);
-    const lp=players.map(p=>!!p.lp);   // cau thu danh dau "uu tien du bi"
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
-    const fitPen=fitT.map((row,i)=>row.map((vv,c)=> vv-((lp[i]&&c>=1)?PEN:0)));
+    // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
+    const PRI=2.5, SEC=1.0, OFF=3.0;
+    const fitPen=fitT.map((row,i)=>{
+      const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
+      if(!pr) return row;                                   // chua chon vi tri -> trung tinh
+      return row.map((v,c)=>{ const sl=SLOTS[c];
+        return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)); });
+    });
     const TM=players.map(p=>p.TM);
     const ctx={players,overall,fitT,fitPen};
     const sizeA=Math.ceil(N/2), even=(N%2===0);
