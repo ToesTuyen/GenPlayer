@@ -277,7 +277,7 @@ HTML=f"""<!doctype html><html lang="vi"><head><meta charset="utf-8">
 </div>
 <div class="foot">Tạo tự động từ bảng đánh giá · sơ đồ 1-3-3 (1 thủ môn · 1 trung vệ + 2 hậu vệ · tiền vệ giữa + tiền vệ cánh + tiền đạo)</div>
 </body></html>"""
-outhtml="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/index.html"   # index.html -> GitHub Pages hien o URL goc
+outhtml="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/preview_static.html"   # ban Python (tinh, de doi chieu) - trang web that la index.html do build_web.py tao
 with open(outhtml,"w",encoding="utf-8") as f: f.write(HTML)
 print("\nĐã xuất HTML:", outhtml)
 print("\n--- CHENH LECH ---")

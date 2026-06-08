@@ -13,20 +13,24 @@ Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho b�
 ## Cấu trúc
 | File | Vai trò |
 |---|---|
+| **`index.html`** | **Trang web có nút "Tạo 2 đội"** — chọn người có mặt → chia đội ngay trong trình duyệt (không cần server/AI) |
+| `optimizer.js` | Thuật toán chia đội bằng JavaScript (duyệt toàn bộ + Hungarian) |
+| `build_web.py` | Ghép `web_template.html` + `optimizer.js` + điểm (xlsx) → `index.html` |
+| `web_template.html` | Giao diện + bộ vẽ sơ đồ của trang web |
 | `build_xlsx.py` | Tạo template chấm điểm `BangDanhGia_CauThu.xlsx` (⚠️ chạy lại sẽ xoá điểm) |
-| `fill_tuyen.py` | Quy đổi đánh giá (trình độ + vị trí + tốc độ + độ nhiệt) → 9 điểm, ghi vào file; có `OVERRIDES` để chỉnh tay |
-| `team_builder.py` | Chia 2 đội tối ưu + xuất `DoiHinh.html` |
+| `fill_tuyen.py` | Quy đổi đánh giá (trình độ + vị trí + tốc độ + độ nhiệt) → 9 điểm; có `OVERRIDES` để chỉnh tay |
+| `team_builder.py` | Bản Python đối chiếu (in ra console + `preview_static.html`) |
 | `BangDanhGia_CauThu.xlsx` | Bảng chấm điểm (3 người chấm) |
-| `index.html` | Sơ đồ 2 đội + dự đoán + ưu/nhược + chỉ số (trang web) |
 | `HuongDan_ChamDiem.md` | Hướng dẫn cho người chấm |
 
 ## Chạy
 ```bash
 pip install openpyxl numpy scipy
-python3 build_xlsx.py     # tạo template (1 lần)
-python3 fill_tuyen.py     # nhập điểm của người chấm
-python3 team_builder.py   # chia đội + sinh DoiHinh.html
+python3 build_xlsx.py     # tạo template chấm điểm (1 lần)
+python3 fill_tuyen.py     # nhập/cập nhật điểm cầu thủ
+python3 build_web.py      # sinh trang web index.html (mở bằng trình duyệt)
 ```
+Mở `index.html` → tick người có mặt → bấm **Tạo 2 đội**. Mọi tính toán chạy trong trình duyệt.
 
 ## Yêu cầu
-Python 3 · `openpyxl`, `numpy`, `scipy`
+Python 3 · `openpyxl`, `numpy`, `scipy` *(numpy/scipy chỉ cần cho bản Python đối chiếu; trang web không cần gì)*
