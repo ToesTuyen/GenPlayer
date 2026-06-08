@@ -2,6 +2,8 @@
 
 Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho bóng đá sân 7, kèm sơ đồ thi đấu trực quan (HTML) và phân tích ưu/nhược điểm.
 
+🌐 **Xem trực tiếp:** https://toestuyen.github.io/GenPlayer/ *(tự cập nhật mỗi khi push, F5 để xem)*
+
 ## Cách hoạt động
 - Mỗi cầu thủ được chấm **9 tiêu chí** (thang 1–10): **KT** kỹ thuật, **CH** chuyền, **DĐ** dứt điểm, **PN** phòng ngự, **TC** tốc độ, **TL** thể lực, **ĐN** độ nhiệt (chịu chạy), **TD** tư duy, **TM** thủ môn.
 - **6 vị trí**: GK (thủ môn), Thòng (trung vệ), HV (hậu vệ biên), TVtt (tiền vệ trung tâm), TV (tiền vệ cánh), TĐ (tiền đạo).
@@ -15,7 +17,7 @@ Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho b�
 | `fill_tuyen.py` | Quy đổi đánh giá (trình độ + vị trí + tốc độ + độ nhiệt) → 9 điểm, ghi vào file; có `OVERRIDES` để chỉnh tay |
 | `team_builder.py` | Chia 2 đội tối ưu + xuất `DoiHinh.html` |
 | `BangDanhGia_CauThu.xlsx` | Bảng chấm điểm (3 người chấm) |
-| `DoiHinh.html` | Sơ đồ 2 đội + dự đoán + ưu/nhược + chỉ số |
+| `index.html` | Sơ đồ 2 đội + dự đoán + ưu/nhược + chỉ số (trang web) |
 | `HuongDan_ChamDiem.md` | Hướng dẫn cho người chấm |
 
 ## Chạy

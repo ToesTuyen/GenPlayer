@@ -124,11 +124,12 @@ def jersey(kit):
             f'<path d="M70,8 L88,18 L96,40 L80,48 L74,38 L74,12 Z" fill="{sleeve}" stroke="#00000022" stroke-width="1"/>'
             # co ao (trim)
             f'<path d="M34,9 Q50,21 66,9 L62,6 Q50,16 38,6 Z" fill="{trim}"/></svg>')
+POSNAME={"GK":"Thủ môn","Thòng":"Trung vệ","HV":"Hậu vệ","TVtt":"Tiền vệ giữa","TV":"Tiền vệ cánh","TĐ":"Tiền đạo"}
 def chip(pl, label, kit):
     star=' <span class="star">★</span>' if overall[pl]>=8 else ''
     return (f'<div class="player">{jersey(kit)}'
             f'<div class="name">{names[pl]}{star}</div>'
-            f'<div class="sub">{label} · {overall[pl]:.1f}</div></div>')
+            f'<div class="sub">{POSNAME.get(label,label)} · {overall[pl]:.1f}</div></div>')
 def col(chips, gk=False):
     return f'<div class="col{" gkcol" if gk else ""}">{"".join(chips)}</div>'
 def subs_items(bench):
@@ -189,10 +190,10 @@ balintro=("Hai đội chênh tổng chỉ <b>~%.1f%%</b> — gần như <b>50/50
 def metric_rows():
     R=[("Sức mạnh đội hình chính",f"{mA['start']:.1f}",f"{mB['start']:.1f}"),
        ("Tổng cả đội (chính + dự bị)",f"{mA['total']:.1f}",f"{mB['total']:.1f}"),
-       ("Ngôi sao (OVR ≥ 8)",f"{mA['stars']}",f"{mB['stars']}"),
-       ("Thủ môn (fit)",f"{mA['gk']:.1f}",f"{mB['gk']:.1f}"),
-       ("Phòng ngự tuyến dưới (PN)",f"{mA['defPN']:.1f}",f"{mB['defPN']:.1f}"),
-       ("Dứt điểm tuyến trên (DĐ)",f"{mA['attk']:.1f}",f"{mB['attk']:.1f}"),
+       ("Ngôi sao (điểm tổng ≥ 8)",f"{mA['stars']}",f"{mB['stars']}"),
+       ("Thủ môn",f"{mA['gk']:.1f}",f"{mB['gk']:.1f}"),
+       ("Phòng ngự tuyến dưới",f"{mA['defPN']:.1f}",f"{mB['defPN']:.1f}"),
+       ("Dứt điểm tuyến trên",f"{mA['attk']:.1f}",f"{mB['attk']:.1f}"),
        ("Tốc độ trung bình",f"{mA['pace']:.1f}",f"{mB['pace']:.1f}"),
        ("Độ nhiệt (chịu chạy)",f"{mA['heat']:.1f}",f"{mB['heat']:.1f}")]
     return ''.join(f'<tr><td>{n}</td><td>{a}</td><td>{b}</td></tr>' for n,a,b in R)
@@ -274,9 +275,9 @@ HTML=f"""<!doctype html><html lang="vi"><head><meta charset="utf-8">
  <h2>📊 Chỉ số đánh giá</h2>
  <table><tr><th>Chỉ số</th><th>Đội A</th><th>Đội B</th></tr>{metric_rows()}</table>
 </div>
-<div class="foot">Tạo tự động từ bảng đánh giá · sơ đồ 1-3-3 (1 GK · Thòng + 2 HV · TVtt + TV + TĐ)</div>
+<div class="foot">Tạo tự động từ bảng đánh giá · sơ đồ 1-3-3 (1 thủ môn · 1 trung vệ + 2 hậu vệ · tiền vệ giữa + tiền vệ cánh + tiền đạo)</div>
 </body></html>"""
-outhtml="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/DoiHinh.html"
+outhtml="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/index.html"   # index.html -> GitHub Pages hien o URL goc
 with open(outhtml,"w",encoding="utf-8") as f: f.write(HTML)
 print("\nĐã xuất HTML:", outhtml)
 print("\n--- CHENH LECH ---")
