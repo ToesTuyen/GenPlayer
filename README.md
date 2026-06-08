@@ -1,0 +1,30 @@
+# GenPlayer — Chia 2 đội bóng sân 7 cân bằng
+
+Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho bóng đá sân 7, kèm sơ đồ thi đấu trực quan (HTML) và phân tích ưu/nhược điểm.
+
+## Cách hoạt động
+- Mỗi cầu thủ được chấm **9 tiêu chí** (thang 1–10): **KT** kỹ thuật, **CH** chuyền, **DĐ** dứt điểm, **PN** phòng ngự, **TC** tốc độ, **TL** thể lực, **ĐN** độ nhiệt (chịu chạy), **TD** tư duy, **TM** thủ môn.
+- **6 vị trí**: GK (thủ môn), Thòng (trung vệ), HV (hậu vệ biên), TVtt (tiền vệ trung tâm), TV (tiền vệ cánh), TĐ (tiền đạo).
+- Chấm bởi **3 người** (Tuyên/Mạnh/Nam) → lấy trung bình để khách quan.
+- Optimizer **duyệt toàn bộ C(19,9) = 92.378 cách chia**, mỗi đội gán vị trí tối ưu bằng thuật toán Hungarian, chọn cách **cân nhất** (cân: tổng điểm, ngôi sao, phòng ngự, hàng công, tốc độ, độ nhiệt, thủ môn, **cả đội hình chính lẫn dự bị**).
+
+## Cấu trúc
+| File | Vai trò |
+|---|---|
+| `build_xlsx.py` | Tạo template chấm điểm `BangDanhGia_CauThu.xlsx` (⚠️ chạy lại sẽ xoá điểm) |
+| `fill_tuyen.py` | Quy đổi đánh giá (trình độ + vị trí + tốc độ + độ nhiệt) → 9 điểm, ghi vào file; có `OVERRIDES` để chỉnh tay |
+| `team_builder.py` | Chia 2 đội tối ưu + xuất `DoiHinh.html` |
+| `BangDanhGia_CauThu.xlsx` | Bảng chấm điểm (3 người chấm) |
+| `DoiHinh.html` | Sơ đồ 2 đội + dự đoán + ưu/nhược + chỉ số |
+| `HuongDan_ChamDiem.md` | Hướng dẫn cho người chấm |
+
+## Chạy
+```bash
+pip install openpyxl numpy scipy
+python3 build_xlsx.py     # tạo template (1 lần)
+python3 fill_tuyen.py     # nhập điểm của người chấm
+python3 team_builder.py   # chia đội + sinh DoiHinh.html
+```
+
+## Yêu cầu
+Python 3 · `openpyxl`, `numpy`, `scipy`

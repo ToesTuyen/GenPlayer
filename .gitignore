@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Excel lock/temp files
+~$*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+
+# Scratch
+out.txt
