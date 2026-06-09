@@ -1156,20 +1156,14 @@ function showPlayers(){
 // ======== TÀI KHOẢN: GUEST / USER / ADMIN ========
 // guest: chỉ xem. user: chấm điểm cầu thủ (dưới tên mình). admin: thêm/xoá cầu thủ + xoá lượt chấm của user + xem lịch sử.
 let role="guest", isAdmin=false, canEdit=false, sessionName="";
-// Tài khoản thật quản lý trên Firestore (genplayer/config.accounts). Dưới đây chỉ là PHAO CỨU SINH
-// dùng khi mất mạng / DB lỗi để admin còn vào được mà sửa — KHÔNG dùng khi đã đọc được config từ DB.
-const ACCOUNTS={ "12345":{role:"admin",name:"Admin"} };
 function requireAdmin(){ if(isAdmin)return true; openAdminModal(); return false; }
 function requireEdit(){  if(canEdit)return true; openAdminModal(); return false; }
-// mật khẩu -> tài khoản {role,name}. Nguồn chính = Firestore genplayer/config.accounts; ACCOUNTS chỉ là fallback khi DB chưa cấu hình.
-async function verifyPass(pw){
-  let map=ACCOUNTS;
-  if(STATE.cloud&&typeof firebase!=="undefined"){
-    try{const s=await firebase.firestore().collection("genplayer").doc("config").get();
-        const a=s.exists&&s.data().accounts;
-        if(a&&Object.keys(a).length)map=a;}catch(e){console.warn("cfg:",e);}   // DB có -> dùng hẳn DB
-  }
-  return map[String(pw)]||null;        // {role,name} hoặc null
+// BẮT BUỘC đọc tài khoản từ Firestore genplayer/config.accounts — KHÔNG có fallback cứng.
+// Trả về map {pw:{role,name}}; trả null nếu không kết nối / đọc được DB (sẽ chặn đăng nhập).
+async function fetchAccounts(){
+  if(!(STATE.cloud&&typeof firebase!=="undefined"))return null;
+  try{const s=await firebase.firestore().collection("genplayer").doc("config").get();
+      return (s.exists&&s.data().accounts)?s.data().accounts:{};}catch(e){console.warn("cfg:",e);return null;}
 }
 function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   document.body.classList.toggle("is-admin",isAdmin);
@@ -1193,12 +1187,14 @@ function openAdminModal(){
 }
 function closeAdminModal(){$("adminModal").classList.remove("on");}
 async function adminLoginOk(){
-  const pw=($("adm-input").value||""), btn=$("admBtn");
+  const pw=($("adm-input").value||""), btn=$("admBtn"), err=$("adm-err");
   if(btn){btn.disabled=true;btn.textContent="Đang kiểm tra…";}
-  let acc=null; try{acc=await verifyPass(pw);}catch(e){}
+  let map=null; try{map=await fetchAccounts();}catch(e){}
   if(btn){btn.disabled=false;btn.textContent="Đăng nhập";}
-  if(!acc){$("adm-err").classList.add("show");$("adm-input").focus();$("adm-input").select();return;}
-  role=acc.role; isAdmin=(acc.role==="admin"); canEdit=true; sessionName=acc.name; rememberEditor(acc.name);  // mật khẩu -> ra quyền + tên hiển thị; sửa ghi theo tên này
+  if(map===null){ err.textContent="Không kết nối được dữ liệu tài khoản (cần mạng). Thử lại."; err.classList.add("show"); return; }
+  const acc=map[String(pw)]||null;
+  if(!acc){ err.textContent="Sai mật khẩu."; err.classList.add("show"); $("adm-input").focus();$("adm-input").select(); return; }
+  role=acc.role; isAdmin=(acc.role==="admin"); canEdit=true; sessionName=acc.name; rememberEditor(acc.name);  // mật khẩu -> ra quyền + tên (đọc từ Firestore); sửa ghi theo tên này
   closeAdminModal(); applyRoleUI();
   renderPlayersCards(); if($("playerModal").classList.contains("on"))renderPlayerProfile();
 }
