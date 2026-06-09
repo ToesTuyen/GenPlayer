@@ -667,6 +667,20 @@ const isStar=p=>ov(p)>=STAR_MIN;
 const $=id=>document.getElementById(id);
 function initials(n){const p=(n||"").trim().split(/\s+/);return((p[0]&&p[0][0]||"")+(p.length>1?p[p.length-1][0]:"")).toUpperCase();}
 function avColor(n){let h=0;for(const c of (n||""))h=(h*31+c.charCodeAt(0))%360;return`hsl(${h} 52% 52%)`;}
+// ---- ảnh đại diện cầu thủ (ảnh trong assets/, map theo tên không dấu) ----
+function normName(s){return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[đĐ]/g,"d").toLowerCase().replace(/\s+/g," ").trim();}
+const PHOTO_BY_NORM={
+  "huy hoang":"assets/ava/Hoang Huy.jpg",
+  "hung":"assets/ava/Hung.jpg",
+  "manh khac":"assets/ava/Khac_Manh.jpg",
+  "nguyen khac trong":"assets/ava/Khac_Trong.jpg",
+  "nguyen van quyen":"assets/ava/Quyen.jpg",
+  "quyet nguyen":"assets/ava/Quyet.jpg",
+  "nguyen danh tuyen":"assets/ava/Tuyen.jpg",
+};
+function photoOf(n){return PHOTO_BY_NORM[normName(n)]||null;}
+function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${encodeURI(ph)}');background-size:cover;background-position:center top`:`background:${avColor(n)}`;}
+function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
 let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], cloud:false, docRef:null};
@@ -1123,7 +1137,7 @@ function renderPlayersCards(){
       <div class="stripe"></div>
       <div class="pc-top"><div class="pc-badge">${POSAB[pos]||""}${star?' <span class="pc-star">★</span>':''}</div>
         <div class="pc-ov"><div class="n">${o}</div><div class="l">Điểm</div></div></div>
-      <div class="pc-avatar" style="background:${c}">${initials(p.n)}</div>
+      <div class="pc-avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</div>
       <div class="pc-mid"><div class="pc-name">${p.n}</div><div class="pc-pos">${POS_LABEL[pos]}</div></div>
       <div class="pc-foot">
         <div><div class="sv">${p.DD}</div><div class="sk">Dứt điểm</div></div>
@@ -1142,12 +1156,9 @@ function showPlayers(){
 // ======== TÀI KHOẢN: GUEST / USER / ADMIN ========
 // guest: chỉ xem. user: chấm điểm cầu thủ (dưới tên mình). admin: thêm/xoá cầu thủ + xoá lượt chấm của user + xem lịch sử.
 let role="guest", isAdmin=false, canEdit=false, sessionName="";
-const ACCOUNTS={                       // mật khẩu -> { quyền, tên hiển thị }
-  "12345":{role:"admin",name:"Admin"},
-  "1111":{role:"user",name:"user1"},
-  "2222":{role:"user",name:"user2"},
-  "3333":{role:"user",name:"user3"},
-};
+// Tài khoản thật quản lý trên Firestore (genplayer/config.accounts). Dưới đây chỉ là PHAO CỨU SINH
+// dùng khi mất mạng / DB lỗi để admin còn vào được mà sửa — KHÔNG dùng khi đã đọc được config từ DB.
+const ACCOUNTS={ "12345":{role:"admin",name:"Admin"} };
 function requireAdmin(){ if(isAdmin)return true; openAdminModal(); return false; }
 function requireEdit(){  if(canEdit)return true; openAdminModal(); return false; }
 // mật khẩu -> tài khoản {role,name}. Nguồn chính = Firestore genplayer/config.accounts; ACCOUNTS chỉ là fallback khi DB chưa cấu hình.
@@ -1306,11 +1317,26 @@ function evalBlock(p){
   const head=isGK?apt.find(a=>a.k==="GK"):outfield[0];
   const second=isGK?outfield[0]:outfield[1];
   const arch=ARCH[head.k];
-  const subline=second&&second.v>=5?`${arch[1]} Cũng khá ở khâu ${second.name.toLowerCase()}.`:arch[1];
+  const overall=ov(p);                 // điểm tổng 0–10 (8 chỉ số sân) -> xét trình độ chung
+  let title, desc;
+  if(isGK){
+    const tm=g("TM");
+    title=tm>=7?"Người gác đền":"Thủ môn";
+    desc=tm>=7?arch[1]:(tm>=4?"Trấn giữ khung thành, bắt tạm ổn.":"Đứng khung thành nhưng phản xạ còn yếu, cần luyện thêm.");
+  }else if(overall<3.5){               // yếu gần như mọi mặt
+    title="Tân binh";
+    desc="Chỉ số còn thấp ở hầu hết các mặt — cần tập luyện thêm."+(head.v>=4?` Tạm khá nhất ở khâu ${head.name.toLowerCase()}.`:"");
+  }else if(overall<5.5){               // trung bình
+    title=`Thiên hướng ${head.name.toLowerCase()}`;
+    desc=`Khá nhất ở khâu ${head.name.toLowerCase()}, cần lên đều các mặt còn lại.`;
+  }else{                               // khá/tốt -> mới phong danh hiệu
+    title=arch[0];
+    desc=second&&second.v>=5?`${arch[1]} Cũng khá ở khâu ${second.name.toLowerCase()}.`:arch[1];
+  }
   const aptRow=a=>{const c=evRate(a.v)[1],hi=a===head;return `<div class="ev-apt${hi?" hi":""}"><span class="ev-apt-n">${a.name}</span><div class="ev-bar"><i style="width:${Math.round(a.v*10)}%;background:${c}"></i></div><span class="ev-apt-v">${a.v.toFixed(1)}</span></div>`;};
   return `<div class="pm-eval">
     <div class="pm-sec">Đánh giá chỉ số</div>
-    <div class="ev-arch"><div class="ev-arch-name">${arch[0]}</div><div class="ev-arch-desc">${subline}</div></div>
+    <div class="ev-arch"><div class="ev-arch-name">${title}</div><div class="ev-arch-desc">${desc}</div></div>
     <div class="ev-apts">${apt.slice().sort((a,b)=>b.v-a.v).map(aptRow).join("")}</div>
   </div>`;
 }
@@ -1325,7 +1351,7 @@ function renderPlayerProfile(){
   $("pmEdit").style.display=canEdit?"":"none";
   $("pmBody").innerHTML=`
     <div class="pm-head">
-      <div class="pm-ava" style="background:${c}">${initials(p.n)}</div>
+      <div class="pm-ava" style="${avaStyle(p.n)}">${avaInner(p.n)}</div>
       <div>
         <div class="pm-h-name">${p.n}${star?' <span class="pc-star pm-h-star">★</span>':''}</div>
         <div class="pm-h-sub"><span>${POS_LABEL[pos]}</span>·<span>Điểm tổng <span class="pm-h-ov">${o}</span>/10</span>${ratersTag}</div>
