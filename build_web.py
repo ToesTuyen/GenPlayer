@@ -1,38 +1,62 @@
 # -*- coding: utf-8 -*-
-"""Ghep web_template.html + optimizer.js + diem cau thu (tu xlsx) -> index.html (trang co nut bam)."""
-import json, os
-from openpyxl import load_workbook
+"""Ghep src/web_template.html + src/optimizer.js + diem cau thu (doc tu Firestore DB) -> index.html.
 
-BASE="/Users/tuyennd/Documents/VN_NAMI/Tools/GenPlayer/"
+Nguon diem cau thu = Firestore (collection 'genplayer' / doc 'data', field 'players').
+Day la noi web app ghi khi sua diem, nen luon la du lieu moi nhat. KHONG doc tu file/xlsx.
 
-# 1) doc diem 20 cau thu tu xlsx
-wb=load_workbook(BASE+"BangDanhGia_CauThu.xlsx",data_only=True); ws=wb["ChamDiem"]
-HR=next(r for r in range(1,40) if ws.cell(r,1).value=="STT"); FIRST=HR+1
-players=[]
-for idx in range(20):
-    r=FIRST+3*idx
-    nm=ws.cell(r,2).value
-    KT,CH,DD,PN,TC,TL,DN,TD,TM=[ws.cell(r,c).value for c in range(8,17)]
-    players.append({"n":nm,"KT":KT,"CH":CH,"DD":DD,"PN":PN,
-                    "TC":TC,"TL":TL,"DN":DN,"TD":TD,"TM":TM})
+Cau truc: src/ = nguon (template + optimizer); assets/ = anh; index.html = output o root (GitHub Pages).
+"""
+import json, os, sys, urllib.request
+
+ROOT=os.path.dirname(os.path.abspath(__file__))+"/"   # thu muc chua build_web.py (= root repo)
+SRC=ROOT+"src/"
+PROJECT="ai-gen-aa66f"
+DOC_URL=("https://firestore.googleapis.com/v1/projects/%s/databases/(default)"
+         "/documents/genplayer/data" % PROJECT)
+
+# ---- Firestore REST value -> python ----
+def fsval(v):
+    if "integerValue" in v: return int(v["integerValue"])
+    if "doubleValue"  in v: return v["doubleValue"]
+    if "booleanValue" in v: return v["booleanValue"]
+    if "stringValue"  in v: return v["stringValue"]
+    if "nullValue"    in v: return None
+    if "arrayValue"   in v: return [fsval(x) for x in v["arrayValue"].get("values",[])]
+    if "mapValue"     in v: return {k:fsval(x) for k,x in v["mapValue"].get("fields",{}).items()}
+    return None
+
+def players_from_db():
+    req=urllib.request.Request(DOC_URL,headers={"User-Agent":"genplayer-build"})
+    with urllib.request.urlopen(req,timeout=15) as r:
+        doc=json.load(r)
+    pl=doc.get("fields",{}).get("players")
+    return fsval(pl) if pl else []
+
+# 1) doc diem 20 cau thu tu DB (Firestore)
+try:
+    players=players_from_db()
+    if not players: raise ValueError("DB tra ve rong")
+except Exception as e:
+    sys.exit("❌ Khong doc duoc diem tu Firestore (%s). Kiem tra mang/DB roi chay lai." % e)
 players_js=json.dumps(players,ensure_ascii=False)
 
-# 2) doc optimizer.js, bo phan test node
-opt=open(BASE+"optimizer.js",encoding="utf-8").read()
+# 2) doc src/optimizer.js, bo phan test node
+opt=open(SRC+"optimizer.js",encoding="utf-8").read()
 opt=opt.split("// ===== Node test =====")[0].rstrip()
 
 # 3) firebase config (neu co file firebase_config.json) -> bat dong bo real-time
 fb="null"
-if os.path.exists(BASE+"firebase_config.json"):
-    fb=open(BASE+"firebase_config.json",encoding="utf-8").read().strip()
+if os.path.exists(ROOT+"firebase_config.json"):
+    fb=open(ROOT+"firebase_config.json",encoding="utf-8").read().strip()
 
-# 4) nhet vao template
-tpl=open(BASE+"web_template.html",encoding="utf-8").read()
+# 4) nhet vao src/web_template.html
+tpl=open(SRC+"web_template.html",encoding="utf-8").read()
 html=(tpl.replace("/*__OPTIMIZER__*/",opt)
          .replace("/*__PLAYERS__*/",players_js)
          .replace("/*__FIREBASE__*/",fb))
 
-open(BASE+"index.html","w",encoding="utf-8").write(html)
-print("Đã tạo index.html ·",len(players),"cầu thủ · Firebase:",("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(html),"ký tự")
+open(ROOT+"index.html","w",encoding="utf-8").write(html)
+print("Đã tạo index.html ·",len(players),"cầu thủ (nguồn: Firestore DB) · Firebase:",
+      ("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(html),"ký tự")
 assert "/*__OPTIMIZER__*/" not in html and "/*__PLAYERS__*/" not in html and "/*__FIREBASE__*/" not in html, "Còn placeholder!"
 print("OK: không còn placeholder")

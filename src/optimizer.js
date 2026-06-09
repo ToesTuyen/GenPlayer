@@ -2,6 +2,7 @@
 // Port tu team_builder.py
 (function(global){
   const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // 1-3-3
+  const STAR_MIN = 8;   // ⭐ Ngôi sao = overall >= ngưỡng này (PHẢI khớp STAR_MIN trong web_template.html)
 
   function fit(s, p){
     const KT=s.KT,CH=s.CH,DD=s.DD,PN=s.PN,TC=s.TC,TL=s.TL,DN=s.DN,TD=s.TD,TM=s.TM;
@@ -72,7 +73,7 @@
       atk:   mean(fronts,s=>s.DD),
       pace:  mean(starters,s=>s.TC),
       heat:  mean(starters,s=>s.DN),
-      stars: team.filter(i=>ctx.overall[i]>=8).length,
+      stars: team.filter(i=>ctx.overall[i]>=STAR_MIN).length,
       total: startFit+benchOv,
     };
   }
