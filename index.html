@@ -1,6 +1,8 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GenPlayer — Chia đội bóng sân 7</title>
+<title>FC Haha — Chia đội bóng sân 7</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
 <style>
 :root{
   --bg:#0a0e1a; --bg2:#070a12; --surface:#141b2e; --surface2:#1a2236; --surface3:#222c45;
@@ -28,10 +30,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;heigh
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .ab-back:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 .ab-title{font-weight:800;font-size:17px;letter-spacing:-.01em}
-.ab-admin{flex:0 0 auto;border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.ab-admin{flex:0 0 auto;margin-left:auto;border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
 .ab-admin:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);background:rgba(34,224,122,.12)}
-.ab-brand{color:var(--brand)}
+.ab-brand{color:var(--brand);display:inline-flex;align-items:center;gap:7px}
+.ab-logo{height:38px;width:auto;vertical-align:middle}
 /* ===== dashboard layout ===== */
 .dash-top{display:grid;grid-template-columns:1.62fr 1fr;gap:16px}
 .dash-main{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;margin-top:16px;align-items:start}
@@ -458,18 +461,20 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-name{font-weight:800;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
+.rk-wrap{max-width:680px;margin:0 auto;padding:4px 0 24px}
+.rk-pos{font-size:13px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
+.rk-pos:first-child{margin-top:4px}
 </style></head><body>
 
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
-  <div class="ab-title" id="appTitle"><span class="ab-brand">⚽ GenPlayer</span></div>
-  <span id="cloud" style="margin-left:auto;font-size:12px;font-weight:700"></span>
+  <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()">🔒 Admin</button>
 </header>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
-  <div class="page-banner"><img src="assets/banner.jpg" alt="GenPlayer" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
+  <div class="page-banner"><img src="assets/banner.jpg" alt="FC Haha" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
   <div class="dash-top">
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
@@ -478,7 +483,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="ap-grid">
         <button class="ap-btn" onclick="show('screen-create')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tạo đội</span></button>
         <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-week')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg><span>Trận tới</span></button>
+        <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
       </div>
     </section>
@@ -493,6 +498,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div id="spotlight"></div>
     </aside>
   </div>
+</div>
+
+<!-- ====== XEP HANG CAU THU (theo vị trí đá chính) ====== -->
+<div id="screen-rank" class="screen">
+  <div id="rank2-body" class="rk-wrap"></div>
 </div>
 
 <!-- ====== TAO DOI ====== -->
@@ -747,11 +757,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     const overall=players.map(overallOf);
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
-    const PRI=2.5, SEC=1.0, OFF=3.0;
+    const PRI=2.5, SEC=1.0, OFF=3.0, GKLOCK=50;
+    const isGK=players.map(p=>p.pos==="GK");
+    const lockGK=isGK.filter(Boolean).length>=2;            // co >=2 thu mon co dinh -> khoa khung gon cho ho, khong xet nguoi khac (du TM cao)
     const fitPen=fitT.map((row,i)=>{
       const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
-      if(!pr) return row;                                   // chua chon vi tri -> trung tinh
       return row.map((v,c)=>{ const sl=SLOTS[c];
+        if(lockGK && sl==="GK") return v + (pr==="GK"?GKLOCK:-GKLOCK);   // gon chi danh cho thu mon co dinh
+        if(!pr) return v;                                   // chua chon vi tri -> trung tinh
         return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)); });
     });
     const TM=players.map(p=>p.TM);
@@ -772,10 +785,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const A=baseA.concat(pick);
       const inA=new Array(N).fill(false); A.forEach(i=>inA[i]=true);
       const B=all.filter(i=>!inA[i]);
-      // moi doi can it nhat 1 thu mon
+      // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
+      const okGK=i=>lockGK?isGK[i]:TM[i]>0;
       let okA=false,okB=false;
-      for(const i of A) if(TM[i]>0){okA=true;break;}
-      for(const i of B) if(TM[i]>0){okB=true;break;}
+      for(const i of A) if(okGK(i)){okA=true;break;}
+      for(const i of B) if(okGK(i)){okB=true;break;}
       if(!okA||!okB) return;
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
       const J = 3.0*Math.abs(eA.stars-eB.stars)
@@ -797,7 +811,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
 <script>
-const DEFAULT_PLAYERS = [{"TM": 0, "KT": 5, "TL": 5, "lp": false, "PN": 5, "TD": 6, "n": "Cris Dao", "ratings": {"(khởi tạo)": {"KT": 5, "ts": null, "TL": 5, "TM": 0, "CH": 6, "DN": 5, "DD": 7, "TD": 6, "TC": 5, "PN": 5}, "admin": {"KT": 5, "ts": "9/6/2026 15:52", "TL": 5, "TM": 0, "TD": 6, "TC": 5, "at": 1780995120971, "PN": 5, "DN": 5, "CH": 6, "byAdmin": true, "DD": 7}}, "TC": 5, "DD": 7, "DN": 5, "CH": 6}, {"TL": 5, "KT": 4, "TM": 0, "CH": 4, "DN": 6, "DD": 5, "TC": 5, "ratings": {"admin": {"TM": 0, "KT": 4, "ts": "9/6/2026 15:52", "TL": 5, "at": 1780995120971, "PN": 4, "TD": 5, "TC": 5, "DD": 5, "CH": 4, "DN": 6, "byAdmin": true}, "(khởi tạo)": {"DN": 6, "CH": 4, "DD": 5, "TD": 5, "TC": 5, "PN": 4, "ts": null, "KT": 4, "TL": 5, "TM": 0}}, "n": "Doan Ha", "TD": 5, "PN": 4, "lp": false}, {"DD": 4, "DN": 5, "CH": 4, "PN": 5, "lp": true, "TD": 5, "ratings": {"(khởi tạo)": {"TM": 0, "TL": 5, "KT": 4, "ts": null, "PN": 5, "TC": 5, "TD": 5, "DD": 4, "CH": 4, "DN": 5}, "admin": {"byAdmin": true, "CH": 4, "DN": 5, "DD": 4, "TC": 5, "TD": 5, "at": 1780995120972, "PN": 5, "TL": 5, "KT": 4, "ts": "9/6/2026 15:52", "TM": 0}}, "n": "Duy Hùng", "TC": 5, "TM": 0, "KT": 4, "TL": 5}, {"TL": 9, "KT": 6, "TM": 0, "TC": 7, "TD": 6, "ratings": {"admin": {"KT": 6, "ts": "9/6/2026 15:52", "TL": 9, "TM": 0, "TD": 6, "TC": 7, "at": 1780995120971, "PN": 7, "DN": 9, "CH": 6, "byAdmin": true, "DD": 8}, "(khởi tạo)": {"DN": 9, "CH": 6, "DD": 8, "TD": 6, "TC": 7, "PN": 7, "KT": 6, "ts": null, "TL": 9, "TM": 0}}, "n": "Hoàng Duy", "PN": 7, "lp": false, "CH": 6, "DN": 9, "DD": 8}, {"pos2": ["GK"], "KT": 7, "TL": 7, "DD": 7, "PN": 4, "ratings": {"(khởi tạo)": {"TC": 7, "TD": 7, "PN": 4, "CH": 7, "DN": 7, "DD": 7, "TL": 7, "ts": null, "KT": 7, "TM": 9}, "admin": {"TM": 9, "TL": 7, "ts": "9/6/2026 15:52", "KT": 7, "DD": 7, "byAdmin": true, "DN": 7, "CH": 7, "PN": 4, "at": 1780995120971, "TC": 7, "TD": 7}}, "TC": 7, "TM": 9, "pos": "TĐ", "DN": 7, "CH": 7, "n": "Hoàng Thiên", "TD": 7}, {"lp": false, "PN": 7, "TC": 4, "TD": 7, "ratings": {"admin": {"byAdmin": true, "CH": 7, "DN": 6, "DD": 5, "TC": 4, "TD": 7, "at": 1780995120971, "PN": 7, "TL": 5, "KT": 5, "ts": "9/6/2026 15:52", "TM": 0}, "(khởi tạo)": {"DD": 5, "DN": 6, "CH": 7, "PN": 7, "TC": 4, "TD": 7, "TM": 0, "TL": 5, "ts": null, "KT": 5}}, "n": "Hưng", "DD": 5, "CH": 7, "DN": 6, "TM": 0, "TL": 5, "KT": 5}, {"TD": 6.4, "n": "Huy Hoàng", "lp": false, "DN": 7.4, "CH": 0.4, "TM": 0, "pos": "Thòng", "ratings": {"user1": {"TM": 0, "KT": 0, "ts": "9/6/2026 16:20", "TL": 7, "DD": 8, "DN": 7, "CH": 0, "PN": 7, "at": 1780996823978, "TD": 6, "TC": 7}}, "TC": 7.4, "PN": 7.4, "DD": 8.4, "KT": 0.4, "TL": 7.4, "pos2": []}, {"TM": 0, "KT": 5, "TL": 5, "DD": 6, "DN": 5, "CH": 5, "PN": 5, "lp": false, "n": "Mạnh Khắc", "TD": 6, "ratings": {"admin": {"CH": 5, "DN": 5, "byAdmin": true, "DD": 6, "TD": 6, "TC": 4, "at": 1780995120971, "PN": 5, "KT": 5, "ts": "9/6/2026 15:52", "TL": 5, "TM": 0}, "(khởi tạo)": {"KT": 5, "ts": null, "TL": 5, "TM": 0, "TD": 6, "TC": 4, "PN": 5, "DN": 5, "CH": 5, "DD": 6}}, "TC": 4}, {"KT": 5, "TL": 6, "TM": 5, "CH": 6, "DN": 8, "DD": 4, "ratings": {"admin": {"ts": "9/6/2026 15:52", "KT": 5, "TL": 6, "TM": 5, "DN": 8, "CH": 6, "byAdmin": true, "DD": 4, "TD": 6, "TC": 8, "at": 1780995120971, "PN": 7}, "(khởi tạo)": {"TM": 5, "KT": 5, "ts": null, "TL": 6, "PN": 7, "TD": 6, "TC": 8, "DD": 4, "DN": 8, "CH": 6}}, "n": "Mạnh Tiến", "TD": 6, "TC": 8, "lp": true, "PN": 7}, {"TM": 0, "KT": 7, "TL": 8, "DD": 6, "CH": 7, "DN": 8, "PN": 9, "lp": false, "ratings": {"(khởi tạo)": {"TM": 0, "KT": 7, "ts": null, "TL": 8, "PN": 9, "TD": 8, "TC": 8, "DD": 6, "DN": 8, "CH": 7}, "admin": {"PN": 9, "at": 1780995120971, "TC": 8, "TD": 8, "DD": 6, "byAdmin": true, "CH": 7, "DN": 8, "TM": 0, "TL": 8, "KT": 7, "ts": "9/6/2026 15:52"}}, "TD": 8, "n": "Nam Khắc", "TC": 8}, {"TM": 0, "TL": 8, "KT": 7, "DD": 6, "CH": 8, "DN": 8, "lp": false, "PN": 8, "TC": 8, "n": "Nguyễn Danh Tuyên", "ratings": {"admin": {"TM": 0, "ts": "9/6/2026 15:52", "KT": 7, "TL": 8, "DD": 6, "CH": 8, "DN": 8, "byAdmin": true, "PN": 8, "at": 1780995120971, "TD": 8, "TC": 8}, "(khởi tạo)": {"TD": 8, "TC": 8, "PN": 8, "DN": 8, "CH": 8, "DD": 6, "ts": null, "KT": 7, "TL": 8, "TM": 0}}, "TD": 8}, {"TL": 6, "KT": 5, "TM": 5, "DN": 8, "CH": 6, "DD": 4, "TC": 4, "n": "Nguyễn Khắc Trọng", "TD": 6, "ratings": {"admin": {"TM": 5, "TL": 6, "ts": "9/6/2026 15:52", "KT": 5, "DD": 4, "byAdmin": true, "DN": 8, "CH": 6, "at": 1780995120971, "PN": 7, "TC": 4, "TD": 6}, "(khởi tạo)": {"KT": 5, "ts": null, "TL": 6, "TM": 5, "DN": 8, "CH": 6, "DD": 4, "TD": 6, "TC": 4, "PN": 7}}, "lp": false, "PN": 7}, {"CH": 4, "DN": 9, "lp": false, "n": "Nguyen Quy Bong", "TD": 9, "pos": "TĐ", "TM": 0, "DD": 9, "PN": 8, "TC": 9, "ratings": {"admin": {"TM": 0, "TL": 9, "ts": "9/6/2026 15:52", "KT": 4, "DD": 9, "byAdmin": true, "CH": 4, "DN": 9, "PN": 8, "at": 1780995120971, "TC": 9, "TD": 9}, "(khởi tạo)": {"TC": 9, "TD": 9, "PN": 8, "DN": 9, "CH": 4, "DD": 9, "TL": 9, "ts": null, "KT": 4, "TM": 0}}, "pos2": [], "TL": 9, "KT": 4}, {"PN": 5, "lp": false, "TC": 3, "TD": 5, "n": "Nguyễn Văn Quyền", "ratings": {"(khởi tạo)": {"TM": 0, "ts": null, "KT": 4, "TL": 5, "PN": 5, "TD": 5, "TC": 3, "DD": 3, "DN": 3, "CH": 5}, "admin": {"CH": 5, "DN": 3, "byAdmin": true, "DD": 3, "TD": 5, "TC": 3, "PN": 5, "at": 1780995120972, "ts": "9/6/2026 15:52", "KT": 4, "TL": 5, "TM": 0}}, "DD": 3, "DN": 3, "CH": 5, "TM": 0, "TL": 5, "KT": 4}, {"n": "Quang Minh", "ratings": {"admin": {"DD": 5, "CH": 6, "DN": 8, "byAdmin": true, "at": 1780995120971, "PN": 6, "TD": 6, "TC": 8, "TM": 5, "KT": 6, "ts": "9/6/2026 15:52", "TL": 6}, "(khởi tạo)": {"TM": 5, "ts": null, "KT": 6, "TL": 6, "DD": 5, "DN": 8, "CH": 6, "PN": 6, "TD": 6, "TC": 8}}, "TD": 6, "TC": 8, "PN": 6, "lp": true, "DN": 8, "CH": 6, "DD": 5, "KT": 6, "TL": 6, "TM": 5}, {"PN": 5, "lp": true, "TC": 3, "n": "Quý Tàu", "ratings": {"(khởi tạo)": {"KT": 4, "ts": null, "TL": 5, "TM": 0, "TD": 5, "TC": 3, "PN": 5, "CH": 5, "DN": 3, "DD": 3}, "admin": {"TM": 0, "ts": "9/6/2026 15:52", "KT": 4, "TL": 5, "DD": 3, "DN": 3, "CH": 5, "byAdmin": true, "PN": 5, "at": 1780995120972, "TD": 5, "TC": 3}}, "TD": 5, "DD": 3, "CH": 5, "DN": 3, "TM": 0, "TL": 5, "KT": 4}, {"DN": 8, "CH": 7, "DD": 7, "TC": 8, "TD": 8, "ratings": {"admin": {"TM": 0, "TL": 8, "KT": 7, "ts": "9/6/2026 15:52", "DD": 7, "byAdmin": true, "DN": 8, "CH": 7, "PN": 7, "at": 1780995120971, "TC": 8, "TD": 8}, "(khởi tạo)": {"TL": 8, "ts": null, "KT": 7, "TM": 0, "TC": 8, "TD": 8, "PN": 7, "CH": 7, "DN": 8, "DD": 7}}, "n": "Quyết Nguyễn", "PN": 7, "lp": false, "TL": 8, "KT": 7, "TM": 0}, {"TM": 0, "TL": 6, "KT": 6, "lp": true, "PN": 6, "TC": 4, "n": "Trịnh Mạnh", "TD": 6, "ratings": {"admin": {"CH": 6, "DN": 8, "byAdmin": true, "DD": 5, "TD": 6, "TC": 4, "PN": 6, "at": 1780995120971, "ts": "9/6/2026 15:52", "KT": 6, "TL": 6, "TM": 0}, "(khởi tạo)": {"PN": 6, "TD": 6, "TC": 4, "DD": 5, "DN": 8, "CH": 6, "TM": 0, "KT": 6, "ts": null, "TL": 6}}, "DD": 5, "DN": 8, "CH": 6}, {"lp": false, "PN": 7, "n": "Trịnh Tuấn Anh", "ratings": {"(khởi tạo)": {"PN": 7, "TC": 8, "TD": 7, "DD": 7, "DN": 8, "CH": 7, "TM": 0, "TL": 8, "ts": null, "KT": 7}, "admin": {"DD": 7, "CH": 7, "DN": 8, "byAdmin": true, "at": 1780995120971, "PN": 7, "TD": 7, "TC": 8, "TM": 0, "ts": "9/6/2026 15:52", "KT": 7, "TL": 8}}, "TD": 7, "TC": 8, "DD": 7, "CH": 7, "DN": 8, "TM": 0, "KT": 7, "TL": 8}, {"pos2": [], "KT": 9, "TL": 9, "DD": 9, "PN": 9, "ratings": {"(khởi tạo)": {"TM": 0, "ts": null, "KT": 9, "TL": 9, "DD": 9, "DN": 8, "CH": 8, "PN": 9, "TD": 9, "TC": 4}}, "TC": 4, "TM": 0, "pos": "TĐ", "DN": 8, "CH": 8, "lp": false, "TD": 9, "n": "Văn Thanh"}];
+const DEFAULT_PLAYERS = [{"lp": false, "pos2": ["TV"], "n": "Cris Dao", "CH": 6, "TM": 0, "pos": "HV", "TC": 5, "DD": 7, "PN": 5, "desc": "Có chân dứt điểm (7) và tư duy khá, nhưng phòng ngự còn nhẹ. Đẩy lên cánh hoặc tiền vệ sẽ hợp hơn.", "TD": 6, "DN": 5, "ratings": {"admin": {"TD": 6, "byAdmin": true, "DN": 5, "CH": 6, "PN": 5, "at": 1780995120971, "ts": "9/6/2026 15:52", "KT": 5, "DD": 7, "TL": 5, "TM": 0, "TC": 5}, "(khởi tạo)": {"TC": 5, "TM": 0, "DD": 7, "TL": 5, "KT": 5, "ts": null, "PN": 5, "DN": 5, "CH": 6, "TD": 6}, "Admin": {"TD": 6, "byAdmin": true, "DN": 5, "CH": 6, "at": 1781001123466, "PN": 5, "ts": "9/6/2026 17:32", "KT": 5, "TL": 5, "DD": 7, "TM": 0, "TC": 5}}, "KT": 5, "TL": 5}, {"PN": 4, "TD": 5, "desc": "Tiền đạo còn thô, chuyền và dứt điểm tầm 6. Có nhiệt nhưng cần mài thêm kỹ thuật và dứt điểm.", "DN": 6, "ratings": {"(khởi tạo)": {"TC": 5, "TM": 0, "TL": 5, "DD": 5, "KT": 4, "ts": null, "PN": 4, "DN": 6, "CH": 4, "TD": 5}, "Admin": {"TD": 5, "byAdmin": true, "DN": 6, "CH": 6, "PN": 4, "at": 1781001027231, "ts": "9/6/2026 17:30", "KT": 5, "TL": 5, "DD": 6, "TM": 0, "TC": 5}, "admin": {"ts": "9/6/2026 15:52", "at": 1780995120971, "PN": 4, "DN": 6, "CH": 4, "TD": 5, "byAdmin": true, "TC": 5, "TM": 0, "TL": 5, "DD": 5, "KT": 4}}, "KT": 5, "TL": 5, "pos2": [], "lp": false, "n": "Doan Ha", "CH": 6, "TM": 0, "TC": 5, "pos": "TĐ", "DD": 6}, {"n": "Duy Hùng", "pos2": ["TV"], "lp": true, "CH": 5, "TC": 5, "pos": "HV", "TM": 0, "DD": 5, "PN": 4, "DN": 5, "TD": 5, "desc": "Tân binh, chỉ số còn thấp đều (4–5). Cần tập thêm nhiều, nhất là kỹ thuật và phòng ngự.", "ratings": {"admin": {"ts": "9/6/2026 15:52", "PN": 5, "at": 1780995120972, "DN": 5, "CH": 4, "TD": 5, "byAdmin": true, "TC": 5, "TM": 0, "TL": 5, "DD": 4, "KT": 4}, "(khởi tạo)": {"TM": 0, "TC": 5, "KT": 4, "DD": 4, "TL": 5, "PN": 5, "ts": null, "TD": 5, "CH": 4, "DN": 5}, "Admin": {"ts": "9/6/2026 17:18", "PN": 4, "at": 1781000338373, "CH": 5, "DN": 5, "byAdmin": true, "TD": 5, "TC": 5, "TM": 0, "TL": 5, "DD": 5, "KT": 4}}, "TL": 5, "KT": 4}, {"pos2": ["Thòng", "TV"], "lp": false, "n": "Hoàng Duy", "CH": 5, "TM": 0, "TC": 8, "pos": "HV", "DD": 5, "PN": 7, "TD": 6, "desc": "Máy chạy không biết mệt — thể lực, năng nổ đều 9, tốc độ 8. Lên công về thủ cả trận, càn nát cánh.", "DN": 9, "ratings": {"admin": {"KT": 6, "DD": 8, "TL": 9, "TM": 0, "TC": 7, "byAdmin": true, "TD": 6, "CH": 6, "DN": 9, "at": 1780995120971, "PN": 7, "ts": "9/6/2026 15:52"}, "Admin": {"TM": 0, "TC": 8, "KT": 5, "TL": 9, "DD": 5, "at": 1780999830931, "PN": 7, "ts": "9/6/2026 17:10", "byAdmin": true, "TD": 6, "CH": 5, "DN": 9}, "(khởi tạo)": {"TM": 0, "TC": 7, "KT": 6, "DD": 8, "TL": 9, "PN": 7, "ts": null, "TD": 6, "CH": 6, "DN": 9}}, "KT": 5, "TL": 9}, {"pos": "TĐ", "TC": 7, "TM": 9, "DD": 8, "n": "Hoàng Thiên", "pos2": ["GK"], "CH": 8, "ratings": {"(khởi tạo)": {"DN": 7, "CH": 7, "TD": 7, "ts": null, "PN": 4, "DD": 7, "TL": 7, "KT": 7, "TC": 7, "TM": 9}, "Admin": {"ts": "9/6/2026 17:37", "at": 1781001471088, "PN": 6, "DN": 7, "CH": 8, "TD": 8, "byAdmin": true, "TC": 7, "TM": 9, "TL": 7, "DD": 8, "KT": 8}, "admin": {"TM": 9, "TC": 7, "KT": 7, "TL": 7, "DD": 7, "at": 1780995120971, "PN": 4, "ts": "9/6/2026 15:52", "TD": 7, "byAdmin": true, "DN": 7, "CH": 7}}, "TL": 7, "KT": 8, "PN": 6, "DN": 7, "desc": "Tiền đạo toàn diện: kỹ thuật, chuyền, dứt điểm đều 8. Bí quá còn vào bắt gôn cực ngọt — của hiếm.", "TD": 8}, {"TC": 5, "pos": "Thòng", "TM": 0, "DD": 6, "n": "Hưng", "pos2": ["HV", "TĐ"], "lp": false, "CH": 7, "ratings": {"(khởi tạo)": {"TC": 4, "TM": 0, "DD": 5, "TL": 5, "KT": 5, "ts": null, "PN": 7, "DN": 6, "CH": 7, "TD": 7}, "Admin": {"byAdmin": true, "TD": 7, "CH": 7, "DN": 6, "at": 1781001321146, "PN": 7, "ts": "9/6/2026 17:35", "KT": 7, "TL": 5, "DD": 6, "TM": 0, "TC": 5}, "admin": {"DD": 5, "TL": 5, "KT": 5, "TC": 4, "TM": 0, "CH": 7, "DN": 6, "byAdmin": true, "TD": 7, "ts": "9/6/2026 15:52", "PN": 7, "at": 1780995120971}}, "TL": 5, "KT": 7, "PN": 7, "DN": 6, "TD": 7, "desc": "Trung vệ biết chơi chân: phòng ngự, kỹ thuật, chuyền đều 7. Hơi chậm nên cần chọn vị trí khôn ngoan."}, {"DD": 9, "TM": 0, "TC": 7, "pos": "TĐ", "CH": 8, "pos2": ["TVtt", "TV"], "lp": false, "n": "Huy Hoàng", "KT": 8, "TL": 7, "ratings": {"user1": {"CH": 0, "DN": 7, "TD": 6, "ts": "9/6/2026 16:20", "PN": 7, "at": 1780996823978, "TL": 7, "DD": 8, "KT": 0, "TC": 7, "TM": 0}, "Admin": {"ts": "9/6/2026 17:32", "at": 1781001179096, "PN": 7, "DN": 8, "CH": 8, "TD": 8, "byAdmin": true, "TC": 7, "TM": 0, "DD": 9, "TL": 7, "KT": 8}}, "TD": 8, "desc": "Chân sút số 1 của đội — dứt điểm 9 sắc lẹm, kỹ thuật và chuyền đều 8. Có bóng trong vòng cấm gần như là có bàn.", "DN": 8, "PN": 7}, {"n": "Mạnh Khắc", "lp": false, "pos2": ["TV"], "CH": 6, "pos": "HV", "TC": 5, "TM": 0, "DD": 7, "PN": 5, "DN": 6, "desc": "Thiên về tấn công hơn thủ — dứt điểm và tư duy 7. Hợp dâng cao hoặc đá cánh hơn là bám biên phòng ngự.", "TD": 7, "ratings": {"admin": {"ts": "9/6/2026 15:52", "at": 1780995120971, "PN": 5, "CH": 5, "DN": 5, "byAdmin": true, "TD": 6, "TC": 4, "TM": 0, "TL": 5, "DD": 6, "KT": 5}, "(khởi tạo)": {"TM": 0, "TC": 4, "KT": 5, "DD": 6, "TL": 5, "PN": 5, "ts": null, "TD": 6, "CH": 5, "DN": 5}, "Admin": {"TM": 0, "TC": 5, "KT": 6, "DD": 7, "TL": 6, "at": 1781001080817, "PN": 5, "ts": "9/6/2026 17:31", "byAdmin": true, "TD": 7, "CH": 6, "DN": 6}}, "TL": 6, "KT": 6}, {"KT": 5, "TL": 7, "ratings": {"(khởi tạo)": {"KT": 5, "TL": 6, "DD": 4, "TM": 5, "TC": 8, "TD": 6, "DN": 8, "CH": 6, "PN": 7, "ts": null}, "Admin": {"DD": 5, "TL": 7, "KT": 5, "TC": 7, "TM": 7, "DN": 7, "CH": 6, "TD": 6, "byAdmin": true, "ts": "9/6/2026 18:10", "PN": 7, "at": 1781003420713}, "admin": {"TL": 6, "DD": 4, "KT": 5, "TC": 8, "TM": 5, "CH": 6, "DN": 8, "byAdmin": true, "TD": 6, "ts": "9/6/2026 15:52", "PN": 7, "at": 1780995120971}}, "TD": 6, "desc": "Thủ môn số 2 đáng tin (bắt gôn 7), nhanh nhẹn và bền. Ra vào hợp lý, gánh tuyến cuối ổn.", "DN": 7, "PN": 7, "DD": 5, "TM": 7, "TC": 7, "pos": "GK", "CH": 6, "pos2": [], "lp": true, "n": "Mạnh Tiến"}, {"PN": 8, "DN": 8, "TD": 7, "desc": "Trung vệ thép: phòng ngự, thể lực, năng nổ đều 8. Bức tường khó xuyên thủng, càng đá càng hăng.", "ratings": {"admin": {"CH": 7, "DN": 8, "byAdmin": true, "TD": 8, "ts": "9/6/2026 15:52", "at": 1780995120971, "PN": 9, "DD": 6, "TL": 8, "KT": 7, "TC": 8, "TM": 0}, "Admin": {"at": 1780999042629, "PN": 8, "ts": "9/6/2026 16:57", "TD": 7, "byAdmin": true, "DN": 8, "CH": 7, "TM": 0, "TC": 7, "KT": 5, "TL": 8, "DD": 6}, "(khởi tạo)": {"KT": 7, "TL": 8, "DD": 6, "TM": 0, "TC": 8, "TD": 8, "DN": 8, "CH": 7, "PN": 9, "ts": null}}, "TL": 8, "KT": 5, "n": "Nam Khắc", "pos2": ["HV", "TV"], "lp": false, "CH": 7, "TC": 7, "pos": "Thòng", "TM": 0, "DD": 6}, {"desc": "Hậu vệ biên chắc chắn mà chuyền cực hay (đều 8). Phòng ngự chủ động, phát động tấn công từ tuyến dưới.", "TD": 7, "DN": 7, "PN": 8, "KT": 7, "TL": 7, "ratings": {"Admin": {"ts": "9/6/2026 17:00", "PN": 8, "at": 1780999236239, "DN": 7, "CH": 8, "TD": 7, "byAdmin": true, "TC": 7, "TM": 4, "DD": 7, "TL": 7, "KT": 7}, "(khởi tạo)": {"TD": 8, "DN": 8, "CH": 8, "PN": 8, "ts": null, "KT": 7, "TL": 8, "DD": 6, "TM": 0, "TC": 8}, "admin": {"ts": "9/6/2026 15:52", "PN": 8, "at": 1780995120971, "CH": 8, "DN": 8, "byAdmin": true, "TD": 8, "TC": 8, "TM": 0, "TL": 8, "DD": 6, "KT": 7}}, "CH": 8, "lp": false, "pos2": ["GK", "Thòng", "TVtt", "TV"], "n": "Nguyễn Danh Tuyên", "DD": 7, "TM": 4, "pos": "HV", "TC": 7}, {"DD": 4, "pos": "GK", "TC": 5, "TM": 8, "CH": 7, "n": "Nguyễn Khắc Trọng", "lp": false, "pos2": [], "TL": 7, "KT": 6, "ratings": {"admin": {"TM": 5, "TC": 4, "KT": 5, "DD": 4, "TL": 6, "at": 1780995120971, "PN": 7, "ts": "9/6/2026 15:52", "TD": 6, "byAdmin": true, "DN": 8, "CH": 6}, "Admin": {"KT": 6, "DD": 4, "TL": 7, "TM": 8, "TC": 5, "TD": 6, "byAdmin": true, "DN": 7, "CH": 7, "PN": 7, "at": 1781003398363, "ts": "9/6/2026 18:09"}, "(khởi tạo)": {"ts": null, "PN": 7, "DN": 8, "CH": 6, "TD": 6, "TC": 4, "TM": 5, "DD": 4, "TL": 6, "KT": 5}}, "DN": 7, "desc": "Người gác đền số 1 (bắt gôn 8) lại chơi chân tốt, chuyền và phòng ngự đều 7. Tuyến cuối khỏi lo.", "TD": 6, "PN": 7}, {"DD": 8, "TM": 0, "TC": 7, "pos": "TVtt", "CH": 8, "pos2": ["TĐ"], "lp": false, "n": "Nguyen Quy Bong", "KT": 8, "TL": 7, "ratings": {"admin": {"TM": 0, "TC": 9, "KT": 4, "TL": 9, "DD": 9, "at": 1780995120971, "PN": 8, "ts": "9/6/2026 15:52", "TD": 9, "byAdmin": true, "DN": 9, "CH": 4}, "Admin": {"byAdmin": true, "TD": 8, "CH": 8, "DN": 7, "at": 1781001441578, "PN": 6, "ts": "9/6/2026 17:37", "KT": 8, "TL": 7, "DD": 8, "TM": 0, "TC": 7}, "(khởi tạo)": {"KT": 4, "TL": 9, "DD": 9, "TM": 0, "TC": 9, "TD": 9, "CH": 4, "DN": 9, "PN": 8, "ts": null}}, "TD": 8, "desc": "Nhạc trưởng tuyến giữa — kỹ thuật, chuyền, dứt điểm đều 8. Cầm nhịp và tổ chức, trái tim lối chơi.", "DN": 7, "PN": 6}, {"desc": "Cầu thủ cơ bản, khỏe nhất ở thể lực. Cần lên đều các mặt, nhất là kỹ thuật.", "TD": 5, "DN": 5, "PN": 5, "KT": 4, "TL": 6, "ratings": {"admin": {"DD": 3, "TL": 5, "KT": 4, "TC": 3, "TM": 0, "CH": 5, "DN": 3, "byAdmin": true, "TD": 5, "ts": "9/6/2026 15:52", "at": 1780995120972, "PN": 5}, "(khởi tạo)": {"ts": null, "PN": 5, "CH": 5, "DN": 3, "TD": 5, "TC": 3, "TM": 0, "DD": 3, "TL": 5, "KT": 4}, "Admin": {"DD": 5, "TL": 6, "KT": 4, "TC": 5, "TM": 0, "DN": 5, "CH": 5, "TD": 5, "byAdmin": true, "ts": "9/6/2026 17:17", "PN": 5, "at": 1781000249564}}, "CH": 5, "lp": false, "pos2": ["TV"], "n": "Nguyễn Văn Quyền", "DD": 5, "TM": 0, "pos": "HV", "TC": 5}, {"ratings": {"(khởi tạo)": {"TM": 5, "TC": 8, "KT": 6, "DD": 5, "TL": 6, "PN": 6, "ts": null, "TD": 6, "CH": 6, "DN": 8}, "Admin": {"DN": 8, "CH": 6, "TD": 6, "byAdmin": true, "ts": "9/6/2026 17:15", "at": 1781000132775, "PN": 7, "DD": 5, "TL": 7, "KT": 6, "TC": 7, "TM": 7}, "admin": {"TC": 8, "TM": 5, "TL": 6, "DD": 5, "KT": 6, "ts": "9/6/2026 15:52", "PN": 6, "at": 1780995120971, "DN": 8, "CH": 6, "TD": 6, "byAdmin": true}}, "TL": 7, "KT": 6, "PN": 7, "DN": 8, "desc": "Cầu thủ đa năng: chạy cánh khỏe (năng nổ 8), thủ tốt, lại bắt gôn được (7). Người để dành cực lợi hại.", "TD": 6, "pos": "TV", "TC": 7, "TM": 7, "DD": 5, "n": "Quang Minh", "lp": true, "pos2": ["GK", "HV"], "CH": 6}, {"TD": 5, "desc": "Chơi nhiệt và chịu khó (năng nổ 6), thủ tạm. Còn non kỹ thuật và dứt điểm — vai trò trám quân số.", "DN": 6, "PN": 5, "KT": 4, "TL": 5, "ratings": {"Admin": {"TM": 0, "TC": 4, "KT": 4, "DD": 3, "TL": 5, "PN": 5, "at": 1781000189830, "ts": "9/6/2026 17:16", "byAdmin": true, "TD": 5, "CH": 4, "DN": 6}, "(khởi tạo)": {"PN": 5, "ts": null, "TD": 5, "CH": 5, "DN": 3, "TM": 0, "TC": 3, "KT": 4, "DD": 3, "TL": 5}, "admin": {"PN": 5, "at": 1780995120972, "ts": "9/6/2026 15:52", "byAdmin": true, "TD": 5, "CH": 5, "DN": 3, "TM": 0, "TC": 3, "KT": 4, "TL": 5, "DD": 3}}, "CH": 4, "pos2": [], "lp": true, "n": "Quý Tàu", "DD": 3, "TM": 0, "TC": 4, "pos": "HV"}, {"DD": 7, "pos": "HV", "TC": 6, "TM": 0, "CH": 7, "n": "Quyết Nguyễn", "lp": false, "pos2": ["Thòng", "TV", "TĐ"], "TL": 7, "KT": 6, "ratings": {"(khởi tạo)": {"TC": 8, "TM": 0, "TL": 8, "DD": 7, "KT": 7, "ts": null, "PN": 7, "DN": 8, "CH": 7, "TD": 8}, "Admin": {"DN": 7, "CH": 7, "TD": 7, "byAdmin": true, "ts": "9/6/2026 17:01", "PN": 7, "at": 1780999284021, "TL": 7, "DD": 7, "KT": 6, "TC": 6, "TM": 0}, "admin": {"KT": 7, "TL": 8, "DD": 7, "TM": 0, "TC": 8, "TD": 8, "byAdmin": true, "DN": 8, "CH": 7, "at": 1780995120971, "PN": 7, "ts": "9/6/2026 15:52"}}, "DN": 7, "desc": "Hậu vệ biên đều tay — chuyền, dứt điểm, phòng ngự đều 7. Lên xuống nhịp nhàng, không có điểm yếu rõ.", "TD": 7, "PN": 7}, {"DD": 5, "TM": 0, "TC": 5, "pos": "HV", "CH": 6, "pos2": ["TV"], "lp": true, "n": "Trịnh Mạnh", "KT": 5, "TL": 6, "ratings": {"Admin": {"TC": 5, "TM": 0, "TL": 6, "DD": 5, "KT": 5, "ts": "9/6/2026 17:36", "PN": 6, "at": 1781001364951, "CH": 6, "DN": 7, "byAdmin": true, "TD": 6}, "(khởi tạo)": {"KT": 6, "TL": 6, "DD": 5, "TM": 0, "TC": 4, "TD": 6, "DN": 8, "CH": 6, "PN": 6, "ts": null}, "admin": {"CH": 6, "DN": 8, "byAdmin": true, "TD": 6, "ts": "9/6/2026 15:52", "at": 1780995120971, "PN": 6, "DD": 5, "TL": 6, "KT": 6, "TC": 4, "TM": 0}}, "TD": 6, "desc": "Hậu vệ biên chịu khó (năng nổ 7), chuyền và thủ tạm ổn. Cần thêm kỹ thuật và dứt điểm để bứt lên.", "DN": 7, "PN": 6}, {"CH": 5, "pos2": ["HV"], "lp": false, "n": "Trịnh Tuấn Anh", "DD": 6, "TM": 0, "TC": 7, "pos": "TV", "TD": 6, "desc": "Tiền vệ cánh máu lửa — năng nổ 8, tốc độ và thể lực 7. Cày nát biên, chỉ cần trau thêm khâu chuyền.", "DN": 8, "PN": 5, "KT": 6, "TL": 7, "ratings": {"(khởi tạo)": {"TM": 0, "TC": 8, "KT": 7, "DD": 7, "TL": 8, "PN": 7, "ts": null, "TD": 7, "DN": 8, "CH": 7}, "Admin": {"ts": "9/6/2026 17:09", "PN": 5, "at": 1780999777500, "DN": 8, "CH": 5, "TD": 6, "byAdmin": true, "TC": 7, "TM": 0, "DD": 6, "TL": 7, "KT": 6}, "admin": {"KT": 7, "DD": 7, "TL": 8, "TM": 0, "TC": 8, "TD": 7, "byAdmin": true, "DN": 8, "CH": 7, "at": 1780995120971, "PN": 7, "ts": "9/6/2026 15:52"}}}, {"KT": 7, "TL": 6, "ratings": {"(khởi tạo)": {"TM": 0, "TC": 4, "KT": 9, "DD": 9, "TL": 9, "PN": 9, "ts": null, "TD": 9, "CH": 8, "DN": 8}, "Admin": {"KT": 7, "TL": 6, "DD": 8, "TM": 0, "TC": 6, "TD": 7, "byAdmin": true, "DN": 7, "CH": 7, "at": 1781001504094, "PN": 6, "ts": "9/6/2026 17:38"}}, "TD": 7, "desc": "Tiền đạo nhạy bén, dứt điểm 8. Luôn trực sẵn trong vòng cấm, ngửi bàn thắng rất tốt.", "DN": 7, "PN": 6, "DD": 8, "TM": 0, "TC": 6, "pos": "TĐ", "CH": 7, "pos2": ["Thòng", "TVtt"], "lp": false, "n": "Văn Thanh"}];
 const FIREBASE_CONFIG = {
   "apiKey": "AIzaSyDQ5h2sSNPOmtc23fXaZdzxgjxiF_Mudho",
   "authDomain": "ai-gen-aa66f.firebaseapp.com",
@@ -807,11 +821,25 @@ const FIREBASE_CONFIG = {
   "appId": "1:369243060469:web:15be646482a42c08d46dbc"
 };
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor"};
-const TITLES={home:'<span class="ab-brand">⚽ GenPlayer</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
+const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#11224f";
-const ov = s => (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+// Trọng số tính ĐIỂM theo vị trí — đá hướng nào thì nặng chỉ số đó (chuẩn hoá theo tổng trọng số).
+const POS_W={
+  GK:    {TM:7, PN:1.5, TD:1, TL:0.5},
+  "Thòng":{PN:3, TD:2, DN:1.2, TL:1.2, CH:0.8, KT:0.6},                // trung vệ
+  HV:    {PN:2.2, TC:2, TL:1.5, DN:1.2, KT:0.9, CH:0.9, TD:0.9},        // hậu vệ biên
+  TVtt:  {CH:2.3, TD:2, KT:1.6, TL:1.1, DN:1, PN:1, DD:0.7},            // tiền vệ giữa
+  TV:    {TC:1.9, KT:1.9, DD:1.4, CH:1.3, TL:1.1, DN:1, TD:0.8},        // tiền vệ cánh
+  "TĐ":  {DD:3, KT:1.6, TC:1.5, DN:1.1, TD:0.9, CH:0.6},                // tiền đạo
+};
+const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình 8 chỉ số sân
+  const w=POS_W[posCodeOf(s)];
+  if(!w)return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+  let sum=0,tot=0; for(const k in w){sum+=(+s[k]||0)*w[k];tot+=w[k];}
+  return tot?sum/tot:0;
+};
 const STAR_MIN=8;                 // ⭐ Ngôi sao = điểm tổng (ov) >= con số này — đổi 1 chỗ duy nhất
 const isStar=p=>ov(p)>=STAR_MIN;
 const $=id=>document.getElementById(id);
@@ -1016,13 +1044,34 @@ function show(id){
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
   $("backBtn").style.display=id==="home"?"none":"flex";
+  $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
   if(id==="screen-create") buildRoster();
   if(id==="screen-players") showPlayers();
+  if(id==="screen-rank") showPosRank();
   if(id==="screen-week") showWeek();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
+}
+// ===== Xếp hạng cầu thủ theo VỊ TRÍ ĐÁ CHÍNH (điểm theo vị trí, cao→thấp trong mỗi nhóm) =====
+const RANK_POS_ORDER=["GK","Thòng","HV","TVtt","TV","TĐ"];
+function openProfileByName(enc){pmName=decodeURIComponent(enc);renderPlayerProfile();$("playerModal").classList.add("on");}
+function showPosRank(){
+  const box=$("rank2-body"); if(!box)return;
+  const groups={}; getPlayers().forEach(p=>{const c=posCodeOf(p);(groups[c]||(groups[c]=[])).push(p);});
+  let html="";
+  RANK_POS_ORDER.forEach(c=>{
+    const arr=(groups[c]||[]).sort((a,b)=>ov(b)-ov(a)); if(!arr.length)return;
+    html+=`<div class="rk-pos">${POS_LABEL[c]} · ${arr.length}</div><div class="rank-list">`+arr.map((p,i)=>`
+      <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(p.n)}')">
+        <span class="rank-no${i<3?" top":""}">${i+1}</span>
+        <span class="avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</span>
+        <div class="rank-id"><div class="rank-name">${p.n}${isStar(p)?' <span class="pc-star">★</span>':''}</div><div class="rank-sub">${evalTitle(p)}</div></div>
+        <span class="rank-wr">${ov(p).toFixed(1)}</span>
+      </div>`).join("")+`</div>`;
+  });
+  box.innerHTML=html||`<div class="empty"><span class="big">📊</span>Chưa có cầu thủ.</div>`;
 }
 const IC={
   play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
@@ -1442,16 +1491,27 @@ function renderRank(){
 }
 // ---- đánh giá tự động từ chỉ số ----
 function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}
+// Xếp loại 1 câu theo vị trí + trình độ (dùng cho hồ sơ & bảng xếp hạng) — 1 nguồn duy nhất
+function evalTitle(p){
+  const g=k=>+p[k]||0;
+  if(posCodeOf(p)==="GK")return g("TM")>=7?"Người gác đền":"Thủ môn";
+  const apt=[{k:"DEF",name:"Phòng ngự",v:(g("PN")*2+g("TD")+g("DN"))/4},{k:"RUN",name:"Chân chạy",v:(g("TC")+g("TL")+g("DN"))/3},{k:"ATT",name:"Tấn công",v:(g("DD")*2+g("KT")+g("TC"))/4},{k:"PLY",name:"Kiến thiết",v:(g("CH")*2+g("TD")+g("KT"))/4}];
+  const head=apt.sort((a,b)=>b.v-a.v)[0], o=ov(p);
+  const ARCH={DEF:"Hàng thủ chắc chắn",RUN:"Chân chạy bền bỉ",ATT:"Mũi nhọn săn bàn",PLY:"Nhạc trưởng tuyến giữa"};
+  if(o<3.5)return "Tân binh";
+  if(o<5.5)return "Thiên hướng "+head.name.toLowerCase();
+  return ARCH[head.k];
+}
 function evalBlock(p){
   const g=k=>+p[k]||0;
-  const isGK=g("TM")>=7||posCodeOf(p)==="GK";
+  const isGK=posCodeOf(p)==="GK";          // chỉ thủ môn theo VỊ TRÍ mới đánh giá kiểu gác đền
   const apt=[
     {k:"DEF",name:"Phòng ngự",v:(g("PN")*2+g("TD")+g("DN"))/4},
     {k:"RUN",name:"Chân chạy",v:(g("TC")+g("TL")+g("DN"))/3},
     {k:"ATT",name:"Tấn công", v:(g("DD")*2+g("KT")+g("TC"))/4},
     {k:"PLY",name:"Kiến thiết",v:(g("CH")*2+g("TD")+g("KT"))/4},
-    {k:"GK", name:"Thủ môn",  v:g("TM")},
   ];
+  if(isGK)apt.push({k:"GK",name:"Thủ môn",v:g("TM")});   // chỉ hiện thanh Thủ môn cho thủ môn
   const ARCH={
     DEF:["Hàng thủ chắc chắn","Tranh chấp và bọc lót tốt, khó bị qua mặt."],
     RUN:["Chân chạy bền bỉ","Càn lướt, lên công về thủ không biết mệt."],
@@ -1464,19 +1524,15 @@ function evalBlock(p){
   const second=isGK?outfield[0]:outfield[1];
   const arch=ARCH[head.k];
   const overall=ov(p);                 // điểm tổng 0–10 (8 chỉ số sân) -> xét trình độ chung
-  let title, desc;
+  const title=evalTitle(p); let desc;
   if(isGK){
     const tm=g("TM");
-    title=tm>=7?"Người gác đền":"Thủ môn";
     desc=tm>=7?arch[1]:(tm>=4?"Trấn giữ khung thành, bắt tạm ổn.":"Đứng khung thành nhưng phản xạ còn yếu, cần luyện thêm.");
   }else if(overall<3.5){               // yếu gần như mọi mặt
-    title="Tân binh";
     desc="Chỉ số còn thấp ở hầu hết các mặt — cần tập luyện thêm."+(head.v>=4?` Tạm khá nhất ở khâu ${head.name.toLowerCase()}.`:"");
   }else if(overall<5.5){               // trung bình
-    title=`Thiên hướng ${head.name.toLowerCase()}`;
     desc=`Khá nhất ở khâu ${head.name.toLowerCase()}, cần lên đều các mặt còn lại.`;
-  }else{                               // khá/tốt -> mới phong danh hiệu
-    title=arch[0];
+  }else{                               // khá/tốt
     desc=second&&second.v>=5?`${arch[1]} Cũng khá ở khâu ${second.name.toLowerCase()}.`:arch[1];
   }
   const aptRow=a=>{const c=evRate(a.v)[1],hi=a===head;return `<div class="ev-apt${hi?" hi":""}"><span class="ev-apt-n">${a.name}</span><div class="ev-bar"><i style="width:${Math.round(a.v*10)}%;background:${c}"></i></div><span class="ev-apt-v">${a.v.toFixed(1)}</span></div>`;};

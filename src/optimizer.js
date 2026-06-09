@@ -93,11 +93,14 @@
     const overall=players.map(overallOf);
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
-    const PRI=2.5, SEC=1.0, OFF=3.0;
+    const PRI=2.5, SEC=1.0, OFF=3.0, GKLOCK=50;
+    const isGK=players.map(p=>p.pos==="GK");
+    const lockGK=isGK.filter(Boolean).length>=2;            // co >=2 thu mon co dinh -> khoa khung gon cho ho, khong xet nguoi khac (du TM cao)
     const fitPen=fitT.map((row,i)=>{
       const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
-      if(!pr) return row;                                   // chua chon vi tri -> trung tinh
       return row.map((v,c)=>{ const sl=SLOTS[c];
+        if(lockGK && sl==="GK") return v + (pr==="GK"?GKLOCK:-GKLOCK);   // gon chi danh cho thu mon co dinh
+        if(!pr) return v;                                   // chua chon vi tri -> trung tinh
         return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)); });
     });
     const TM=players.map(p=>p.TM);
@@ -118,10 +121,11 @@
       const A=baseA.concat(pick);
       const inA=new Array(N).fill(false); A.forEach(i=>inA[i]=true);
       const B=all.filter(i=>!inA[i]);
-      // moi doi can it nhat 1 thu mon
+      // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
+      const okGK=i=>lockGK?isGK[i]:TM[i]>0;
       let okA=false,okB=false;
-      for(const i of A) if(TM[i]>0){okA=true;break;}
-      for(const i of B) if(TM[i]>0){okB=true;break;}
+      for(const i of A) if(okGK(i)){okA=true;break;}
+      for(const i of B) if(okGK(i)){okB=true;break;}
       if(!okA||!okB) return;
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
       const J = 3.0*Math.abs(eA.stars-eB.stars)

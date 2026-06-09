@@ -1,6 +1,8 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GenPlayer — Chia đội bóng sân 7</title>
+<title>FC Haha — Chia đội bóng sân 7</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
 <style>
 :root{
   --bg:#0a0e1a; --bg2:#070a12; --surface:#141b2e; --surface2:#1a2236; --surface3:#222c45;
@@ -28,10 +30,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;heigh
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .ab-back:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 .ab-title{font-weight:800;font-size:17px;letter-spacing:-.01em}
-.ab-admin{flex:0 0 auto;border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.ab-admin{flex:0 0 auto;margin-left:auto;border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
 .ab-admin:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);background:rgba(34,224,122,.12)}
-.ab-brand{color:var(--brand)}
+.ab-brand{color:var(--brand);display:inline-flex;align-items:center;gap:7px}
+.ab-logo{height:38px;width:auto;vertical-align:middle}
 /* ===== dashboard layout ===== */
 .dash-top{display:grid;grid-template-columns:1.62fr 1fr;gap:16px}
 .dash-main{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;margin-top:16px;align-items:start}
@@ -458,18 +461,20 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-name{font-weight:800;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
+.rk-wrap{max-width:680px;margin:0 auto;padding:4px 0 24px}
+.rk-pos{font-size:13px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
+.rk-pos:first-child{margin-top:4px}
 </style></head><body>
 
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
-  <div class="ab-title" id="appTitle"><span class="ab-brand">⚽ GenPlayer</span></div>
-  <span id="cloud" style="margin-left:auto;font-size:12px;font-weight:700"></span>
+  <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()">🔒 Admin</button>
 </header>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
-  <div class="page-banner"><img src="assets/banner.jpg" alt="GenPlayer" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
+  <div class="page-banner"><img src="assets/banner.jpg" alt="FC Haha" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
   <div class="dash-top">
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
@@ -478,7 +483,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="ap-grid">
         <button class="ap-btn" onclick="show('screen-create')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tạo đội</span></button>
         <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-week')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg><span>Trận tới</span></button>
+        <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
       </div>
     </section>
@@ -493,6 +498,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div id="spotlight"></div>
     </aside>
   </div>
+</div>
+
+<!-- ====== XEP HANG CAU THU (theo vị trí đá chính) ====== -->
+<div id="screen-rank" class="screen">
+  <div id="rank2-body" class="rk-wrap"></div>
 </div>
 
 <!-- ====== TAO DOI ====== -->
@@ -657,11 +667,25 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor"};
-const TITLES={home:'<span class="ab-brand">⚽ GenPlayer</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
+const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#11224f";
-const ov = s => (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+// Trọng số tính ĐIỂM theo vị trí — đá hướng nào thì nặng chỉ số đó (chuẩn hoá theo tổng trọng số).
+const POS_W={
+  GK:    {TM:7, PN:1.5, TD:1, TL:0.5},
+  "Thòng":{PN:3, TD:2, DN:1.2, TL:1.2, CH:0.8, KT:0.6},                // trung vệ
+  HV:    {PN:2.2, TC:2, TL:1.5, DN:1.2, KT:0.9, CH:0.9, TD:0.9},        // hậu vệ biên
+  TVtt:  {CH:2.3, TD:2, KT:1.6, TL:1.1, DN:1, PN:1, DD:0.7},            // tiền vệ giữa
+  TV:    {TC:1.9, KT:1.9, DD:1.4, CH:1.3, TL:1.1, DN:1, TD:0.8},        // tiền vệ cánh
+  "TĐ":  {DD:3, KT:1.6, TC:1.5, DN:1.1, TD:0.9, CH:0.6},                // tiền đạo
+};
+const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình 8 chỉ số sân
+  const w=POS_W[posCodeOf(s)];
+  if(!w)return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+  let sum=0,tot=0; for(const k in w){sum+=(+s[k]||0)*w[k];tot+=w[k];}
+  return tot?sum/tot:0;
+};
 const STAR_MIN=8;                 // ⭐ Ngôi sao = điểm tổng (ov) >= con số này — đổi 1 chỗ duy nhất
 const isStar=p=>ov(p)>=STAR_MIN;
 const $=id=>document.getElementById(id);
@@ -866,13 +890,34 @@ function show(id){
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
   $("backBtn").style.display=id==="home"?"none":"flex";
+  $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
   if(id==="screen-create") buildRoster();
   if(id==="screen-players") showPlayers();
+  if(id==="screen-rank") showPosRank();
   if(id==="screen-week") showWeek();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
+}
+// ===== Xếp hạng cầu thủ theo VỊ TRÍ ĐÁ CHÍNH (điểm theo vị trí, cao→thấp trong mỗi nhóm) =====
+const RANK_POS_ORDER=["GK","Thòng","HV","TVtt","TV","TĐ"];
+function openProfileByName(enc){pmName=decodeURIComponent(enc);renderPlayerProfile();$("playerModal").classList.add("on");}
+function showPosRank(){
+  const box=$("rank2-body"); if(!box)return;
+  const groups={}; getPlayers().forEach(p=>{const c=posCodeOf(p);(groups[c]||(groups[c]=[])).push(p);});
+  let html="";
+  RANK_POS_ORDER.forEach(c=>{
+    const arr=(groups[c]||[]).sort((a,b)=>ov(b)-ov(a)); if(!arr.length)return;
+    html+=`<div class="rk-pos">${POS_LABEL[c]} · ${arr.length}</div><div class="rank-list">`+arr.map((p,i)=>`
+      <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(p.n)}')">
+        <span class="rank-no${i<3?" top":""}">${i+1}</span>
+        <span class="avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</span>
+        <div class="rank-id"><div class="rank-name">${p.n}${isStar(p)?' <span class="pc-star">★</span>':''}</div><div class="rank-sub">${evalTitle(p)}</div></div>
+        <span class="rank-wr">${ov(p).toFixed(1)}</span>
+      </div>`).join("")+`</div>`;
+  });
+  box.innerHTML=html||`<div class="empty"><span class="big">📊</span>Chưa có cầu thủ.</div>`;
 }
 const IC={
   play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
@@ -1292,16 +1337,27 @@ function renderRank(){
 }
 // ---- đánh giá tự động từ chỉ số ----
 function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}
+// Xếp loại 1 câu theo vị trí + trình độ (dùng cho hồ sơ & bảng xếp hạng) — 1 nguồn duy nhất
+function evalTitle(p){
+  const g=k=>+p[k]||0;
+  if(posCodeOf(p)==="GK")return g("TM")>=7?"Người gác đền":"Thủ môn";
+  const apt=[{k:"DEF",name:"Phòng ngự",v:(g("PN")*2+g("TD")+g("DN"))/4},{k:"RUN",name:"Chân chạy",v:(g("TC")+g("TL")+g("DN"))/3},{k:"ATT",name:"Tấn công",v:(g("DD")*2+g("KT")+g("TC"))/4},{k:"PLY",name:"Kiến thiết",v:(g("CH")*2+g("TD")+g("KT"))/4}];
+  const head=apt.sort((a,b)=>b.v-a.v)[0], o=ov(p);
+  const ARCH={DEF:"Hàng thủ chắc chắn",RUN:"Chân chạy bền bỉ",ATT:"Mũi nhọn săn bàn",PLY:"Nhạc trưởng tuyến giữa"};
+  if(o<3.5)return "Tân binh";
+  if(o<5.5)return "Thiên hướng "+head.name.toLowerCase();
+  return ARCH[head.k];
+}
 function evalBlock(p){
   const g=k=>+p[k]||0;
-  const isGK=g("TM")>=7||posCodeOf(p)==="GK";
+  const isGK=posCodeOf(p)==="GK";          // chỉ thủ môn theo VỊ TRÍ mới đánh giá kiểu gác đền
   const apt=[
     {k:"DEF",name:"Phòng ngự",v:(g("PN")*2+g("TD")+g("DN"))/4},
     {k:"RUN",name:"Chân chạy",v:(g("TC")+g("TL")+g("DN"))/3},
     {k:"ATT",name:"Tấn công", v:(g("DD")*2+g("KT")+g("TC"))/4},
     {k:"PLY",name:"Kiến thiết",v:(g("CH")*2+g("TD")+g("KT"))/4},
-    {k:"GK", name:"Thủ môn",  v:g("TM")},
   ];
+  if(isGK)apt.push({k:"GK",name:"Thủ môn",v:g("TM")});   // chỉ hiện thanh Thủ môn cho thủ môn
   const ARCH={
     DEF:["Hàng thủ chắc chắn","Tranh chấp và bọc lót tốt, khó bị qua mặt."],
     RUN:["Chân chạy bền bỉ","Càn lướt, lên công về thủ không biết mệt."],
@@ -1314,19 +1370,15 @@ function evalBlock(p){
   const second=isGK?outfield[0]:outfield[1];
   const arch=ARCH[head.k];
   const overall=ov(p);                 // điểm tổng 0–10 (8 chỉ số sân) -> xét trình độ chung
-  let title, desc;
+  const title=evalTitle(p); let desc;
   if(isGK){
     const tm=g("TM");
-    title=tm>=7?"Người gác đền":"Thủ môn";
     desc=tm>=7?arch[1]:(tm>=4?"Trấn giữ khung thành, bắt tạm ổn.":"Đứng khung thành nhưng phản xạ còn yếu, cần luyện thêm.");
   }else if(overall<3.5){               // yếu gần như mọi mặt
-    title="Tân binh";
     desc="Chỉ số còn thấp ở hầu hết các mặt — cần tập luyện thêm."+(head.v>=4?` Tạm khá nhất ở khâu ${head.name.toLowerCase()}.`:"");
   }else if(overall<5.5){               // trung bình
-    title=`Thiên hướng ${head.name.toLowerCase()}`;
     desc=`Khá nhất ở khâu ${head.name.toLowerCase()}, cần lên đều các mặt còn lại.`;
-  }else{                               // khá/tốt -> mới phong danh hiệu
-    title=arch[0];
+  }else{                               // khá/tốt
     desc=second&&second.v>=5?`${arch[1]} Cũng khá ở khâu ${second.name.toLowerCase()}.`:arch[1];
   }
   const aptRow=a=>{const c=evRate(a.v)[1],hi=a===head;return `<div class="ev-apt${hi?" hi":""}"><span class="ev-apt-n">${a.name}</span><div class="ev-bar"><i style="width:${Math.round(a.v*10)}%;background:${c}"></i></div><span class="ev-apt-v">${a.v.toFixed(1)}</span></div>`;};
