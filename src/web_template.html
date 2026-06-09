@@ -52,10 +52,11 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .hero-feat>.hf-bg{position:absolute;inset:0;z-index:0;background:#0c1020 center/cover no-repeat}   /* selector mạnh hơn .hero-feat>* để không bị ép position:relative */
 .hf-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(95deg,rgba(8,10,20,.93) 0%,rgba(8,10,20,.6) 50%,rgba(8,10,20,.28) 100%),linear-gradient(0deg,rgba(8,10,20,.72) 0%,rgba(8,10,20,.04) 42%)}
 .hero-feat>*{position:relative;z-index:1}
-.hero-feat>.hf-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:40px;height:40px;border-radius:50%;border:0;background:rgba(8,10,20,.5);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);transition:.14s}
-.hero-feat>.hf-nav:hover{background:rgba(8,10,20,.82)}
-.hf-nav.prev{left:10px}.hf-nav.next{right:10px}
-@media(max-width:560px){.hero-feat>.hf-nav{width:34px;height:34px;font-size:22px;background:rgba(8,10,20,.42)}}
+.hero-feat>.hf-nav{position:absolute;top:0;bottom:0;z-index:4;width:58px;border:0;color:#fff;font-size:46px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;transition:.14s;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.hf-nav.prev{left:0;justify-content:flex-start;padding-left:8px;background:linear-gradient(to right,rgba(8,10,20,.62),rgba(8,10,20,0))}
+.hf-nav.next{right:0;justify-content:flex-end;padding-right:8px;background:linear-gradient(to left,rgba(8,10,20,.62),rgba(8,10,20,0))}
+.hero-feat>.hf-nav:hover{filter:brightness(1.4)}
+@media(max-width:560px){.hero-feat>.hf-nav{width:48px;font-size:40px}}
 .hf-logos{position:absolute;top:18px;left:22px;display:flex}
 .hf-logos .tlogo{width:38px;height:38px;border-radius:12px;border:2px solid rgba(255,255,255,.18);box-shadow:0 6px 14px rgba(0,0,0,.4)}
 .hf-ava{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:900;font-size:16px;color:#fff;border:2px solid rgba(255,255,255,.2);box-shadow:0 6px 14px rgba(0,0,0,.4)}
@@ -972,7 +973,7 @@ function renderUpdateLog(){
 }
 // BANNER LỚN = SLIDESHOW Cầu thủ nổi bật (lần lượt qua các cầu thủ, xếp theo điểm cao→thấp)
 const HERO_FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
-const HERO_BG=["assets/bg-1.jpg","assets/bg-2.jpg","assets/bg-3.jpg","assets/bg-4.jpg","assets/bg-5.jpg"];   // nền bóng đá, đổi theo slide
+const HERO_BG=/*__HEROBG__*/;   // tự quét assets/bg-*.jpg lúc build (thả thêm file là tự dùng)
 let heroSlides=[], heroIdx=0, heroTimer=null;
 function heroSlideHTML(p,idx,total){
   const bg=`<div class="hf-bg" style="background-image:url('${HERO_BG[((idx||0)%HERO_BG.length)]}')"></div>`;

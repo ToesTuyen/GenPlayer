@@ -6,7 +6,7 @@ Day la noi web app ghi khi sua diem, nen luon la du lieu moi nhat. KHONG doc tu 
 
 Cau truc: src/ = nguon (template + optimizer); assets/ = anh; index.html = output o root (GitHub Pages).
 """
-import json, os, sys, urllib.request
+import json, os, sys, re, urllib.request
 
 ROOT=os.path.dirname(os.path.abspath(__file__))+"/"   # thu muc chua build_web.py (= root repo)
 SRC=ROOT+"src/"
@@ -49,14 +49,21 @@ fb="null"
 if os.path.exists(ROOT+"firebase_config.json"):
     fb=open(ROOT+"firebase_config.json",encoding="utf-8").read().strip()
 
+# 3b) nen banner = tu quet assets/bg-*.jpg|png (so theo so thu tu); tha them file la tu dung
+ASSETS=ROOT+"assets"
+bgfiles=sorted([f for f in os.listdir(ASSETS) if re.match(r"bg-\d+\.(jpe?g|png)$",f,re.I)],
+               key=lambda x:int(re.search(r"\d+",x).group())) if os.path.isdir(ASSETS) else []
+herobg=json.dumps(["assets/"+f for f in bgfiles],ensure_ascii=False)
+
 # 4) nhet vao src/web_template.html
 tpl=open(SRC+"web_template.html",encoding="utf-8").read()
 html=(tpl.replace("/*__OPTIMIZER__*/",opt)
          .replace("/*__PLAYERS__*/",players_js)
-         .replace("/*__FIREBASE__*/",fb))
+         .replace("/*__FIREBASE__*/",fb)
+         .replace("/*__HEROBG__*/",herobg))
 
 open(ROOT+"index.html","w",encoding="utf-8").write(html)
 print("Đã tạo index.html ·",len(players),"cầu thủ (nguồn: Firestore DB) · Firebase:",
-      ("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(html),"ký tự")
-assert "/*__OPTIMIZER__*/" not in html and "/*__PLAYERS__*/" not in html and "/*__FIREBASE__*/" not in html, "Còn placeholder!"
+      ("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(bgfiles),"nền banner ·",len(html),"ký tự")
+assert not any(ph in html for ph in ("/*__OPTIMIZER__*/","/*__PLAYERS__*/","/*__FIREBASE__*/","/*__HEROBG__*/")), "Còn placeholder!"
 print("OK: không còn placeholder")
