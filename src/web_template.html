@@ -52,6 +52,10 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .hero-feat>.hf-bg{position:absolute;inset:0;z-index:0;background:#0c1020 center/cover no-repeat}   /* selector mạnh hơn .hero-feat>* để không bị ép position:relative */
 .hf-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(95deg,rgba(8,10,20,.93) 0%,rgba(8,10,20,.6) 50%,rgba(8,10,20,.28) 100%),linear-gradient(0deg,rgba(8,10,20,.72) 0%,rgba(8,10,20,.04) 42%)}
 .hero-feat>*{position:relative;z-index:1}
+.hero-feat>.hf-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:40px;height:40px;border-radius:50%;border:0;background:rgba(8,10,20,.5);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);transition:.14s}
+.hero-feat>.hf-nav:hover{background:rgba(8,10,20,.82)}
+.hf-nav.prev{left:10px}.hf-nav.next{right:10px}
+@media(max-width:560px){.hero-feat>.hf-nav{width:34px;height:34px;font-size:22px;background:rgba(8,10,20,.42)}}
 .hf-logos{position:absolute;top:18px;left:22px;display:flex}
 .hf-logos .tlogo{width:38px;height:38px;border-radius:12px;border:2px solid rgba(255,255,255,.18);box-shadow:0 6px 14px rgba(0,0,0,.4)}
 .hf-ava{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:900;font-size:16px;color:#fff;border:2px solid rgba(255,255,255,.2);box-shadow:0 6px 14px rgba(0,0,0,.4)}
@@ -976,7 +980,8 @@ function heroSlideHTML(p,idx,total){
       <div class="hf-top"><span class="hf-tag">★ Cầu thủ nổi bật</span><span class="hf-league">Thêm cầu thủ để bắt đầu</span></div>
       <h1 class="hf-title">CẦU THỦ<br>NỔI BẬT</h1>`;
   const o=ov(p).toFixed(1), pos=posCodeOf(p), star=isStar(p);
-  return `${bg}${HERO_FX}
+  const nav=total>1?'<button class="hf-nav prev" aria-label="Trước" onclick="event.stopPropagation();heroGo(-1)">‹</button><button class="hf-nav next" aria-label="Sau" onclick="event.stopPropagation();heroGo(1)">›</button>':"";
+  return `${bg}${HERO_FX}${nav}
       <div class="hf-top"><span class="hf-tag">★ Cầu thủ nổi bật</span><span class="hf-count">${idx+1}/${total}</span></div>
       <h1 class="hf-title"><span class="hf-nmwrap">${esc((p.n||"").toUpperCase())}${star?'<span class="hf-star">★</span>':''}</span></h1>
       <div class="hf-meta">${POS_LABEL[pos]} · Điểm tổng ${o}/10</div>
@@ -994,12 +999,30 @@ function startHeroShow(){
   if(heroSlides.length<2)return;        // 1 cầu thủ thì khỏi chạy
   heroTimer=setInterval(()=>{heroIdx=(heroIdx+1)%heroSlides.length;renderHero();},10000);
 }
+let heroSwiped=false, heroBound=false;
+function heroGo(d){                       // chuyển banner tay; đặt lại nhịp 10s
+  if(heroSlides.length<2)return;
+  heroIdx=(heroIdx+d+heroSlides.length)%heroSlides.length;
+  renderHero(); startHeroShow();
+}
+function bindHeroSwipe(){                  // vuốt ngang để chuyển (gắn 1 lần)
+  const el=$("heroFeat"); if(!el||heroBound)return; heroBound=true;
+  let x0=null,y0=null;
+  el.addEventListener("touchstart",e=>{const t=e.changedTouches[0];x0=t.clientX;y0=t.clientY;heroSwiped=false;},{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(x0==null)return; const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){heroSwiped=true;heroGo(dx<0?1:-1);}   // vuốt trái->kế tiếp, phải->trước
+    x0=null;
+  },{passive:true});
+}
 function renderHeroFeat(pl){
+  bindHeroSwipe();
   heroSlides=(pl||[]).slice().sort((a,b)=>ov(b)-ov(a));
   if(heroIdx>=heroSlides.length)heroIdx=0;
   if(!heroTimer){ renderHero(); startHeroShow(); }   // chỉ render+chạy khi CHƯA chạy → cloud tick không reset nhịp
 }
 function openHeroPlayer(){   // click banner → mở hồ sơ cầu thủ đang hiện
+  if(heroSwiped){heroSwiped=false;return;}   // vừa vuốt thì đừng mở hồ sơ
   const p=heroSlides.length?heroSlides[heroIdx]:null;
   if(!p){show("screen-players");return;}
   pmName=p.n; renderPlayerProfile(); $("playerModal").classList.add("on");
