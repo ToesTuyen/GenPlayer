@@ -317,6 +317,12 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .req-attr.ch .rv b{color:var(--amber)}
 .req-acts{display:flex;gap:9px;margin-top:6px}
 .req-rej{color:var(--red)}
+.req-tabs{display:flex;gap:8px;margin-bottom:14px}
+.req-tabs button{flex:1;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:.12s}
+.req-tabs button.on{background:var(--brand-soft);border-color:var(--brand);color:var(--text)}
+.req-st{flex:0 0 auto;align-self:flex-start;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px}
+.req-st.ok{background:var(--brand-soft);color:#22e07a}
+.req-st.rej{background:rgba(255,81,104,.16);color:var(--red)}
 /* toast (popup nhẹ thay alert) */
 .toast-wrap{position:fixed;left:0;right:0;bottom:24px;z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
 .toast{display:flex;align-items:center;gap:10px;max-width:460px;width:fit-content;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 16px;box-shadow:var(--sh);font-size:13.5px;font-weight:600;opacity:0;transform:translateY(14px);transition:.28s;pointer-events:auto}
@@ -1030,47 +1036,65 @@ function toast(msg,type,ms){
 }
 
 // ====== DANH SÁCH YÊU CẦU (admin duyệt yêu cầu sửa của người thường) ======
+function reqPending(){return getRequests().filter(r=>!r.status||r.status==="pending");}
+function reqDone(){return getRequests().filter(r=>r.status==="approved"||r.status==="rejected").sort((a,b)=>(b.actedAt||b.at||0)-(a.actedAt||a.at||0));}
 function updateReqBadge(){
-  const n=getRequests().length, b=$("reqBadge"); if(!b)return;
+  const n=reqPending().length, b=$("reqBadge"); if(!b)return;
   b.textContent=n; b.style.display=(isAdmin&&n>0)?"":"none";
 }
-function openReq(){ if(!requireAdmin())return; renderReq(); $("reqModal").classList.add("on"); }
+let reqTab="pending";
+function openReq(){ if(!requireAdmin())return; reqTab="pending"; renderReq(); $("reqModal").classList.add("on"); }
 function closeReq(){ $("reqModal").classList.remove("on"); }
+function setReqTab(t){ reqTab=t; renderReq(); }
+function reqCard(r,players){
+  const cur=players.find(p=>p.n===r.n)||{};
+  const rows=LOGKEYS.map(k=>{
+    const o=clampInt(cur[k]), v=clampInt((r.rat||{})[k]), diff=v!==o;
+    const lab=(ATTRS_ALL.find(a=>a[0]===k)||[k,k])[1];
+    return `<div class="req-attr${diff?' ch':''}"><span class="rk">${lab}</span><span class="rv">${diff?`${o}<b>→${v}</b>`:o}</span></div>`;
+  }).join("");
+  const posChg=(r.pos&&r.pos!==(cur.pos||""))?` · vị trí: <b>${POS_LABEL[r.pos]||r.pos}</b>`:"";
+  const done=r.status==="approved"||r.status==="rejected";
+  const st=r.status==="approved"?`<span class="req-st ok">✓ Đã duyệt</span>`:r.status==="rejected"?`<span class="req-st rej">✕ Từ chối</span>`:"";
+  const acted=done&&r.actedBy?`<div class="ulog-by">${r.status==="approved"?"Duyệt":"Từ chối"} bởi <b>${r.actedBy}</b> · ${r.actedTs||""}</div>`:"";
+  const acts=done?"":`<div class="req-acts">
+        <button class="btn sm" onclick="approveReq('${r.id}')">✓ Duyệt</button>
+        <button class="btn alt sm req-rej" onclick="rejectReq('${r.id}')">✕ Từ chối</button></div>`;
+  return `<div class="ulog-card">
+      <div class="ulog-top"><span class="avatar" style="background:${avColor(r.n)}">${initials(r.n)}</span>
+        <div class="ulog-id"><div class="ulog-name">${r.n}</div><div class="ulog-by">👤 ${r.by||"?"} · ${r.ts||""}${posChg}</div>${acted}</div>${st}</div>
+      <div class="req-grid">${rows}</div>${acts}</div>`;
+}
 function renderReq(){
   const box=$("req-body"); if(!box)return;
-  const reqs=getRequests();
-  if(!reqs.length){box.innerHTML=`<div class="empty"><span class="big">📥</span>Chưa có yêu cầu nào.<br>Khi người chơi sửa điểm, yêu cầu sẽ hiện ở đây để bạn duyệt.</div>`;return;}
-  const players=getPlayers();
-  box.innerHTML=`<div class="ulog-grid">`+reqs.map(r=>{
-    const cur=players.find(p=>p.n===r.n)||{};
-    const rows=LOGKEYS.map(k=>{
-      const o=clampInt(cur[k]), v=clampInt(r.rat[k]), diff=v!==o;
-      const lab=(ATTRS_ALL.find(a=>a[0]===k)||[k,k])[1];
-      return `<div class="req-attr${diff?' ch':''}"><span class="rk">${lab}</span><span class="rv">${diff?`${o}<b>→${v}</b>`:o}</span></div>`;
-    }).join("");
-    const posChg=(r.pos&&r.pos!==(cur.pos||""))?` · vị trí: <b>${POS_LABEL[r.pos]||r.pos}</b>`:"";
-    return `<div class="ulog-card">
-      <div class="ulog-top"><span class="avatar" style="background:${avColor(r.n)}">${initials(r.n)}</span>
-        <div class="ulog-id"><div class="ulog-name">${r.n}</div><div class="ulog-by">👤 ${r.by||"?"} · ${r.ts||""}${posChg}</div></div></div>
-      <div class="req-grid">${rows}</div>
-      <div class="req-acts">
-        <button class="btn sm" onclick="approveReq('${r.id}')">✓ Duyệt</button>
-        <button class="btn alt sm req-rej" onclick="rejectReq('${r.id}')">✕ Từ chối</button>
-      </div></div>`;
-  }).join("")+`</div>`;
+  const pend=reqPending(), done=reqDone(), players=getPlayers();
+  const tabs=`<div class="req-tabs">
+      <button class="${reqTab==="pending"?"on":""}" onclick="setReqTab('pending')">Đang chờ (${pend.length})</button>
+      <button class="${reqTab==="done"?"on":""}" onclick="setReqTab('done')">Đã xử lý (${done.length})</button></div>`;
+  const list=reqTab==="done"?done:pend;
+  if(!list.length){box.innerHTML=tabs+`<div class="empty"><span class="big">📥</span>${reqTab==="done"?"Chưa có yêu cầu nào được xử lý.":"Không có yêu cầu nào đang chờ."}</div>`;return;}
+  box.innerHTML=tabs+`<div class="ulog-grid">`+list.map(r=>reqCard(r,players)).join("")+`</div>`;
+}
+function reqMark(id,status){      // gắn nhãn trạng thái + ai xử lý + lúc nào; GIỮ LẠI làm lịch sử (cap 80 đã xử lý)
+  const reqs=getRequests(), r=reqs.find(x=>String(x.id)===String(id)); if(!r)return null;
+  r.status=status; r.actedBy=sessionName||(isAdmin?"Admin":"?"); r.actedTs=nowStamp(); r.actedAt=Date.now();
+  const pend=reqs.filter(x=>!x.status||x.status==="pending");
+  const done=reqs.filter(x=>x.status==="approved"||x.status==="rejected").sort((a,b)=>(b.actedAt||0)-(a.actedAt||0)).slice(0,80);
+  STATE.requests=[...pend,...done];
+  return r;
 }
 function approveReq(id){
-  const r=getRequests().find(x=>String(x.id)===String(id)); if(!r)return;
-  const u={n:r.n,pos:r.pos,pos2:r.pos2}; LOGKEYS.forEach(k=>u[k]=clampInt(r.rat[k]));
-  saveRatings([u],r.by,{fromRequest:true});            // tính như lượt chấm của người gửi (gộp với người khác, KHÔNG đè kiểu admin)
-  STATE.requests=getRequests().filter(x=>String(x.id)!==String(id)); persist();
+  const r=getRequests().find(x=>String(x.id)===String(id)); if(!r||r.status)return;
+  const u={n:r.n,pos:r.pos,pos2:r.pos2}; LOGKEYS.forEach(k=>u[k]=clampInt((r.rat||{})[k]));
+  reqMark(id,"approved");                              // đánh dấu TRƯỚC; saveRatings persist cả players lẫn requests
+  saveRatings([u],r.by,{fromRequest:true});            // tính như lượt chấm của người gửi (KHÔNG đè kiểu admin)
   updateReqBadge(); renderReq(); renderPlayersCards();
   if($("playerModal").classList.contains("on"))renderPlayerProfile();
   toast("Đã duyệt & cập nhật điểm <b>"+r.n+"</b> (từ "+(r.by||"?")+").");
 }
 function rejectReq(id){
   if(!confirm("Từ chối yêu cầu này?"))return;
-  STATE.requests=getRequests().filter(x=>String(x.id)!==String(id)); persist();
+  reqMark(id,"rejected"); persist();
   updateReqBadge(); renderReq();
 }
 function logActBadge(e){
