@@ -1337,9 +1337,10 @@ $("saveWeek").onclick=()=>{
 // ============ CAP NHAT CAU THU ============
 function rowHtml(p){
   p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,TM:0};
-  const num=k=>`<td><input type="number" min="0" max="10" data-k="${k}" value="${p[k]}"></td>`;
+  const esc=(p.n||"").replace(/"/g,'&quot;');
+  const num=k=>`<td><input type="number" min="0" max="10" data-k="${k}" data-o="${p[k]}" value="${p[k]}"></td>`;   // data-o = giá trị gốc, để biết dòng nào THỰC SỰ đổi
   return `<tr>
-    <td style="text-align:left"><input type="text" class="nm" value="${(p.n||"").replace(/"/g,'&quot;')}"></td>
+    <td style="text-align:left"><input type="text" class="nm" data-o="${esc}" value="${esc}"></td>
     ${["KT","CH","DD","PN","TC","TL","DN","TD","TM"].map(num).join("")}
     <td><button class="iconbtn" title="Nhập nhanh" onclick="openQuick(this)">⚡</button></td>
     <td><button class="iconbtn" title="Xóa" onclick="this.closest('tr').remove()">🗑️</button></td>
@@ -1451,7 +1452,7 @@ function toggleEdit(force){
   const ed=$("players-editor"), cards=$("players-cards"), t=$("editToggle");
   const goEdit = force===true ? true : (ed.style.display==="none");
   if(goEdit){ if(!requireAdmin())return; ensureName(()=>{ tableEditor=sessionName; buildEditor(); ed.style.display=""; cards.style.display="none"; if(t)t.textContent="🗂️ Xem thẻ"; window.scrollTo(0,0); }); }
-  else { saveRatings(collectEditor(),tableEditor||lastEditor,{removeMissing:true}); ed.style.display="none"; cards.style.display=""; if(t)t.textContent="✏️ Sửa điểm"; renderPlayersCards(); }
+  else { commitEditorEdits(); ed.style.display="none"; cards.style.display=""; if(t)t.textContent="✏️ Sửa điểm"; renderPlayersCards(); }
 }
 // ---- chi tiet cau thu (FM-style) ----
 let pcards=[], pmName=null;
@@ -1878,7 +1879,28 @@ function collectEditor(){
     return o;
   }).filter(o=>o.n);
 }
-function savePlayersFromEditor(){const a=collectEditor();saveRatings(a,tableEditor||lastEditor,{removeMissing:true});alert("Đã lưu "+a.length+" lượt chấm (tên: "+(tableEditor||lastEditor||"?")+").");}
+// 1 dòng coi là ĐÃ SỬA khi: đổi tên / là người mới / có chỉ số khác giá trị gốc
+function rowChanged(tr){
+  const nm=tr.querySelector(".nm"), name=(nm.value||"").trim(); if(!name)return false;
+  if(name!==(nm.dataset.o||"").trim())return true;
+  return [...tr.querySelectorAll("input[type=number]")].some(inp=>Math.max(0,Math.min(10,+inp.value||0))!==(+inp.dataset.o||0));
+}
+function collectEditorChanged(){
+  return [...$("editor-body").querySelectorAll("tr")].filter(rowChanged).map(tr=>{
+    const o={n:tr.querySelector(".nm").value.trim()};
+    tr.querySelectorAll("input[type=number]").forEach(inp=>o[inp.dataset.k]=Math.max(0,Math.min(10,+inp.value||0)));
+    return o;
+  }).filter(o=>o.n);
+}
+function commitEditorEdits(){   // CHỈ lưu người đã sửa · KHÔNG removeMissing → tuyệt đối không đụng/ghi đè/xoá người khác
+  const a=collectEditorChanged();
+  if(a.length) saveRatings(a, tableEditor||lastEditor);
+  return a.length;
+}
+function savePlayersFromEditor(){
+  const n=commitEditorEdits();
+  toast(n?("Đã lưu "+n+" người đã sửa."):"Không có thay đổi nào để lưu.", n?"ok":"warn");
+}
 function resetPlayers(){if(confirm("Khôi phục danh sách mặc định? (mất chỉnh sửa)")){localStorage.removeItem(LS.players);buildEditor();}}
 let quickRowBtn=null;
 function openQuick(btn){quickRowBtn=btn.closest("tr");$("quickModal").classList.add("on");}
