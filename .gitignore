@@ -12,3 +12,4 @@ __pycache__/
 out.txt
 players.json
 preview_static.html
+backups/

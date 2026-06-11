@@ -167,6 +167,9 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pcard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media(max-width:820px){.pcard-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.pcard-grid{grid-template-columns:1fr}}
+.pc-groups{display:flex;flex-direction:column;gap:24px}
+.pc-group-h{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.pc-group-h span{color:var(--faint);font-weight:700}
 .pcard{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:256px;padding:16px 18px;border-radius:18px;
   border:1px solid var(--line);box-shadow:var(--sh);cursor:pointer;transition:.15s;
   background:radial-gradient(120% 90% at 72% 8%,#243049 0%,#0f1426 62%)}
@@ -602,7 +605,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="editToggle" onclick="toggleEdit()">✏️ Sửa điểm</button>
     </div>
   </div>
-  <div id="players-cards" class="pcard-grid"></div>
+  <div id="players-cards" class="pc-groups"></div>
   <div id="players-editor" style="display:none">
   <div class="toolbar">
     <button class="btn sm" onclick="savePlayersFromEditor()">💾 Lưu</button>
@@ -1402,13 +1405,9 @@ function guessPosCode(p){
   return (+p.TC||0)>=7?"TV":"TVtt";
 }
 function posCodeOf(p){return p.pos||guessPosCode(p);}
-function renderPlayersCards(){
-  const pl=getPlayers().sort((a,b)=>ov(b)-ov(a)), box=$("players-cards"); if(!box)return; pcards=pl;
-  if($("pcCount"))$("pcCount").textContent="· "+pl.length;
-  if(!pl.length){box.innerHTML=`<div class="empty"><span class="big">👤</span>Chưa có cầu thủ. Bấm <b>Sửa điểm</b> để thêm.</div>`;return;}
-  box.innerHTML=pl.map((p,i)=>{
-    const o=ov(p).toFixed(1), pos=posCodeOf(p), c=avColor(p.n), star=isStar(p);
-    return `<div class="pcard" onclick="openPlayer(${i})" style="--cc:${c}">
+function pcardHtml(p,i){
+  const o=ov(p).toFixed(1), pos=posCodeOf(p), c=avColor(p.n), star=isStar(p);
+  return `<div class="pcard" onclick="openPlayer(${i})" style="--cc:${c}">
       <div class="stripe"></div>
       <div class="pc-top"><div class="pc-badge">${POSAB[pos]||""}${star?' <span class="pc-star">★</span>':''}</div>
         <div class="pc-ov"><div class="n">${o}</div><div class="l">Điểm</div></div></div>
@@ -1420,6 +1419,18 @@ function renderPlayersCards(){
         <div><div class="sv">${p.TC}</div><div class="sk">Tốc độ</div></div>
         <div><div class="sv">${p.CH}</div><div class="sk">Chuyền</div></div>
       </div></div>`;
+}
+function renderPlayersCards(){           // NHÓM theo vị trí chính, mỗi nhóm sắp theo điểm vị trí (ov) giảm dần
+  const box=$("players-cards"); if(!box)return;
+  const all=getPlayers(); pcards=all;    // pcards[i] khớp index trong onclick openPlayer(i)
+  if($("pcCount"))$("pcCount").textContent="· "+all.length;
+  if(!all.length){box.innerHTML=`<div class="empty"><span class="big">👤</span>Chưa có cầu thủ. Bấm <b>Sửa điểm</b> để thêm.</div>`;return;}
+  const byPos={}; all.forEach((p,i)=>{const pos=posCodeOf(p);(byPos[pos]=byPos[pos]||[]).push(i);});
+  box.innerHTML=POS_LIST.map(([code,label])=>{
+    const idxs=(byPos[code]||[]).sort((a,b)=>ov(all[b])-ov(all[a]));
+    if(!idxs.length)return "";
+    return `<div class="pc-group"><div class="pc-group-h">${label} <span>· ${idxs.length}</span></div>
+      <div class="pcard-grid">${idxs.map(i=>pcardHtml(all[i],i)).join("")}</div></div>`;
   }).join("");
 }
 function showPlayers(){
