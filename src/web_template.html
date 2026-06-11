@@ -154,6 +154,11 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .vp-mark{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:74px;z-index:2;pointer-events:none}
 .vp-mark svg{width:36px;height:33px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
 .vp-nm{margin-top:1px;font-size:9.5px;font-weight:700;color:#fff;text-align:center;line-height:1.15;text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 2px #000;max-width:80px}
+.vp-bench{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.vp-bench{grid-template-columns:1fr}}
+.vpb-l{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.vpb-list{display:flex;flex-wrap:wrap;gap:4px}
+.vpb-none{font-size:11px;color:var(--faint)}
 .bet-against{width:100%;background:#fff;color:#0e1322;border:0;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;transition:.14s}
 .bet-against:hover{background:#e9eefb}
 /* ===== player cards ===== */
@@ -1115,6 +1120,10 @@ function renderSpotlight(h){
     </div>
     <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
     ${vpitch(r)}
+    <div class="vp-bench">
+      <div class="vpb"><div class="vpb-l">🔁 Dự bị Pháo Thủ</div><div class="vpb-list">${subsItems(eB,sel)||'<span class="vpb-none">— không có —</span>'}</div></div>
+      <div class="vpb"><div class="vpb-l">🔁 Dự bị Quỷ Đỏ</div><div class="vpb-list">${subsItems(eA,sel)||'<span class="vpb-none">— không có —</span>'}</div></div>
+    </div>
   </div>`;
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");viewHistory(id);}
