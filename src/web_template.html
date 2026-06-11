@@ -154,11 +154,10 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .vp-mark{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:74px;z-index:2;pointer-events:none}
 .vp-mark svg{width:36px;height:33px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
 .vp-nm{margin-top:1px;font-size:9.5px;font-weight:700;color:#fff;text-align:center;line-height:1.15;text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 2px #000;max-width:80px}
-.vp-bench{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:480px){.vp-bench{grid-template-columns:1fr}}
-.vpb-l{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px}
-.vpb-list{display:flex;flex-wrap:wrap;gap:4px}
-.vpb-none{font-size:11px;color:var(--faint)}
+.vp-sub{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;padding:8px 6px}
+.vp-sub.top{margin-bottom:6px}.vp-sub.bot{margin-top:8px}
+.vsub{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#cbd5e1}
+.vsub svg{width:17px;height:16px;flex:0 0 auto}
 .bet-against{width:100%;background:#fff;color:#0e1322;border:0;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;transition:.14s}
 .bet-against:hover{background:#e9eefb}
 /* ===== player cards ===== */
@@ -289,6 +288,44 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pm-edit input:focus,.pm-edit select:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
 .pe-actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
 .pe-del{margin-left:auto;color:#ff6b6b}
+/* wizard hỏi-đáp chấm cầu thủ */
+.pe-wiz{padding:20px}
+.pe-wiz-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.pe-wiz-name{font-size:15px;font-weight:800}
+.pe-wiz-step{font-size:12px;color:var(--muted);font-weight:700;flex:0 0 auto}
+.pe-prog{height:6px;border-radius:6px;background:var(--surface3);overflow:hidden;margin-bottom:20px}
+.pe-prog>i{display:block;height:100%;background:var(--brand);transition:width .25s}
+.pe-q-title{font-size:17px;font-weight:800;margin-bottom:5px}
+.pe-q-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.45}
+.pe-opts{display:flex;flex-direction:column;gap:10px}
+.pe-opt{display:flex;flex-direction:column;gap:3px;text-align:left;padding:13px 15px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);cursor:pointer;transition:.12s;color:var(--text);width:100%}
+.pe-opt:hover{border-color:rgba(255,255,255,.22)}
+.pe-opt.on{border-color:var(--brand);background:var(--brand-soft)}
+.pe-opt .ol{font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pe-opt .od{font-size:12px;color:var(--muted);line-height:1.4}
+.pe-opt .opt-sc{font-size:12.5px;font-weight:800;color:var(--faint);flex:0 0 auto}
+.pe-opt.on .opt-sc{color:var(--brand)}
+.pe-wiz-nav{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.pe-wiz-nav .sp{flex:1}
+/* danh sách yêu cầu (admin duyệt) */
+.req-badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:800;line-height:1}
+.req-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px 12px;margin:10px 0}
+@media(max-width:560px){.req-grid{grid-template-columns:repeat(2,1fr)}}
+.req-attr{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--line2)}
+.req-attr .rk{color:var(--muted)}
+.req-attr .rv{font-weight:700}
+.req-attr.ch{background:var(--amber-soft);border-radius:6px;padding:3px 6px}
+.req-attr.ch .rv b{color:var(--amber)}
+.req-acts{display:flex;gap:9px;margin-top:6px}
+.req-rej{color:var(--red)}
+/* toast (popup nhẹ thay alert) */
+.toast-wrap{position:fixed;left:0;right:0;bottom:24px;z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+.toast{display:flex;align-items:center;gap:10px;max-width:460px;width:fit-content;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 16px;box-shadow:var(--sh);font-size:13.5px;font-weight:600;opacity:0;transform:translateY(14px);transition:.28s;pointer-events:auto}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.warn{border-left-color:var(--amber)}
+.toast.err{border-left-color:var(--red)}
+.toast .t-ic{flex:0 0 auto;font-size:16px}
+.toast .t-msg{line-height:1.4}
 /* card / panel */
 .card-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
 .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
@@ -555,6 +592,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="pc-bar-title">Cầu thủ <span id="pcCount"></span></div>
     <div class="pc-bar-actions">
       <button class="btn alt sm" onclick="openRank()">🏆 Xếp hạng</button>
+      <button class="btn alt sm" id="reqBtn" onclick="openReq()" style="display:none">📥 Yêu cầu <span class="req-badge" id="reqBadge" style="display:none">0</span></button>
       <button class="btn alt sm" id="plogBtn" onclick="openPlog()">🔄 Lịch sử cập nhật</button>
       <button class="btn alt sm" id="editToggle" onclick="toggleEdit()">✏️ Sửa điểm</button>
     </div>
@@ -675,6 +713,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
 </div>
 
+<!-- ====== DANH SACH YEU CAU (admin duyet) ====== -->
+<div class="pm-overlay" id="reqModal" onclick="if(event.target===this)closeReq()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">📥 Danh sách yêu cầu chỉnh sửa</div>
+      <button class="pm-close" onclick="closeReq()">✕</button>
+    </div>
+    <div id="req-body" class="plog-wrap"></div>
+  </div>
+</div>
+
 <!-- ====== BANG XEP HANG ====== -->
 <div class="pm-overlay" id="rankModal" onclick="if(event.target===this)closeRank()">
   <div class="pm-panel">
@@ -693,7 +742,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
-const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor"};
+const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests"};
 const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
@@ -734,19 +783,21 @@ function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${enco
 function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
-let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], cloud:false, docRef:null};
+let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], cloud:false, docRef:null};
 function localLoad(){
   try{const s=localStorage.getItem(LS.players); if(s)STATE.players=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.history); if(s)STATE.history=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.plog); if(s)STATE.plog=JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem(LS.requests); if(s)STATE.requests=JSON.parse(s);}catch(e){}
   ensureRatings(STATE.players);
 }
 function getPlayers(){return STATE.players.map(p=>({...p}));}
 function getHistory(){return STATE.history.slice();}
 function getPlog(){return (STATE.plog||[]).slice();}
+function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
 function persist(){
-  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));}catch(e){}
-  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
+  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));}catch(e){}
+  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
 }
 function setPlayers(a){STATE.players=a;persist();}
 function setHistory(a){STATE.history=a;persist();}
@@ -754,6 +805,7 @@ function setHistory(a){STATE.history=a;persist();}
 // ---- log cập nhật cầu thủ (ai · khi nào · đổi gì) ----
 const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","TM"];
 let lastEditor="", peEditor="", tableEditor="";   // peEditor: tên ở form hồ sơ; tableEditor: tên ở bảng sửa
+let peStep=0, peAns={}, peTouched={}, pePos="", pePos2=[];   // trạng thái wizard hỏi-đáp chấm cầu thủ
 try{lastEditor=localStorage.getItem(LS.editor)||"";}catch(e){}
 if(lastEditor==="12345"){lastEditor="";try{localStorage.removeItem(LS.editor);}catch(e){}}  // dọn tên cũ bị nhầm với mật khẩu
 function rememberEditor(nm){if(nm&&nm!=="?"&&nm!=="12345"){lastEditor=nm;try{localStorage.setItem(LS.editor,nm);}catch(e){}}}  // không lưu mật khẩu admin làm tên
@@ -857,7 +909,7 @@ function saveRatings(updates,rater,opts){
   updates.forEach(u=>{
     let p=find(u.n); if(!p){p={n:u.n,pos:"",pos2:[]};arr.push(p);}
     const rat={ts:nowStamp(),at:Date.now()}; LOGKEYS.forEach(k=>rat[k]=clampInt(u[k]));
-    if(isAdmin)rat.byAdmin=true;                        // admin -> đè thẳng khi tính điểm
+    if(isAdmin && !opts.fromRequest)rat.byAdmin=true;   // admin -> đè thẳng; nhưng DUYỆT yêu cầu thì tính như lượt chấm của người gửi
     p.ratings={...(p.ratings||{}),[rater]:rat};
     if(u.pos!==undefined)p.pos=u.pos; if(u.pos2!==undefined)p.pos2=u.pos2;
   });
@@ -880,8 +932,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[]});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[]});
       ensureRatings(STATE.players);
       onCloudUpdate();
     },err=>{console.warn("Firebase:",err);STATE.cloud=false;setCloudBadge();});
@@ -889,7 +941,9 @@ function initCloud(){
 }
 function onCloudUpdate(){
   setCloudBadge();
+  updateReqBadge();
   if($("plogModal")&&$("plogModal").classList.contains("on"))renderUpdateLog();
+  if($("reqModal")&&$("reqModal").classList.contains("on"))renderReq();
   if($("rankModal")&&$("rankModal").classList.contains("on"))renderRank();
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
   if(!cur)return;
@@ -961,6 +1015,64 @@ function renderHome(){
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
 function openPlog(){if(!requireAdmin())return;renderUpdateLog();$("plogModal").classList.add("on");}
 function closePlog(){$("plogModal").classList.remove("on");}
+
+// ====== TOAST (popup nhẹ theo theme, tự ẩn — thay alert mặc định) ======
+function toast(msg,type,ms){
+  let w=$("toastWrap");
+  if(!w){ w=document.createElement("div"); w.id="toastWrap"; w.className="toast-wrap"; document.body.appendChild(w); }
+  const t=document.createElement("div");
+  t.className="toast "+(type||"ok");
+  const ic=type==="err"?"⚠️":type==="warn"?"🔔":"✅";
+  t.innerHTML=`<span class="t-ic">${ic}</span><span class="t-msg">${msg}</span>`;
+  w.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add("show"));
+  setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(),300); }, ms||3400);
+}
+
+// ====== DANH SÁCH YÊU CẦU (admin duyệt yêu cầu sửa của người thường) ======
+function updateReqBadge(){
+  const n=getRequests().length, b=$("reqBadge"); if(!b)return;
+  b.textContent=n; b.style.display=(isAdmin&&n>0)?"":"none";
+}
+function openReq(){ if(!requireAdmin())return; renderReq(); $("reqModal").classList.add("on"); }
+function closeReq(){ $("reqModal").classList.remove("on"); }
+function renderReq(){
+  const box=$("req-body"); if(!box)return;
+  const reqs=getRequests();
+  if(!reqs.length){box.innerHTML=`<div class="empty"><span class="big">📥</span>Chưa có yêu cầu nào.<br>Khi người chơi sửa điểm, yêu cầu sẽ hiện ở đây để bạn duyệt.</div>`;return;}
+  const players=getPlayers();
+  box.innerHTML=`<div class="ulog-grid">`+reqs.map(r=>{
+    const cur=players.find(p=>p.n===r.n)||{};
+    const rows=LOGKEYS.map(k=>{
+      const o=clampInt(cur[k]), v=clampInt(r.rat[k]), diff=v!==o;
+      const lab=(ATTRS_ALL.find(a=>a[0]===k)||[k,k])[1];
+      return `<div class="req-attr${diff?' ch':''}"><span class="rk">${lab}</span><span class="rv">${diff?`${o}<b>→${v}</b>`:o}</span></div>`;
+    }).join("");
+    const posChg=(r.pos&&r.pos!==(cur.pos||""))?` · vị trí: <b>${POS_LABEL[r.pos]||r.pos}</b>`:"";
+    return `<div class="ulog-card">
+      <div class="ulog-top"><span class="avatar" style="background:${avColor(r.n)}">${initials(r.n)}</span>
+        <div class="ulog-id"><div class="ulog-name">${r.n}</div><div class="ulog-by">👤 ${r.by||"?"} · ${r.ts||""}${posChg}</div></div></div>
+      <div class="req-grid">${rows}</div>
+      <div class="req-acts">
+        <button class="btn sm" onclick="approveReq('${r.id}')">✓ Duyệt</button>
+        <button class="btn alt sm req-rej" onclick="rejectReq('${r.id}')">✕ Từ chối</button>
+      </div></div>`;
+  }).join("")+`</div>`;
+}
+function approveReq(id){
+  const r=getRequests().find(x=>String(x.id)===String(id)); if(!r)return;
+  const u={n:r.n,pos:r.pos,pos2:r.pos2}; LOGKEYS.forEach(k=>u[k]=clampInt(r.rat[k]));
+  saveRatings([u],r.by,{fromRequest:true});            // tính như lượt chấm của người gửi (gộp với người khác, KHÔNG đè kiểu admin)
+  STATE.requests=getRequests().filter(x=>String(x.id)!==String(id)); persist();
+  updateReqBadge(); renderReq(); renderPlayersCards();
+  if($("playerModal").classList.contains("on"))renderPlayerProfile();
+  toast("Đã duyệt & cập nhật điểm <b>"+r.n+"</b> (từ "+(r.by||"?")+").");
+}
+function rejectReq(id){
+  if(!confirm("Từ chối yêu cầu này?"))return;
+  STATE.requests=getRequests().filter(x=>String(x.id)!==String(id)); persist();
+  updateReqBadge(); renderReq();
+}
 function logActBadge(e){
   if(e.action==="add")return `<span class="ulog-badge add">➕ Thêm mới</span>`;
   if(e.action==="del")return `<span class="ulog-badge del">🗑️ Đã xoá</span>`;
@@ -1112,6 +1224,11 @@ function renderSpotlight(h){
   const sel=r.subset, eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
   if(!sel||!eA||!eB){box.innerHTML=matchCard(r,false);return;}   // trận cũ không có đội hình -> thẻ gọn
   const when=r.kickoff?fmtKick(r.kickoff):(r.label||"⏳ Chưa đá");
+  const benchStrip=(ev,kit,side)=>{
+    const items=ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a]))
+      .map(i=>`<span class="vsub">${jersey(kit)}<span>${esc(shortName(sel[i].n))}</span></span>`).join("");
+    return items?`<div class="vp-sub ${side}">${items}</div>`:"";
+  };
   box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
       <span class="lu-team"><span class="lu-logo" style="background:${KIT_B.body};color:#11224f">PT</span>Pháo Thủ</span>
@@ -1119,11 +1236,9 @@ function renderSpotlight(h){
       <span class="lu-team r">Quỷ Đỏ<span class="lu-logo" style="background:${KIT_A.body};color:#fff">QĐ</span></span>
     </div>
     <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
+    ${benchStrip(eB,KIT_B,"top")}
     ${vpitch(r)}
-    <div class="vp-bench">
-      <div class="vpb"><div class="vpb-l">🔁 Dự bị Pháo Thủ</div><div class="vpb-list">${subsItems(eB,sel)||'<span class="vpb-none">— không có —</span>'}</div></div>
-      <div class="vpb"><div class="vpb-l">🔁 Dự bị Quỷ Đỏ</div><div class="vpb-list">${subsItems(eA,sel)||'<span class="vpb-none">— không có —</span>'}</div></div>
-    </div>
+    ${benchStrip(eA,KIT_A,"bot")}
   </div>`;
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");viewHistory(id);}
@@ -1290,7 +1405,8 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   document.body.classList.toggle("is-admin",isAdmin);
   document.body.classList.toggle("can-edit",canEdit);
   const set=(id,show)=>{const el=$(id);if(el)el.style.display=show?"":"none";};
-  set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",canEdit); set("histBtn",isAdmin);
+  set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin);
+  updateReqBadge();
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
 }
@@ -1472,7 +1588,7 @@ function renderPlayerProfile(){
     :nR>=MIN_RATERS?`<span class="pm-h-raters ok">👥 ${nR} người chấm</span>`:`<span class="pm-h-raters warn">👥 ${nR} người chấm · tạm tính</span>`;
   const sec=(Array.isArray(p.pos2)?p.pos2:[]).filter(s=>POS_X[s]!=null);
   const dots=`<div class="dot" style="left:${POS_X[pos]}%;top:50%"></div>`+sec.map(s=>`<div class="dot sec" style="left:${POS_X[s]}%;top:50%"></div>`).join("");
-  $("pmEdit").style.display=canEdit?"":"none";
+  $("pmEdit").style.display="";   // công khai: ai cũng thấy nút Chỉnh sửa
   $("pmBody").innerHTML=`
     <div class="pm-head">
       <div class="pm-ava" style="${avaStyle(p.n)}">${avaInner(p.n)}</div>
@@ -1531,39 +1647,173 @@ function peCollect(){            // đọc giá trị đang chọn trong form ->
 }
 function peRenderEval(){const box=$("pe-eval"); if(box)box.innerHTML=evalBlock(peCollect());}
 function editPlayer(){
-  if(!requireEdit())return;          // phải đăng nhập (user/admin) mới chấm
   if(!pmFind())return;
-  ensureName(()=>{ peEditor=sessionName; editPlayerForm(); });
+  ensureName(()=>{ peEditor=sessionName; editPlayerForm(); });   // CÔNG KHAI: ai cũng chấm được (chỉ cần tên); admin lưu thẳng, người khác gửi yêu cầu chờ duyệt
+}
+// ====== WIZARD HỎI-ĐÁP CHẤM CẦU THỦ ======
+// Mỗi câu: key = chỉ số sẽ ghi; opts[].score = điểm (0-10) ứng với lựa chọn.
+// SC (sức chạy) ghi vào CẢ TL & DN. MOOD chỉ chỉnh DD/TD (không phải chỉ số riêng).
+const PE_Q_OUTFIELD=[
+  {id:"KT",key:"KT",title:"Kỹ thuật — giữ & xử lý bóng",sub:"Khi nhận bóng trong không gian hẹp và bị 1 đối thủ áp sát ngay, cậu ấy khống chế và xử lý quả bóng thế nào?",opts:[
+    {l:"Chạm hỏng, mất bóng",d:"Cú chạm bóng đầu tiên nặng/khó chịu, bóng nảy xa tầm hoặc bị cướp ngay khi bị ép",score:3},
+    {l:"Phá an toàn",d:"Khống chế được nhưng vội phá/chuyền đại cho xong, mất quyền kiểm soát bóng",score:5},
+    {l:"Khống chế gọn",d:"Chạm một gọn gàng, che chắn giữ bóng, thoát được khỏi người kèm",score:7},
+    {l:"Qua người, mở cơ hội",d:"Khéo léo xoay người / rê thoát qua đối thủ, giữ bóng tốt và mở ra hướng tấn công",score:8}]},
+  {id:"CH",key:"CH",title:"Chuyền bóng",sub:"Khả năng chuyền và phối hợp với đồng đội của cậu ấy ra sao?",opts:[
+    {l:"Hay sai địa chỉ/lực",d:"Chuyền hay lệch người, lực quá mạnh/quá nhẹ, làm đứt nhịp tấn công",score:3},
+    {l:"Ngắn, an toàn",d:"Chỉ chuyền ngắn cự ly gần cho chắc, ngại đường chuyền khó hoặc dài",score:5},
+    {l:"Chuẩn, biết 1-2",d:"Chuyền chính xác phần lớn tình huống, biết phối hợp đập nhả 1-2 với đồng đội",score:7},
+    {l:"Sắc, xuyên tuyến/mở biên",d:"Chuyền sắc: chọc khe xuyên tuyến, đổi cánh, phất dài chuẩn — tạo cơ hội cho đồng đội",score:8}]},
+  {id:"DD",key:"DD",title:"Dứt điểm",sub:"Khi có cơ hội ăn bàn (đối mặt thủ môn, bóng trong vòng cấm), cậu ấy dứt điểm thế nào?",opts:[
+    {l:"Thường bỏ lỡ",d:"Hay sút trượt hoặc sút thẳng thủ môn, phá hỏng cả cơ hội ngon ăn",score:3},
+    {l:"Lúc được lúc không",d:"Có ghi bàn nhưng phập phù, cơ hội rõ vẫn thường bỏ lỡ",score:5},
+    {l:"Ăn cơ hội ngon",d:"Cơ hội rõ ràng là tận dụng tốt, dứt điểm dứt khoát",score:7},
+    {l:"Sát thủ, đa dạng",d:"Ghi bàn đều, sút nhiều kiểu (2 chân, đặt lòng, vô lê); có bóng trong cấm gần như chắc bàn",score:8}]},
+  {id:"PN",key:"PN",title:"Phòng ngự",sub:"Khi đối phương cầm bóng tấn công về phía mình, cậu ấy phòng ngự thế nào?",opts:[
+    {l:"Bị qua dễ",d:"Ngại va chạm/tranh chấp, hoặc lao vào hớ rồi bị qua mặt dễ dàng",score:3},
+    {l:"Tranh chấp được, hớ vị trí",d:"Tranh bóng được nhưng hay đứng sai chỗ, để lộ khoảng trống sau lưng",score:5},
+    {l:"Chắc, tì đè + bọc lót",d:"Tranh chấp chắc chắn, tì đè tốt, biết bọc lót che chắn cho đồng đội",score:7},
+    {l:"Bức tường, đọc bài",d:"Đọc trước đường bóng, cắt/đoạt từ xa, hiếm khi bị xuyên thủng",score:8}]},
+  {id:"TD",key:"TD",title:"Tư duy — đọc trận",sub:"Khả năng đọc tình huống, chọn vị trí và ra quyết định (chuyền / rê / sút) đúng lúc?",opts:[
+    {l:"Đứng sai chỗ, đuổi bóng",d:"Hay đứng sai vị trí, chạy theo bóng theo bản năng, quyết định vội vàng",score:3},
+    {l:"Ổn nhưng thụ động",d:"Ít mắc lỗi vị trí nhưng thụ động, chờ bóng đến chân mới xử lý",score:5},
+    {l:"Chọn vị trí hợp lý",d:"Di chuyển chọn chỗ hợp lý, bọc lót đúng lúc, quyết định phần lớn là đúng",score:7},
+    {l:"Đọc trước, cầm nhịp",d:"Đọc trước tình huống vài nhịp, biết lúc nào tăng tốc / làm chậm, điều tiết nhịp cả đội",score:8}]},
+  {id:"TC",key:"TC",title:"Tốc độ",sub:"Tốc độ bứt cự ly ngắn (5–15m) và khả năng đổi hướng — thứ quyết định ở sân nhỏ?",opts:[
+    {l:"Chậm, ì",d:"Tăng tốc chậm, dễ bị đối thủ bứt khỏi hoặc rượt theo không kịp",score:3},
+    {l:"Trung bình",d:"Tốc độ đủ dùng, không hơn không kém ai rõ rệt",score:5},
+    {l:"Nhanh, bứt được",d:"Bứt tốc tốt, thường theo kịp hoặc vượt được trong pha tranh chấp",score:7},
+    {l:"Tốc biến, lắt léo",d:"Bứt rất nhanh trong vài bước đầu, đổi hướng lắt léo khiến đối thủ khó theo",score:8}]},
+  {id:"SC",key:"SC",title:"Sức chạy",sub:"Thể lực và mức chịu chạy suốt cả trận (gộp 'sức bền' với 'chịu khó, máu lửa')?",opts:[
+    {l:"Mau mệt, hay đi bộ",d:"Nhanh xuống sức, hay đi bộ, ngại di chuyển nhiều",score:3},
+    {l:"Đuối nửa sau",d:"Đầu trận chạy ổn nhưng đuối sức rõ ở hiệp 2 / cuối trận",score:5},
+    {l:"Bền, chịu khó di chuyển",d:"Lên công về thủ đều đặn, chạy bền gần hết trận",score:7},
+    {l:"Máy chạy, pressing không nghỉ",d:"Thể lực dồi dào, đeo bám/pressing không biết mệt, cày cả trận",score:8}]},
+  {id:"MOOD",key:"MOOD",title:"Tâm lý — bản lĩnh",sub:"Khi áp lực cao (đội bị dẫn bàn, đối mặt thủ môn, phút cuối căng thẳng), tâm lý cậu ấy thế nào?",opts:[
+    {l:"Cuống, đá hỏng",d:"Mất bình tĩnh, đá vội hoặc đổ lỗi, càng căng càng hỏng (giảm nhẹ Dứt điểm & Tư duy)",dd:-1,td:-1},
+    {l:"Hơi vội",d:"Có chút cuống nhưng vẫn còn kiểm soát được phần nào",dd:0,td:0},
+    {l:"Giữ được bình tĩnh",d:"Điềm đạm, xử lý tỉnh táo dù đang bị áp lực",dd:0,td:0},
+    {l:"Càng căng càng hay",d:"Bản lĩnh, thậm chí đá hay hơn khi căng thẳng (cộng nhẹ Dứt điểm)",dd:1,td:0}]},
+];
+const PE_Q_GK={id:"TM",key:"TM",title:"Thủ môn — bắt gôn",sub:"Khi đứng trong khung thành, cậu ấy bắt và cản phá bóng thế nào?",opts:[
+  {l:"Không bắt được",d:"Không có khả năng bắt gôn, không nên cho vào khung",score:0},
+  {l:"Tạm, chữa cháy",d:"Bắt đỡ được lúc bí / thiếu người, nhưng không chắc chắn",score:3},
+  {l:"Khá",d:"Phản xạ ổn, đỡ được phần lớn các pha dứt điểm thông thường",score:6},
+  {l:"Xịn",d:"Phản xạ tốt, ra vào và bắt 1v1 chắc chắn, đủ làm thủ môn chính",score:9}]};
+
+function peIsGK(){return pePos==="GK"||(pePos2||[]).includes("GK");}
+function peQList(){return peIsGK()?[...PE_Q_OUTFIELD,PE_Q_GK]:PE_Q_OUTFIELD.slice();}
+function peNearestIdx(v,opts){let bi=0,bd=1e9;opts.forEach((o,i)=>{if(o.score==null)return;const d=Math.abs(o.score-v);if(d<bd){bd=d;bi=i;}});return bi;}
+function peComputeScores(){    // suy điểm 9 chỉ số từ đáp án; chỉ số chưa chấm giữ điểm cũ
+  const p=pmFind()||{}, o={};
+  ATTRS_ALL.forEach(([k])=>o[k]=clampInt(p[k]));
+  peQList().forEach(q=>{
+    if(!peTouched[q.id])return;
+    const opt=q.opts[peAns[q.id]]; if(!opt)return;
+    if(q.key==="SC"){o.TL=opt.score;o.DN=opt.score;}
+    else if(q.key==="MOOD"){o.DD=clampInt(o.DD+(opt.dd||0));o.TD=clampInt(o.TD+(opt.td||0));}
+    else o[q.key]=opt.score;
+  });
+  return o;
+}
+function peCapturePos(){       // chốt vị trí từ chip đang hiện (bước vị trí hoặc bước xem lại)
+  const pr=document.querySelector('input[name="pe-pos"]:checked'); if(pr)pePos=pr.value;
+  const box=$("pe-pos2"); if(box)pePos2=[...box.querySelectorAll('input:checked')].map(c=>c.value).filter(v=>v!==pePos);
 }
 function editPlayerForm(){
   const p=pmFind(); if(!p)return;
   $("pmEdit").style.display="none";
-  const mine=(p.ratings&&p.ratings[peEditor])||null, self=isSelf(peEditor,p), nR=raterCount(p);
-  const start=k=>mine?clampInt(mine[k]):clampInt(p[k]);   // điểm cũ của chính bạn; chưa có -> lấy điểm tổng làm gợi ý
-  const cell=([k,l])=>`<label class="pe-cell"><span class="pe-lab">${l}</span><span class="pe-hint">${ATTR_HINT[k]||""}</span><select class="pe-sel" id="pe-${k}">${peOpts(start(k))}</select></label>`;
-  const curPos=posCodeOf(p), sec=(Array.isArray(p.pos2)?p.pos2:[]);
-  const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${curPos===k?"checked":""}><span>${l}</span></label>`;
-  const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${sec.includes(k)?"checked":""}><span>${l}</span></label>`;
+  peStep=0; peAns={}; peTouched={};
+  pePos=posCodeOf(p); pePos2=(Array.isArray(p.pos2)?p.pos2:[]).filter(s=>s!==pePos);
+  [...PE_Q_OUTFIELD,PE_Q_GK].forEach(q=>{                       // gợi ý: chọn sẵn nấc gần điểm cũ nhất (chưa tính là đã chấm)
+    if(q.key==="MOOD")return;
+    const cur=q.key==="SC"?clampInt(((+p.TL||0)+(+p.DN||0))/2):clampInt(p[q.key]);
+    peAns[q.id]=peNearestIdx(cur,q.opts);
+  });
+  peWizRender();
+}
+function peWizRender(){
+  const p=pmFind(); if(!p)return;
+  const qs=peQList(), total=qs.length+2;                        // bước 0 vị trí + N câu + bước xem lại
+  let body;
+  if(peStep===0) body=peWizPosStep();
+  else if(peStep<=qs.length) body=peWizQStep(qs[peStep-1]);
+  else body=peWizReview(p);
+  const pct=Math.round(peStep/(total-1)*100);
   $("pmBody").innerHTML=`
-    <div class="pm-edit">
-      <div class="pe-top">
-        <div class="pe-name"><span>Tên (không sửa được)</span><div class="pe-name-val">${p.n}</div></div>
+    <div class="pe-wiz">
+      <div class="pe-wiz-head">
+        <div class="pe-wiz-name">${p.n}</div>
+        <div class="pe-wiz-step">Bước ${peStep+1}/${total}</div>
       </div>
-      <div class="pe-pos">
-        <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
-        <div class="pe-pos-group"><span class="pe-lab">Vị trí phụ (đá được)</span><div class="pos-chips" id="pe-pos2">${POS_LIST.map(secChip).join("")}</div></div>
-      </div>
-      <div class="pe-note">${isAdmin?`🔒 <b>Admin</b>: điểm bạn nhập sẽ <b>áp dụng thẳng</b> (đặt 10 là 10)`:self?`⚠️ Tên bạn trùng tên cầu thủ — điểm <b>tự chấm</b> sẽ không tính vào điểm tổng`:`Bạn đang chấm với tên <b>${peEditor}</b> · điểm tổng = tổng hợp ${nR?nR+" người":"các lượt"} chấm`} · thang <b>0–10</b></div>
-      <div class="pe-grid">${ATTRS_ALL.map(cell).join("")}</div>
-      <div id="pe-eval" class="pe-eval-wrap"></div>
-      <div class="pe-actions">
-        <button class="btn sm" onclick="savePlayer()">💾 Lưu</button>
-        <button class="btn alt sm" onclick="renderPlayerProfile()">Hủy</button>
-        <button class="btn alt sm pe-del" onclick="deletePlayer()">🗑️ Xóa cầu thủ</button>
-      </div>
+      <div class="pe-prog"><i style="width:${pct}%"></i></div>
+      ${body}
     </div>`;
-  $("pmBody").querySelectorAll('.pe-sel,input[name="pe-pos"]').forEach(el=>el.addEventListener("change",peRenderEval));
-  peRenderEval();
+  if(peStep>qs.length){
+    $("pmBody").querySelectorAll('.pe-sel,input[name="pe-pos"]').forEach(el=>el.addEventListener("change",peRenderEval));
+    peRenderEval();
+  }
+}
+function peWizPosStep(){
+  const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${pePos===k?"checked":""}><span>${l}</span></label>`;
+  const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${pePos2.includes(k)?"checked":""}><span>${l}</span></label>`;
+  return `
+    <div class="pe-q-title">Vị trí thi đấu</div>
+    <div class="pe-q-sub">Chọn vị trí <b>chính</b> (1 ô) và các vị trí <b>phụ</b> cậu ấy đá được (chọn nhiều ô). Nếu có chọn <b>Thủ môn</b>, cuối phần hỏi sẽ có thêm câu về bắt gôn.</div>
+    <div class="pe-pos">
+      <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
+      <div class="pe-pos-group"><span class="pe-lab">Vị trí phụ (đá được)</span><div class="pos-chips" id="pe-pos2">${POS_LIST.map(secChip).join("")}</div></div>
+    </div>
+    <div class="pe-wiz-nav">
+      <button class="btn alt sm" onclick="renderPlayerProfile()">Hủy</button>
+      <span class="sp"></span>
+      <button class="btn sm" onclick="peWizNav(1)">Tiếp →</button>
+    </div>`;
+}
+function peWizQStep(q){
+  const sel=peTouched[q.id]?peAns[q.id]:-1;
+  const opt=(o,i)=>`<button class="pe-opt${sel===i?' on':''}" onclick="peWizPick('${q.id}',${i})">
+      <span class="ol"><span>${o.l}</span>${o.score!=null?`<span class="opt-sc">${o.score}đ</span>`:''}</span>
+      <span class="od">${o.d}</span></button>`;
+  return `
+    <div class="pe-q-title">${q.title}</div>
+    <div class="pe-q-sub">${q.sub}</div>
+    <div class="pe-opts">${q.opts.map(opt).join("")}</div>
+    <div class="pe-wiz-nav">
+      <button class="btn alt sm" onclick="peWizNav(-1)">← Quay lại</button>
+      <span class="sp"></span>
+      <button class="btn alt sm" onclick="peWizNav(1)">Tiếp →</button>
+    </div>`;
+}
+function peWizReview(p){
+  peCapturePos();
+  const sc=peComputeScores(), self=isSelf(peEditor,p), nR=raterCount(p);
+  const note=isAdmin?`🔒 <b>Admin</b>: điểm sẽ <b>áp dụng thẳng</b>`:self?`⚠️ Tên bạn trùng tên cầu thủ — điểm tự chấm không tính vào tổng`:`Chấm với tên <b>${peEditor}</b> · điểm tổng = tổng hợp ${nR?nR+" người":"các lượt"} chấm`;
+  const cell=([k,l])=>`<label class="pe-cell"><span class="pe-lab">${l}</span><span class="pe-hint">${ATTR_HINT[k]||""}</span><select class="pe-sel" id="pe-${k}">${peOpts(clampInt(sc[k]))}</select></label>`;
+  const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${pePos===k?"checked":""}><span>${l}</span></label>`;
+  const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${pePos2.includes(k)?"checked":""}><span>${l}</span></label>`;
+  return `
+    <div class="pe-q-title">Xem lại & lưu</div>
+    <div class="pe-q-sub">Điểm dưới đây suy ra từ câu trả lời của bạn — chỉnh tay nếu cần rồi bấm Lưu.<br><span class="pe-note">${note} · thang 0–10</span></div>
+    <div class="pe-pos">
+      <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
+      <div class="pe-pos-group"><span class="pe-lab">Vị trí phụ</span><div class="pos-chips" id="pe-pos2">${POS_LIST.map(secChip).join("")}</div></div>
+    </div>
+    <div class="pe-grid">${ATTRS_ALL.map(cell).join("")}</div>
+    <div id="pe-eval" class="pe-eval-wrap"></div>
+    <div class="pe-wiz-nav">
+      <button class="btn alt sm" onclick="peWizNav(-1)">← Quay lại</button>
+      <span class="sp"></span>
+      <button class="btn sm" onclick="savePlayer()">💾 Lưu</button>
+      <button class="btn alt sm pe-del" onclick="deletePlayer()">🗑️ Xóa</button>
+    </div>`;
+}
+function peWizPick(qid,idx){peAns[qid]=idx;peTouched[qid]=true;peWizNav(1);}
+function peWizNav(dir){
+  peCapturePos();
+  const total=peQList().length+2;
+  peStep=Math.max(0,Math.min(total-1,peStep+dir));
+  peWizRender();
 }
 function savePlayer(){
   if(!pmName)return;
@@ -1571,7 +1821,18 @@ function savePlayer(){
   ATTRS_ALL.forEach(([k])=>u[k]=Math.max(0,Math.min(10,+$("pe-"+k).value||0)));
   const pr=document.querySelector('input[name="pe-pos"]:checked'); u.pos=pr?pr.value:"";
   u.pos2=[...document.querySelectorAll('#pe-pos2 input:checked')].map(c=>c.value).filter(v=>v!==u.pos);
-  saveRatings([u],peEditor); renderPlayerProfile(); renderPlayersCards();
+  if(isAdmin){ saveRatings([u],peEditor); renderPlayerProfile(); renderPlayersCards(); }
+  else { submitRequest(u); }              // người thường: gửi yêu cầu chờ admin duyệt
+}
+// ---- người thường gửi yêu cầu sửa (chờ admin duyệt) ----
+function submitRequest(u){
+  const reqs=getRequests().filter(r=>!(r.n===u.n && (r.by||"")===(peEditor||"")));   // 1 người · 1 cầu thủ = giữ yêu cầu mới nhất
+  const rat={}; LOGKEYS.forEach(k=>rat[k]=clampInt(u[k]));
+  reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:peEditor||"?", n:u.n, rat, pos:u.pos, pos2:u.pos2, ts:nowStamp(), at:Date.now()});
+  STATE.requests=reqs; persist();
+  updateReqBadge();
+  renderPlayerProfile();
+  toast("Đã gửi yêu cầu cập nhật <b>"+u.n+"</b> cho admin. Điểm sẽ áp dụng sau khi được duyệt.");
 }
 function deletePlayer(){
   if(!requireAdmin())return;

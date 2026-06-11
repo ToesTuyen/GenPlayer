@@ -67,10 +67,15 @@
     const backs=[starters[1],starters[2],starters[3]];
     const fronts=[starters[4],starters[5],starters[6]];
     const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
+    const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
     return {
       starters, bench, startFit, benchOv, gkFit,
-      defPN: mean(backs,s=>s.PN),
-      atk:   mean(fronts,s=>s.DD),
+      defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình
+      atk:   mean(fronts,s=>s.DD),    // CÔNG tuyến trên (3 mũi) — giữ cân hình
+      def7:  mean(starters,s=>s.PN),  // THỦ toàn đội hình chính (cả tuyến giữa)
+      atk7:  mean(starters,s=>s.DD),  // CÔNG toàn đội hình chính (cả tuyến giữa)
+      benchDef: bmean(s=>s.PN),       // THỦ của ghế dự bị
+      benchAtk: bmean(s=>s.DD),       // CÔNG của ghế dự bị
       pace:  mean(starters,s=>s.TC),
       heat:  mean(starters,s=>s.DN),
       stars: team.filter(i=>ctx.overall[i]>=STAR_MIN).length,
@@ -86,8 +91,22 @@
     })(0,0);
   }
 
-  // players: mang object {n,KT,...,TM}. Tra ve {A,B,evA,evB,J} hoac null neu loi.
-  function solve(players){
+  // Trong so ham muc tieu J (cang nho cang can). CONG = THU de "khong cai nhau".
+  const DEFW={
+    stars:2.5,        // chenh so ngoi sao
+    startFit:1.0,     // suc manh doi hinh chinh (Hungarian fit)
+    total:0.5,        // tong ca doi (chinh + du bi)
+    cong:1.0, thu:1.0,        // CONG/THU toan doi hinh chinh (ca tuyen giua) — NGANG NHAU
+    congLine:0.5, thuLine:0.5, // giu can hinh tuyen tren/duoi
+    benchOv:0.5,              // du bi: suc manh
+    benchCong:0.5, benchThu:0.5, // du bi: can ca cong lan thu (khong lech thanh phan)
+    pace:0.3, heat:0.3,
+    gk:0.4,           // thu mon
+  };
+
+  // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
+  function solve(players, Wover){
+    const W=Object.assign({}, DEFW, Wover||{});
     const N=players.length;
     if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
     const overall=players.map(overallOf);
@@ -128,15 +147,16 @@
       for(const i of B) if(okGK(i)){okB=true;break;}
       if(!okA||!okB) return;
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
-      const J = 3.0*Math.abs(eA.stars-eB.stars)
-              + 1.0*Math.abs(eA.startFit-eB.startFit)
-              + 0.6*Math.abs(eA.total-eB.total)
-              + 0.5*Math.abs(eA.benchOv-eB.benchOv)
-              + 1.0*Math.abs(eA.defPN-eB.defPN)
-              + 0.4*Math.abs(eA.atk-eB.atk)
-              + 0.4*Math.abs(eA.pace-eB.pace)
-              + 0.4*Math.abs(eA.heat-eB.heat)
-              + 0.3*Math.abs(eA.gkFit-eB.gkFit);
+      const d=k=>Math.abs(eA[k]-eB[k]);
+      const J = W.stars*d('stars')
+              + W.startFit*d('startFit')
+              + W.total*d('total')
+              + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
+              + W.congLine*d('atk') + W.thuLine*d('defPN') // giữ cân hình tuyến trên/dưới
+              + W.benchOv*d('benchOv')
+              + W.benchCong*d('benchAtk') + W.benchThu*d('benchDef') // dự bị cân công-thủ
+              + W.pace*d('pace') + W.heat*d('heat')
+              + W.gk*d('gkFit');
       consider({J,A,B,evA:eA,evB:eB});
     });
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
