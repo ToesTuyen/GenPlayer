@@ -146,7 +146,7 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .lu-logo{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:0 0 auto}
 .lu-vs{flex:0 0 auto;color:var(--faint);font-size:11px;font-weight:700}
 .lu-meta{text-align:center;color:var(--muted);font-size:11.5px;font-weight:600;margin:8px 0 12px}
-.vpitch{position:relative;width:100%;max-width:400px;margin:2px auto 0;aspect-ratio:5/6;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 44px rgba(0,0,0,.28);background:linear-gradient(160deg,#1f8043,#14562d);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 16.66%,rgba(0,0,0,.05) 16.66% 33.33%)}
+.vpitch{position:relative;width:100%;max-width:440px;margin:2px auto 0;aspect-ratio:1/1.18;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 44px rgba(0,0,0,.28);background:linear-gradient(160deg,#1f8043,#14562d);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 16.66%,rgba(0,0,0,.05) 16.66% 33.33%)}
 .vp-mid{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.36)}
 .vp-circle{position:absolute;left:50%;top:50%;width:70px;height:70px;border:2px solid rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%)}
 .vp-box{position:absolute;left:50%;transform:translateX(-50%);width:46%;height:13%;border:2px solid rgba(255,255,255,.26)}
@@ -1092,9 +1092,9 @@ function renderMatchList(h){
 function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
-  const X ={0:50,1:25,2:50,3:75,4:25,5:50,6:75};
-  const YA={0:90,1:73,2:73,3:73,4:57,5:57,6:57};   // Quỷ Đỏ tấn công lên (dưới)
-  const YB={0:10,1:27,2:27,3:27,4:43,5:43,6:43};   // Pháo Thủ tấn công xuống (trên)
+  const X ={0:50,1:17,2:50,3:83,4:17,5:50,6:83};
+  const YA={0:93,1:74,2:74,3:74,4:56,5:56,6:56};   // Quỷ Đỏ tấn công lên (dưới)
+  const YB={0:7,1:26,2:26,3:26,4:44,5:44,6:44};    // Pháo Thủ tấn công xuống (trên)
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
   for(let c=0;c<7;c++){h+=mark(sel[eB.starters[c]],X[c],YB[c],KIT_B);h+=mark(sel[eA.starters[c]],X[c],YA[c],KIT_A);}
