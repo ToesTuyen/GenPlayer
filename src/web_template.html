@@ -146,12 +146,14 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .lu-logo{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:0 0 auto}
 .lu-vs{flex:0 0 auto;color:var(--faint);font-size:11px;font-weight:700}
 .lu-meta{text-align:center;color:var(--muted);font-size:11.5px;font-weight:600;margin:8px 0 12px}
-.lu-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.lu-col{display:flex;flex-direction:column;gap:5px}
-.lu-row{display:flex;align-items:center;gap:7px;font-size:12px;padding:6px 9px;background:var(--surface2);border:1px solid var(--line);border-radius:9px}
-.lu-col.r .lu-row{flex-direction:row-reverse}
-.lu-pos{flex:0 0 auto;font-size:9px;font-weight:800;color:var(--gold);min-width:26px;text-align:center;letter-spacing:.3px}
-.lu-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}
+.vpitch{position:relative;width:100%;max-width:400px;margin:2px auto 0;aspect-ratio:5/6;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 44px rgba(0,0,0,.28);background:linear-gradient(160deg,#1f8043,#14562d);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 16.66%,rgba(0,0,0,.05) 16.66% 33.33%)}
+.vp-mid{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.36)}
+.vp-circle{position:absolute;left:50%;top:50%;width:70px;height:70px;border:2px solid rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%)}
+.vp-box{position:absolute;left:50%;transform:translateX(-50%);width:46%;height:13%;border:2px solid rgba(255,255,255,.26)}
+.vp-box.top{top:-2px;border-top:0}.vp-box.bot{bottom:-2px;border-bottom:0}
+.vp-mark{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:74px;z-index:2;pointer-events:none}
+.vp-mark svg{width:36px;height:33px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.vp-nm{margin-top:1px;font-size:9.5px;font-weight:700;color:#fff;text-align:center;line-height:1.15;text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 2px #000;max-width:80px}
 .bet-against{width:100%;background:#fff;color:#0e1322;border:0;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;transition:.14s}
 .bet-against:hover{background:#e9eefb}
 /* ===== player cards ===== */
@@ -509,14 +511,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </section>
   </div>
   <div class="dash-main">
-    <div class="dash-left">
-      <div class="league-head"><span class="lg-ic">⚽</span>Lịch sử thi đấu</div>
-      <div id="matchList"></div>
-    </div>
-    <aside class="dash-right">
+    <aside class="dash-left">
       <div class="pop-head">Trận sắp tới <a onclick="show('screen-week')">Xem thêm</a></div>
       <div id="spotlight"></div>
     </aside>
+    <div class="dash-right">
+      <div class="league-head"><span class="lg-ic">⚽</span>Lịch sử thi đấu</div>
+      <div id="matchList"></div>
+    </div>
   </div>
 </div>
 
@@ -1086,7 +1088,18 @@ function renderMatchList(h){
   if(!h.length){box.innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> rồi bấm <b>Lưu làm đội tuần này</b>.</div>`;return;}
   box.innerHTML=`<div class="mc-list">`+h.map(r=>matchCard(r,false)).join("")+`</div>`;
 }
-// Ô PHẢI = Trận sắp tới — hiển thị ĐỘI HÌNH 2 cột dọc (QĐ | PT)
+// Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Pháo Thủ (trên, vàng) vs Quỷ Đỏ (dưới, đỏ)
+function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
+function vpitch(r){
+  const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
+  const X ={0:50,1:25,2:50,3:75,4:25,5:50,6:75};
+  const YA={0:90,1:73,2:73,3:73,4:57,5:57,6:57};   // Quỷ Đỏ tấn công lên (dưới)
+  const YB={0:10,1:27,2:27,3:27,4:43,5:43,6:43};   // Pháo Thủ tấn công xuống (trên)
+  const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
+  let h="";
+  for(let c=0;c<7;c++){h+=mark(sel[eB.starters[c]],X[c],YB[c],KIT_B);h+=mark(sel[eA.starters[c]],X[c],YA[c],KIT_A);}
+  return `<div class="vpitch"><div class="vp-box top"></div><div class="vp-box bot"></div><div class="vp-mid"></div><div class="vp-circle"></div>${h}</div>`;
+}
 function renderSpotlight(h){
   const box=$("spotlight"); if(!box)return;
   const r=featuredMatch(h||[]);
@@ -1094,15 +1107,14 @@ function renderSpotlight(h){
   const sel=r.subset, eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
   if(!sel||!eA||!eB){box.innerHTML=matchCard(r,false);return;}   // trận cũ không có đội hình -> thẻ gọn
   const when=r.kickoff?fmtKick(r.kickoff):(r.label||"⏳ Chưa đá");
-  const lu=ev=>SLAB.map((sl,c)=>{const p=sel[ev.starters[c]];return p?`<div class="lu-row"><span class="lu-pos">${POSAB[sl]||sl}</span><span class="lu-nm">${esc(p.n)}</span></div>`:"";}).join("");
   box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
-      <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">QĐ</span>Quỷ Đỏ</span>
+      <span class="lu-team"><span class="lu-logo" style="background:${KIT_B.body};color:#11224f">PT</span>Pháo Thủ</span>
       <span class="lu-vs">VS</span>
-      <span class="lu-team r">Pháo Thủ<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">PT</span></span>
+      <span class="lu-team r">Quỷ Đỏ<span class="lu-logo" style="background:${KIT_A.body};color:#fff">QĐ</span></span>
     </div>
     <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
-    <div class="lu-cols"><div class="lu-col">${lu(eA)}</div><div class="lu-col r">${lu(eB)}</div></div>
+    ${vpitch(r)}
   </div>`;
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");viewHistory(id);}
