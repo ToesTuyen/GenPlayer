@@ -1057,7 +1057,9 @@ function reqCard(r,players){
   const done=r.status==="approved"||r.status==="rejected";
   const st=r.status==="approved"?`<span class="req-st ok">✓ Đã duyệt</span>`:r.status==="rejected"?`<span class="req-st rej">✕ Từ chối</span>`:"";
   const acted=done&&r.actedBy?`<div class="ulog-by">${r.status==="approved"?"Duyệt":"Từ chối"} bởi <b>${r.actedBy}</b> · ${r.actedTs||""}</div>`:"";
-  const acts=done?"":`<div class="req-acts">
+  const acts=done
+    ? `<div class="req-acts"><button class="btn alt sm" onclick="reopenReq('${r.id}')">↩ Đưa lại chờ duyệt</button></div>`
+    : `<div class="req-acts">
         <button class="btn sm" onclick="approveReq('${r.id}')">✓ Duyệt</button>
         <button class="btn alt sm req-rej" onclick="rejectReq('${r.id}')">✕ Từ chối</button></div>`;
   return `<div class="ulog-card">
@@ -1096,6 +1098,18 @@ function rejectReq(id){
   if(!confirm("Từ chối yêu cầu này?"))return;
   reqMark(id,"rejected"); persist();
   updateReqBadge(); renderReq();
+}
+function reopenReq(id){            // đưa yêu cầu đã xử lý về lại CHỜ DUYỆT (gỡ luôn ảnh hưởng điểm nếu đã duyệt)
+  const r=(STATE.requests||[]).find(x=>String(x.id)===String(id)); if(!r||!r.status)return;
+  if(r.status==="approved"){       // bỏ lượt chấm của người gửi khỏi cầu thủ → điểm trở lại như chưa duyệt
+    const p=(STATE.players||[]).find(x=>x.n===r.n);
+    if(p&&p.ratings&&p.ratings[r.by]!==undefined){ delete p.ratings[r.by]; recomputeAll(STATE.players); }
+  }
+  r.status="pending"; delete r.actedBy; delete r.actedTs; delete r.actedAt;
+  persist();
+  updateReqBadge(); renderReq(); renderPlayersCards();
+  if($("playerModal").classList.contains("on"))renderPlayerProfile();
+  toast("Đã đưa <b>"+r.n+"</b> lại trạng thái chờ duyệt.");
 }
 function logActBadge(e){
   if(e.action==="add")return `<span class="ulog-badge add">➕ Thêm mới</span>`;
