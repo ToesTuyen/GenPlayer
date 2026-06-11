@@ -138,6 +138,20 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .spot-stats>div+div{border-left:1px solid var(--line)}
 .spot-stats .sv{font-size:18px;font-weight:800}
 .spot-stats .sk{font-size:11px;color:var(--muted);margin-top:3px}
+/* đội hình trận sắp tới (2 cột dọc) */
+.spot-lineup{cursor:pointer}
+.lu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:800}
+.lu-team{display:flex;align-items:center;gap:6px;color:var(--text);min-width:0}
+.lu-team.r{justify-content:flex-end}
+.lu-logo{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:0 0 auto}
+.lu-vs{flex:0 0 auto;color:var(--faint);font-size:11px;font-weight:700}
+.lu-meta{text-align:center;color:var(--muted);font-size:11.5px;font-weight:600;margin:8px 0 12px}
+.lu-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lu-col{display:flex;flex-direction:column;gap:5px}
+.lu-row{display:flex;align-items:center;gap:7px;font-size:12px;padding:6px 9px;background:var(--surface2);border:1px solid var(--line);border-radius:9px}
+.lu-col.r .lu-row{flex-direction:row-reverse}
+.lu-pos{flex:0 0 auto;font-size:9px;font-weight:800;color:var(--gold);min-width:26px;text-align:center;letter-spacing:.3px}
+.lu-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}
 .bet-against{width:100%;background:#fff;color:#0e1322;border:0;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;transition:.14s}
 .bet-against:hover{background:#e9eefb}
 /* ===== player cards ===== */
@@ -1072,12 +1086,24 @@ function renderMatchList(h){
   if(!h.length){box.innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> rồi bấm <b>Lưu làm đội tuần này</b>.</div>`;return;}
   box.innerHTML=`<div class="mc-list">`+h.map(r=>matchCard(r,false)).join("")+`</div>`;
 }
-// Ô PHẢI = Trận sắp tới (compact, dùng matchCard)
+// Ô PHẢI = Trận sắp tới — hiển thị ĐỘI HÌNH 2 cột dọc (QĐ | PT)
 function renderSpotlight(h){
   const box=$("spotlight"); if(!box)return;
   const r=featuredMatch(h||[]);
   if(!r){box.innerHTML=`<div class="empty"><span class="big">📋</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
-  box.innerHTML=matchCard(r,false);
+  const sel=r.subset, eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
+  if(!sel||!eA||!eB){box.innerHTML=matchCard(r,false);return;}   // trận cũ không có đội hình -> thẻ gọn
+  const when=r.kickoff?fmtKick(r.kickoff):(r.label||"⏳ Chưa đá");
+  const lu=ev=>SLAB.map((sl,c)=>{const p=sel[ev.starters[c]];return p?`<div class="lu-row"><span class="lu-pos">${POSAB[sl]||sl}</span><span class="lu-nm">${esc(p.n)}</span></div>`:"";}).join("");
+  box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
+    <div class="lu-head">
+      <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">QĐ</span>Quỷ Đỏ</span>
+      <span class="lu-vs">VS</span>
+      <span class="lu-team r">Pháo Thủ<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">PT</span></span>
+    </div>
+    <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
+    <div class="lu-cols"><div class="lu-col">${lu(eA)}</div><div class="lu-col r">${lu(eB)}</div></div>
+  </div>`;
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");viewHistory(id);}
 
