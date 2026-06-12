@@ -628,10 +628,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <!-- ====== LICH SU ====== -->
 <div id="screen-history" class="screen">
-  <div class="seg-tabs">
-    <button class="seg on" id="ht-up" onclick="setHistTab('upcoming')">⏳ Sắp diễn ra <span id="ht-up-n"></span></button>
-    <button class="seg" id="ht-done" onclick="setHistTab('done')">✅ Đã kết thúc <span id="ht-done-n"></span></button>
-  </div>
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
 </div>
@@ -1227,7 +1223,7 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  const actions=full?`<div class="mc-actions">
+  const actions=(full&&canEdit)?`<div class="mc-actions">
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button>
       <button class="btn alt sm" onclick="event.stopPropagation();viewHistory(${r.id})">👁️ Xem</button>
@@ -2027,13 +2023,9 @@ function setHistTab(t){histTab=t;showHistory();}
 function showHistory(){
   const h=getHistory(); $("history-detail").innerHTML="";
   const up=h.filter(r=>!r.score).sort((a,b)=>(a.kickoff||Infinity)-(b.kickoff||Infinity));
-  const done=h.filter(r=>r.score).sort((a,b)=>b.id-a.id);   // mới lưu trước (1 trục nhất quán)
-  if($("ht-up-n"))$("ht-up-n").textContent="("+up.length+")";
-  if($("ht-done-n"))$("ht-done-n").textContent="("+done.length+")";
-  if($("ht-up"))$("ht-up").classList.toggle("on",histTab==="upcoming");
-  if($("ht-done"))$("ht-done").classList.toggle("on",histTab==="done");
-  const list=histTab==="done"?done:up;
-  if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>${histTab==="done"?"Chưa có trận nào đã kết thúc.<br>Nhập <b>⚽ Tỉ số</b> cho trận để chuyển sang đây.":"Chưa có trận sắp diễn ra.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>."}</div>`;return;}
+  const done=h.filter(r=>r.score).sort((a,b)=>b.id-a.id);   // sắp diễn ra trước, rồi đã kết thúc
+  const list=up.concat(done);
+  if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
 }
 function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail");$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
