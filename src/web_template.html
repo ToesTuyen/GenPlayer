@@ -1296,27 +1296,35 @@ function teamCols(ev,kit,sel,reverse){
 }
 function subsItems(ev,sel){return ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`<span class="subchip">${sel[i].n} <b>${ov(sel[i]).toFixed(1)}</b></span>`).join("");}
 function card(m,o,ctxt,label,ev,sel){
-  const fast=m.pace>o.pace, nm=c=>sel[ev.starters[c]].n;
-  const stars=[0,1,2,3,4,5,6].filter(c=>isStar(sel[ev.starters[c]])).map(c=>sel[ev.starters[c]].n);
-  const tb=ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a]))[0], topbench=tb!==undefined?sel[tb].n:"—";
+  const SL=["thủ môn","trung vệ","hậu vệ","hậu vệ","tiền vệ trung tâm","tiền vệ cánh","tiền đạo"];
+  const idx=c=>ev.starters[c];
+  const topAtk=[4,5,6].map(idx).sort((a,b)=>(sel[b].DD-sel[a].DD)||(ov(sel[b])-ov(sel[a])))[0];
+  const anchor=[1,2,3].map(idx).sort((a,b)=>(sel[b].PN-sel[a].PN)||(ov(sel[b])-ov(sel[a])))[0];
+  const weakI=[1,2,3,4,5,6].map(idx).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
+  const slotOf=i=>SL[ev.starters.indexOf(i)];
+  const gkEdge=m.gkFit-o.gkFit, paceEdge=m.pace-o.pace;
+  const tb=ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a]))[0];
   const b=[];
-  if(stars.length)b.push(`⭐ Đầu tàu <b>${stars.join(" + ")}</b> — gánh điểm và tạo đột biến ở mọi thời điểm.`);
-  b.push(`🎯 Hàng công sắc, dứt điểm TB <b>${m.atk.toFixed(1)}/10</b>, mũi nhọn <b>${nm(6)}</b> chốt hạ trước khung thành.`);
-  b.push(`🛡️ Tuyến dưới chắc, phòng ngự TB <b>${m.defPN.toFixed(1)}/10</b>: trung vệ <b>${nm(1)}</b> bọc lót, thủ môn <b>${nm(0)}</b> trấn giữ.`);
-  b.push(fast?`⚡ Tốc độ vượt trội (<b>${m.pace.toFixed(1)}/10</b>) → phản công chớp nhoáng, pressing tầm cao ngạt thở.`:`🧠 Đồng đều & lì đòn (năng nổ <b>${m.heat.toFixed(1)}/10</b>) → cầm bóng, đập nhả, áp đặt thế trận.`);
-  b.push(`🔁 Băng ghế còn <b>${topbench}</b> để bơm sức, giữ cường độ tới phút chót.`);
-  const weak=fast?"khi mất bóng cần 3 mũi trên tích cực lùi về; gặp đối thủ biết cầm nhịp sẽ phải kiên nhẫn hơn":"tốc độ thấp hơn một nhịp — phải bọc lót kín, tránh để đối thủ thốc thẳng sau lưng";
-  const plan=fast?"đẩy cao pressing, đoạt bóng nhanh rồi tung tốc độ kết liễu — ghi bàn sớm để dẫn dắt thế trận":"kiểm soát bóng, kéo giãn đối thủ rồi phối hợp trung lộ tung đòn quyết định";
+  b.push(`🎯 <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
+  const gkTxt=gkEdge>=0.5?`khung gỗ là một lợi thế — ${sel[idx(0)].n} (${m.gkFit.toFixed(0)}/10) nhỉnh hơn người gác đền đối phương`:gkEdge<=-0.5?`${sel[idx(0)].n} bắt gôn chưa phải sở trường (${m.gkFit.toFixed(0)}/10), cần hàng thủ bọc lót kín phía trước`:`${sel[idx(0)].n} trấn giữ khung thành ở mức ổn định`;
+  b.push(`🛡️ <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
+  b.push(paceEdge>0.3?`⚡ <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`🧠 <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`⚙️ <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
+  b.push(tb!==undefined?`🔁 <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`🔁 <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
+  const weak=`${slotOf(weakI)} ${sel[weakI].n} (trung bình ${ov(sel[weakI]).toFixed(1)}/10) là mắt xích nhẹ ký nhất, nhiều khả năng bị đối thủ nhắm vào${paceEdge<=-0.3?"; tốc độ tổng thể thấp hơn nên dễ bị khai thác khoảng trống sau lưng":""}`;
+  const plan=paceEdge>0.3?`gây áp lực tầm cao, đoạt bóng nhanh và tận dụng tốc độ để dứt điểm — chủ động mở tỉ số`:`giữ bóng chắc, kéo giãn cự ly đối thủ rồi xuyên phá trung lộ, đồng thời che chắn kỹ vị trí ${slotOf(weakI)}`;
   return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="wk">⚠️ <b>Điểm cần lưu ý:</b> ${weak}.</div><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
 function render(res,sel,target){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
   const A=res.evA,B=res.evB;
-  const dtot=Math.abs(A.total-B.total), pct=100*dtot/((A.total+B.total)/2);
-  const faster=A.pace>B.pace?"A":"B", slower=faster==="A"?"B":"A";
-  const pred=`Trận 50-50 — chênh tổng chỉ ~${pct.toFixed(1)}%. Dự đoán <b>3-3</b> hoặc chênh 1 bàn; đội ${faster} nhanh hơn nhỉnh ở phản công, đội ${slower} kiểm soát tốt thì thắng sít sao.`;
-  const intro=`Hai đội chênh tổng chỉ <b>~${pct.toFixed(1)}%</b> — gần như <b>50/50</b>. Khác biệt nằm ở <b>chất chơi</b> chứ không phải trình độ: một bên thiên <b>tốc độ – phản công</b>, một bên thiên <b>kiểm soát – chắc chắn</b>. Mỗi đội đều có ngôi sao, thủ môn ngang nhau, công–thủ tương đương — đội nào cũng có cửa thắng sòng phẳng. Ra sân cứ tự tin!`;
+  const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
+  const pdiff=A.pace-B.pace, gkGap=A.gkFit-B.gkFit;
+  const gkAdvNm=Math.abs(gkGap)>=0.5?(gkGap>0?"Quỷ Đỏ":"Pháo Thủ"):null;
+  const styleLine=Math.abs(pdiff)>=0.3?`<b>${pdiff>0?"Quỷ Đỏ":"Pháo Thủ"}</b> nhỉnh hơn về tốc độ và chuyển trạng thái nhanh, trong khi <b>${pdiff>0?"Pháo Thủ":"Quỷ Đỏ"}</b> thiên về kiểm soát và sự chắc chắn.`:`Hai đội tương đồng về nền tảng thể chất — khác biệt sẽ đến từ khâu tổ chức và tận dụng cơ hội.`;
+  const gkLine=gkAdvNm?` Điểm tạo khác biệt đáng chú ý là khung gỗ: <b>${gkAdvNm}</b> có người gác đền chắc tay hơn.`:` Hai khung thành ở mức tương đương.`;
+  const pred=`Kèo cân (đội hình chính chênh ~${pct.toFixed(1)}%). Dự đoán tỉ số sít sao, cách biệt tối đa một bàn; ${gkAdvNm?`lợi thế khung gỗ có thể nghiêng nhẹ cán cân về phía <b>${gkAdvNm}</b>`:`đội nào kiểm soát nhịp độ và tận dụng cơ hội tốt hơn sẽ giành phần thắng`}.`;
+  const intro=`Chênh lệch đội hình chính chỉ <b>~${pct.toFixed(1)}%</b> — một cặp đấu cân bằng, kết quả sẽ do <b>cách vận hành</b> quyết định chứ không phải đẳng cấp. ${styleLine}${gkLine} Một trận đấu hứa hẹn ngang ngửa và cởi mở.`;
   const rows=[["Sức mạnh đội hình chính",A.startFit.toFixed(1),B.startFit.toFixed(1)],["Tổng cả đội (chính + dự bị)",A.total.toFixed(1),B.total.toFixed(1)],["Ngôi sao (điểm tổng ≥ "+STAR_MIN+")",A.stars,B.stars],["Thủ môn",A.gkFit.toFixed(1),B.gkFit.toFixed(1)],["Phòng ngự tuyến dưới",A.defPN.toFixed(1),B.defPN.toFixed(1)],["Dứt điểm tuyến trên",A.atk.toFixed(1),B.atk.toFixed(1)],["Tốc độ trung bình",A.pace.toFixed(1),B.pace.toFixed(1)],["Năng nổ (chịu chạy)",A.heat.toFixed(1),B.heat.toFixed(1)]];
   box.innerHTML=`
   <div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>
