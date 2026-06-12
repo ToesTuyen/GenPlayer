@@ -391,6 +391,13 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .report{max-width:832px;margin:22px auto 0}
 .report h2{font-size:15px;margin:20px 0 10px;letter-spacing:-.01em}
 .persuade{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 15px;margin:2px 0 12px;font-size:13.5px;line-height:1.6;color:#c7d0e0}
+.ai-review{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 17px;margin:2px 0 12px;font-size:13.5px;line-height:1.7;color:#d6deee}
+.ai-review p{margin:0 0 11px}
+.ai-review p:last-child{margin-bottom:0}
+.ai-review b{color:#fff}
+.ai-review .rv-lead{font-size:15px;line-height:1.4;color:#fff;margin-bottom:13px}
+.ai-review .rv-pred{margin-top:13px;padding-top:11px;border-top:1px solid var(--line2);color:#a7f3c4}
+.ai-review .rv-pred b{color:#bff3d3}
 .cards{display:flex;gap:14px;flex-wrap:wrap}
 .card{flex:1;min-width:260px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.55;box-shadow:var(--sh-sm)}
 .card h3{font-size:14px;margin-bottom:8px;letter-spacing:-.01em}
@@ -1448,9 +1455,10 @@ function card(m,o,ctxt,label,ev,sel){
   const plan=`${edges.sort((x,y)=>y.v-x.v)[0].t}; nhắm vào ${oWeakSlot} bên phía đối thủ và đưa bóng cho ${sel[topAtk].n} ở thời điểm quyết định`;
   return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
-function render(res,sel,target){
+function render(res,sel,target,review){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
+  const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
   const pdiff=A.pace-B.pace, gkGap=A.gkFit-B.gkFit;
@@ -1460,14 +1468,18 @@ function render(res,sel,target){
   const pred=`Kèo cân (đội hình chính chênh ~${pct.toFixed(1)}%). Dự đoán tỉ số sít sao, cách biệt tối đa một bàn; ${gkAdvNm?`lợi thế khung gỗ có thể nghiêng nhẹ cán cân về phía <b>${gkAdvNm}</b>`:`đội nào kiểm soát nhịp độ và tận dụng cơ hội tốt hơn sẽ giành phần thắng`}.`;
   const intro=`Chênh lệch đội hình chính chỉ <b>~${pct.toFixed(1)}%</b> — một cặp đấu cân bằng, kết quả sẽ do <b>cách vận hành</b> quyết định chứ không phải đẳng cấp. ${styleLine}${gkLine} Một trận đấu hứa hẹn ngang ngửa và cởi mở.`;
   const rows=[["Sức mạnh đội hình chính",A.startFit.toFixed(1),B.startFit.toFixed(1)],["Tổng cả đội (chính + dự bị)",A.total.toFixed(1),B.total.toFixed(1)],["Ngôi sao (điểm tổng ≥ "+STAR_MIN+")",A.stars,B.stars],["Thủ môn",A.gkFit.toFixed(1),B.gkFit.toFixed(1)],["Phòng ngự tuyến dưới",A.defPN.toFixed(1),B.defPN.toFixed(1)],["Dứt điểm tuyến trên",A.atk.toFixed(1),B.atk.toFixed(1)],["Tốc độ trung bình",A.pace.toFixed(1),B.pace.toFixed(1)],["Năng nổ (chịu chạy)",A.heat.toFixed(1),B.heat.toFixed(1)]];
+  const predBlock=hasRev?"":`<div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>`;
+  const narrative=hasRev
+    ? `<div class="ai-review">${review}</div>`
+    : `<div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Đội A · Quỷ Đỏ",A,sel)}${card(B,A,CBtxt,"Đội B · Pháo Thủ",B,sel)}</div>`;
   box.innerHTML=`
-  <div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>
+  ${predBlock}
   <div class="matchwrap"><div class="match">
    <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 ĐỘI A · Quỷ Đỏ ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ Pháo Thủ · ĐỘI B 🟡</div></div>
    <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false)}${teamCols(B,KIT_B,sel,true)}</div>
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
   </div></div>
-  <div class="report"><h2>⚖️ Ưu – nhược điểm</h2><div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Đội A · Quỷ Đỏ",A,sel)}${card(B,A,CBtxt,"Đội B · Pháo Thủ",B,sel)}</div>
+  <div class="report"><h2>${hasRev?"⚖️ Đánh giá trận":"⚖️ Ưu – nhược điểm"}</h2>${narrative}
   <h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Đội A</th><th>Đội B</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table></div>`;
   fitMatch();
 }
@@ -2310,7 +2322,7 @@ function showWeek(){
   if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
-  render(r.result,r.subset,"week-result"); setTimeout(fitMatch,0);
+  render(r.result,r.subset,"week-result",r.review); setTimeout(fitMatch,0);
 }
 
 // ============ THONG TIN TRAN (tao / sua) ============
@@ -2366,7 +2378,7 @@ function showHistory(){
   if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
 }
-function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail");$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
+function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
 function setScore(id){
   if(!requireAdmin())return;
   const h=getHistory(), r=h.find(x=>x.id===id); if(!r)return;
