@@ -533,6 +533,40 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-name{font-weight:800;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
+.rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+.rank-row .avatar.sm,.avatar.sm{width:34px;height:34px;font-size:12px;background-size:cover;background-position:center top}
+/* ----- bàn thắng: form nhập + chip ----- */
+.gl-info{font-size:13px;color:var(--text);font-weight:700;margin-bottom:4px}
+.gl-info b{color:var(--gold)}
+.gl-hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.gl-team{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:12px}
+.gl-team-h{display:flex;align-items:center;gap:9px;margin-bottom:8px;font-size:13px}
+.gl-team-h b{letter-spacing:.03em}
+.mc-logo.sm{width:30px;height:30px;border-radius:9px;font-size:11px;box-shadow:none}
+.gl-need{color:var(--muted);font-size:11.5px;margin-left:auto}
+.gl-sum{min-width:26px;text-align:center;font-weight:900;font-size:14px;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--muted)}
+.gl-sum.ok{background:var(--brand-soft);color:#22e07a}
+.gl-sum.over{background:rgba(255,81,104,.16);color:var(--red)}
+.gl-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2)}
+.gl-row:last-child{border-bottom:0}
+.gl-nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gl-stepper{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.gl-bt{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:16px;font-weight:800;cursor:pointer;line-height:1;display:grid;place-items:center}
+.gl-bt:active{background:var(--surface3)}
+.gl-in{width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);font-size:15px;font-weight:800;color-scheme:dark;-moz-appearance:textfield}
+.gl-in::-webkit-outer-spin-button,.gl-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.gl-empty{font-size:12.5px;color:var(--faint);padding:6px 0}
+.gl-acts{display:flex;gap:8px;margin-top:6px}
+.gl-chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.gl-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;color:var(--text)}
+.gl-chip b{color:var(--gold);font-weight:900}
+.gl-chip.muted{color:var(--muted)}
+.gl-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.gl-warn{font-size:11.5px;color:var(--gold);background:var(--amber-soft);border-radius:8px;padding:6px 9px;margin:4px 0}
+.mc-scorers{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line2);font-size:12px;color:var(--muted)}
+.mc-scorer{display:inline-flex;align-items:center;gap:5px;color:var(--text)}
+.mc-scorer b{color:var(--gold);font-weight:800}
+.ps-sub{color:var(--muted);font-weight:600;font-size:11.5px}
 .rk-wrap{max-width:680px;margin:0 auto;padding:4px 0 24px}
 .rk-pos{font-size:13px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 .rk-pos:first-child{margin-top:4px}
@@ -642,6 +676,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </div>
 
 <div id="screen-history" class="screen">
+  <div class="pc-bar-actions" style="margin-bottom:14px">
+    <button class="btn alt sm" onclick="openScorer()">🥇 Vua phá lưới</button>
+    <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none">⚽ Duyệt bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
+  </div>
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
 </div>
@@ -753,6 +791,39 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
 </div>
 
+<!-- ====== NHAP BAN THANG ====== -->
+<div class="pm-overlay" id="goalModal" onclick="if(event.target===this)closeGoalModal()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">⚽ Bàn thắng của trận</div>
+      <button class="pm-close" onclick="closeGoalModal()">✕</button>
+    </div>
+    <div id="goal-body" class="plog-wrap"></div>
+  </div>
+</div>
+
+<!-- ====== DUYET BAN THANG (admin) ====== -->
+<div class="pm-overlay" id="goalReqModal" onclick="if(event.target===this)closeGoalReq()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">⚽ Duyệt bàn thắng</div>
+      <button class="pm-close" onclick="closeGoalReq()">✕</button>
+    </div>
+    <div id="goalreq-body" class="plog-wrap"></div>
+  </div>
+</div>
+
+<!-- ====== VUA PHA LUOI ====== -->
+<div class="pm-overlay" id="scorerModal" onclick="if(event.target===this)closeScorer()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">🥇 Vua phá lưới · bàn thắng nhiều nhất</div>
+      <button class="pm-close" onclick="closeScorer()">✕</button>
+    </div>
+    <div id="scorer-body" class="plog-wrap"></div>
+  </div>
+</div>
+
 <!-- Firebase (chỉ dùng khi đồng bộ; lỗi mạng/không có config thì tự về chế độ cục bộ) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -760,7 +831,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
-const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests"};
+const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs"};
 const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
@@ -802,21 +873,23 @@ function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${enco
 function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
-let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], cloud:false, docRef:null};
+let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], cloud:false, docRef:null};
 function localLoad(){
   try{const s=localStorage.getItem(LS.players); if(s)STATE.players=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.history); if(s)STATE.history=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.plog); if(s)STATE.plog=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.requests); if(s)STATE.requests=JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem(LS.goalReqs); if(s)STATE.goalReqs=JSON.parse(s);}catch(e){}
   ensureRatings(STATE.players);
 }
 function getPlayers(){return STATE.players.map(p=>({...p}));}
 function getHistory(){return STATE.history.slice();}
 function getPlog(){return (STATE.plog||[]).slice();}
 function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
+function getGoalReqs(){return (STATE.goalReqs||[]).slice();}   // yêu cầu ghi nhận bàn thắng đang chờ admin duyệt
 function persist(){
-  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));}catch(e){}
-  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
+  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));}catch(e){}
+  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
 }
 function setPlayers(a){STATE.players=a;persist();}
 function setHistory(a){STATE.history=a;persist();}
@@ -994,8 +1067,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],lineupBackups:STATE.lineupBackups||[]});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],lineupBackups:STATE.lineupBackups||[]});
       ensureRatings(STATE.players);
       onCloudUpdate();
     },err=>{console.warn("Firebase:",err);STATE.cloud=false;setCloudBadge();});
@@ -1004,9 +1077,12 @@ function initCloud(){
 function onCloudUpdate(){
   setCloudBadge();
   updateReqBadge();
+  updateGoalReqBadge();
   if($("plogModal")&&$("plogModal").classList.contains("on"))renderUpdateLog();
   if($("reqModal")&&$("reqModal").classList.contains("on"))renderReq();
   if($("rankModal")&&$("rankModal").classList.contains("on"))renderRank();
+  if($("goalReqModal")&&$("goalReqModal").classList.contains("on"))renderGoalReq();
+  if($("scorerModal")&&$("scorerModal").classList.contains("on"))renderScorer();
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
   if(!cur)return;
   if(cur.id==="home")renderHome();
@@ -1280,17 +1356,20 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  const actions=(full&&canEdit)?`<div class="mc-actions">
+  const goalBtn=(full&&res.played)?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Bàn thắng</button>`:"";
+  const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button>
       <button class="btn alt sm" onclick="event.stopPropagation();viewHistory(${r.id})">👁️ Xem</button>
-      <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button></div>`:"";
+      <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:"";
+  const actions=(goalBtn||adminActs)?`<div class="mc-actions">${goalBtn}${adminActs}</div>`:"";
   return `<div class="mc" onclick="${full?`viewHistory(${r.id})`:`openHistory(${r.id})`}">
     <div class="mc-main">
       <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Quỷ Đỏ")}</span><span class="mc-tn">QUỶ ĐỎ</span></div>
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}</div>
       <div class="mc-team r"><span class="mc-tn">PHÁO THỦ</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Pháo Thủ")}</span></div>
     </div>
+    ${goalSummaryLine(r)}
     ${actions}
   </div>`;
 }
@@ -1303,9 +1382,11 @@ function renderMatchList(h){
 function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
-  const X ={0:50,1:17,2:50,3:83,4:17,5:50,6:83};
-  const YA={0:93,1:74,2:74,3:74,4:56,5:56,6:56};   // Quỷ Đỏ tấn công lên (dưới)
-  const YB={0:7,1:26,2:26,3:26,4:44,5:44,6:44};    // Pháo Thủ tấn công xuống (trên)
+  // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa (slot 4) · 2 tiền đạo (slot 5,6)
+  // MỖI ĐỘI nằm GỌN trong nửa sân của mình (không vượt vạch giữa) → màu áo không lẫn sang nửa kia
+  const X ={0:50,1:18,2:50,3:82,4:50,5:30,6:70};
+  const YA={0:92,1:78,2:78,3:78,4:65,5:55,6:55};   // Quỷ Đỏ (dưới) — cả đội ở nửa sân dưới, tiền đạo áp vạch giữa
+  const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Pháo Thủ (trên) — cả đội ở nửa sân trên
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
   for(let c=0;c<7;c++){h+=mark(sel[eB.starters[c]],X[c],YB[c],KIT_B);h+=mark(sel[eA.starters[c]],X[c],YA[c],KIT_A);}
@@ -1343,8 +1424,8 @@ function chip(pl,label,kit,delay){const o=ov(pl);const star=isStar(pl)?' <span c
 function col(chips,gk){return `<div class="col${gk?' gkcol':''}">${chips.join("")}</div>`;}
 const SLAB=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
 function teamCols(ev,kit,sel,reverse){
-  const bands=[[0],[1,2,3],[4,5,6]];
-  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.30+j*0.07)),bi===0));
+  const bands=[[0],[1,2,3],[4],[5,6]];   // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa · 2 tiền đạo
+  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.24+j*0.07)),bi===0));
   if(reverse)cols=cols.reverse(); return cols.join("");
 }
 function subsItems(ev,sel){return ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`<span class="subchip">${sel[i].n} <b>${ov(sel[i]).toFixed(1)}</b></span>`).join("");}
@@ -1517,7 +1598,8 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   document.body.classList.toggle("can-edit",canEdit);
   const set=(id,show)=>{const el=$(id);if(el)el.style.display=show?"":"none";};
   set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin); set("backupNavBtn",isAdmin);
-  updateReqBadge();
+  set("goalReqBtn",isAdmin);
+  updateReqBadge(); updateGoalReqBadge();
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
 }
@@ -1608,13 +1690,14 @@ function playerStats(name){
 }
 const FCHIP={W:["T","w"],D:["H","d"],L:["B","l"]};
 function statsPanel(name){
-  const st=playerStats(name);
+  const st=playerStats(name), g=playerGoals(name);
   if(!st.played)return `<div class="pm-sec" style="margin-top:18px">Thống kê thi đấu</div><div class="ps-empty">Chưa có trận nào (cần nhập tỉ số ở Lịch sử thi đấu).</div>`;
   return `<div class="pm-sec" style="margin-top:18px">Thống kê thi đấu</div>
     <div class="ps-wrap">
       <div class="ps-top"><div class="ps-big"><div class="ps-num">${st.played}</div><div class="ps-k">trận</div></div>
         <div class="ps-wld"><span class="w">${st.w} T</span><span class="d">${st.d} H</span><span class="l">${st.l} B</span></div></div>
       <div class="ps-row"><span>Tỉ lệ thắng</span><b>${st.winRate}%</b></div>
+      <div class="ps-row"><span>⚽ Bàn thắng</span><b>${g.total}${g.matches?` <span class="ps-sub">(${g.matches} trận)</span>`:""}</b></div>
       <div class="ps-row"><span>Phong độ gần đây</span><span class="ps-form">${st.form.map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join("")}</span></div>
     </div>`;
 }
@@ -1637,6 +1720,201 @@ function renderRank(){
       <span class="rank-wr">${st.winRate}%</span>
     </div>`;
   }).join("")+`</div>`;
+}
+// ============ BÀN THẮNG (nhập + admin duyệt + Vua phá lưới) ============
+// Bàn thắng đã duyệt lưu NGAY TRONG record trận: r.goals = { "Tên cầu thủ": số bàn }.
+// Người thường nhập -> gửi yêu cầu (STATE.goalReqs, chờ admin duyệt); admin nhập -> áp thẳng.
+function matchById(id){return getHistory().find(r=>String(r.id)===String(id));}
+function teamSideName(side){return side==="A"?"Quỷ Đỏ":"Pháo Thủ";}
+function matchLineup(r){   // [{n,idx,team}] những cầu thủ đã ra sân trận r (kèm đội A/B)
+  const sub=Array.isArray(r&&r.subset)?r.subset:[];
+  return sub.map((p,idx)=>({n:p&&p.n,idx,team:teamOfIdx(r,idx)})).filter(x=>x.n&&x.team);
+}
+function goalsByTeam(r,goals){   // tổng bàn mỗi đội theo bản ghi goals (để đối chiếu tỉ số)
+  const lu=matchLineup(r), out={A:0,B:0};
+  lu.forEach(x=>{const g=+(goals||{})[x.n]||0; if(x.team)out[x.team]+=g;});
+  return out;
+}
+function goalSummaryLine(r){   // dòng người ghi bàn gọn trên thẻ trận
+  if(!r.score||!r.goals)return "";
+  const lu=matchLineup(r), nameTeam={}; lu.forEach(x=>nameTeam[x.n]=x.team);
+  const ent=Object.entries(r.goals).filter(([n,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1]);
+  if(!ent.length)return "";
+  const chip=([n,g])=>{const side=nameTeam[n],dot=side==="A"?KIT_A.body:(side==="B"?KIT_B.body:"#888");
+    return `<span class="mc-scorer"><span class="gl-dot" style="background:${dot}"></span>${esc(shortName(n))}${(+g)>1?` <b>×${g}</b>`:""}</span>`;};
+  return `<div class="mc-scorers">⚽ ${ent.map(chip).join("")}</div>`;
+}
+// ----- form NHẬP bàn thắng cho 1 trận -----
+let goalMatchId=null;
+function openGoalModal(id){
+  const r=matchById(id); if(!r){toast("Không tìm thấy trận.","err");return;}
+  if(!r.score){toast("Trận chưa có tỉ số — nhập tỉ số trước đã.","warn");return;}
+  if(!matchLineup(r).length){toast("Trận này không có đội hình để gán bàn thắng.","warn");return;}
+  ensureName(()=>{ goalMatchId=id; renderGoalForm(); $("goalModal").classList.add("on"); });
+}
+function closeGoalModal(){$("goalModal").classList.remove("on");goalMatchId=null;}
+function goalPrefill(r){   // ưu tiên: yêu cầu đang chờ của CHÍNH người này -> điểm đã duyệt r.goals
+  const mine=getGoalReqs().find(q=>(!q.status||q.status==="pending")&&String(q.mid)===String(r.id)&&(q.by||"")===(sessionName||""));
+  if(mine&&mine.goals)return mine.goals;
+  return r.goals||{};
+}
+function renderGoalForm(){
+  const box=$("goal-body"); if(!box)return;
+  const r=matchById(goalMatchId); if(!r){box.innerHTML="";return;}
+  const pre=goalPrefill(r), lu=matchLineup(r), sa=+r.score.a||0, sb=+r.score.b||0;
+  const teamBlock=(side)=>{
+    const col=side==="A"?KIT_A.body:KIT_B.body, txtc=side==="A"?"#fff":"#11224f", sc=side==="A"?sa:sb;
+    const rows=lu.filter(x=>x.team===side).map(x=>{const enc=encodeURIComponent(x.n);return `
+      <div class="gl-row">
+        <span class="avatar sm" style="${avaStyle(x.n)}">${avaInner(x.n)}</span>
+        <span class="gl-nm">${esc(x.n)}</span>
+        <div class="gl-stepper">
+          <button type="button" class="gl-bt" onclick="goalStep('${enc}',-1)">−</button>
+          <input type="number" min="0" max="50" class="gl-in" id="gl-${enc}" value="${+pre[x.n]||0}" data-n="${esc(x.n)}" oninput="goalRecount()">
+          <button type="button" class="gl-bt" onclick="goalStep('${enc}',1)">＋</button>
+        </div>
+      </div>`;}).join("")||`<div class="gl-empty">Không có cầu thủ ${teamSideName(side)}.</div>`;
+    return `<div class="gl-team">
+      <div class="gl-team-h"><span class="mc-logo sm" style="background:${col};color:${txtc}">${initials(teamSideName(side))}</span>
+        <b>${teamSideName(side).toUpperCase()}</b><span class="gl-need">cần ${sc}</span>
+        <span class="gl-sum" id="gl-sum-${side}">0</span></div>
+      ${rows}</div>`;
+  };
+  box.innerHTML=`
+    <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · Tỉ số <b>${sa} : ${sb}</b></div>
+    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"Nhập xong sẽ gửi cho admin duyệt."} Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).</div>
+    ${teamBlock("A")}${teamBlock("B")}
+    <div class="gl-acts">
+      <button class="btn sm" onclick="saveGoals()">${isAdmin?"💾 Lưu bàn thắng":"📤 Gửi cho admin"}</button>
+      <button class="btn alt sm" onclick="closeGoalModal()">Hủy</button></div>`;
+  goalRecount();
+}
+function goalStep(enc,d){const el=$("gl-"+enc); if(!el)return; el.value=Math.max(0,Math.min(50,(+el.value||0)+d)); goalRecount();}
+function goalCollect(){
+  const out={};
+  document.querySelectorAll("#goal-body .gl-in").forEach(inp=>{const n=inp.dataset.n,g=Math.max(0,Math.min(50,Math.round(+inp.value||0))); if(g>0)out[n]=g;});
+  return out;
+}
+function goalRecount(){
+  const r=matchById(goalMatchId); if(!r)return;
+  const t=goalsByTeam(r,goalCollect());
+  ["A","B"].forEach(side=>{const el=$("gl-sum-"+side); if(!el)return; const sc=side==="A"?(+r.score.a||0):(+r.score.b||0);
+    el.textContent=t[side]; el.className="gl-sum"+(t[side]===sc?" ok":(t[side]>sc?" over":""));});
+}
+function saveGoals(){
+  const r=matchById(goalMatchId); if(!r)return;
+  const goals=goalCollect();
+  if(isAdmin){
+    const h=getHistory(), rec=h.find(x=>String(x.id)===String(r.id));
+    if(rec){rec.goals=goals; setHistory(h);}
+    closeGoalModal(); toast("Đã lưu bàn thắng trận này."); refreshAfterGoals();
+  }else ensureName(()=>{
+    const reqs=getGoalReqs().filter(q=>!(String(q.mid)===String(r.id)&&(q.by||"")===(sessionName||"")));   // 1 người · 1 trận = giữ bản mới nhất
+    reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:sessionName||"?", mid:r.id,
+      mlabel:(fmtKick(r.kickoff)||r.label||""), score:{a:+r.score.a||0,b:+r.score.b||0}, goals, ts:nowStamp(), at:Date.now()});
+    STATE.goalReqs=reqs; persist(); closeGoalModal(); updateGoalReqBadge();
+    toast("Đã gửi bàn thắng cho admin duyệt.");
+  });
+}
+function refreshAfterGoals(){
+  const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
+  if(cur&&cur.id==="screen-history")showHistory();
+  if(cur&&cur.id==="home")renderHome();
+  if($("scorerModal")&&$("scorerModal").classList.contains("on"))renderScorer();
+  if($("playerModal").classList.contains("on"))renderPlayerProfile();
+}
+// ----- ADMIN: duyệt yêu cầu bàn thắng -----
+function goalReqPending(){return getGoalReqs().filter(q=>!q.status||q.status==="pending").sort((a,b)=>(b.at||0)-(a.at||0));}
+function goalReqDone(){return getGoalReqs().filter(q=>q.status==="approved"||q.status==="rejected").sort((a,b)=>(b.actedAt||b.at||0)-(a.actedAt||a.at||0));}
+function updateGoalReqBadge(){const n=goalReqPending().length,b=$("goalReqBadge"); if(!b)return; b.textContent=n; b.style.display=(isAdmin&&n>0)?"":"none";}
+let goalReqTab="pending";
+function openGoalReq(){ if(!requireAdmin())return; goalReqTab="pending"; renderGoalReq(); $("goalReqModal").classList.add("on"); }
+function closeGoalReq(){ $("goalReqModal").classList.remove("on"); }
+function setGoalReqTab(t){ goalReqTab=t; renderGoalReq(); }
+function goalReqCard(q){
+  const r=matchById(q.mid), sc=q.score||{a:0,b:0}, t=goalsByTeam(r,q.goals);
+  const lu=r?matchLineup(r):[], nameTeam={}; lu.forEach(x=>nameTeam[x.n]=x.team);
+  const items=Object.entries(q.goals||{}).filter(([n,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1])
+    .map(([n,g])=>{const side=nameTeam[n],dot=side==="A"?KIT_A.body:(side==="B"?KIT_B.body:"#888");
+      return `<span class="gl-chip"><span class="gl-dot" style="background:${dot}"></span>${esc(n)} <b>${g}</b></span>`;}).join("")
+      ||`<span class="gl-chip muted">Không ghi bàn nào</span>`;
+  const warn=(t.A!==sc.a||t.B!==sc.b)?`<div class="gl-warn">⚠️ Tổng bàn ${t.A}/${t.B} lệch tỉ số ${sc.a}/${sc.b} (có thể do phản lưới/thiếu).</div>`:"";
+  const done=q.status==="approved"||q.status==="rejected";
+  const st=q.status==="approved"?`<span class="req-st ok">✓ Đã duyệt</span>`:q.status==="rejected"?`<span class="req-st rej">✕ Từ chối</span>`:"";
+  const acted=done&&q.actedBy?`<div class="ulog-by">${q.status==="approved"?"Duyệt":"Từ chối"} bởi <b>${esc(q.actedBy)}</b> · ${q.actedTs||""}</div>`:"";
+  const acts=done
+    ? `<div class="req-acts"><button class="btn alt sm" onclick="reopenGoalReq('${q.id}')">↩ Đưa lại chờ duyệt</button></div>`
+    : `<div class="req-acts"><button class="btn sm" onclick="approveGoalReq('${q.id}')">✓ Duyệt</button>
+        <button class="btn alt sm req-rej" onclick="rejectGoalReq('${q.id}')">✕ Từ chối</button></div>`;
+  return `<div class="ulog-card">
+      <div class="ulog-top"><span class="avatar" style="background:${avColor(q.by)}">${initials(q.by)}</span>
+        <div class="ulog-id"><div class="ulog-name">⚽ Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">👤 ${esc(q.by||"?")} · ${q.ts||""} · Tỉ số ${sc.a}:${sc.b}</div>${acted}</div>${st}</div>
+      <div class="gl-chips">${items}</div>${warn}${acts}</div>`;
+}
+function renderGoalReq(){
+  const box=$("goalreq-body"); if(!box)return;
+  const pend=goalReqPending(), done=goalReqDone();
+  const tabs=`<div class="req-tabs">
+      <button class="${goalReqTab==="pending"?"on":""}" onclick="setGoalReqTab('pending')">Đang chờ (${pend.length})</button>
+      <button class="${goalReqTab==="done"?"on":""}" onclick="setGoalReqTab('done')">Đã xử lý (${done.length})</button></div>`;
+  const list=goalReqTab==="done"?done:pend;
+  if(!list.length){box.innerHTML=tabs+`<div class="empty"><span class="big">⚽</span>${goalReqTab==="done"?"Chưa có yêu cầu nào được xử lý.":"Không có yêu cầu bàn thắng nào đang chờ."}</div>`;return;}
+  box.innerHTML=tabs+`<div class="ulog-grid">`+list.map(goalReqCard).join("")+`</div>`;
+}
+function goalReqMark(id,status){
+  const reqs=getGoalReqs(), q=reqs.find(x=>String(x.id)===String(id)); if(!q)return null;
+  q.status=status; q.actedBy=sessionName||(isAdmin?"Admin":"?"); q.actedTs=nowStamp(); q.actedAt=Date.now();
+  const pend=reqs.filter(x=>!x.status||x.status==="pending");
+  const dn=reqs.filter(x=>x.status==="approved"||x.status==="rejected").sort((a,b)=>(b.actedAt||0)-(a.actedAt||0)).slice(0,80);
+  STATE.goalReqs=[...pend,...dn]; return q;
+}
+function approveGoalReq(id){
+  const q=getGoalReqs().find(x=>String(x.id)===String(id)); if(!q||q.status)return;
+  const h=getHistory(), rec=h.find(x=>String(x.id)===String(q.mid));
+  if(!rec){toast("Trận không còn tồn tại.","err"); rejectGoalReq(id,true); return;}
+  rec.goals=q.goals||{};
+  goalReqMark(id,"approved"); setHistory(h);   // setHistory persist cả history lẫn goalReqs (đã đổi STATE)
+  updateGoalReqBadge(); renderGoalReq(); refreshAfterGoals();
+  toast("Đã duyệt bàn thắng (từ "+(q.by||"?")+").");
+}
+function rejectGoalReq(id,silent){
+  if(!silent&&!confirm("Từ chối yêu cầu bàn thắng này?"))return;
+  goalReqMark(id,"rejected"); persist(); updateGoalReqBadge(); renderGoalReq();
+}
+function reopenGoalReq(id){
+  const q=(STATE.goalReqs||[]).find(x=>String(x.id)===String(id)); if(!q||!q.status)return;
+  q.status="pending"; delete q.actedBy; delete q.actedTs; delete q.actedAt;
+  persist(); updateGoalReqBadge(); renderGoalReq();
+  toast("Đã đưa yêu cầu lại trạng thái chờ duyệt.");
+}
+// ----- Vua phá lưới (BXH bàn thắng) -----
+function playerGoals(name){
+  let total=0,matches=0;
+  getHistory().forEach(r=>{ if(r.score&&r.goals&&(+r.goals[name]||0)>0){total+=+r.goals[name];matches++;} });
+  return {total,matches};
+}
+function scorerBoard(){
+  const tally={};
+  getHistory().forEach(r=>{ if(r.score&&r.goals)Object.entries(r.goals).forEach(([n,g])=>{g=+g||0; if(g>0){const t=tally[n]||(tally[n]={goals:0,matches:0});t.goals+=g;t.matches++;}});});
+  const pls=getPlayers();
+  return Object.entries(tally).map(([n,t])=>({name:n,goals:t.goals,matches:t.matches,p:pls.find(x=>x.n===n)||null}))
+    .sort((a,b)=>b.goals-a.goals||b.matches-a.matches||a.name.localeCompare(b.name));
+}
+let scorerRows=[];
+function openScorer(){renderScorer();$("scorerModal").classList.add("on");}
+function closeScorer(){$("scorerModal").classList.remove("on");}
+function openScorerRow(i){const x=scorerRows[i];if(!x)return;pmName=x.name;closeScorer();renderPlayerProfile();$("playerModal").classList.add("on");}
+function renderScorer(){
+  const box=$("scorer-body"); if(!box)return;
+  scorerRows=scorerBoard();
+  if(!scorerRows.length){box.innerHTML=`<div class="empty"><span class="big">🥇</span>Chưa có bàn thắng nào được ghi nhận.<br>Vào <b>Lịch sử thi đấu</b> → trận đã có tỉ số → <b>⚽ Bàn thắng</b>.</div>`;return;}
+  box.innerHTML=`<div class="rank-list">`+scorerRows.map((x,i)=>`
+      <div class="rank-row" onclick="openScorerRow(${i})">
+        <span class="rank-no${i<3?" top":""}">${i+1}</span>
+        <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
+        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn${x.p?" · "+evalTitle(x.p):""}</div></div>
+        <span class="rank-goals">⚽ ${x.goals}</span>
+      </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
 function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}

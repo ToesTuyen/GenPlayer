@@ -1,7 +1,7 @@
 // Thuat toan chia 2 doi can bang (chay trong trinh duyet hoac node) - khong can server
 // Port tu team_builder.py
 (function(global){
-  const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // 1-3-3
+  const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // sơ đồ hiển thị 1-3-1-2 (GK · 3 thủ · TVtt · TV+TĐ)
   const STAR_MIN = 8;   // ⭐ Ngôi sao = overall >= ngưỡng này (PHẢI khớp STAR_MIN trong web_template.html)
 
   function fit(s, p){
