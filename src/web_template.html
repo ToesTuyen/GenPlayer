@@ -1363,7 +1363,7 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  const goalBtn=(full&&res.played)?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Bàn thắng</button>`:"";
+  const goalBtn=full?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Bàn thắng</button>`:"";
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button>
@@ -1748,7 +1748,7 @@ function goalsByTeam(r,goals){   // tổng bàn mỗi đội theo bản ghi goal
   return out;
 }
 function goalSummaryLine(r){   // dòng người ghi bàn gọn trên thẻ trận
-  if(!r.score||!r.goals)return "";
+  if(!r.goals)return "";
   const lu=matchLineup(r), nameTeam={}; lu.forEach(x=>nameTeam[x.n]=x.team);
   const ent=Object.entries(r.goals).filter(([n,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1]);
   if(!ent.length)return "";
@@ -1760,7 +1760,6 @@ function goalSummaryLine(r){   // dòng người ghi bàn gọn trên thẻ tr�
 let goalMatchId=null;
 function openGoalModal(id){
   const r=matchById(id); if(!r){toast("Không tìm thấy trận.","err");return;}
-  if(!r.score){toast("Trận chưa có tỉ số — nhập tỉ số trước đã.","warn");return;}
   if(!matchLineup(r).length){toast("Trận này không có đội hình để gán bàn thắng.","warn");return;}
   ensureName(()=>{ goalMatchId=id; renderGoalForm(); $("goalModal").classList.add("on"); });
 }
@@ -1773,9 +1772,10 @@ function goalPrefill(r){   // ưu tiên: yêu cầu đang chờ của CHÍNH ng�
 function renderGoalForm(){
   const box=$("goal-body"); if(!box)return;
   const r=matchById(goalMatchId); if(!r){box.innerHTML="";return;}
-  const pre=goalPrefill(r), lu=matchLineup(r), sa=+r.score.a||0, sb=+r.score.b||0;
+  const pre=goalPrefill(r), lu=matchLineup(r), hasScore=!!r.score, sa=+(r.score||{}).a||0, sb=+(r.score||{}).b||0;
   const teamBlock=(side)=>{
     const col=side==="A"?KIT_A.body:KIT_B.body, txtc=side==="A"?"#fff":"#11224f", sc=side==="A"?sa:sb;
+    const need=hasScore?`<span class="gl-need">cần ${sc}</span>`:"";
     const rows=lu.filter(x=>x.team===side).map(x=>{const enc=encodeURIComponent(x.n);return `
       <div class="gl-row">
         <span class="avatar sm" style="${avaStyle(x.n)}">${avaInner(x.n)}</span>
@@ -1788,13 +1788,13 @@ function renderGoalForm(){
       </div>`;}).join("")||`<div class="gl-empty">Không có cầu thủ ${teamSideName(side)}.</div>`;
     return `<div class="gl-team">
       <div class="gl-team-h"><span class="mc-logo sm" style="background:${col};color:${txtc}">${initials(teamSideName(side))}</span>
-        <b>${teamSideName(side).toUpperCase()}</b><span class="gl-need">cần ${sc}</span>
+        <b>${teamSideName(side).toUpperCase()}</b>${need}
         <span class="gl-sum" id="gl-sum-${side}">0</span></div>
       ${rows}</div>`;
   };
   box.innerHTML=`
-    <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · Tỉ số <b>${sa} : ${sb}</b></div>
-    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"Nhập xong sẽ gửi cho admin duyệt."} Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).</div>
+    <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · ${hasScore?`Tỉ số <b>${sa} : ${sb}</b>`:`<span style="color:var(--muted)">Chưa có tỉ số</span>`}</div>
+    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"Nhập xong sẽ <b>gửi cho admin duyệt</b>."}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
     ${teamBlock("A")}${teamBlock("B")}
     <div class="gl-acts">
       <button class="btn sm" onclick="saveGoals()">${isAdmin?"💾 Lưu bàn thắng":"📤 Gửi cho admin"}</button>
@@ -1809,9 +1809,12 @@ function goalCollect(){
 }
 function goalRecount(){
   const r=matchById(goalMatchId); if(!r)return;
-  const t=goalsByTeam(r,goalCollect());
-  ["A","B"].forEach(side=>{const el=$("gl-sum-"+side); if(!el)return; const sc=side==="A"?(+r.score.a||0):(+r.score.b||0);
-    el.textContent=t[side]; el.className="gl-sum"+(t[side]===sc?" ok":(t[side]>sc?" over":""));});
+  const t=goalsByTeam(r,goalCollect()), hasScore=!!r.score;
+  ["A","B"].forEach(side=>{const el=$("gl-sum-"+side); if(!el)return;
+    el.textContent=t[side];
+    if(!hasScore){el.className="gl-sum";return;}                 // chưa có tỉ số → không tô đúng/sai
+    const sc=side==="A"?(+r.score.a||0):(+r.score.b||0);
+    el.className="gl-sum"+(t[side]===sc?" ok":(t[side]>sc?" over":""));});
 }
 function saveGoals(){
   const r=matchById(goalMatchId); if(!r)return;
@@ -1823,7 +1826,7 @@ function saveGoals(){
   }else ensureName(()=>{
     const reqs=getGoalReqs().filter(q=>!(String(q.mid)===String(r.id)&&(q.by||"")===(sessionName||"")));   // 1 người · 1 trận = giữ bản mới nhất
     reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:sessionName||"?", mid:r.id,
-      mlabel:(fmtKick(r.kickoff)||r.label||""), score:{a:+r.score.a||0,b:+r.score.b||0}, goals, ts:nowStamp(), at:Date.now()});
+      mlabel:(fmtKick(r.kickoff)||r.label||""), score:r.score?{a:+r.score.a||0,b:+r.score.b||0}:null, goals, ts:nowStamp(), at:Date.now()});
     STATE.goalReqs=reqs; persist(); closeGoalModal(); updateGoalReqBadge();
     toast("Đã gửi bàn thắng cho admin duyệt.");
   });
@@ -1844,13 +1847,13 @@ function openGoalReq(){ if(!requireAdmin())return; goalReqTab="pending"; renderG
 function closeGoalReq(){ $("goalReqModal").classList.remove("on"); }
 function setGoalReqTab(t){ goalReqTab=t; renderGoalReq(); }
 function goalReqCard(q){
-  const r=matchById(q.mid), sc=q.score||{a:0,b:0}, t=goalsByTeam(r,q.goals);
+  const r=matchById(q.mid), sc=q.score, t=goalsByTeam(r,q.goals);
   const lu=r?matchLineup(r):[], nameTeam={}; lu.forEach(x=>nameTeam[x.n]=x.team);
   const items=Object.entries(q.goals||{}).filter(([n,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1])
     .map(([n,g])=>{const side=nameTeam[n],dot=side==="A"?KIT_A.body:(side==="B"?KIT_B.body:"#888");
       return `<span class="gl-chip"><span class="gl-dot" style="background:${dot}"></span>${esc(n)} <b>${g}</b></span>`;}).join("")
       ||`<span class="gl-chip muted">Không ghi bàn nào</span>`;
-  const warn=(t.A!==sc.a||t.B!==sc.b)?`<div class="gl-warn">⚠️ Tổng bàn ${t.A}/${t.B} lệch tỉ số ${sc.a}/${sc.b} (có thể do phản lưới/thiếu).</div>`:"";
+  const warn=(sc&&(t.A!==sc.a||t.B!==sc.b))?`<div class="gl-warn">⚠️ Tổng bàn ${t.A}/${t.B} lệch tỉ số ${sc.a}/${sc.b} (có thể do phản lưới/thiếu).</div>`:"";
   const done=q.status==="approved"||q.status==="rejected";
   const st=q.status==="approved"?`<span class="req-st ok">✓ Đã duyệt</span>`:q.status==="rejected"?`<span class="req-st rej">✕ Từ chối</span>`:"";
   const acted=done&&q.actedBy?`<div class="ulog-by">${q.status==="approved"?"Duyệt":"Từ chối"} bởi <b>${esc(q.actedBy)}</b> · ${q.actedTs||""}</div>`:"";
@@ -1860,7 +1863,7 @@ function goalReqCard(q){
         <button class="btn alt sm req-rej" onclick="rejectGoalReq('${q.id}')">✕ Từ chối</button></div>`;
   return `<div class="ulog-card">
       <div class="ulog-top"><span class="avatar" style="background:${avColor(q.by)}">${initials(q.by)}</span>
-        <div class="ulog-id"><div class="ulog-name">⚽ Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">👤 ${esc(q.by||"?")} · ${q.ts||""} · Tỉ số ${sc.a}:${sc.b}</div>${acted}</div>${st}</div>
+        <div class="ulog-id"><div class="ulog-name">⚽ Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">👤 ${esc(q.by||"?")} · ${q.ts||""}${sc?` · Tỉ số ${sc.a}:${sc.b}`:""}</div>${acted}</div>${st}</div>
       <div class="gl-chips">${items}</div>${warn}${acts}</div>`;
 }
 function renderGoalReq(){
@@ -1902,12 +1905,12 @@ function reopenGoalReq(id){
 // ----- Vua phá lưới (BXH bàn thắng) -----
 function playerGoals(name){
   let total=0,matches=0;
-  getHistory().forEach(r=>{ if(r.score&&r.goals&&(+r.goals[name]||0)>0){total+=+r.goals[name];matches++;} });
+  getHistory().forEach(r=>{ if(r.goals&&(+r.goals[name]||0)>0){total+=+r.goals[name];matches++;} });
   return {total,matches};
 }
 function scorerBoard(){
   const tally={};
-  getHistory().forEach(r=>{ if(r.score&&r.goals)Object.entries(r.goals).forEach(([n,g])=>{g=+g||0; if(g>0){const t=tally[n]||(tally[n]={goals:0,matches:0});t.goals+=g;t.matches++;}});});
+  getHistory().forEach(r=>{ if(r.goals)Object.entries(r.goals).forEach(([n,g])=>{g=+g||0; if(g>0){const t=tally[n]||(tally[n]={goals:0,matches:0});t.goals+=g;t.matches++;}});});
   const pls=getPlayers();
   return Object.entries(tally).map(([n,t])=>({name:n,goals:t.goals,matches:t.matches,p:pls.find(x=>x.n===n)||null}))
     .sort((a,b)=>b.goals-a.goals||b.matches-a.matches||a.name.localeCompare(b.name));
