@@ -934,7 +934,7 @@ const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_ed
 const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
-const CAtxt="#bd2004", CBtxt="#11224f";
+const CAtxt="#bd2004", CBtxt="#fcba03";
 // Trọng số tính ĐIỂM theo vị trí — đá hướng nào thì nặng chỉ số đó (chuẩn hoá theo tổng trọng số).
 const POS_W={
   GK:    {TM:7, PN:1.5, TD:1, TL:0.5},
@@ -1480,19 +1480,19 @@ function card(m,o,ctxt,label,ev,sel){
   const idx=c=>ev.starters[c];
   const topAtk=[4,5,6].map(idx).sort((a,b)=>(sel[b].DD-sel[a].DD)||(ov(sel[b])-ov(sel[a])))[0];
   const anchor=[1,2,3].map(idx).sort((a,b)=>(sel[b].PN-sel[a].PN)||(ov(sel[b])-ov(sel[a])))[0];
-  const weakI=[1,2,3,4,5,6].map(idx).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
-  const slotOf=i=>SL[ev.starters.indexOf(i)];
   const gkEdge=m.gkFit-o.gkFit, paceEdge=m.pace-o.pace;
   const tb=ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a]))[0];
+  const oWeak=[1,2,3,4,5,6].map(c=>o.starters[c]).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
+  const oWeakSlot=SL[o.starters.indexOf(oWeak)];
   const b=[];
   b.push(`🎯 <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
   const gkTxt=gkEdge>=0.5?`khung gỗ là một lợi thế — ${sel[idx(0)].n} (${m.gkFit.toFixed(0)}/10) nhỉnh hơn người gác đền đối phương`:gkEdge<=-0.5?`${sel[idx(0)].n} bắt gôn chưa phải sở trường (${m.gkFit.toFixed(0)}/10), cần hàng thủ bọc lót kín phía trước`:`${sel[idx(0)].n} trấn giữ khung thành ở mức ổn định`;
   b.push(`🛡️ <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
   b.push(paceEdge>0.3?`⚡ <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`🧠 <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`⚙️ <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
   b.push(tb!==undefined?`🔁 <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`🔁 <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
-  const weak=`${slotOf(weakI)} ${sel[weakI].n} (trung bình ${ov(sel[weakI]).toFixed(1)}/10) là mắt xích nhẹ ký nhất, nhiều khả năng bị đối thủ nhắm vào${paceEdge<=-0.3?"; tốc độ tổng thể thấp hơn nên dễ bị khai thác khoảng trống sau lưng":""}`;
-  const plan=paceEdge>0.3?`gây áp lực tầm cao, đoạt bóng nhanh và tận dụng tốc độ để dứt điểm — chủ động mở tỉ số`:`giữ bóng chắc, kéo giãn cự ly đối thủ rồi xuyên phá trung lộ, đồng thời che chắn kỹ vị trí ${slotOf(weakI)}`;
-  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="wk">⚠️ <b>Điểm cần lưu ý:</b> ${weak}.</div><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
+  const edges=[{v:gkEdge,t:`dựa vào sự chắc chắn nơi khung thành, chơi chắc lớp và kiên nhẫn chờ đối thủ phạm sai lầm`},{v:paceEdge,t:`tăng nhịp chuyển trạng thái, dùng tốc độ xộc thẳng hai biên để kết liễu`},{v:m.atk-o.atk,t:`chủ động dồn ép tấn công, gây sức ép liên tục buộc đối thủ mắc lỗi`},{v:m.defPN-o.defPN,t:`phòng ngự kỷ luật rồi tổ chức phản công sắc từ tuyến dưới`}];
+  const plan=`${edges.sort((x,y)=>y.v-x.v)[0].t}; nhắm vào ${oWeakSlot} bên phía đối thủ và đưa bóng cho ${sel[topAtk].n} ở thời điểm quyết định`;
+  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
 function render(res,sel,target){
   target=target||"result"; const box=$(target);
