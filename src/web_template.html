@@ -1758,14 +1758,15 @@ function goalSummaryLine(r){   // dòng người ghi bàn gọn trên thẻ tr�
 }
 // ----- form NHẬP bàn thắng cho 1 trận -----
 let goalMatchId=null;
+function goalWho(){return sessionName||"Khách";}   // không hỏi tên nữa: khách vô danh ghi "Khách"
 function openGoalModal(id){
   const r=matchById(id); if(!r){toast("Không tìm thấy trận.","err");return;}
   if(!matchLineup(r).length){toast("Trận này không có đội hình để gán bàn thắng.","warn");return;}
-  ensureName(()=>{ goalMatchId=id; renderGoalForm(); $("goalModal").classList.add("on"); });
+  goalMatchId=id; renderGoalForm(); $("goalModal").classList.add("on");   // mở thẳng form, chọn cầu thủ + nhập số bàn
 }
 function closeGoalModal(){$("goalModal").classList.remove("on");goalMatchId=null;}
 function goalPrefill(r){   // ưu tiên: yêu cầu đang chờ của CHÍNH người này -> điểm đã duyệt r.goals
-  const mine=getGoalReqs().find(q=>(!q.status||q.status==="pending")&&String(q.mid)===String(r.id)&&(q.by||"")===(sessionName||""));
+  const mine=getGoalReqs().find(q=>(!q.status||q.status==="pending")&&String(q.mid)===String(r.id)&&(q.by||"")===goalWho());
   if(mine&&mine.goals)return mine.goals;
   return r.goals||{};
 }
@@ -1823,13 +1824,14 @@ function saveGoals(){
     const h=getHistory(), rec=h.find(x=>String(x.id)===String(r.id));
     if(rec){rec.goals=goals; setHistory(h);}
     closeGoalModal(); toast("Đã lưu bàn thắng trận này."); refreshAfterGoals();
-  }else ensureName(()=>{
-    const reqs=getGoalReqs().filter(q=>!(String(q.mid)===String(r.id)&&(q.by||"")===(sessionName||"")));   // 1 người · 1 trận = giữ bản mới nhất
-    reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:sessionName||"?", mid:r.id,
+  }else{
+    const who=goalWho();
+    const reqs=getGoalReqs().filter(q=>!(String(q.mid)===String(r.id)&&(q.by||"")===who));   // 1 người · 1 trận = giữ bản mới nhất
+    reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:who, mid:r.id,
       mlabel:(fmtKick(r.kickoff)||r.label||""), score:r.score?{a:+r.score.a||0,b:+r.score.b||0}:null, goals, ts:nowStamp(), at:Date.now()});
     STATE.goalReqs=reqs; persist(); closeGoalModal(); updateGoalReqBadge();
     toast("Đã gửi bàn thắng cho admin duyệt.");
-  });
+  }
 }
 function refreshAfterGoals(){
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
