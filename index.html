@@ -536,6 +536,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rk-wrap{max-width:680px;margin:0 auto;padding:4px 0 24px}
 .rk-pos{font-size:13px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 .rk-pos:first-child{margin-top:4px}
+.bk-card{background:var(--card,#10172a);border:1px solid var(--line,#22304d);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.bk-card.rejected{opacity:.55}
+.bk-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;flex-wrap:wrap}
+.bk-status{font-weight:800;padding:2px 8px;border-radius:999px;background:#1b2742;color:#9fb0d0}
+.bk-status.applied{background:#143a2a;color:#42e08a}
+.bk-status.rejected{background:#3a1a1a;color:#ff6b6b}
+.bk-when{color:var(--muted,#8aa)}
+.bk-teams{font-size:12.5px;line-height:1.5;color:var(--text,#e8ecf6)}
+.bk-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
 </style></head><body>
 
 <header class="appbar">
@@ -557,6 +566,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
+        <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span>Backup</span></button>
       </div>
     </section>
   </div>
@@ -627,6 +637,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </div>
 
 <!-- ====== LICH SU ====== -->
+<div id="screen-backup" class="screen">
+  <div id="backup-list"></div>
+</div>
+
 <div id="screen-history" class="screen">
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
@@ -927,7 +941,7 @@ const FIREBASE_CONFIG = {
   "appId": "1:369243060469:web:15be646482a42c08d46dbc"
 };
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests"};
-const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu"};
+const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#fcba03";
@@ -982,10 +996,53 @@ function getPlog(){return (STATE.plog||[]).slice();}
 function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
 function persist(){
   try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));}catch(e){}
-  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
+  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
 }
 function setPlayers(a){STATE.players=a;persist();}
 function setHistory(a){STATE.history=a;persist();}
+function getBackups(){return (STATE.lineupBackups||[]).slice();}
+function setBackups(a){STATE.lineupBackups=a;persist();}
+function bkTeams(b){
+  if(!b||!b.result||!b.subset)return "";
+  const sel=b.subset, nm=i=>esc(shortName(sel[i].n));
+  const A=b.result.evA.starters.map(nm).join(", "), B=b.result.evB.starters.map(nm).join(", ");
+  return `<div class="bk-teams"><div><b style="color:#ff5a4d">Quỷ Đỏ:</b> ${A}</div><div><b style="color:#e0a800">Pháo Thủ:</b> ${B}</div></div>`;
+}
+function openBackup(){show("screen-backup");showBackup();}
+function showBackup(){
+  const box=$("backup-list"); if(!box)return;
+  const bks=getBackups();
+  if(!bks.length){box.innerHTML=`<div class="empty"><span class="big">🗂️</span>Chưa có backup đội hình nào.<br>Mỗi lần lưu một đội tuần này mới, đội cũ sẽ tự vào đây.</div>`;return;}
+  box.innerHTML=bks.map(b=>{
+    const st=b.bkStatus||"backup";
+    const stTxt=st==="applied"?"✅ Đã áp dụng":st==="rejected"?"❌ Đã từ chối":"🗂️ Backup";
+    const when=b.kickoff?fmtKick(b.kickoff):(b.label||"");
+    return `<div class="bk-card ${st}"><div class="bk-head"><span class="bk-status ${st}">${stTxt}</span><span class="bk-when">${when}${b.venue?" · 📍 "+esc(b.venue):""}</span></div>${bkTeams(b)}<div class="bk-actions"><button class="btn alt sm" onclick="applyBackup(${b.id})">✅ Áp dụng</button><button class="btn alt sm" onclick="rejectBackup(${b.id})">❌ Từ chối</button><button class="iconbtn" onclick="deleteBackup(${b.id})" title="Xoá">🗑️</button></div></div>`;
+  }).join("");
+}
+function applyBackup(id){
+  if(!isAdmin){alert("🔒 Cần đăng nhập admin.");return;}
+  const bks=getBackups(), b=bks.find(x=>String(x.id)===String(id)); if(!b)return;
+  const h=getHistory(), now=Date.now();
+  const olds=h.filter(r=>!r.score);
+  let nb=bks.filter(x=>String(x.id)!==String(id));
+  if(olds.length)nb=[...olds.map(r=>({...r,bkStatus:"backup",bkAt:now})),...nb];
+  STATE.lineupBackups=nb;
+  const h2=h.filter(r=>r.score);
+  const m={...b}; delete m.bkStatus; delete m.bkAt;
+  h2.unshift(m); setHistory(h2);
+  showBackup(); if(typeof toast==="function")toast("Đã áp dụng đội hình này làm trận sắp tới.");
+}
+function rejectBackup(id){
+  if(!isAdmin){alert("🔒 Cần đăng nhập admin.");return;}
+  const bks=getBackups(), b=bks.find(x=>String(x.id)===String(id)); if(!b)return;
+  b.bkStatus="rejected"; setBackups(bks); showBackup();
+}
+function deleteBackup(id){
+  if(!isAdmin){alert("🔒 Cần đăng nhập admin.");return;}
+  if(!confirm("Xoá bản backup này?"))return;
+  setBackups(getBackups().filter(x=>String(x.id)!==String(id))); showBackup();
+}
 
 // ---- log cập nhật cầu thủ (ai · khi nào · đổi gì) ----
 const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","TM"];
@@ -1117,8 +1174,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[]});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],lineupBackups:STATE.lineupBackups||[]});
       ensureRatings(STATE.players);
       onCloudUpdate();
     },err=>{console.warn("Firebase:",err);STATE.cloud=false;setCloudBadge();});
@@ -1639,7 +1696,7 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   document.body.classList.toggle("is-admin",isAdmin);
   document.body.classList.toggle("can-edit",canEdit);
   const set=(id,show)=>{const el=$(id);if(el)el.style.display=show?"":"none";};
-  set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin);
+  set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin); set("backupNavBtn",isAdmin);
   updateReqBadge();
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
@@ -2186,6 +2243,9 @@ function saveMatch(){
   else{
     if(!mmDraft){closeMatchModal();return;}
     const now=new Date();
+    const olds=h.filter(r=>!r.score);   // đội tuần này cũ -> đưa vào backup
+    if(olds.length){STATE.lineupBackups=[...olds.map(r=>({...r,bkStatus:"backup",bkAt:now.getTime()})),...getBackups()];}
+    for(let i=h.length-1;i>=0;i--)if(!h[i].score)h.splice(i,1);   // bỏ trận sắp tới cũ khỏi history
     h.unshift({id:now.getTime(),label:now.toLocaleDateString("vi-VN")+" "+now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),
       n:mmDraft.n, subset:mmDraft.subset, result:mmDraft.result, kickoff, venue});
     $("saveWeek").textContent="✅ Đã lưu!"; setTimeout(()=>$("saveWeek").textContent="💾 Lưu làm đội tuần này",1500);
