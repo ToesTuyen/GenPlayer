@@ -665,7 +665,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
   <div class="editor-wrap">
     <table class="edit"><thead><tr>
-      <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Tư duy</th><th>Thủ môn</th><th></th><th></th>
+      <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Nhãn quan</th><th>Ổn định</th><th>Thủ môn</th><th></th><th></th>
     </tr></thead><tbody id="editor-body"></tbody></table>
   </div>
   </div>
@@ -852,9 +852,9 @@ const POS_W={
   TV:    {TC:1.9, KT:1.9, DD:1.4, CH:1.3, TL:1.1, DN:1, TD:0.8},        // tiền vệ cánh
   "TĐ":  {DD:3, KT:1.6, TC:1.5, DN:1.1, TD:0.9, CH:0.6},                // tiền đạo
 };
-const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình 8 chỉ số sân
+const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình các chỉ số sân (+Ổn định nếu có)
   const w=POS_W[posCodeOf(s)];
-  if(!w)return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+  if(!w){let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;}
   let sum=0,tot=0; for(const k in w){sum+=(+s[k]||0)*w[k];tot+=w[k];}
   return tot?sum/tot:0;
 };
@@ -945,7 +945,7 @@ function deleteBackup(id){
 }
 
 // ---- log cập nhật cầu thủ (ai · khi nào · đổi gì) ----
-const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","TM"];
+const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"];
 let lastEditor="", peEditor="", tableEditor="";   // peEditor: tên ở form hồ sơ; tableEditor: tên ở bảng sửa
 let peStep=0, peAns={}, peTouched={}, pePos="", pePos2=[];   // trạng thái wizard hỏi-đáp chấm cầu thủ
 try{lastEditor=localStorage.getItem(LS.editor)||"";}catch(e){}
@@ -991,7 +991,7 @@ function commitPlayers(newArr,opts){
 // Mỗi cầu thủ giữ p.ratings = { "tên người chấm": {KT..TM, ts} }. p.KT..TM hiển thị = TỔNG HỢP các lượt chấm.
 const BASE_RATER="(khởi tạo)";                       // lượt chấm gốc (migrate từ dữ liệu cũ)
 const MIN_RATERS=3;                                  // <3 người thật -> "tạm tính"
-const BIAS_KEYS=["KT","CH","DD","PN","TC","TL","DN","TD"];  // bỏ TM khỏi tính thiên lệch (đa số = 0)
+const BIAS_KEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD"];  // bỏ TM khỏi tính thiên lệch (đa số = 0)
 const clampInt=v=>Math.max(0,Math.min(10,Math.round(+v||0)));
 function snapAgg(p){const s={};LOGKEYS.forEach(k=>s[k]=+p[k]||0);return s;}
 function isSelf(rater,p){return (rater||"").trim().toLowerCase()===((p&&p.n)||"").trim().toLowerCase();}
@@ -1107,7 +1107,7 @@ function quickScores(tier,positions,spd,wr){
   const avg=[0,1,2,3,4,5].map(i=> outp.length? outp.reduce((s,p)=>s+TILT[p][i],0)/outp.length : 0);
   return {KT:rhu(b+avg[0]),CH:rhu(b+avg[1]),DD:rhu(b+avg[2]),PN:rhu(b+avg[3]),
           TC:rhu(SPD[spd]+0.3*(b-5.5)),TL:rhu(b+avg[4]),DN:rhu(WR[wr]+0.2*(b-5.5)),TD:rhu(b+avg[5]),
-          TM:positions.includes("GK")?rhu(TMt[tier]):0};
+          OD:rhu(b),TM:positions.includes("GK")?rhu(TMt[tier]):0};
 }
 
 // ---- nav ----
@@ -1269,7 +1269,7 @@ function logPanel(e){
   }
   return `<div class="pm-cols">
     <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
-    <div><div class="pm-sec">Thể chất &amp; tư duy</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
+    <div><div class="pm-sec">Thể chất &amp; tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
   </div>`;
 }
 function renderUpdateLog(){
@@ -1531,12 +1531,12 @@ $("saveWeek").onclick=()=>{
 
 // ============ CAP NHAT CAU THU ============
 function rowHtml(p){
-  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,TM:0};
+  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,OD:6,TM:0};
   const esc=(p.n||"").replace(/"/g,'&quot;');
   const num=k=>`<td><input type="number" min="0" max="10" data-k="${k}" data-o="${p[k]}" value="${p[k]}"></td>`;   // data-o = giá trị gốc, để biết dòng nào THỰC SỰ đổi
   return `<tr>
     <td style="text-align:left"><input type="text" class="nm" data-o="${esc}" value="${esc}"></td>
-    ${["KT","CH","DD","PN","TC","TL","DN","TD","TM"].map(num).join("")}
+    ${["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"].map(num).join("")}
     <td><button class="iconbtn" title="Nhập nhanh" onclick="openQuick(this)">⚡</button></td>
     <td><button class="iconbtn" title="Xóa" onclick="this.closest('tr').remove()">🗑️</button></td>
   </tr>`;
@@ -1544,7 +1544,7 @@ function rowHtml(p){
 function buildEditor(){            // mỗi dòng = lượt chấm của tableEditor; chưa chấm -> điểm tổng (làm tròn) làm gợi ý
   const r=tableEditor;
   $("editor-body").innerHTML=getPlayers().sort((a,b)=>ov(b)-ov(a)).map(p=>{
-    const src=(p.ratings&&p.ratings[r])||p; const row={n:p.n}; LOGKEYS.forEach(k=>row[k]=clampInt(src[k])); return rowHtml(row);
+    const src=(p.ratings&&p.ratings[r])||p; const row={n:p.n}; LOGKEYS.forEach(k=>row[k]=(src[k]==null&&k==="OD")?6:clampInt(src[k])); return rowHtml(row);
   }).join("");
 }
 const POS_LIST=[["GK","Thủ môn"],["Thòng","Trung vệ"],["HV","Hậu vệ biên"],["TVtt","Tiền vệ giữa"],["TV","Tiền vệ cánh"],["TĐ","Tiền đạo"]];
@@ -1661,7 +1661,7 @@ function toggleEdit(force){
 // ---- chi tiet cau thu (FM-style) ----
 let pcards=[], pmName=null;
 const ATTRS_TECH=[["KT","Kỹ thuật"],["CH","Chuyền"],["DD","Dứt điểm"],["PN","Phòng ngự"],["TM","Thủ môn"]];
-const ATTRS_PHYS=[["TC","Tốc độ"],["TL","Thể lực"],["DN","Năng nổ"],["TD","Tư duy"]];
+const ATTRS_PHYS=[["TC","Tốc độ"],["TL","Thể lực"],["DN","Năng nổ"],["TD","Nhãn quan"],["OD","Ổn định"]];
 const ATTRS_ALL=ATTRS_TECH.concat(ATTRS_PHYS);
 const ATTR_HINT={
   KT:"Rê dắt, xử lý bóng · 1–2 vụng · 3–4 lóng ngóng · 5–6 ổn · 7–8 mượt · 9–10 khéo",
@@ -1672,13 +1672,14 @@ const ATTR_HINT={
   TC:"Chạy nhanh · 1–2 chậm · 3–4 hơi chậm · 5–6 trung bình · 7–8 nhanh · 9–10 bứt tốc",
   TL:"Sức bền · 1–2 mau mệt · 3–4 đuối sớm · 5–6 ổn · 7–8 dẻo dai · 9–10 bền cả trận",
   DN:"Chịu chạy, máu lửa · 1–2 lười · 3–4 cầm chừng · 5–6 vừa · 7–8 chịu khó · 9–10 nhiệt",
-  TD:"Đọc trận, chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
+  TD:"Nhãn quan, đọc trận chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
+  OD:"Ổn định phong độ · 1–2 thất thường · 3–4 phập phù · 5–6 ổn · 7–8 đều · 9–10 rất đều mọi trận",
 };
 function attrColor(v){v=+v||0;return v>=8?"#22e07a":(v>=6?"#e8ecf6":(v>=4?"#f5c451":"#ff6b6b"));}
 function pmFind(){return getPlayers().find(x=>x.n===pmName);}
 function openPlayer(i){const p=pcards[i];if(!p)return;pmName=p.n;renderPlayerProfile();$("playerModal").classList.add("on");}
 function closePlayer(){$("playerModal").classList.remove("on");}
-function attrRow(l,v){return `<div class="pm-attr"><span class="lab">${l}</span><span class="val" style="color:${attrColor(v)}">${v}</span></div>`;}
+function attrRow(l,v){const has=v!=null&&v!=="";return `<div class="pm-attr"><span class="lab">${l}</span><span class="val" style="color:${has?attrColor(v):"#7c87a0"}">${has?clampInt(v):"–"}</span></div>`;}
 // ---- thống kê thi đấu (suy từ các trận ĐÃ có tỉ số) ----
 function teamOfIdx(r,idx){
   const eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
@@ -2014,7 +2015,7 @@ function renderPlayerProfile(){
       </div>
       <div class="pm-right"><div class="pm-cols">
         <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
-        <div><div class="pm-sec">Thể chất & tư duy</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+        <div><div class="pm-sec">Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
       </div></div>
     </div>
     ${evalBlock(p)}
@@ -2097,7 +2098,7 @@ const PE_Q_OUTFIELD=[
     {l:"Tốt",d:"Chắc chắn, đoạt bóng tốt",score:8},
     {l:"Rất chắc",d:"Đọc bài, cắt bóng từ xa",score:9},
     {l:"Bức tường",d:"Gần như không xuyên thủng",score:10}]},
-  {id:"TD",key:"TD",title:"Tư duy — đọc trận",sub:"Khả năng đọc tình huống, chọn vị trí và ra quyết định (chuyền / rê / sút) đúng lúc?",opts:[
+  {id:"TD",key:"TD",title:"Nhãn quan — đọc trận",sub:"Khả năng đọc tình huống, chọn vị trí và ra quyết định (chuyền / rê / sút) đúng lúc?",opts:[
     {l:"Rất kém",d:"Đứng sai chỗ, đuổi theo bóng",score:3},
     {l:"Kém",d:"Hay sai vị trí, quyết định vội",score:4},
     {l:"Tạm",d:"Thụ động, chờ bóng đến chân",score:5},
@@ -2125,10 +2126,19 @@ const PE_Q_OUTFIELD=[
     {l:"Rất bền",d:"Đeo bám tích cực, ít mệt",score:9},
     {l:"Máy chạy",d:"Pressing không nghỉ cả trận",score:10}]},
   {id:"MOOD",key:"MOOD",title:"Tâm lý — bản lĩnh",sub:"Khi áp lực cao (đội bị dẫn bàn, đối mặt thủ môn, phút cuối căng thẳng), tâm lý cậu ấy thế nào?",opts:[
-    {l:"Cuống, đá hỏng",d:"Mất bình tĩnh, đá vội hoặc đổ lỗi, càng căng càng hỏng (giảm nhẹ Dứt điểm & Tư duy)",dd:-1,td:-1},
+    {l:"Cuống, đá hỏng",d:"Mất bình tĩnh, đá vội hoặc đổ lỗi, càng căng càng hỏng (giảm nhẹ Dứt điểm & Nhãn quan)",dd:-1,td:-1},
     {l:"Hơi vội",d:"Có chút cuống nhưng vẫn còn kiểm soát được phần nào",dd:0,td:0},
     {l:"Giữ được bình tĩnh",d:"Điềm đạm, xử lý tỉnh táo dù đang bị áp lực",dd:0,td:0},
     {l:"Càng căng càng hay",d:"Bản lĩnh, thậm chí đá hay hơn khi căng thẳng (cộng nhẹ Dứt điểm)",dd:1,td:0}]},
+  {id:"OD",key:"OD",title:"Ổn định — phong độ",sub:"Phong độ giữa các trận có đều không, hay lúc hay lúc dở (thất thường)?",opts:[
+    {l:"Rất thất thường",d:"Trận hay trận dở, khó lường",score:3},
+    {l:"Thất thường",d:"Phong độ trồi sụt nhiều",score:4},
+    {l:"Hơi phập phù",d:"Đôi trận xuống phong độ rõ",score:5},
+    {l:"Tạm ổn",d:"Phần lớn giữ được mức trung bình",score:6},
+    {l:"Khá đều",d:"Ít trận đá dưới sức",score:7},
+    {l:"Ổn định",d:"Đá đều tay gần như mọi trận",score:8},
+    {l:"Rất đều",d:"Hiếm khi có trận tệ",score:9},
+    {l:"Cực ổn định",d:"Luôn giữ phong độ cao, đáng tin",score:10}]},
 ];
 const PE_Q_GK={id:"TM",key:"TM",title:"Thủ môn — bắt gôn",sub:"Khi đứng trong khung thành, cậu ấy bắt và cản phá bóng thế nào?",opts:[
   {l:"Rất yếu",d:"Bắt chữa cháy, hay để lọt",score:3},
@@ -2143,9 +2153,9 @@ const PE_Q_GK={id:"TM",key:"TM",title:"Thủ môn — bắt gôn",sub:"Khi đứ
 function peIsGK(){return pePos==="GK"||(pePos2||[]).includes("GK");}
 function peQList(){return peIsGK()?[...PE_Q_OUTFIELD,PE_Q_GK]:PE_Q_OUTFIELD.slice();}
 function peNearestIdx(v,opts){let bi=0,bd=1e9;opts.forEach((o,i)=>{if(o.score==null)return;const d=Math.abs(o.score-v);if(d<bd){bd=d;bi=i;}});return bi;}
-function peComputeScores(){    // suy điểm 9 chỉ số từ đáp án; chỉ số chưa chấm giữ điểm cũ
+function peComputeScores(){    // suy điểm các chỉ số từ đáp án; chỉ số chưa chấm giữ điểm cũ
   const p=pmFind()||{}, o={};
-  ATTRS_ALL.forEach(([k])=>o[k]=clampInt(p[k]));
+  ATTRS_ALL.forEach(([k])=>o[k]=(p[k]==null&&k==="OD")?6:clampInt(p[k]));
   peQList().forEach(q=>{
     if(!peTouched[q.id])return;
     const opt=q.opts[peAns[q.id]]; if(!opt)return;

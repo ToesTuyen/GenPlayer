@@ -42,8 +42,8 @@
     return ans;
   }
 
-  // gia tri 8 chi so ngoai san
-  function overallOf(s){ return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8; }
+  // gia tri cac chi so ngoai san (8, +Ổn định OD neu da cham -> /9)
+  function overallOf(s){ let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD, n=8; if(s.OD!=null){t+=s.OD;n=9;} return t/n; }
 
   // danh gia 1 doi (mang index global). Tra ve starters[slot]=idx, bench[], cac chi so.
   function evalTeam(team, ctx){
@@ -68,7 +68,7 @@
     const fronts=[starters[4],starters[5],starters[6]];
     const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
     const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
-    const flat=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;   // chất lượng tổng quát (8 chỉ số sân)
+    const flat=s=>{let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;};   // chất lượng tổng quát (8–9 chỉ số sân, +Ổn định nếu có)
     return {
       starters, bench, startFit, benchOv, gkFit,
       defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình

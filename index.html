@@ -665,7 +665,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
   <div class="editor-wrap">
     <table class="edit"><thead><tr>
-      <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Tư duy</th><th>Thủ môn</th><th></th><th></th>
+      <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Nhãn quan</th><th>Ổn định</th><th>Thủ môn</th><th></th><th></th>
     </tr></thead><tbody id="editor-body"></tbody></table>
   </div>
   </div>
@@ -878,8 +878,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     return ans;
   }
 
-  // gia tri 8 chi so ngoai san
-  function overallOf(s){ return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8; }
+  // gia tri cac chi so ngoai san (8, +Ổn định OD neu da cham -> /9)
+  function overallOf(s){ let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD, n=8; if(s.OD!=null){t+=s.OD;n=9;} return t/n; }
 
   // danh gia 1 doi (mang index global). Tra ve starters[slot]=idx, bench[], cac chi so.
   function evalTeam(team, ctx){
@@ -904,7 +904,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     const fronts=[starters[4],starters[5],starters[6]];
     const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
     const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
-    const flat=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;   // chất lượng tổng quát (8 chỉ số sân)
+    const flat=s=>{let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;};   // chất lượng tổng quát (8–9 chỉ số sân, +Ổn định nếu có)
     return {
       starters, bench, startFit, benchOv, gkFit,
       defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình
@@ -1009,7 +1009,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
 <script>
-const DEFAULT_PLAYERS = [{"PN": 7, "DD": 7, "TD": 7, "n": "Cris Dao", "pos": "HV", "CH": 7, "TL": 5, "lp": false, "TC": 6, "KT": 7, "pos2": ["Thòng", "TV", "GK"], "desc": "Hậu vệ biên kỹ thuật khéo, đọc trận và chuyền bóng tốt, phòng ngự chắc, có thể quét hoặc dâng cánh. Thể lực và độ năng nổ còn hạn chế nên cần tiết chế nhịp lên xuống.", "ratings": {"Admin": {"TM": 6, "DN": 5, "ts": "11/6/2026 18:03", "CH": 7, "byAdmin": true, "TL": 5, "DD": 7, "TD": 7, "at": 1781175813315, "KT": 7, "TC": 6, "PN": 7}, "(khởi tạo)": {"CH": 0, "TL": 0, "ts": null, "TM": 0, "DN": 0, "PN": 0, "TC": 0, "KT": 0, "TD": 0, "DD": 0}}, "TM": 6, "DN": 5}, {"n": "Doan Ha", "pos": "TĐ", "TD": 6, "DD": 7, "PN": 6, "lp": false, "TL": 6, "CH": 7, "pos2": [], "KT": 6, "desc": "Hậu vệ thòng càn quét chắc chắn, đọc trận và bọc lót hợp lý, có thể dâng cao dứt điểm khi cần. Kỹ thuật và thể lực ổn, lối chơi đa năng giữa công và thủ.", "TC": 6, "DN": 6, "TM": 0, "ratings": {"(khởi tạo)": {"DN": 0, "TM": 0, "CH": 0, "TL": 0, "ts": null, "DD": 0, "TD": 0, "KT": 0, "PN": 0, "TC": 0}, "Admin": {"TL": 6, "CH": 7, "byAdmin": true, "ts": "11/6/2026 19:38", "DN": 6, "TM": 0, "KT": 6, "at": 1781181533991, "PN": 6, "TC": 6, "TD": 6, "DD": 7}}}, {"PN": 5, "n": "Duy Hùng", "pos": "HV", "DD": 4, "TD": 6, "TL": 6, "CH": 5, "lp": true, "pos2": ["TV"], "KT": 5, "desc": "Hậu vệ biên giàu tốc độ và thể lực, chịu khó di chuyển lên công về thủ, đọc trận khá ổn. Kỹ thuật và phòng ngự ở mức cơ bản, khả năng dứt điểm còn hạn chế.", "TC": 6, "ratings": {"Quyet": {"TM": 0, "DN": 4, "ts": "11/6/2026 18:48", "CH": 4, "TL": 4, "TD": 3, "DD": 5, "at": 1781178514405, "KT": 6, "TC": 5, "PN": 4}, "Admin": {"ts": "11/6/2026 18:05", "byAdmin": true, "CH": 5, "TL": 6, "TM": 0, "DN": 6, "at": 1781175902352, "KT": 5, "TC": 6, "PN": 5, "DD": 4, "TD": 6}, "(khởi tạo)": {"TL": 0, "CH": 0, "ts": null, "DN": 0, "TM": 0, "PN": 0, "TC": 0, "KT": 0, "DD": 0, "TD": 0}}, "TM": 0, "DN": 6}, {"PN": 8, "DD": 5, "TD": 7, "pos": "HV", "n": "Hoàng Duy", "TL": 9, "CH": 6, "lp": false, "TC": 9, "desc": "Hậu vệ biên giàu thể lực và tốc độ, năng nổ chịu chạy, lên công về thủ bền bỉ với khả năng phòng ngự chắc chắn. Đọc tình huống ổn, có thể đảm nhiệm vai trò thòng quét hoặc dạt biên.", "pos2": ["Thòng", "TV"], "KT": 6, "ratings": {"Admin": {"TC": 9, "PN": 8, "at": 1781176220148, "KT": 6, "TD": 7, "DD": 5, "ts": "11/6/2026 18:10", "CH": 6, "TL": 9, "byAdmin": true, "DN": 9, "TM": 0}, "(khởi tạo)": {"DD": 0, "TD": 0, "KT": 0, "TC": 0, "PN": 0, "DN": 0, "TM": 0, "ts": null, "CH": 0, "TL": 0}}, "TM": 0, "DN": 9}, {"TC": 7, "desc": "Tiền đạo kỹ thuật khéo, dứt điểm sắc bén, đọc trận tốt; phản xạ bắt gôn xuất sắc khi cần. Thể lực và độ máu lửa ở mức trung bình.", "pos2": ["GK"], "KT": 8, "DN": 6, "TM": 9, "ratings": {"Admin": {"TM": 9, "DN": 6, "CH": 7, "TL": 6, "byAdmin": true, "ts": "11/6/2026 18:08", "TD": 7, "DD": 8, "PN": 6, "TC": 7, "KT": 8, "at": 1781176081943}, "Quyet": {"TD": 6, "DD": 6, "KT": 7, "at": 1781178520004, "PN": 7, "TC": 7, "DN": 8, "TM": 9, "TL": 8, "CH": 7, "ts": "11/6/2026 18:48"}, "(khởi tạo)": {"TD": 0, "DD": 0, "TC": 0, "PN": 0, "KT": 0, "TM": 0, "DN": 0, "ts": null, "CH": 0, "TL": 0}}, "TD": 7, "DD": 8, "pos": "TĐ", "n": "Hoàng Thiên", "PN": 6, "lp": false, "TL": 6, "CH": 7}, {"TL": 6, "CH": 8, "lp": false, "PN": 7, "DD": 5, "TD": 7, "n": "Hưng", "pos": "Thòng", "ratings": {"(khởi tạo)": {"KT": 0, "TC": 0, "PN": 0, "TD": 0, "DD": 0, "ts": null, "TL": 0, "CH": 0, "TM": 0, "DN": 0}, "Admin": {"ts": "11/6/2026 18:14", "TL": 6, "byAdmin": true, "CH": 8, "TM": 0, "DN": 6, "at": 1781176483083, "KT": 8, "TC": 6, "PN": 7, "DD": 5, "TD": 7}}, "DN": 6, "TM": 0, "TC": 6, "KT": 8, "pos2": ["HV", "TĐ"], "desc": "Trung vệ thòng giữ và xử lý bóng điềm tĩnh, chuyền phát động tốt, đọc trận hợp lý và càn quét bọc lót chắc chắn. Tốc độ và thể lực ở mức tương đối, dứt điểm còn hạn chế."}, {"pos": "TĐ", "n": "Huy Hoàng", "TD": 7, "DD": 8, "PN": 7, "lp": false, "CH": 7, "TL": 7, "desc": "Tiền đạo kỹ thuật khéo, dứt điểm sắc bén và tốc độ tốt, có thể lùi cầm nhịp tuyến giữa. Tư duy và thể lực ổn định, đa năng nơi hàng công.", "KT": 8, "pos2": ["TVtt", "TV"], "TC": 8, "DN": 7, "TM": 0, "ratings": {"(khởi tạo)": {"TC": 0, "PN": 0, "KT": 0, "TD": 0, "DD": 0, "ts": null, "TL": 0, "CH": 0, "DN": 0, "TM": 0}, "Admin": {"ts": "11/6/2026 18:16", "CH": 7, "byAdmin": true, "TL": 7, "TM": 0, "DN": 7, "TC": 8, "PN": 7, "at": 1781176561337, "KT": 8, "DD": 8, "TD": 7}}}, {"desc": "Hậu vệ biên toàn diện, phòng ngự chắc chắn, xử lý bóng và đọc trận tốt, khả năng lên tham gia tấn công. Thể lực và độ máu lửa cần cải thiện để duy trì nhịp độ.", "KT": 7, "pos2": ["Thòng", "TV"], "TC": 6, "DN": 5, "TM": 0, "ratings": {"Quyet": {"DN": 6, "TM": 0, "CH": 6, "TL": 6, "ts": "11/6/2026 18:48", "TD": 5, "DD": 5, "PN": 5, "TC": 6, "KT": 8, "at": 1781178512198}, "Admin": {"TM": 0, "DN": 5, "ts": "11/6/2026 18:18", "CH": 7, "TL": 5, "byAdmin": true, "DD": 7, "TD": 7, "TC": 6, "PN": 7, "at": 1781176719331, "KT": 7}, "(khởi tạo)": {"KT": 0, "PN": 0, "TC": 0, "DD": 0, "TD": 0, "CH": 0, "TL": 0, "ts": null, "TM": 0, "DN": 0}}, "pos": "HV", "n": "Mạnh Khắc", "DD": 7, "TD": 7, "PN": 7, "lp": false, "CH": 7, "TL": 5}, {"CH": 6, "TL": 6, "lp": true, "PN": 6, "pos": "GK", "n": "Mạnh Tiến", "TD": 6, "DD": 5, "ratings": {"Admin": {"DD": 5, "TD": 6, "KT": 5, "at": 1781176837143, "PN": 6, "TC": 7, "DN": 6, "TM": 7, "TL": 6, "CH": 6, "byAdmin": true, "ts": "11/6/2026 18:20"}, "Quyet": {"TD": 3, "DD": 4, "KT": 4, "at": 1781178509146, "PN": 4, "TC": 6, "DN": 6, "TM": 6, "TL": 6, "CH": 4, "ts": "11/6/2026 18:48"}, "(khởi tạo)": {"TC": 0, "PN": 0, "KT": 0, "TD": 0, "DD": 0, "ts": null, "TL": 0, "CH": 0, "TM": 0, "DN": 0}}, "DN": 6, "TM": 7, "desc": "Thủ môn phản xạ tốt, chọn vị trí và ra vào hợp lý, vững vàng trong khung gỗ. Tốc độ và thể lực ổn nên có thể trám hậu vệ biên khi cần.", "KT": 5, "pos2": ["HV"], "TC": 7}, {"ratings": {"user1": {"TM": 0, "DN": 7, "CH": 7, "TL": 7, "ts": "11/6/2026 18:49", "DD": 6, "TD": 7, "KT": 7, "at": 1781178561999, "PN": 7, "TC": 7}, "Admin": {"CH": 7, "TL": 8, "byAdmin": true, "ts": "11/6/2026 18:21", "DN": 8, "TM": 0, "PN": 8, "TC": 8, "KT": 7, "at": 1781176915046, "TD": 8, "DD": 5}, "(khởi tạo)": {"TM": 0, "DN": 0, "CH": 0, "TL": 0, "ts": null, "DD": 0, "TD": 0, "KT": 0, "PN": 0, "TC": 0}}, "TM": 0, "DN": 8, "TC": 8, "pos2": ["HV", "TV"], "KT": 7, "desc": "Hậu vệ thòng đọc trận nhạy bén, tốc độ và thể lực dồi dào, máu lửa càn quét và bọc lót chắc chắn. Kỹ thuật cùng khả năng phát động từ tuyến dưới hợp lý, dứt điểm còn hạn chế.", "CH": 7, "TL": 8, "lp": false, "PN": 8, "DD": 5, "TD": 8, "n": "Nam Khắc", "pos": "Thòng"}, {"CH": 8, "TL": 6, "lp": false, "PN": 7, "DD": 4, "TD": 7, "n": "Nguyễn Danh Tuyên", "pos": "HV", "ratings": {"(khởi tạo)": {"DD": 0, "TD": 0, "PN": 0, "TC": 0, "KT": 0, "DN": 0, "TM": 0, "CH": 0, "TL": 0, "ts": null}, "Admin": {"TM": 0, "DN": 6, "byAdmin": true, "CH": 8, "TL": 6, "ts": "11/6/2026 19:37", "TD": 7, "DD": 4, "KT": 7, "at": 1781181464340, "PN": 7, "TC": 7}, "Quyet": {"PN": 5, "TC": 9, "KT": 7, "at": 1781178507920, "DD": 5, "TD": 6, "CH": 4, "TL": 7, "ts": "11/6/2026 18:48", "TM": 6, "DN": 7}}, "TM": 0, "DN": 6, "TC": 7, "KT": 7, "pos2": ["Thòng", "TV"], "desc": "Hậu vệ biên giàu tốc độ và kỹ thuật, đọc trận nhạy bén, chuyền bóng chính xác, phòng ngự ổn định và lên hỗ trợ tấn công hiệu quả. Khả năng dứt điểm còn hạn chế."}, {"CH": 6, "TL": 6, "lp": false, "PN": 7, "n": "Nguyễn Khắc Trọng", "pos": "GK", "DD": 4, "TD": 6, "ratings": {"Admin": {"ts": "11/6/2026 18:25", "CH": 6, "TL": 6, "byAdmin": true, "TM": 8, "DN": 6, "TC": 6, "PN": 7, "at": 1781177108464, "KT": 5, "DD": 4, "TD": 6}, "Quyet": {"PN": 5, "TC": 6, "KT": 6, "at": 1781178507093, "TD": 3, "DD": 2, "CH": 4, "TL": 5, "ts": "11/6/2026 18:48", "TM": 6, "DN": 5}, "(khởi tạo)": {"TD": 0, "DD": 0, "TC": 0, "PN": 0, "KT": 0, "DN": 0, "TM": 0, "ts": null, "TL": 0, "CH": 0}}, "TM": 8, "DN": 6, "KT": 5, "pos2": ["Thòng", "HV"], "desc": "Thủ môn phản xạ tốt, bắt bóng chắc tay, chọn vị trí hợp lý, là điểm tựa vững cho hàng thủ. Có thể lùi sâu chơi trung vệ thòng nhờ khả năng phòng ngự khá ổn.", "TC": 6}, {"lp": false, "TL": 7, "CH": 7, "DD": 8, "TD": 7, "n": "Nguyen Quy Bong", "pos": "TVtt", "PN": 6, "TM": 0, "DN": 7, "ratings": {"Quyet": {"ts": "11/6/2026 18:48", "CH": 8, "TL": 6, "DN": 6, "TM": 0, "at": 1781178505028, "KT": 8, "TC": 7, "PN": 8, "DD": 9, "TD": 8}, "Admin": {"PN": 6, "TC": 7, "KT": 9, "at": 1781177270560, "DD": 8, "TD": 7, "TL": 7, "CH": 7, "byAdmin": true, "ts": "11/6/2026 18:27", "TM": 0, "DN": 7}, "(khởi tạo)": {"DD": 0, "TD": 0, "TC": 0, "PN": 0, "KT": 0, "DN": 0, "TM": 0, "ts": null, "CH": 0, "TL": 0}}, "TC": 7, "pos2": ["Thòng", "TĐ"], "KT": 9, "desc": "Nhạc trưởng tuyến giữa kỹ thuật khéo léo, giữ và xử lý bóng tinh tế, dứt điểm sắc bén, đọc trận hợp lý. Càn quét phòng ngự ở mức ổn nên hợp vai trò điều tiết nhịp độ."}, {"DN": 6, "TM": 0, "ratings": {"(khởi tạo)": {"DN": 0, "TM": 0, "ts": null, "CH": 0, "TL": 0, "TD": 0, "DD": 0, "TC": 0, "PN": 0, "KT": 0}, "Admin": {"PN": 6, "TC": 6, "KT": 5, "at": 1781177382720, "DD": 5, "TD": 6, "TL": 6, "byAdmin": true, "CH": 6, "ts": "11/6/2026 18:29", "TM": 0, "DN": 6}, "Quyet": {"ts": "11/6/2026 18:48", "CH": 7, "TL": 6, "TM": 0, "DN": 6, "at": 1781178503555, "KT": 6, "TC": 6, "PN": 6, "TD": 6, "DD": 7}}, "pos2": ["TV", "TĐ"], "KT": 5, "desc": "Hậu vệ biên cần mẫn, đọc tình huống và bọc lót hợp lý, sẵn sàng dâng cao hỗ trợ tấn công biên. Tốc độ, thể lực ổn; kỹ thuật xử lý bóng cần trau dồi thêm.", "TC": 6, "lp": false, "CH": 6, "TL": 6, "n": "Nguyễn Văn Quyền", "pos": "HV", "DD": 5, "TD": 6, "PN": 6}, {"desc": "Hậu vệ biên giàu năng lượng, tốc độ và chuyền bóng khá, hỗ trợ tấn công lẫn phòng ngự ổn định. Phản xạ bắt gôn tốt là điểm cộng khi đá luân phiên nhiều vị trí.", "KT": 6, "pos2": ["GK", "HV", "TĐ"], "TC": 7, "ratings": {"Minh": {"DD": 7, "TD": 6, "TC": 7, "PN": 5, "at": 1781178482470, "KT": 3, "TM": 6, "DN": 7, "ts": "11/6/2026 18:48", "CH": 8, "TL": 7}, "Admin": {"DN": 6, "TM": 7, "ts": "11/6/2026 18:32", "CH": 7, "TL": 6, "byAdmin": true, "DD": 6, "TD": 6, "at": 1781177544100, "KT": 6, "TC": 7, "PN": 6}, "Quyet": {"TM": 6, "DN": 5, "TL": 5, "CH": 6, "ts": "11/6/2026 18:48", "DD": 6, "TD": 4, "PN": 6, "TC": 6, "KT": 5, "at": 1781178501471}, "(khởi tạo)": {"TM": 0, "DN": 0, "ts": null, "TL": 0, "CH": 0, "DD": 0, "TD": 0, "TC": 0, "PN": 0, "KT": 0}}, "TM": 7, "DN": 6, "PN": 6, "pos": "TV", "n": "Quang Minh", "DD": 6, "TD": 6, "CH": 7, "TL": 6, "lp": true}, {"ratings": {"Admin": {"ts": "11/6/2026 18:33", "CH": 5, "TL": 5, "byAdmin": true, "DN": 5, "TM": 0, "TC": 6, "PN": 5, "at": 1781177631127, "KT": 5, "DD": 4, "TD": 5}, "Quyet": {"at": 1781178493662, "KT": 3, "TC": 4, "PN": 3, "TD": 3, "DD": 4, "ts": "11/6/2026 18:48", "TL": 4, "CH": 3, "DN": 4, "TM": 0}, "(khởi tạo)": {"TM": 0, "DN": 0, "CH": 0, "TL": 0, "ts": null, "TD": 0, "DD": 0, "KT": 0, "PN": 0, "TC": 0}}, "TM": 0, "DN": 5, "desc": "Hậu vệ biên có tốc độ khá, thể lực và tranh chấp ở mức ổn, đủ sức lên công về thủ. Khả năng dứt điểm còn hạn chế nên phù hợp tập trung phòng ngự.", "KT": 5, "pos2": ["TĐ"], "TC": 6, "CH": 5, "TL": 5, "lp": true, "PN": 5, "pos": "HV", "n": "Quý Tàu", "DD": 4, "TD": 5}, {"lp": false, "CH": 7, "TL": 7, "DD": 7, "TD": 7, "n": "Quyết Nguyễn", "pos": "HV", "PN": 7, "TM": 0, "DN": 7, "ratings": {"(khởi tạo)": {"TD": 0, "DD": 0, "TC": 0, "PN": 0, "KT": 0, "TM": 0, "DN": 0, "ts": null, "TL": 0, "CH": 0}, "Admin": {"TL": 7, "byAdmin": true, "CH": 7, "ts": "11/6/2026 18:34", "TM": 0, "DN": 7, "KT": 7, "at": 1781177698776, "PN": 7, "TC": 6, "DD": 7, "TD": 7}}, "TC": 6, "KT": 7, "pos2": ["Thòng", "TV", "TĐ"], "desc": "Hậu vệ biên toàn diện, phòng ngự chắc chắn, càn quét bọc lót tốt, đọc trận nhạy bén. Thể lực bền bỉ, kỹ thuật và chuyền bóng khá, đa năng nhiều vị trí."}, {"lp": true, "CH": 7, "TL": 6, "pos": "HV", "n": "Trịnh Mạnh", "TD": 6, "DD": 5, "PN": 6, "TM": 0, "DN": 6, "ratings": {"(khởi tạo)": {"TM": 0, "DN": 0, "CH": 0, "TL": 0, "ts": null, "DD": 0, "TD": 0, "KT": 0, "PN": 0, "TC": 0}, "Admin": {"DN": 6, "TM": 0, "ts": "11/6/2026 18:35", "TL": 6, "CH": 7, "byAdmin": true, "DD": 5, "TD": 6, "at": 1781177744522, "KT": 6, "TC": 6, "PN": 6}, "Quyet": {"TL": 5, "CH": 7, "ts": "11/6/2026 18:48", "TM": 0, "DN": 5, "PN": 7, "TC": 7, "KT": 8, "at": 1781178492921, "DD": 8, "TD": 7}}, "desc": "Hậu vệ biên đa năng, thể lực và tốc độ ổn định, có thể dâng cao hỗ trợ và tổ chức tuyến giữa. Phân phối bóng khá, dứt điểm còn hạn chế.", "KT": 6, "pos2": ["TVtt", "TV"], "TC": 6}, {"TD": 6, "DD": 7, "pos": "TV", "n": "Trịnh Tuấn Anh", "PN": 7, "lp": false, "TL": 7, "CH": 7, "TC": 7, "desc": "Tiền vệ cánh giàu năng lượng, bám biên tốt, có tốc độ và thể lực bền bỉ, hỗ trợ phòng ngự tích cực. Khả năng chuyền và dứt điểm khá, giữ bóng còn cần trau dồi thêm.", "pos2": ["HV", "TĐ"], "KT": 6, "DN": 7, "TM": 0, "ratings": {"(khởi tạo)": {"ts": null, "TL": 0, "CH": 0, "DN": 0, "TM": 0, "TC": 0, "PN": 0, "KT": 0, "DD": 0, "TD": 0}, "Admin": {"ts": "11/6/2026 18:37", "CH": 7, "byAdmin": true, "TL": 7, "TM": 0, "DN": 7, "at": 1781177829751, "KT": 6, "TC": 7, "PN": 7, "DD": 7, "TD": 6}, "Quyet": {"TM": 0, "DN": 7, "TL": 7, "CH": 6, "ts": "11/6/2026 18:48", "TD": 5, "DD": 5, "PN": 6, "TC": 6, "KT": 6, "at": 1781178492260}}}, {"CH": 8, "TL": 6, "lp": false, "PN": 7, "DD": 8, "TD": 7, "pos": "TĐ", "n": "Văn Thanh", "ratings": {"(khởi tạo)": {"TL": 0, "CH": 0, "ts": null, "TM": 0, "DN": 0, "KT": 0, "PN": 0, "TC": 0, "DD": 0, "TD": 0}, "Admin": {"KT": 7, "at": 1781177906023, "PN": 7, "TC": 6, "TD": 7, "DD": 8, "byAdmin": true, "CH": 8, "TL": 6, "ts": "11/6/2026 18:38", "TM": 0, "DN": 6}}, "TM": 0, "DN": 6, "TC": 6, "desc": "Tiền đạo nhãn quan tốt, chuyền và dứt điểm sắc bén. Đủ đa năng lùi sâu cầm nhịp hoặc làm thòng, dù tốc độ và thể lực chỉ ở mức ổn.", "pos2": ["Thòng", "TVtt"], "KT": 7}, {"TC": 7, "KT": 6, "pos2": [], "desc": "Cầu thủ mới — tạm chấm ngang Quang Minh, cần chấm lại cho chuẩn.", "TM": 7, "DN": 6, "ratings": {"(khởi tạo)": {"TD": 0, "DD": 0, "KT": 0, "PN": 0, "TC": 0, "TM": 0, "DN": 0, "TL": 0, "CH": 0, "ts": null}, "Admin": {"TD": 6, "DD": 6, "PN": 6, "TC": 7, "KT": 6, "at": 1781233325535, "TM": 7, "DN": 6, "CH": 7, "TL": 6, "byAdmin": true, "ts": "12/6/2026 10:02"}}, "DD": 6, "TD": 6, "n": "Siêu Phủi Bụi", "pos": "TV", "PN": 6, "lp": false, "CH": 7, "TL": 6}];
+const DEFAULT_PLAYERS = [{"CH": 6, "OD": 6, "KT": 6, "PN": 6, "n": "Cris Dao", "desc": "Hậu vệ biên kỹ thuật khéo, đọc trận và chuyền bóng tốt, phòng ngự chắc, có thể quét hoặc dâng cánh. Thể lực và độ năng nổ còn hạn chế nên cần tiết chế nhịp lên xuống.", "ratings": {"(khởi tạo)": {"TL": 6, "CH": 6, "TC": 6, "OD": 6, "ts": null, "DN": 6, "DD": 6, "PN": 6, "KT": 6, "TD": 6, "TM": 0}}, "TL": 6, "TC": 6, "DD": 6, "DN": 6, "pos": "HV", "TD": 6, "TM": 0, "pos2": ["Thòng", "TV", "GK"], "lp": false}, {"CH": 6, "OD": 6, "KT": 6, "PN": 6, "n": "Doan Ha", "desc": "Hậu vệ thòng càn quét chắc chắn, đọc trận và bọc lót hợp lý, có thể dâng cao dứt điểm khi cần. Kỹ thuật và thể lực ổn, lối chơi đa năng giữa công và thủ.", "ratings": {"(khởi tạo)": {"KT": 6, "PN": 6, "TD": 6, "TM": 0, "CH": 6, "TC": 6, "DN": 6, "DD": 6, "ts": null, "OD": 6, "TL": 6}}, "TL": 6, "TC": 6, "DD": 6, "DN": 6, "pos": "TĐ", "TD": 6, "TM": 0, "pos2": [], "lp": false}, {"TC": 6, "pos": "HV", "DN": 6, "DD": 6, "TD": 6, "TM": 0, "pos2": ["TV"], "lp": true, "CH": 6, "OD": 6, "PN": 6, "KT": 6, "n": "Duy Hùng", "desc": "Hậu vệ biên giàu tốc độ và thể lực, chịu khó di chuyển lên công về thủ, đọc trận khá ổn. Kỹ thuật và phòng ngự ở mức cơ bản, khả năng dứt điểm còn hạn chế.", "TL": 6, "ratings": {"(khởi tạo)": {"TM": 0, "KT": 6, "PN": 6, "TD": 6, "DN": 6, "DD": 6, "OD": 6, "ts": null, "TC": 6, "CH": 6, "TL": 6}}}, {"TL": 6, "ratings": {"(khởi tạo)": {"TL": 6, "PN": 6, "KT": 6, "TD": 6, "TM": 0, "CH": 6, "TC": 6, "DD": 6, "DN": 6, "OD": 6, "ts": null}}, "OD": 6, "CH": 6, "n": "Hoàng Duy", "desc": "Hậu vệ biên giàu thể lực và tốc độ, năng nổ chịu chạy, lên công về thủ bền bỉ với khả năng phòng ngự chắc chắn. Đọc tình huống ổn, có thể đảm nhiệm vai trò thòng quét hoặc dạt biên.", "PN": 6, "KT": 6, "pos2": ["Thòng", "TV"], "lp": false, "DN": 6, "DD": 6, "pos": "HV", "TC": 6, "TM": 0, "TD": 6}, {"desc": "Tiền đạo kỹ thuật khéo, dứt điểm sắc bén, đọc trận tốt; phản xạ bắt gôn xuất sắc khi cần. Thể lực và độ máu lửa ở mức trung bình.", "n": "Hoàng Thiên", "PN": 6, "KT": 6, "OD": 6, "CH": 6, "TL": 6, "ratings": {"(khởi tạo)": {"CH": 6, "TC": 6, "DN": 6, "DD": 6, "ts": null, "OD": 6, "KT": 6, "PN": 6, "TD": 6, "TM": 0, "TL": 6}}, "TM": 0, "TD": 6, "DD": 6, "DN": 6, "pos": "TĐ", "TC": 6, "lp": false, "pos2": ["GK"]}, {"pos2": ["HV", "TĐ"], "lp": false, "pos": "Thòng", "DN": 6, "DD": 6, "TC": 6, "TM": 0, "TD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"ts": null, "OD": 6, "DD": 6, "DN": 6, "TC": 6, "CH": 6, "TM": 0, "KT": 6, "TD": 6, "PN": 6, "TL": 6}}, "OD": 6, "CH": 6, "desc": "Trung vệ thòng giữ và xử lý bóng điềm tĩnh, chuyền phát động tốt, đọc trận hợp lý và càn quét bọc lót chắc chắn. Tốc độ và thể lực ở mức tương đối, dứt điểm còn hạn chế.", "n": "Hưng", "PN": 6, "KT": 6}, {"pos2": ["TVtt", "TV"], "lp": false, "pos": "TĐ", "DN": 6, "DD": 6, "TC": 6, "TM": 0, "TD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"KT": 6, "TD": 6, "PN": 6, "TM": 0, "CH": 6, "TC": 6, "DD": 6, "DN": 6, "OD": 6, "ts": null, "TL": 6}}, "OD": 6, "CH": 6, "desc": "Tiền đạo kỹ thuật khéo, dứt điểm sắc bén và tốc độ tốt, có thể lùi cầm nhịp tuyến giữa. Tư duy và thể lực ổn định, đa năng nơi hàng công.", "n": "Huy Hoàng", "PN": 6, "KT": 6}, {"CH": 6, "OD": 6, "PN": 6, "KT": 6, "desc": "Hậu vệ biên toàn diện, phòng ngự chắc chắn, xử lý bóng và đọc trận tốt, khả năng lên tham gia tấn công. Thể lực và độ máu lửa cần cải thiện để duy trì nhịp độ.", "n": "Mạnh Khắc", "ratings": {"(khởi tạo)": {"TL": 6, "ts": null, "OD": 6, "DN": 6, "DD": 6, "TC": 6, "CH": 6, "TM": 0, "TD": 6, "PN": 6, "KT": 6}}, "TL": 6, "TC": 6, "pos": "HV", "DN": 6, "DD": 6, "TD": 6, "TM": 0, "pos2": ["Thòng", "TV"], "lp": false}, {"PN": 6, "KT": 6, "desc": "Thủ môn phản xạ tốt, chọn vị trí và ra vào hợp lý, vững vàng trong khung gỗ. Tốc độ và thể lực ổn nên có thể trám hậu vệ biên khi cần.", "n": "Mạnh Tiến", "CH": 6, "OD": 6, "ratings": {"(khởi tạo)": {"KT": 6, "PN": 6, "TD": 6, "TM": 0, "TC": 6, "CH": 6, "ts": null, "OD": 6, "DD": 6, "DN": 6, "TL": 6}}, "TL": 6, "TD": 6, "TM": 0, "TC": 6, "pos": "GK", "DN": 6, "DD": 6, "lp": true, "pos2": ["HV"]}, {"ratings": {"(khởi tạo)": {"CH": 6, "TC": 6, "DN": 6, "DD": 6, "ts": null, "OD": 6, "KT": 6, "TD": 6, "PN": 6, "TM": 0, "TL": 6}}, "TL": 6, "n": "Nam Khắc", "desc": "Hậu vệ thòng đọc trận nhạy bén, tốc độ và thể lực dồi dào, máu lửa càn quét và bọc lót chắc chắn. Kỹ thuật cùng khả năng phát động từ tuyến dưới hợp lý, dứt điểm còn hạn chế.", "PN": 6, "KT": 6, "OD": 6, "CH": 6, "lp": false, "pos2": ["HV", "TV"], "TM": 0, "TD": 6, "DN": 6, "DD": 6, "pos": "Thòng", "TC": 6}, {"TL": 6, "ratings": {"(khởi tạo)": {"TL": 6, "KT": 6, "TD": 6, "PN": 6, "TM": 0, "TC": 6, "CH": 6, "DD": 6, "DN": 6, "OD": 6, "ts": null}}, "OD": 6, "CH": 6, "n": "Nguyễn Danh Tuyên", "desc": "Hậu vệ biên giàu tốc độ và kỹ thuật, đọc trận nhạy bén, chuyền bóng chính xác, phòng ngự ổn định và lên hỗ trợ tấn công hiệu quả. Khả năng dứt điểm còn hạn chế.", "PN": 6, "KT": 6, "pos2": ["Thòng", "TV"], "lp": false, "pos": "HV", "DD": 6, "DN": 6, "TC": 6, "TM": 0, "TD": 6}, {"pos2": ["Thòng", "HV"], "lp": false, "DN": 6, "DD": 6, "pos": "GK", "TC": 6, "TM": 0, "TD": 6, "ratings": {"(khởi tạo)": {"TL": 6, "KT": 6, "PN": 6, "TD": 6, "TM": 0, "TC": 6, "CH": 6, "DN": 6, "DD": 6, "OD": 6, "ts": null}}, "TL": 6, "OD": 6, "CH": 6, "n": "Nguyễn Khắc Trọng", "desc": "Thủ môn phản xạ tốt, bắt bóng chắc tay, chọn vị trí hợp lý, là điểm tựa vững cho hàng thủ. Có thể lùi sâu chơi trung vệ thòng nhờ khả năng phòng ngự khá ổn.", "PN": 6, "KT": 6}, {"ratings": {"(khởi tạo)": {"CH": 6, "TC": 6, "ts": null, "OD": 6, "DN": 6, "DD": 6, "KT": 6, "PN": 6, "TD": 6, "TM": 0, "TL": 6}}, "TL": 6, "OD": 6, "CH": 6, "n": "Nguyen Quy Bong", "desc": "Nhạc trưởng tuyến giữa kỹ thuật khéo léo, giữ và xử lý bóng tinh tế, dứt điểm sắc bén, đọc trận hợp lý. Càn quét phòng ngự ở mức ổn nên hợp vai trò điều tiết nhịp độ.", "PN": 6, "KT": 6, "pos2": ["Thòng", "TĐ"], "lp": false, "pos": "TVtt", "DD": 6, "DN": 6, "TC": 6, "TM": 0, "TD": 6}, {"pos2": ["TV", "TĐ"], "lp": false, "TC": 6, "pos": "HV", "DN": 6, "DD": 6, "TD": 6, "TM": 0, "ratings": {"(khởi tạo)": {"TL": 6, "TM": 0, "PN": 6, "TD": 6, "KT": 6, "DN": 6, "DD": 6, "OD": 6, "ts": null, "CH": 6, "TC": 6}}, "TL": 6, "CH": 6, "OD": 6, "KT": 6, "PN": 6, "n": "Nguyễn Văn Quyền", "desc": "Hậu vệ biên cần mẫn, đọc tình huống và bọc lót hợp lý, sẵn sàng dâng cao hỗ trợ tấn công biên. Tốc độ, thể lực ổn; kỹ thuật xử lý bóng cần trau dồi thêm."}, {"KT": 6, "PN": 6, "n": "Quang Minh", "desc": "Hậu vệ biên giàu năng lượng, tốc độ và chuyền bóng khá, hỗ trợ tấn công lẫn phòng ngự ổn định. Phản xạ bắt gôn tốt là điểm cộng khi đá luân phiên nhiều vị trí.", "CH": 6, "OD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"KT": 6, "TD": 6, "PN": 6, "TM": 0, "CH": 6, "TC": 6, "DD": 6, "DN": 6, "OD": 6, "ts": null, "TL": 6}}, "TD": 6, "TM": 0, "TC": 6, "pos": "TV", "DD": 6, "DN": 6, "lp": true, "pos2": ["GK", "HV", "TĐ"]}, {"TM": 0, "TD": 6, "DD": 6, "DN": 6, "pos": "HV", "TC": 6, "lp": true, "pos2": ["TĐ"], "desc": "Hậu vệ biên có tốc độ khá, thể lực và tranh chấp ở mức ổn, đủ sức lên công về thủ. Khả năng dứt điểm còn hạn chế nên phù hợp tập trung phòng ngự.", "n": "Quý Tàu", "PN": 6, "KT": 6, "OD": 6, "CH": 6, "TL": 6, "ratings": {"(khởi tạo)": {"TL": 6, "CH": 6, "TC": 6, "OD": 6, "ts": null, "DN": 6, "DD": 6, "TD": 6, "KT": 6, "PN": 6, "TM": 0}}}, {"DD": 6, "DN": 6, "pos": "HV", "TC": 6, "TM": 0, "TD": 6, "pos2": ["Thòng", "TV", "TĐ"], "lp": false, "OD": 6, "CH": 6, "desc": "Hậu vệ biên toàn diện, phòng ngự chắc chắn, càn quét bọc lót tốt, đọc trận nhạy bén. Thể lực bền bỉ, kỹ thuật và chuyền bóng khá, đa năng nhiều vị trí.", "n": "Quyết Nguyễn", "PN": 6, "KT": 6, "TL": 6, "ratings": {"(khởi tạo)": {"KT": 6, "PN": 6, "TD": 6, "TM": 0, "TC": 6, "CH": 6, "DD": 6, "DN": 6, "OD": 6, "ts": null, "TL": 6}}}, {"ratings": {"(khởi tạo)": {"PN": 6, "TD": 6, "KT": 6, "TM": 0, "CH": 6, "TC": 6, "OD": 6, "ts": null, "DN": 6, "DD": 6, "TL": 6}}, "TL": 6, "OD": 6, "CH": 6, "n": "Trịnh Mạnh", "desc": "Hậu vệ biên đa năng, thể lực và tốc độ ổn định, có thể dâng cao hỗ trợ và tổ chức tuyến giữa. Phân phối bóng khá, dứt điểm còn hạn chế.", "PN": 6, "KT": 6, "pos2": ["TVtt", "TV"], "lp": true, "pos": "HV", "DD": 6, "DN": 6, "TC": 6, "TM": 0, "TD": 6}, {"TD": 6, "TM": 0, "TC": 6, "pos": "TV", "DD": 6, "DN": 6, "lp": false, "pos2": ["HV", "TĐ"], "PN": 6, "KT": 6, "n": "Trịnh Tuấn Anh", "desc": "Tiền vệ cánh giàu năng lượng, bám biên tốt, có tốc độ và thể lực bền bỉ, hỗ trợ phòng ngự tích cực. Khả năng chuyền và dứt điểm khá, giữ bóng còn cần trau dồi thêm.", "CH": 6, "OD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"TL": 6, "TM": 0, "TD": 6, "PN": 6, "KT": 6, "DN": 6, "DD": 6, "OD": 6, "ts": null, "CH": 6, "TC": 6}}}, {"PN": 6, "KT": 6, "n": "Văn Thanh", "desc": "Tiền đạo nhãn quan tốt, chuyền và dứt điểm sắc bén. Đủ đa năng lùi sâu cầm nhịp hoặc làm thòng, dù tốc độ và thể lực chỉ ở mức ổn.", "CH": 6, "OD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"TL": 6, "TD": 6, "PN": 6, "KT": 6, "TM": 0, "TC": 6, "CH": 6, "DN": 6, "DD": 6, "ts": null, "OD": 6}}, "TD": 6, "TM": 0, "TC": 6, "pos": "TĐ", "DN": 6, "DD": 6, "lp": false, "pos2": ["Thòng", "TVtt"]}, {"CH": 6, "OD": 6, "PN": 6, "KT": 6, "desc": "Cầu thủ mới — tạm chấm ngang Quang Minh, cần chấm lại cho chuẩn.", "n": "Siêu Phủi Bụi", "TL": 6, "ratings": {"(khởi tạo)": {"DD": 6, "DN": 6, "ts": null, "OD": 6, "CH": 6, "TC": 6, "TM": 0, "PN": 6, "TD": 6, "KT": 6, "TL": 6}}, "TC": 6, "DN": 6, "DD": 6, "pos": "TV", "TD": 6, "TM": 0, "pos2": [], "lp": false}];
 const FIREBASE_CONFIG = {
   "apiKey": "AIzaSyDQ5h2sSNPOmtc23fXaZdzxgjxiF_Mudho",
   "authDomain": "ai-gen-aa66f.firebaseapp.com",
@@ -1032,9 +1032,9 @@ const POS_W={
   TV:    {TC:1.9, KT:1.9, DD:1.4, CH:1.3, TL:1.1, DN:1, TD:0.8},        // tiền vệ cánh
   "TĐ":  {DD:3, KT:1.6, TC:1.5, DN:1.1, TD:0.9, CH:0.6},                // tiền đạo
 };
-const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình 8 chỉ số sân
+const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình các chỉ số sân (+Ổn định nếu có)
   const w=POS_W[posCodeOf(s)];
-  if(!w)return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+  if(!w){let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;}
   let sum=0,tot=0; for(const k in w){sum+=(+s[k]||0)*w[k];tot+=w[k];}
   return tot?sum/tot:0;
 };
@@ -1125,7 +1125,7 @@ function deleteBackup(id){
 }
 
 // ---- log cập nhật cầu thủ (ai · khi nào · đổi gì) ----
-const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","TM"];
+const LOGKEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"];
 let lastEditor="", peEditor="", tableEditor="";   // peEditor: tên ở form hồ sơ; tableEditor: tên ở bảng sửa
 let peStep=0, peAns={}, peTouched={}, pePos="", pePos2=[];   // trạng thái wizard hỏi-đáp chấm cầu thủ
 try{lastEditor=localStorage.getItem(LS.editor)||"";}catch(e){}
@@ -1171,7 +1171,7 @@ function commitPlayers(newArr,opts){
 // Mỗi cầu thủ giữ p.ratings = { "tên người chấm": {KT..TM, ts} }. p.KT..TM hiển thị = TỔNG HỢP các lượt chấm.
 const BASE_RATER="(khởi tạo)";                       // lượt chấm gốc (migrate từ dữ liệu cũ)
 const MIN_RATERS=3;                                  // <3 người thật -> "tạm tính"
-const BIAS_KEYS=["KT","CH","DD","PN","TC","TL","DN","TD"];  // bỏ TM khỏi tính thiên lệch (đa số = 0)
+const BIAS_KEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD"];  // bỏ TM khỏi tính thiên lệch (đa số = 0)
 const clampInt=v=>Math.max(0,Math.min(10,Math.round(+v||0)));
 function snapAgg(p){const s={};LOGKEYS.forEach(k=>s[k]=+p[k]||0);return s;}
 function isSelf(rater,p){return (rater||"").trim().toLowerCase()===((p&&p.n)||"").trim().toLowerCase();}
@@ -1287,7 +1287,7 @@ function quickScores(tier,positions,spd,wr){
   const avg=[0,1,2,3,4,5].map(i=> outp.length? outp.reduce((s,p)=>s+TILT[p][i],0)/outp.length : 0);
   return {KT:rhu(b+avg[0]),CH:rhu(b+avg[1]),DD:rhu(b+avg[2]),PN:rhu(b+avg[3]),
           TC:rhu(SPD[spd]+0.3*(b-5.5)),TL:rhu(b+avg[4]),DN:rhu(WR[wr]+0.2*(b-5.5)),TD:rhu(b+avg[5]),
-          TM:positions.includes("GK")?rhu(TMt[tier]):0};
+          OD:rhu(b),TM:positions.includes("GK")?rhu(TMt[tier]):0};
 }
 
 // ---- nav ----
@@ -1449,7 +1449,7 @@ function logPanel(e){
   }
   return `<div class="pm-cols">
     <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
-    <div><div class="pm-sec">Thể chất &amp; tư duy</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
+    <div><div class="pm-sec">Thể chất &amp; tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
   </div>`;
 }
 function renderUpdateLog(){
@@ -1711,12 +1711,12 @@ $("saveWeek").onclick=()=>{
 
 // ============ CAP NHAT CAU THU ============
 function rowHtml(p){
-  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,TM:0};
+  p=p||{n:"",KT:6,CH:6,DD:6,PN:6,TC:6,TL:6,DN:6,TD:6,OD:6,TM:0};
   const esc=(p.n||"").replace(/"/g,'&quot;');
   const num=k=>`<td><input type="number" min="0" max="10" data-k="${k}" data-o="${p[k]}" value="${p[k]}"></td>`;   // data-o = giá trị gốc, để biết dòng nào THỰC SỰ đổi
   return `<tr>
     <td style="text-align:left"><input type="text" class="nm" data-o="${esc}" value="${esc}"></td>
-    ${["KT","CH","DD","PN","TC","TL","DN","TD","TM"].map(num).join("")}
+    ${["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"].map(num).join("")}
     <td><button class="iconbtn" title="Nhập nhanh" onclick="openQuick(this)">⚡</button></td>
     <td><button class="iconbtn" title="Xóa" onclick="this.closest('tr').remove()">🗑️</button></td>
   </tr>`;
@@ -1724,7 +1724,7 @@ function rowHtml(p){
 function buildEditor(){            // mỗi dòng = lượt chấm của tableEditor; chưa chấm -> điểm tổng (làm tròn) làm gợi ý
   const r=tableEditor;
   $("editor-body").innerHTML=getPlayers().sort((a,b)=>ov(b)-ov(a)).map(p=>{
-    const src=(p.ratings&&p.ratings[r])||p; const row={n:p.n}; LOGKEYS.forEach(k=>row[k]=clampInt(src[k])); return rowHtml(row);
+    const src=(p.ratings&&p.ratings[r])||p; const row={n:p.n}; LOGKEYS.forEach(k=>row[k]=(src[k]==null&&k==="OD")?6:clampInt(src[k])); return rowHtml(row);
   }).join("");
 }
 const POS_LIST=[["GK","Thủ môn"],["Thòng","Trung vệ"],["HV","Hậu vệ biên"],["TVtt","Tiền vệ giữa"],["TV","Tiền vệ cánh"],["TĐ","Tiền đạo"]];
@@ -1841,7 +1841,7 @@ function toggleEdit(force){
 // ---- chi tiet cau thu (FM-style) ----
 let pcards=[], pmName=null;
 const ATTRS_TECH=[["KT","Kỹ thuật"],["CH","Chuyền"],["DD","Dứt điểm"],["PN","Phòng ngự"],["TM","Thủ môn"]];
-const ATTRS_PHYS=[["TC","Tốc độ"],["TL","Thể lực"],["DN","Năng nổ"],["TD","Tư duy"]];
+const ATTRS_PHYS=[["TC","Tốc độ"],["TL","Thể lực"],["DN","Năng nổ"],["TD","Nhãn quan"],["OD","Ổn định"]];
 const ATTRS_ALL=ATTRS_TECH.concat(ATTRS_PHYS);
 const ATTR_HINT={
   KT:"Rê dắt, xử lý bóng · 1–2 vụng · 3–4 lóng ngóng · 5–6 ổn · 7–8 mượt · 9–10 khéo",
@@ -1852,13 +1852,14 @@ const ATTR_HINT={
   TC:"Chạy nhanh · 1–2 chậm · 3–4 hơi chậm · 5–6 trung bình · 7–8 nhanh · 9–10 bứt tốc",
   TL:"Sức bền · 1–2 mau mệt · 3–4 đuối sớm · 5–6 ổn · 7–8 dẻo dai · 9–10 bền cả trận",
   DN:"Chịu chạy, máu lửa · 1–2 lười · 3–4 cầm chừng · 5–6 vừa · 7–8 chịu khó · 9–10 nhiệt",
-  TD:"Đọc trận, chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
+  TD:"Nhãn quan, đọc trận chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
+  OD:"Ổn định phong độ · 1–2 thất thường · 3–4 phập phù · 5–6 ổn · 7–8 đều · 9–10 rất đều mọi trận",
 };
 function attrColor(v){v=+v||0;return v>=8?"#22e07a":(v>=6?"#e8ecf6":(v>=4?"#f5c451":"#ff6b6b"));}
 function pmFind(){return getPlayers().find(x=>x.n===pmName);}
 function openPlayer(i){const p=pcards[i];if(!p)return;pmName=p.n;renderPlayerProfile();$("playerModal").classList.add("on");}
 function closePlayer(){$("playerModal").classList.remove("on");}
-function attrRow(l,v){return `<div class="pm-attr"><span class="lab">${l}</span><span class="val" style="color:${attrColor(v)}">${v}</span></div>`;}
+function attrRow(l,v){const has=v!=null&&v!=="";return `<div class="pm-attr"><span class="lab">${l}</span><span class="val" style="color:${has?attrColor(v):"#7c87a0"}">${has?clampInt(v):"–"}</span></div>`;}
 // ---- thống kê thi đấu (suy từ các trận ĐÃ có tỉ số) ----
 function teamOfIdx(r,idx){
   const eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
@@ -2194,7 +2195,7 @@ function renderPlayerProfile(){
       </div>
       <div class="pm-right"><div class="pm-cols">
         <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
-        <div><div class="pm-sec">Thể chất & tư duy</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+        <div><div class="pm-sec">Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
       </div></div>
     </div>
     ${evalBlock(p)}
@@ -2277,7 +2278,7 @@ const PE_Q_OUTFIELD=[
     {l:"Tốt",d:"Chắc chắn, đoạt bóng tốt",score:8},
     {l:"Rất chắc",d:"Đọc bài, cắt bóng từ xa",score:9},
     {l:"Bức tường",d:"Gần như không xuyên thủng",score:10}]},
-  {id:"TD",key:"TD",title:"Tư duy — đọc trận",sub:"Khả năng đọc tình huống, chọn vị trí và ra quyết định (chuyền / rê / sút) đúng lúc?",opts:[
+  {id:"TD",key:"TD",title:"Nhãn quan — đọc trận",sub:"Khả năng đọc tình huống, chọn vị trí và ra quyết định (chuyền / rê / sút) đúng lúc?",opts:[
     {l:"Rất kém",d:"Đứng sai chỗ, đuổi theo bóng",score:3},
     {l:"Kém",d:"Hay sai vị trí, quyết định vội",score:4},
     {l:"Tạm",d:"Thụ động, chờ bóng đến chân",score:5},
@@ -2305,10 +2306,19 @@ const PE_Q_OUTFIELD=[
     {l:"Rất bền",d:"Đeo bám tích cực, ít mệt",score:9},
     {l:"Máy chạy",d:"Pressing không nghỉ cả trận",score:10}]},
   {id:"MOOD",key:"MOOD",title:"Tâm lý — bản lĩnh",sub:"Khi áp lực cao (đội bị dẫn bàn, đối mặt thủ môn, phút cuối căng thẳng), tâm lý cậu ấy thế nào?",opts:[
-    {l:"Cuống, đá hỏng",d:"Mất bình tĩnh, đá vội hoặc đổ lỗi, càng căng càng hỏng (giảm nhẹ Dứt điểm & Tư duy)",dd:-1,td:-1},
+    {l:"Cuống, đá hỏng",d:"Mất bình tĩnh, đá vội hoặc đổ lỗi, càng căng càng hỏng (giảm nhẹ Dứt điểm & Nhãn quan)",dd:-1,td:-1},
     {l:"Hơi vội",d:"Có chút cuống nhưng vẫn còn kiểm soát được phần nào",dd:0,td:0},
     {l:"Giữ được bình tĩnh",d:"Điềm đạm, xử lý tỉnh táo dù đang bị áp lực",dd:0,td:0},
     {l:"Càng căng càng hay",d:"Bản lĩnh, thậm chí đá hay hơn khi căng thẳng (cộng nhẹ Dứt điểm)",dd:1,td:0}]},
+  {id:"OD",key:"OD",title:"Ổn định — phong độ",sub:"Phong độ giữa các trận có đều không, hay lúc hay lúc dở (thất thường)?",opts:[
+    {l:"Rất thất thường",d:"Trận hay trận dở, khó lường",score:3},
+    {l:"Thất thường",d:"Phong độ trồi sụt nhiều",score:4},
+    {l:"Hơi phập phù",d:"Đôi trận xuống phong độ rõ",score:5},
+    {l:"Tạm ổn",d:"Phần lớn giữ được mức trung bình",score:6},
+    {l:"Khá đều",d:"Ít trận đá dưới sức",score:7},
+    {l:"Ổn định",d:"Đá đều tay gần như mọi trận",score:8},
+    {l:"Rất đều",d:"Hiếm khi có trận tệ",score:9},
+    {l:"Cực ổn định",d:"Luôn giữ phong độ cao, đáng tin",score:10}]},
 ];
 const PE_Q_GK={id:"TM",key:"TM",title:"Thủ môn — bắt gôn",sub:"Khi đứng trong khung thành, cậu ấy bắt và cản phá bóng thế nào?",opts:[
   {l:"Rất yếu",d:"Bắt chữa cháy, hay để lọt",score:3},
@@ -2323,9 +2333,9 @@ const PE_Q_GK={id:"TM",key:"TM",title:"Thủ môn — bắt gôn",sub:"Khi đứ
 function peIsGK(){return pePos==="GK"||(pePos2||[]).includes("GK");}
 function peQList(){return peIsGK()?[...PE_Q_OUTFIELD,PE_Q_GK]:PE_Q_OUTFIELD.slice();}
 function peNearestIdx(v,opts){let bi=0,bd=1e9;opts.forEach((o,i)=>{if(o.score==null)return;const d=Math.abs(o.score-v);if(d<bd){bd=d;bi=i;}});return bi;}
-function peComputeScores(){    // suy điểm 9 chỉ số từ đáp án; chỉ số chưa chấm giữ điểm cũ
+function peComputeScores(){    // suy điểm các chỉ số từ đáp án; chỉ số chưa chấm giữ điểm cũ
   const p=pmFind()||{}, o={};
-  ATTRS_ALL.forEach(([k])=>o[k]=clampInt(p[k]));
+  ATTRS_ALL.forEach(([k])=>o[k]=(p[k]==null&&k==="OD")?6:clampInt(p[k]));
   peQList().forEach(q=>{
     if(!peTouched[q.id])return;
     const opt=q.opts[peAns[q.id]]; if(!opt)return;
