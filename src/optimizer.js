@@ -65,6 +65,10 @@
       else { bench.push(pi); benchOv+=ctx.overall[pi]; }
     }
     const S=ctx.players;
+    // ĐÚNG VỊ TRÍ: đếm starter bị xếp NGOÀI vị trí đăng ký (chính+phụ). Cầu thủ chưa chọn vị trí (pos rỗng) -> bỏ qua.
+    let offPos=0;
+    for(let c=0;c<7;c++){ const pi=starters[c]; if(pi<0)continue; const pr=S[pi].pos; if(!pr)continue;
+      const p2=S[pi].pos2; if(pr!==SLOTS[c] && !(Array.isArray(p2)&&p2.includes(SLOTS[c]))) offPos++; }
     const backs=[starters[1],starters[2],starters[3]];
     const fronts=[starters[4],starters[5],starters[6]];
     const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
@@ -87,6 +91,7 @@
       total: startFit+benchOv,
       odMean: team.reduce((a,i)=>a+(+S[i].OD||0),0)/team.length,  // ỔN ĐỊNH trung bình cả đội — để cân phong độ
       startOv: mean(starters,flat),   // OVERALL trung bình ĐỘI HÌNH CHÍNH — cân để ko dồn người mạnh 1 đội
+      offPos,                         // số starter ĐÁ SAI vị trí đăng ký — phạt nặng để ưu tiên xếp đúng vị trí
     };
   }
 
@@ -112,6 +117,7 @@
     gk:0.4,           // thu mon
     stab:0.6,         // ON DINH (OD) — can deu phong do giua 2 doi (nguoi on dinh chia deu)
     startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
+    posbad:6.0,       // PHAT TUYET DOI moi starter da SAI vi tri dang ky — uu tien xep DUNG vi tri (loai phuong an sai khoi "Tao lai")
   };
 
   // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
@@ -169,7 +175,8 @@
               + W.pace*d('pace') + W.heat*d('heat') + W.run*d('run')
               + W.gk*d('gkFit')
               + W.stab*d('odMean')                          // cân ỔN ĐỊNH (OD) giữa 2 đội
-              + W.startq*d('startOv');                      // cân OVERALL đội hình chính — người mạnh/yếu chia đều
+              + W.startq*d('startOv')                       // cân OVERALL đội hình chính — người mạnh/yếu chia đều
+              + W.posbad*(eA.offPos+eB.offPos);             // PHẠT tuyệt đối starter đá sai vị trí (ko phải chênh lệch)
       consider({J,A,B,evA:eA,evB:eB});
     });
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
