@@ -4,6 +4,7 @@
   const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // sơ đồ hiển thị 1-3-1-2 (GK · 3 thủ · TVtt · TV+TĐ)
   const STAR_MIN = 8;   // ⭐ Ngôi sao = overall >= ngưỡng này (PHẢI khớp STAR_MIN trong web_template.html)
 
+  // Độ hợp vị trí = KỸ NĂNG thuần ở vị trí đó (không trộn Ổn định vào đây — OD cân riêng qua odMean ở hàm J).
   function fit(s, p){
     const KT=s.KT,CH=s.CH,DD=s.DD,PN=s.PN,TC=s.TC,TL=s.TL,DN=s.DN,TD=s.TD,TM=s.TM;
     if(p==="GK")    return TM;
@@ -84,6 +85,8 @@
       run:   mean(starters,s=>s.TC+s.TL+s.DN),  // SỨC CHẠY tổng (tốc độ+thể lực+năng nổ) — để 2 đội chạy đều
       stars: team.filter(i=>ctx.overall[i]>=STAR_MIN).length,
       total: startFit+benchOv,
+      odMean: team.reduce((a,i)=>a+(+S[i].OD||0),0)/team.length,  // ỔN ĐỊNH trung bình cả đội — để cân phong độ
+      startOv: mean(starters,flat),   // OVERALL trung bình ĐỘI HÌNH CHÍNH — cân để ko dồn người mạnh 1 đội
     };
   }
 
@@ -107,6 +110,8 @@
     benchCong:0.5, benchThu:0.5, // du bi: can ca cong lan thu (khong lech thanh phan)
     pace:0.3, heat:0.3, run:0.7, // SUC CHAY can deu (run gom ca the luc) — tach 2 may chay ra 2 doi
     gk:0.4,           // thu mon
+    stab:0.6,         // ON DINH (OD) — can deu phong do giua 2 doi (nguoi on dinh chia deu)
+    startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
   };
 
   // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
@@ -162,7 +167,9 @@
               + W.benchOv*d('benchOv')
               + W.benchCong*d('benchAtk') + W.benchThu*d('benchDef') // dự bị cân công-thủ
               + W.pace*d('pace') + W.heat*d('heat') + W.run*d('run')
-              + W.gk*d('gkFit');
+              + W.gk*d('gkFit')
+              + W.stab*d('odMean')                          // cân ỔN ĐỊNH (OD) giữa 2 đội
+              + W.startq*d('startOv');                      // cân OVERALL đội hình chính — người mạnh/yếu chia đều
       consider({J,A,B,evA:eA,evB:eB});
     });
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
