@@ -1296,7 +1296,7 @@ function heroSlideHTML(p,idx,total){
   return `${bg}${HERO_FX}${nav}
       <div class="hf-top"><span class="hf-tag">★ Cầu thủ nổi bật</span><span class="hf-count">${idx+1}/${total}</span></div>
       <h1 class="hf-title"><span class="hf-nmwrap">${esc((p.n||"").toUpperCase())}${star?'<span class="hf-star">★</span>':''}</span></h1>
-      <div class="hf-meta">${POS_LABEL[pos]} · Điểm tổng ${o}/10</div>
+      <div class="hf-meta">${POS_LABEL[pos]} · Điểm theo vị trí ${o}/10</div>
       <div class="hf-desc">${esc(p.desc||"Mô tả")}</div>`;
 }
 function renderHero(){
@@ -2001,7 +2001,7 @@ function renderPlayerProfile(){
       <div class="pm-ava" style="${avaStyle(p.n)}">${avaInner(p.n)}</div>
       <div>
         <div class="pm-h-name">${p.n}${star?' <span class="pc-star pm-h-star">★</span>':''}</div>
-        <div class="pm-h-sub"><span>${POS_LABEL[pos]}</span>·<span>Điểm tổng <span class="pm-h-ov">${o}</span>/10</span>${ratersTag}</div>
+        <div class="pm-h-sub"><span>${POS_LABEL[pos]}</span>·<span>Điểm theo vị trí <span class="pm-h-ov">${o}</span>/10</span>${ratersTag}</div>
         ${lu?`<div class="pm-h-upd">🔄 ${PLOG_VERB[lu.action]||"Cập nhật"} mới nhất bởi <b>${lu.by==="?"?"ẩn danh":esc(lu.by)}</b> · ${lu.ts}</div>`:""}
         ${(function(){const rs=realRaters(p);return rs.length?`<div class="pm-h-upd">👥 Chấm bởi: <b>${rs.map(r=>r==="?"?"ẩn danh":esc(r)).join(", ")}</b></div>`:"";})()}
       </div>
