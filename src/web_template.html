@@ -285,6 +285,12 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pos-chip.sec input:checked+span{background:var(--blue);border-color:var(--blue)}
 .mini-pitch .dot.sec{background:transparent;border:2px solid var(--gold);box-shadow:none;width:18px;height:18px;opacity:.85}
 .pm-pos-sec{text-align:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.pm-pos-scores{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.pm-pos-row{display:flex;align-items:center;gap:8px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.pm-pos-row .pp-tag{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
+.pm-pos-row .pp-tag.main{color:#0a0f1c;background:var(--brand);border-color:var(--brand)}
+.pm-pos-row .pp-name{flex:1;font-weight:600}
+.pm-pos-row .pp-sc{font-weight:800;font-variant-numeric:tabular-nums}
 .pm-edit input,.pm-edit select{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text);font-size:14px}
 .pe-cell input{text-align:center}
 .pe-cell .pe-sel{width:100%;cursor:pointer;color-scheme:dark;text-align:center;text-align-last:center}
@@ -852,12 +858,15 @@ const POS_W={
   TV:    {TC:1.9, KT:1.9, DD:1.4, CH:1.3, TL:1.1, DN:1, TD:0.8},        // tiền vệ cánh
   "TĐ":  {DD:3, KT:1.6, TC:1.5, DN:1.1, TD:0.9, CH:0.6},                // tiền đạo
 };
-const ov = s => {                       // điểm 0–10 theo vị trí; chưa rõ vị trí -> trung bình các chỉ số sân (+Ổn định nếu có)
-  const w=POS_W[posCodeOf(s)];
+const ovAt = (s,code) => {              // điểm 0–10 cho MỘT vị trí cụ thể (theo trọng số POS_W); ko rõ -> trung bình chỉ số sân
+  const w=POS_W[code];
   if(!w){let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;}
   let sum=0,tot=0; for(const k in w){sum+=(+s[k]||0)*w[k];tot+=w[k];}
   return tot?sum/tot:0;
 };
+const ov = s => ovAt(s, posCodeOf(s));  // điểm theo VỊ TRÍ CHÍNH (giữ hành vi cũ)
+// các vị trí cầu thủ chơi được, chính trước rồi phụ (lọc trùng + chỉ vị trí hợp lệ)
+function posAllOf(p){const main=posCodeOf(p);const sec=(Array.isArray(p.pos2)?p.pos2:[]).filter(s=>POS_W[s]&&s!==main);return [main,...sec];}
 const STAR_MIN=8;                 // ⭐ Ngôi sao = điểm tổng (ov) >= con số này — đổi 1 chỗ duy nhất
 const isStar=p=>ov(p)>=STAR_MIN;
 const $=id=>document.getElementById(id);
@@ -2011,7 +2020,7 @@ function renderPlayerProfile(){
         <div class="pm-sec">Vị trí</div>
         <div class="mini-pitch"><div class="mid"></div><div class="circ"></div>${dots}</div>
         <div class="pm-pos-lbl">${POS_LABEL[pos]}</div>
-        ${sec.length?`<div class="pm-pos-sec">Phụ: ${sec.map(s=>POS_LABEL[s]).join(", ")}</div>`:""}
+        <div class="pm-pos-scores">${posAllOf(p).map((c,i)=>`<div class="pm-pos-row"><span class="pp-tag${i===0?' main':''}">${i===0?'Chính':'Phụ'}</span><span class="pp-name">${POS_LABEL[c]}</span><b class="pp-sc">${ovAt(p,c).toFixed(1)}</b></div>`).join("")}</div>
       </div>
       <div class="pm-right"><div class="pm-cols">
         <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
