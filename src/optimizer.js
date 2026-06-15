@@ -43,8 +43,8 @@
     return ans;
   }
 
-  // gia tri cac chi so ngoai san (8, +Ổn định OD neu da cham -> /9)
-  function overallOf(s){ let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD, n=8; if(s.OD!=null){t+=s.OD;n=9;} return t/n; }
+  // gia tri tong quat = 8 chi so san. OD (On dinh) TAM KHONG tinh vao diem (chi hien thi).
+  function overallOf(s){ return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8; }
 
   // danh gia 1 doi (mang index global). Tra ve starters[slot]=idx, bench[], cac chi so.
   function evalTeam(team, ctx){
@@ -73,7 +73,7 @@
     const fronts=[starters[4],starters[5],starters[6]];
     const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
     const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
-    const flat=s=>{let t=s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD,n=8;if(s.OD!=null){t+=s.OD;n=9;}return t/n;};   // chất lượng tổng quát (8–9 chỉ số sân, +Ổn định nếu có)
+    const flat=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;   // chất lượng tổng quát (8 chỉ số sân; OD tạm KHÔNG tính)
     return {
       starters, bench, startFit, benchOv, gkFit,
       defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình
@@ -115,7 +115,7 @@
     benchCong:0.5, benchThu:0.5, // du bi: can ca cong lan thu (khong lech thanh phan)
     pace:0.3, heat:0.3, run:0.7, // SUC CHAY can deu (run gom ca the luc) — tach 2 may chay ra 2 doi
     gk:0.4,           // thu mon
-    stab:0.6,         // ON DINH (OD) — can deu phong do giua 2 doi (nguoi on dinh chia deu)
+    stab:0,           // ON DINH (OD) — TAM TAT khoi chia doi (OD chi hien thi); doi >0 de bat lai sau
     startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
     posbad:6.0,       // PHAT TUYET DOI moi starter da SAI vi tri dang ky — uu tien xep DUNG vi tri (loai phuong an sai khoi "Tao lai")
   };
