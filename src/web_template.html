@@ -1400,7 +1400,7 @@ function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
   // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa (slot 4) · 2 tiền đạo (slot 5,6)
   // MỖI ĐỘI nằm GỌN trong nửa sân của mình (không vượt vạch giữa) → màu áo không lẫn sang nửa kia
-  const X ={0:50,1:18,2:50,3:82,4:50,5:30,6:70};
+  const X ={0:50,1:50,2:18,3:82,4:50,5:30,6:70};   // slot1=Thòng (Trung vệ) ở GIỮA hàng thủ; slot2,3=HV biên 2 bên
   const YA={0:92,1:78,2:78,3:78,4:65,5:55,6:55};   // Quỷ Đỏ (dưới) — cả đội ở nửa sân dưới, tiền đạo áp vạch giữa
   const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Pháo Thủ (trên) — cả đội ở nửa sân trên
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
@@ -1440,7 +1440,7 @@ function chip(pl,label,kit,delay){const o=ov(pl);const star=isStar(pl)?' <span c
 function col(chips,gk){return `<div class="col${gk?' gkcol':''}">${chips.join("")}</div>`;}
 const SLAB=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
 function teamCols(ev,kit,sel,reverse){
-  const bands=[[0],[1,2,3],[4],[5,6]];   // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa · 2 tiền đạo
+  const bands=[[0],[2,1,3],[4],[5,6]];   // 1-3-1-2: GK · HV–Trung vệ(GIỮA)–HV · 1 tiền vệ giữa · 2 tiền đạo
   let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.24+j*0.07)),bi===0));
   if(reverse)cols=cols.reverse(); return cols.join("");
 }
