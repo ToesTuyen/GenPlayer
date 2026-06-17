@@ -95,6 +95,7 @@
       startOv: mean(starters,flat),   // OVERALL trung bình ĐỘI HÌNH CHÍNH — cân để ko dồn người mạnh 1 đội
       offPos,                         // số starter ĐÁ SAI vị trí đăng ký — phạt nặng để ưu tiên xếp đúng vị trí
       guestStart,                     // số KHÁCH (người ngoài) phải đá chính — phạt để ưu tiên dự bị
+      gkWaste: (starters[0]>=0 && S[starters[0]].pos!=="GK") ? ctx.bestOut[starters[0]] : 0,  // bắt gôn nhưng KO phải thủ môn chính -> phí giá trị ngoài sân (phạt: đừng nhét tiền đạo/HV giỏi vào gôn)
     };
   }
 
@@ -122,6 +123,7 @@
     startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
     posbad:6.0,       // PHAT TUYET DOI moi starter da SAI vi tri dang ky — uu tien xep DUNG vi tri (loai phuong an sai khoi "Tao lai")
     guestbad:5.0,     // PHAT moi KHACH phai da chinh -> uu tien chia khach ve doi con ghe du bi
+    gkwaste:2.0,      // PHAT khi nguoi NGOAI SAN gioi phai bat gon -> chia thu mon sao cho tien dao/HV gioi dung vi tri
   };
 
   // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
@@ -132,19 +134,25 @@
     const overall=players.map(overallOf);
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
-    const PRI=2.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // GUEST_PEN: phat KHACH (nguoi ngoai) o moi vi tri -> uu tien day xuong du bi
+    const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
     const isGK=players.map(p=>p.pos==="GK" && !p.guest);   // KHACH ko tinh la thu mon CO DINH -> uu tien du bi, nhuong gon cho GK that
     const lockGK=isGK.filter(Boolean).length>=2;            // co >=2 thu mon co dinh -> khoa khung gon cho ho, khong xet nguoi khac (du TM cao)
+    const bestOut=fitT.map(row=>Math.max(row[1],row[2],row[3],row[4],row[5],row[6]));  // fit cao nhat o vi tri NGOAI SAN (do "gia tri ngoai san")
     const fitPen=fitT.map((row,i)=>{
       const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
       const gp=players[i].guest?GUEST_PEN:0;                 // KHACH -> tru deu o moi vi tri => uu tien du bi
       return row.map((v,c)=>{ const sl=SLOTS[c];
-        if(lockGK && sl==="GK") return v + (isGK[i]?GKLOCK:-GKLOCK) - gp;   // gon chi danh cho thu mon co dinh (THAT, ko phai khach)
+        if(sl==="GK"){
+          if(lockGK) return v + (isGK[i]?GKLOCK:-GKLOCK) - gp;     // >=2 thu mon co dinh -> khoa gon cho ho
+          if(pr==="GK") return v + PRI - gp;                      // thu mon CHINH
+          if(players[i].TM>0) return -bestOut[i] - gp;            // biet bat nhung KO phai TM chinh -> uu tien nguoi NGOAI SAN KEM nhat bat gon (giu tien dao/HV gioi dung vi tri)
+          return -1e6;                                            // ko biet bat -> khong bao gio vao gon
+        }
         if(!pr) return v - gp;                              // chua chon vi tri -> trung tinh
         return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)) - gp; });
     });
     const TM=players.map(p=>p.TM);
-    const ctx={players,overall,fitT,fitPen};
+    const ctx={players,overall,fitT,fitPen,bestOut};
     const sizeA=Math.ceil(N/2), even=(N%2===0);
 
     const K=12, top=[];   // giu top-K cach chia can nhat (de nut "Tao lai" doi doi)
@@ -182,7 +190,8 @@
               + W.stab*d('odMean')                          // cân ỔN ĐỊNH (OD) giữa 2 đội
               + W.startq*d('startOv')                       // cân OVERALL đội hình chính — người mạnh/yếu chia đều
               + W.posbad*(eA.offPos+eB.offPos)              // PHẠT tuyệt đối starter đá sai vị trí (ko phải chênh lệch)
-              + W.guestbad*(eA.guestStart+eB.guestStart);   // PHẠT khách đá chính -> ưu tiên dự bị
+              + W.guestbad*(eA.guestStart+eB.guestStart)    // PHẠT khách đá chính -> ưu tiên dự bị
+              + W.gkwaste*(eA.gkWaste+eB.gkWaste);          // PHẠT phí người ngoài sân giỏi vào gôn -> giữ tiền đạo/HV đúng vị trí
       consider({J,A,B,evA:eA,evB:eB});
     });
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
