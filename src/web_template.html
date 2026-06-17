@@ -649,7 +649,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="section-title">Người có mặt hôm nay</div>
     <div class="grid" id="roster"></div>
     <div class="bar">
-      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác">⚽ Tạo 2 đội</button>
+      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác">⚽ Tạo đội (Thuật Toán)</button>
       <button class="btn alt sm" id="all">Chọn tất cả</button>
       <button class="btn alt sm" id="none">Bỏ chọn</button>
       <span class="count" id="count"></span>
@@ -935,7 +935,7 @@ function bkTeams(b){
   if(!b||!b.result||!b.subset)return "";
   const sel=b.subset, nm=i=>esc(shortName(sel[i].n));
   const A=b.result.evA.starters.map(nm).join(", "), B=b.result.evB.starters.map(nm).join(", ");
-  return `<div class="bk-teams"><div><b style="color:#ff5a4d">Quỷ Đỏ:</b> ${A}</div><div><b style="color:#e0a800">Pháo Thủ:</b> ${B}</div></div>`;
+  return `<div class="bk-teams"><div><b style="color:#ff5a4d">Team A:</b> ${A}</div><div><b style="color:#e0a800">Team B:</b> ${B}</div></div>`;
 }
 function openBackup(){show("screen-backup");showBackup();}
 function showBackup(){
@@ -1389,7 +1389,8 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","
 function todayStr(){const d=new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
 function parseKick(dateStr,timeStr){if(!dateStr)return null;const ms=new Date(dateStr+"T"+(timeStr||"00:00")).getTime();return isNaN(ms)?null:ms;}
 function fmtKick(ms){if(!ms)return"";const d=new Date(ms),p=n=>String(n).padStart(2,"0");const date=p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();const hm=(d.getHours()||d.getMinutes())?(" · "+p(d.getHours())+":"+p(d.getMinutes())):"";return date+hm;}
-function featuredMatch(h){const up=h.filter(r=>!r.score).sort((a,b)=>(a.kickoff||Infinity)-(b.kickoff||Infinity));return up[0]||h[0]||null;}
+// "Trận sắp tới" = CHỈ trận CHƯA có tỉ số (sắp nhất). Hết trận sắp tới -> null (KHÔNG fallback trận đã đá).
+function featuredMatch(h){const up=h.filter(r=>!r.score).sort((a,b)=>(a.kickoff||Infinity)-(b.kickoff||Infinity));return up[0]||null;}
 
 // ---- thẻ trận đấu (dùng chung dashboard + màn Lịch sử) ----
 function teamResult(r){
@@ -1417,9 +1418,9 @@ function matchCard(r,full){
   const actions=(goalBtn||adminActs)?`<div class="mc-actions">${goalBtn}${adminActs}</div>`:"";
   return `<div class="mc" onclick="${full?`viewHistory(${r.id})`:`openHistory(${r.id})`}">
     <div class="mc-main">
-      <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Quỷ Đỏ")}</span><span class="mc-tn">QUỶ ĐỎ</span></div>
+      <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Team A")}</span><span class="mc-tn">TEAM A</span></div>
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}</div>
-      <div class="mc-team r"><span class="mc-tn">PHÁO THỦ</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Pháo Thủ")}</span></div>
+      <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
     </div>
     ${goalSummaryLine(r)}
     ${actions}
@@ -1430,15 +1431,15 @@ function renderMatchList(h){
   if(!h.length){box.innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> rồi bấm <b>Lưu làm đội tuần này</b>.</div>`;return;}
   box.innerHTML=`<div class="mc-list">`+h.map(r=>matchCard(r,false)).join("")+`</div>`;
 }
-// Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Pháo Thủ (trên, vàng) vs Quỷ Đỏ (dưới, đỏ)
+// Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Team B (trên, vàng) vs Team A (dưới, đỏ)
 function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
   // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa (slot 4) · 2 tiền đạo (slot 5,6)
   // MỖI ĐỘI nằm GỌN trong nửa sân của mình (không vượt vạch giữa) → màu áo không lẫn sang nửa kia
   const X ={0:50,1:50,2:18,3:82,4:50,5:30,6:70};   // slot1=Thòng (Trung vệ) ở GIỮA hàng thủ; slot2,3=HV biên 2 bên
-  const YA={0:92,1:78,2:78,3:78,4:65,5:55,6:55};   // Quỷ Đỏ (dưới) — cả đội ở nửa sân dưới, tiền đạo áp vạch giữa
-  const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Pháo Thủ (trên) — cả đội ở nửa sân trên
+  const YA={0:92,1:78,2:78,3:78,4:65,5:55,6:55};   // Team A (dưới) — cả đội ở nửa sân dưới, tiền đạo áp vạch giữa
+  const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Team B (trên) — cả đội ở nửa sân trên
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
   for(let c=0;c<7;c++){h+=mark(sel[eB.starters[c]],X[c],YB[c],KIT_B);h+=mark(sel[eA.starters[c]],X[c],YA[c],KIT_A);}
@@ -1447,7 +1448,7 @@ function vpitch(r){
 function renderSpotlight(h){
   const box=$("spotlight"); if(!box)return;
   const r=featuredMatch(h||[]);
-  if(!r){box.innerHTML=`<div class="empty"><span class="big">📋</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
+  if(!r){box.innerHTML=`<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   const sel=r.subset, eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
   if(!sel||!eA||!eB){box.innerHTML=matchCard(r,false);return;}   // trận cũ không có đội hình -> thẻ gọn
   const when=r.kickoff?fmtKick(r.kickoff):(r.label||"⏳ Chưa đá");
@@ -1458,9 +1459,9 @@ function renderSpotlight(h){
   };
   box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
-      <span class="lu-team"><span class="lu-logo" style="background:${KIT_B.body};color:#11224f">PT</span>Pháo Thủ</span>
+      <span class="lu-team"><span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span>Team B</span>
       <span class="lu-vs">VS</span>
-      <span class="lu-team r">Quỷ Đỏ<span class="lu-logo" style="background:${KIT_A.body};color:#fff">QĐ</span></span>
+      <span class="lu-team r">Team A<span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span></span>
     </div>
     <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
     ${benchStrip(eB,KIT_B,"top")}
@@ -1507,8 +1508,8 @@ function render(res,sel,target,review){
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
   const pdiff=A.pace-B.pace, gkGap=A.gkFit-B.gkFit;
-  const gkAdvNm=Math.abs(gkGap)>=0.5?(gkGap>0?"Quỷ Đỏ":"Pháo Thủ"):null;
-  const styleLine=Math.abs(pdiff)>=0.3?`<b>${pdiff>0?"Quỷ Đỏ":"Pháo Thủ"}</b> nhỉnh hơn về tốc độ và chuyển trạng thái nhanh, trong khi <b>${pdiff>0?"Pháo Thủ":"Quỷ Đỏ"}</b> thiên về kiểm soát và sự chắc chắn.`:`Hai đội tương đồng về nền tảng thể chất — khác biệt sẽ đến từ khâu tổ chức và tận dụng cơ hội.`;
+  const gkAdvNm=Math.abs(gkGap)>=0.5?(gkGap>0?"Team A":"Team B"):null;
+  const styleLine=Math.abs(pdiff)>=0.3?`<b>${pdiff>0?"Team A":"Team B"}</b> nhỉnh hơn về tốc độ và chuyển trạng thái nhanh, trong khi <b>${pdiff>0?"Team B":"Team A"}</b> thiên về kiểm soát và sự chắc chắn.`:`Hai đội tương đồng về nền tảng thể chất — khác biệt sẽ đến từ khâu tổ chức và tận dụng cơ hội.`;
   const gkLine=gkAdvNm?` Điểm tạo khác biệt đáng chú ý là khung gỗ: <b>${gkAdvNm}</b> có người gác đền chắc tay hơn.`:` Hai khung thành ở mức tương đương.`;
   const pred=`Kèo cân (đội hình chính chênh ~${pct.toFixed(1)}%). Dự đoán tỉ số sít sao, cách biệt tối đa một bàn; ${gkAdvNm?`lợi thế khung gỗ có thể nghiêng nhẹ cán cân về phía <b>${gkAdvNm}</b>`:`đội nào kiểm soát nhịp độ và tận dụng cơ hội tốt hơn sẽ giành phần thắng`}.`;
   const intro=`Chênh lệch đội hình chính chỉ <b>~${pct.toFixed(1)}%</b> — một cặp đấu cân bằng, kết quả sẽ do <b>cách vận hành</b> quyết định chứ không phải đẳng cấp. ${styleLine}${gkLine} Một trận đấu hứa hẹn ngang ngửa và cởi mở.`;
@@ -1516,16 +1517,16 @@ function render(res,sel,target,review){
   const predBlock=hasRev?"":`<div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>`;
   const narrative=hasRev
     ? `<div class="ai-review">${review}</div>`
-    : `<div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Đội A · Quỷ Đỏ",A,sel)}${card(B,A,CBtxt,"Đội B · Pháo Thủ",B,sel)}</div>`;
+    : `<div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Team A",A,sel)}${card(B,A,CBtxt,"Team B",B,sel)}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
-   <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 ĐỘI A · Quỷ Đỏ ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ Pháo Thủ · ĐỘI B 🟡</div></div>
+   <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div>
    <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false)}${teamCols(B,KIT_B,sel,true)}</div>
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
   </div></div>
   <div class="report"><h2>${hasRev?"⚖️ Đánh giá trận":"⚖️ Ưu – nhược điểm"}</h2>${narrative}
-  <h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Đội A</th><th>Đội B</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table></div>`;
+  <h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table></div>`;
   fitMatch();
 }
 function fitMatch(){
@@ -1563,7 +1564,7 @@ $("go").onclick=()=>{
     if(key!==cstate.key){const subset=sel.map(i=>curPlayers[i]);const res=TeamSolver.solve(subset);if(res.error){$("status").innerHTML='<span style="color:#dc2626">'+res.error+'</span>';$("go").disabled=false;return;}cstate={key,results:res,idx:0,subset};fresh=true;}
     else cstate.idx=(cstate.idx+1)%cstate.results.length;
     render(cstate.results[cstate.idx],cstate.subset,"result");
-    $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo 2 đội</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
+    $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo đội (Thuật Toán)</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
     $("saveWeek").style.display="inline-block";
     $("go").disabled=false;
   },30);
@@ -1784,7 +1785,7 @@ function renderRank(){
 // Bàn thắng đã duyệt lưu NGAY TRONG record trận: r.goals = { "Tên cầu thủ": số bàn }.
 // Người thường nhập -> gửi yêu cầu (STATE.goalReqs, chờ admin duyệt); admin nhập -> áp thẳng.
 function matchById(id){return getHistory().find(r=>String(r.id)===String(id));}
-function teamSideName(side){return side==="A"?"Quỷ Đỏ":"Pháo Thủ";}
+function teamSideName(side){return side==="A"?"Team A":"Team B";}
 function matchLineup(r){   // [{n,idx,team}] những cầu thủ đã ra sân trận r (kèm đội A/B)
   const sub=Array.isArray(r&&r.subset)?r.subset:[];
   return sub.map((p,idx)=>({n:p&&p.n,idx,team:teamOfIdx(r,idx)})).filter(x=>x.n&&x.team);
@@ -2380,7 +2381,7 @@ function applyQuick(){
 // ============ DOI TUAN NAY ============
 function showWeek(){
   const h=getHistory(), r=featuredMatch(h);
-  if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
+  if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
   render(r.result,r.subset,"week-result",r.review); setTimeout(fitMatch,0);
@@ -2444,8 +2445,8 @@ function setScore(id){
   if(!requireAdmin())return;
   const h=getHistory(), r=h.find(x=>x.id===id); if(!r)return;
   const cur=r.score||{};
-  const a=prompt("Số bàn ĐỘI A (Quỷ Đỏ):",cur.a!=null?cur.a:""); if(a===null)return;
-  const b=prompt("Số bàn ĐỘI B (Pháo Thủ):",cur.b!=null?cur.b:""); if(b===null)return;
+  const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
+  const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
   r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
   setHistory(h); histTab="done"; showHistory();
 }
@@ -2471,8 +2472,8 @@ function overdueScore(id){
   if(!isAdmin)return;
   const h=getHistory(), r=h.find(x=>x.id===id); if(!r)return;
   const cur=r.score||{};
-  const a=prompt("Số bàn ĐỘI A (Quỷ Đỏ):",cur.a!=null?cur.a:""); if(a===null)return;
-  const b=prompt("Số bàn ĐỘI B (Pháo Thủ):",cur.b!=null?cur.b:""); if(b===null)return;
+  const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
+  const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
   r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
   setHistory(h);            // persist + đồng bộ cloud
   renderOverdue();          // cập nhật lại danh sách; hết thì tự đóng
