@@ -2476,6 +2476,14 @@ function overdueScore(id){
   r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
   setHistory(h);            // persist + đồng bộ cloud
   renderOverdue();          // cập nhật lại danh sách; hết thì tự đóng
+  refreshScreen();          // vẽ lại "Trận sắp tới"/lịch sử → trận đã có KQ chuyển trạng thái ngay
+}
+function refreshScreen(){   // vẽ lại màn đang mở sau khi đổi dữ liệu trận
+  const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
+  if(!cur)return;
+  if(cur.id==="home")renderHome();
+  else if(cur.id==="screen-week")showWeek();
+  else if(cur.id==="screen-history")showHistory();
 }
 function delHistory(id){if(!confirm("Xóa bản ghi này?"))return;setHistory(getHistory().filter(x=>x.id!==id));showHistory();}
 
