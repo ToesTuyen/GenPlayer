@@ -47,6 +47,14 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .od-when{font-weight:700;font-size:13.5px}
 .od-venue{font-size:12px;color:var(--muted);margin-top:2px}
 .od-foot{margin-top:6px;text-align:right}
+.pl-item.guest{border-color:rgba(96,211,138,.5)}
+.gst-badge{font-size:10px;font-weight:700;color:var(--brand);background:var(--brand-soft);border:1px solid rgba(22,163,74,.35);border-radius:5px;padding:1px 5px;margin-left:5px;white-space:nowrap}
+.gst-rm{cursor:pointer;color:var(--muted);font-weight:800;padding:0 7px;font-size:13px}
+.gst-rm:hover{color:#dc2626}
+.gst-body{padding:16px;display:flex;flex-direction:column;gap:8px}
+.gst-lb{font-size:12px;font-weight:700;color:var(--muted)}
+.gst-in{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px;width:100%}
+.gst-hint{font-size:12px;color:var(--muted);line-height:1.5;margin:2px 0 4px}
 /* page banner */
 .page-banner{position:relative;width:100%;height:240px;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:16px;
   background:radial-gradient(120% 100% at 50% 0%,#2a1840,#10162a)}
@@ -554,6 +562,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+.rank-goals.gold{color:#4a3600;background:linear-gradient(135deg,#ffe08a,#e0a800);padding:2px 11px;border-radius:999px;border:1px solid #d49a00;font-size:14px;box-shadow:0 1px 5px rgba(224,168,0,.42)}
 .rank-row .avatar.sm,.avatar.sm{width:34px;height:34px;font-size:12px;background-size:cover;background-position:center top}
 /* ----- bàn thắng: form nhập + chip ----- */
 .gl-info{font-size:13px;color:var(--text);font-weight:700;margin-bottom:4px}
@@ -652,6 +661,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác">⚽ Tạo đội (Thuật Toán)</button>
       <button class="btn alt sm" id="all">Chọn tất cả</button>
       <button class="btn alt sm" id="none">Bỏ chọn</button>
+      <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
+      <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <span class="count" id="count"></span>
     </div>
   </div>
@@ -854,6 +865,24 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="pm-close" onclick="closeOverdue()">✕</button>
     </div>
     <div id="overdue-body" class="plog-wrap"></div>
+  </div>
+</div>
+
+<!-- ====== THEM NGUOI NGOAI (khach) — chi dung cho tran ====== -->
+<div class="pm-overlay" id="guestModal" onclick="if(event.target===this)closeGuest()">
+  <div class="pm-panel" style="max-width:430px">
+    <div class="pm-bar">
+      <div class="plog-title">➕ Thêm người ngoài (khách)</div>
+      <button class="pm-close" onclick="closeGuest()">✕</button>
+    </div>
+    <div class="gst-body">
+      <label class="gst-lb">Tên người ngoài</label>
+      <input id="gst-name" class="gst-in" placeholder="VD: Khách 1, bạn của Tuấn…" onkeydown="if(event.key==='Enter')addGuest()">
+      <label class="gst-lb">Đá giống ai (sao chép điểm)</label>
+      <select id="gst-like" class="gst-in"></select>
+      <div class="gst-hint">Người ngoài chỉ dùng cho <b>trận này</b> — không thêm vào danh sách cầu thủ, không lưu DB.</div>
+      <button class="btn sm" onclick="addGuest()" style="align-self:flex-start">➕ Thêm vào roster</button>
+    </div>
   </div>
 </div>
 
@@ -1199,7 +1228,7 @@ function renderHomeScorers(){
         <span class="rank-no${i<3?' top':''}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn</div></div>
-        <span class="rank-goals">⚽ ${x.goals}</span>
+        <span class="rank-goals${i<3?' gold':''}">⚽ ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
@@ -1539,18 +1568,46 @@ function fitMatch(){
 window.addEventListener("resize",fitMatch);
 
 // ============ TAO DOI ============
-let curPlayers=[], cstate={key:"",results:[],idx:0,subset:null};
+let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
-  curPlayers=getPlayers().sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
+  curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
-    const el=document.createElement("label"); el.className="pl-item on";
-    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span>${p.n}</span></span><span class="ovb">${ov(p).toFixed(1)}</span><input type="checkbox" data-i="${i}" checked>`;
+    const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");
+    const gtag=p.guest?` <span class="gst-badge">khách · giống ${esc(p.likeOf||"")}</span>`:"";
+    const grm=p.guest?`<span class="gst-rm" title="Bỏ người ngoài" onclick="event.preventDefault();event.stopPropagation();removeGuest('${encodeURIComponent(p.n)}')">✕</span>`:"";
+    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span>${esc(p.n)}${gtag}</span></span><span class="ovb">${ov(p).toFixed(1)}</span>${grm}<input type="checkbox" data-i="${i}" checked>`;
     el.querySelector("input").addEventListener("change",e=>{el.classList.toggle("off",!e.target.checked);el.classList.toggle("on",e.target.checked);updateCount();});
     roster.appendChild(el);
   });
   $("result").innerHTML=""; $("status").textContent=""; $("saveWeek").style.display="none"; updateCount();
+  $("roster").style.display=""; const tgr=$("toggleRoster"); if(tgr)tgr.style.display="none";   // về màn Tạo đội -> hiện lại danh sách
 }
+function toggleRoster(){   // ẩn/hiện danh sách chọn người
+  const r=$("roster"), hidden=r.style.display==="none";
+  r.style.display=hidden?"":"none";
+  $("toggleRoster").textContent=hidden?"🙈 Ẩn danh sách":"👥 Hiện danh sách";
+}
+// ---- Người ngoài (khách): chỉ dùng cho trận, sao chép điểm từ 1 cầu thủ có sẵn ----
+function openGuestModal(){
+  const sel=$("gst-like"); if(!sel)return;
+  const pls=getPlayers().slice().sort((a,b)=>ov(b)-ov(a));
+  sel.innerHTML=pls.map(p=>`<option value="${esc(p.n)}">${esc(p.n)} · ${POS_LABEL[posCodeOf(p)]||"?"} · ${ov(p).toFixed(1)}</option>`).join("");
+  $("gst-name").value=""; $("guestModal").classList.add("on"); setTimeout(()=>$("gst-name").focus(),30);
+}
+function closeGuest(){$("guestModal").classList.remove("on");}
+function addGuest(){
+  const name=$("gst-name").value.trim();
+  if(!name){alert("Nhập tên người ngoài");return;}
+  if(getPlayers().some(p=>p.n===name)||guestPlayers.some(g=>g.n===name)){alert("Tên này đã tồn tại — chọn tên khác");return;}
+  const src=getPlayers().find(p=>p.n===$("gst-like").value);
+  if(!src){alert("Chọn 1 cầu thủ để sao chép điểm");return;}
+  const KEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"];
+  const g={n:name,guest:true,likeOf:src.n,pos:src.pos||"",pos2:Array.isArray(src.pos2)?[...src.pos2]:[],desc:`Người ngoài — đá giống ${src.n}`};
+  KEYS.forEach(k=>g[k]=+src[k]||0);   // sao chép điểm
+  guestPlayers.push(g); closeGuest(); buildRoster();
+}
+function removeGuest(enc){const n=decodeURIComponent(enc);guestPlayers=guestPlayers.filter(g=>g.n!==n);buildRoster();}
 function selectedIdx(){return [...$("roster").querySelectorAll("input:checked")].map(c=>+c.dataset.i);}
 function updateCount(){const n=selectedIdx().length;$("count").innerHTML=`Đã chọn <b>${n}</b>`+(n<14?` <span style="color:#dc2626">(cần ≥14)</span>`:(n%2?` <span style="color:#d97706">(lẻ)</span>`:""));}
 $("all").onclick=()=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=true;c.closest(".pl-item").classList.add("on");c.closest(".pl-item").classList.remove("off");});updateCount();};
@@ -1567,6 +1624,9 @@ $("go").onclick=()=>{
     $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo đội (Thuật Toán)</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
     $("saveWeek").style.display="inline-block";
     $("go").disabled=false;
+    $("roster").style.display="none";                                 // gen xong -> ẩn danh sách chọn
+    const tg=$("toggleRoster"); if(tg){tg.style.display="";tg.textContent="👥 Hiện danh sách";}
+    $("result").scrollIntoView({behavior:"smooth",block:"start"});    // nhảy xuống focus đội hình đã gen
   },30);
 };
 $("saveWeek").onclick=()=>{
@@ -1978,21 +2038,36 @@ function renderScorer(){
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn${x.p?" · "+evalTitle(x.p):""}</div></div>
-        <span class="rank-goals">⚽ ${x.goals}</span>
+        <span class="rank-goals${i<3?' gold':''}">⚽ ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
 function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}
-// Xếp loại 1 câu theo vị trí + trình độ (dùng cho hồ sơ & bảng xếp hạng) — 1 nguồn duy nhất
+// Xếp loại 1 câu theo VỊ TRÍ ĐĂNG KÝ + trình độ (dùng cho hồ sơ, bảng xếp hạng, vua phá lưới) — 1 nguồn duy nhất
+// Vai trò chính BÁM vị trí (posCodeOf), không còn chọn theo năng lực cao nhất -> mô tả không mâu thuẫn vị trí.
 function evalTitle(p){
-  const g=k=>+p[k]||0;
-  if(posCodeOf(p)==="GK")return g("TM")>=7?"Người gác đền":"Thủ môn";
-  const apt=[{k:"DEF",name:"Phòng ngự",v:(g("PN")*2+g("TD")+g("DN"))/4},{k:"RUN",name:"Chân chạy",v:(g("TC")+g("TL")+g("DN"))/3},{k:"ATT",name:"Tấn công",v:(g("DD")*2+g("KT")+g("TC"))/4},{k:"PLY",name:"Kiến thiết",v:(g("CH")*2+g("TD")+g("KT"))/4}];
-  const head=apt.sort((a,b)=>b.v-a.v)[0], o=ov(p);
-  const ARCH={DEF:"Hàng thủ chắc chắn",RUN:"Chân chạy bền bỉ",ATT:"Mũi nhọn săn bàn",PLY:"Nhạc trưởng tuyến giữa"};
-  if(o<3.5)return "Tân binh";
-  if(o<5.5)return "Thiên hướng "+head.name.toLowerCase();
-  return ARCH[head.k];
+  const g=k=>+p[k]||0, code=posCodeOf(p), o=ov(p);
+  // GK xét riêng theo chỉ số Thủ môn
+  if(code==="GK")return g("TM")>=7?"Người gác đền":"Thủ môn";
+  // Mỗi vị trí: [vai trò đầy đủ (ov tốt), danh từ vai trò (dùng cho mức "thiên hướng/đang lên")]
+  const ROLE={
+    "Thòng":["Lá chắn tuyến cuối","trung vệ thòng"],
+    HV:     ["Hậu vệ biên",       "hậu vệ biên"],
+    TVtt:   ["Nhạc trưởng tuyến giữa","tiền vệ giữa"],
+    TV:     ["Tiền vệ cánh",      "tiền vệ cánh"],
+    "TĐ":   ["Mũi nhọn săn bàn",  "tiền đạo"],
+  };
+  const r=ROLE[code]||["Cầu thủ đa năng","cầu thủ"];
+  if(o<3.5)return "Tân binh";                         // chỉ số còn thấp -> chưa định hình
+  if(o<5.5)return "Thiên hướng "+r[1];                // mới đang lên -> nói nhẹ theo vị trí
+  // ov tốt: vai trò đầy đủ, nhấn nhẹ 1 tố chất nổi trội KHÔNG mâu thuẫn vị trí
+  let tag="";
+  if(code==="HV"){if(g("TC")>=8)tag=" tốc độ";else if(g("PN")>=8)tag=" chắc chắn";}
+  else if(code==="Thòng"){if(g("PN")>=8)tag=" thép";}
+  else if(code==="TĐ"){if(g("DN")>=8)tag=" tì đè";else if(g("TC")>=8)tag=" tốc độ";}
+  else if(code==="TV"){if(g("KT")>=8)tag=" kỹ thuật";else if(g("TC")>=8)tag=" tốc độ";}
+  else if(code==="TVtt"){if(g("CH")>=8)tag=" nhãn quan";}
+  return r[0]+tag;
 }
 function evalBlock(p){
   const g=k=>+p[k]||0;
