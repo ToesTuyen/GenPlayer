@@ -562,7 +562,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
-.rank-goals.gold{color:#4a3600;background:linear-gradient(135deg,#ffe08a,#e0a800);padding:2px 11px;border-radius:999px;border:1px solid #d49a00;font-size:14px;box-shadow:0 1px 5px rgba(224,168,0,.42)}
 .rank-row .avatar.sm,.avatar.sm{width:34px;height:34px;font-size:12px;background-size:cover;background-position:center top}
 /* ----- bàn thắng: form nhập + chip ----- */
 .gl-info{font-size:13px;color:var(--text);font-weight:700;margin-bottom:4px}
@@ -1219,6 +1218,8 @@ function renderHome(){
   renderHomeScorers();   // thẻ Vua phá lưới (top 3 ghi bàn) trên trang chủ
 }
 // Top 3 cầu thủ ghi bàn nhiều nhất, hiện ngay trên Trang chủ (tái dùng scorerBoard + style xếp hạng)
+// Quả bóng đá MÀU VÀNG (top 3 vua phá lưới) — SVG để chắc chắn vàng, không phụ thuộc emoji
+const GOLD_BALL='<svg viewBox="0 0 32 32" width="15" height="15" style="vertical-align:-2px"><circle cx="16" cy="16" r="14.5" fill="#f7c948" stroke="#a9760a" stroke-width="1.5"/><polygon points="16,9 21.6,13.1 19.5,19.8 12.5,19.8 10.4,13.1" fill="#4a3600"/><g stroke="#a9760a" stroke-width="1.3" fill="none"><path d="M16 9V2.5M21.6 13.1l6-3.8M19.5 19.8l4.3 6.4M12.5 19.8l-4.3 6.4M10.4 13.1l-6-3.8"/></g></svg>';
 function renderHomeScorers(){
   const box=$("homeScorers"); if(!box)return;
   const top=scorerBoard().slice(0,3);
@@ -1228,7 +1229,7 @@ function renderHomeScorers(){
         <span class="rank-no${i<3?' top':''}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn</div></div>
-        <span class="rank-goals${i<3?' gold':''}">⚽ ${x.goals}</span>
+        <span class="rank-goals">${i<3?GOLD_BALL:'⚽'} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
@@ -2038,7 +2039,7 @@ function renderScorer(){
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn${x.p?" · "+evalTitle(x.p):""}</div></div>
-        <span class="rank-goals${i<3?' gold':''}">⚽ ${x.goals}</span>
+        <span class="rank-goals">${i<3?GOLD_BALL:'⚽'} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
