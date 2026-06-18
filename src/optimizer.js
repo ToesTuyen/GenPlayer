@@ -58,10 +58,11 @@
     }
     const ans=hungarian(cost);
     const starters=new Array(7).fill(-1); const bench=[];
-    let startFit=0, benchOv=0, gkFit=0;
+    let startFit=0, benchOv=0, gkFit=0, frontFit=0, backFit=0;
     for(let r=0;r<k;r++){
       const pi=team[r], c=ans[r];
-      if(c<7){ starters[c]=pi; startFit+=ctx.fitT[pi][c]; if(c===0) gkFit=ctx.fitT[pi][c]; }
+      if(c<7){ starters[c]=pi; const fc=ctx.fitT[pi][c]; startFit+=fc; if(c===0) gkFit=fc;
+        if(c>=4&&c<=6) frontFit+=fc; if(c>=1&&c<=3) backFit+=fc; }  // tuyến trên / tuyến dưới (theo fit)
       else { bench.push(pi); benchOv+=ctx.overall[pi]; }
     }
     const S=ctx.players;
@@ -77,7 +78,7 @@
     const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
     const flat=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;   // chất lượng tổng quát (8 chỉ số sân; OD tạm KHÔNG tính)
     return {
-      starters, bench, startFit, benchOv, gkFit,
+      starters, bench, startFit, benchOv, gkFit, frontFit, backFit,
       defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình
       atk:   mean(fronts,s=>s.DD),    // CÔNG tuyến trên (3 mũi) — giữ cân hình
       def7:  mean(starters,s=>s.PN),  // THỦ toàn đội hình chính (cả tuyến giữa)
@@ -114,11 +115,12 @@
     total:1.0,        // tong ca doi (chinh + du bi) — can tong luc 2 doi
     cong:1.0, thu:1.0,        // CONG/THU toan doi hinh chinh (ca tuyen giua) — NGANG NHAU
     congLine:0.5, thuLine:0.5, // giu can hinh tuyen tren/duoi
+    frontBal:1.5, backBal:1.5, // CAN TUYEN TREN/DUOI theo DIEM-VI-TRI (fit) — nhu cach chia AI thu cong
     defq:1.0, atkq:0.7,       // CHAT LUONG tuyen duoi / tuyen tren (overall, khong chi PN/DD) — tranh don ngoi sao 1 tuyen
     benchOv:0.5,              // du bi: suc manh
     benchCong:0.5, benchThu:0.5, // du bi: can ca cong lan thu (khong lech thanh phan)
     pace:0.3, heat:0.3, run:0.7, // SUC CHAY can deu (run gom ca the luc) — tach 2 may chay ra 2 doi
-    gk:0.4,           // thu mon
+    gk:0.2,           // thu mon CHI la phu — khong de ganh can can
     stab:0,           // ON DINH (OD) — TAM TAT khoi chia doi (OD chi hien thi); doi >0 de bat lai sau
     startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
     posbad:6.0,       // PHAT TUYET DOI moi starter da SAI vi tri dang ky — uu tien xep DUNG vi tri (loai phuong an sai khoi "Tao lai")
@@ -182,6 +184,7 @@
               + W.total*d('total')
               + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
               + W.congLine*d('atk') + W.thuLine*d('defPN') // giữ cân hình tuyến trên/dưới
+              + W.frontBal*d('frontFit') + W.backBal*d('backFit') // CÂN TUYẾN TRÊN/DƯỚI theo điểm-vị-trí (fit) — như chia AI
               + W.defq*d('defOv') + W.atkq*d('atkOv')      // cân CHẤT LƯỢNG tuyến dưới/trên (overall)
               + W.benchOv*d('benchOv')
               + W.benchCong*d('benchAtk') + W.benchThu*d('benchDef') // dự bị cân công-thủ
