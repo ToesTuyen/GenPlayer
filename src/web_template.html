@@ -610,6 +610,20 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .bk-when{color:var(--muted,#8aa)}
 .bk-teams{font-size:12.5px;line-height:1.5;color:var(--text,#e8ecf6)}
 .bk-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+/* ===== Góp ý / đánh giá ===== */
+.fb-fab{position:fixed;right:18px;bottom:20px;z-index:45;width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f4e47b,#e0a12e);color:#2a2300;font-size:25px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}
+.fb-fab:active{transform:scale(.94)}
+.fb-fab .req-badge{position:absolute;top:-3px;right:-3px;margin:0}
+.fb-stars{display:flex;gap:8px;font-size:30px;line-height:1;user-select:none}
+.fb-stars span{cursor:pointer;color:#cfd6e4;transition:color .12s}
+.fb-stars span.on{color:#f2b705}
+.fb-ta{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--surface2);color:var(--text);font-family:inherit;resize:vertical;min-height:92px}
+.fb-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.fb-card.seen{opacity:.62}
+.fb-card .fb-rate{color:#f2b705;font-size:14px;letter-spacing:1px;margin-bottom:2px}
+.fb-card .fb-txt{font-size:14px;line-height:1.5;color:var(--text);margin:4px 0;white-space:pre-wrap;word-break:break-word}
+.fb-card .fb-meta{font-size:11.5px;color:var(--muted)}
+.fb-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 </style></head><body>
 
 <header class="appbar">
@@ -617,6 +631,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()">🔒 Admin</button>
 </header>
+
+<!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
+<button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
@@ -770,6 +787,32 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
 </div>
 
+<!-- ====== GOP Y (gui) ====== -->
+<div class="modal" id="fbModal">
+  <div class="modal-box">
+    <h3>💬 Góp ý cho ban tổ chức</h3>
+    <div class="mrow"><span class="lbl">Đánh giá (tuỳ chọn — chạm sao)</span>
+      <div class="fb-stars" id="fbStars"></div></div>
+    <div class="mrow"><span class="lbl">Nội dung góp ý</span>
+      <textarea id="fb-text" class="fb-ta" placeholder="Góp ý về cách chia đội, sân bãi, lịch đá, app… Anh em cứ thẳng thắn nhé!"></textarea></div>
+    <div id="fb-err" class="nm-err">Nhập nội dung góp ý.</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn sm" onclick="sendFeedback()">📨 Gửi góp ý</button>
+      <button class="btn alt sm" onclick="closeFb()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- ====== GOP Y (admin xem) ====== -->
+<div class="pm-overlay" id="fbInboxModal" onclick="if(event.target===this)closeFbInbox()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">💬 Góp ý của anh em</div>
+      <button class="pm-close" onclick="closeFbInbox()">✕</button>
+    </div>
+    <div id="fbinbox-body" class="plog-wrap"></div>
+  </div>
+</div>
+
 <!-- ====== CHI TIET CAU THU ====== -->
 <div class="pm-overlay" id="playerModal" onclick="if(event.target===this)closePlayer()">
   <div class="pm-panel">
@@ -895,7 +938,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
-const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs"};
+const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback"};
 const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
@@ -940,13 +983,14 @@ function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${enco
 function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
-let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], cloud:false, docRef:null};
+let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], feedback:[], cloud:false, docRef:null};
 function localLoad(){
   try{const s=localStorage.getItem(LS.players); if(s)STATE.players=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.history); if(s)STATE.history=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.plog); if(s)STATE.plog=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.requests); if(s)STATE.requests=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.goalReqs); if(s)STATE.goalReqs=JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem(LS.feedback); if(s)STATE.feedback=JSON.parse(s);}catch(e){}
   ensureRatings(STATE.players);
 }
 function getPlayers(){return STATE.players.map(p=>({...p}));}
@@ -955,8 +999,8 @@ function getPlog(){return (STATE.plog||[]).slice();}
 function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
 function getGoalReqs(){return (STATE.goalReqs||[]).slice();}   // yêu cầu ghi nhận bàn thắng đang chờ admin duyệt
 function persist(){
-  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));}catch(e){}
-  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
+  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));}catch(e){}
+  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
 }
 function setPlayers(a){STATE.players=a;persist();}
 function setHistory(a){STATE.history=a;persist();}
@@ -1134,8 +1178,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],lineupBackups:STATE.lineupBackups||[]});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]});
       ensureRatings(STATE.players);
       onCloudUpdate();
     },err=>{console.warn("Firebase:",err);STATE.cloud=false;setCloudBadge();});
@@ -1145,6 +1189,8 @@ function onCloudUpdate(){
   setCloudBadge();
   updateReqBadge();
   updateGoalReqBadge();
+  updateFbBadge();
+  if($("fbInboxModal")&&$("fbInboxModal").classList.contains("on"))renderFbInbox();
   if($("plogModal")&&$("plogModal").classList.contains("on"))renderUpdateLog();
   if($("reqModal")&&$("reqModal").classList.contains("on"))renderReq();
   if($("rankModal")&&$("rankModal").classList.contains("on"))renderRank();
@@ -1157,6 +1203,58 @@ function onCloudUpdate(){
   if(cur.id==="screen-history")showHistory();
   if($("overdueModal")&&$("overdueModal").classList.contains("on"))renderOverdue();   // đang mở -> refresh khi cloud đổi
   maybeWarnOverdue();   // dữ liệu tải/đổi -> kiểm tra trận quá giờ (chỉ tự bật 1 lần/phiên)
+}
+
+// ===== GÓP Ý / ĐÁNH GIÁ (field `feedback`; ai cũng gửi, admin xem) =====
+let fbRating=0, fbTab="new";
+function getFeedback(){return (STATE.feedback||[]).slice();}
+function fbNew(){return getFeedback().filter(f=>(f.status||"")!=="seen").sort((a,b)=>(b.at||0)-(a.at||0));}
+function fbSeen(){return getFeedback().filter(f=>(f.status||"")==="seen").sort((a,b)=>(b.seenAt||b.at||0)-(a.seenAt||a.at||0));}
+function updateFbBadge(){const n=fbNew().length,b=$("fbBadge");if(!b)return;b.textContent=n;b.style.display=(isAdmin&&n>0)?"":"none";}
+function openFeedback(){ if(isAdmin) openFbInbox(); else openFbForm(); }
+function renderFbStars(){const w=$("fbStars");if(!w)return;w.innerHTML=[1,2,3,4,5].map(i=>`<span class="${i<=fbRating?'on':''}" onclick="setFbStar(${i})">★</span>`).join("");}
+function setFbStar(i){ fbRating=(fbRating===i)?0:i; renderFbStars(); }
+function openFbForm(){ ensureName(()=>{ fbRating=0; renderFbStars(); const t=$("fb-text"); if(t)t.value=""; const e=$("fb-err"); if(e)e.classList.remove("show"); $("fbModal").classList.add("on"); setTimeout(()=>{const t2=$("fb-text");if(t2)t2.focus();},40); }); }
+function closeFb(){ $("fbModal").classList.remove("on"); }
+function sendFeedback(){
+  const t=($("fb-text").value||"").trim();
+  if(!t){ $("fb-err").classList.add("show"); $("fb-text").focus(); return; }
+  const fb=getFeedback();
+  fb.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:sessionName||"Ẩn danh", rating:fbRating||0, text:t, ts:nowStamp(), at:Date.now(), status:""});
+  STATE.feedback=fb.slice(0,300); persist(); updateFbBadge();
+  closeFb(); toast("Đã gửi góp ý tới ban tổ chức. Cảm ơn bạn! 🙏");
+}
+function openFbInbox(){ if(!requireAdmin())return; fbTab="new"; renderFbInbox(); $("fbInboxModal").classList.add("on"); }
+function closeFbInbox(){ $("fbInboxModal").classList.remove("on"); }
+function setFbTab(t){ fbTab=t; renderFbInbox(); }
+function fbStarStr(n){ n=Math.max(0,Math.min(5,n|0)); return n? "★".repeat(n)+"☆".repeat(5-n):""; }
+function fbCard(f){
+  const seen=(f.status||"")==="seen";
+  const rate=f.rating? `<div class="fb-rate">${fbStarStr(f.rating)}</div>`:"";
+  const acts=seen
+    ? `<div class="fb-acts"><button class="btn alt sm" onclick="deleteFb('${f.id}')">🗑️ Xoá</button></div>`
+    : `<div class="fb-acts"><button class="btn sm" onclick="markFbSeen('${f.id}')">✓ Đã xem</button><button class="btn alt sm" onclick="deleteFb('${f.id}')">🗑️ Xoá</button></div>`;
+  return `<div class="fb-card${seen?' seen':''}">${rate}
+    <div class="fb-txt">${esc(f.text)}</div>
+    <div class="fb-meta">👤 ${esc(f.by||'Ẩn danh')} · ${f.ts||''}${seen?' · ✓ đã xem':''}</div>${acts}</div>`;
+}
+function renderFbInbox(){
+  const box=$("fbinbox-body"); if(!box)return;
+  const nw=fbNew(), sn=fbSeen();
+  const tabs=`<div class="req-tabs">
+      <button class="${fbTab==='new'?'on':''}" onclick="setFbTab('new')">Chưa xem (${nw.length})</button>
+      <button class="${fbTab==='seen'?'on':''}" onclick="setFbTab('seen')">Đã xem (${sn.length})</button></div>`;
+  const list=fbTab==='seen'?sn:nw;
+  if(!list.length){ box.innerHTML=tabs+`<div class="empty"><span class="big">💬</span>${fbTab==='seen'?'Chưa có góp ý nào đã xem.':'Chưa có góp ý mới.'}</div>`; return; }
+  box.innerHTML=tabs+list.map(fbCard).join("");
+}
+function markFbSeen(id){
+  const fb=getFeedback(), f=fb.find(x=>String(x.id)===String(id)); if(!f)return;
+  f.status="seen"; f.seenAt=Date.now(); STATE.feedback=fb; persist(); updateFbBadge(); renderFbInbox();
+}
+function deleteFb(id){
+  if(!confirm("Xoá góp ý này?"))return;
+  STATE.feedback=getFeedback().filter(x=>String(x.id)!==String(id)); persist(); updateFbBadge(); renderFbInbox();
 }
 
 // ---- quy diem nhanh ----
@@ -1726,7 +1824,7 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   const set=(id,show)=>{const el=$(id);if(el)el.style.display=show?"":"none";};
   set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin); set("backupNavBtn",isAdmin);
   set("goalReqBtn",isAdmin);
-  updateReqBadge(); updateGoalReqBadge();
+  updateReqBadge(); updateGoalReqBadge(); updateFbBadge();
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
   maybeWarnOverdue();   // admin vừa vào -> cảnh báo trận quá giờ chưa có kết quả
