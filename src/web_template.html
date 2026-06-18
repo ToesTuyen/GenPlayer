@@ -506,6 +506,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-list{display:flex;flex-direction:column;gap:12px}
 .mc{background:#0e1422;border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--sh-sm);cursor:pointer;transition:.14s}
 .mc:hover{border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
+.mc-wrap{display:flex;flex-direction:column}
+.mc-detail.on{margin-top:10px;animation:mcdIn .18s ease}
+@keyframes mcdIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .mc-main{display:grid;grid-template-columns:1fr minmax(92px,150px) 1fr;align-items:center;gap:8px}
 .mc-team{display:flex;align-items:center;gap:10px;min-width:0}
 .mc-team.r{justify-content:flex-end}
@@ -1443,10 +1446,13 @@ function matchCard(r,full){
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button>
-      <button class="btn alt sm" onclick="event.stopPropagation();viewHistory(${r.id})">👁️ Xem</button>
+      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
       <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:"";
   const actions=(goalBtn||adminActs)?`<div class="mc-actions">${goalBtn}${adminActs}</div>`:"";
-  return `<div class="mc" onclick="${full?`viewHistory(${r.id})`:`openHistory(${r.id})`}">
+  const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
+  const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
+  return `<div class="mc-wrap">
+    <div class="mc${full?` clk`:``}" onclick="${onclk}">
     <div class="mc-main">
       <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Team A")}</span><span class="mc-tn">TEAM A</span></div>
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}</div>
@@ -1454,6 +1460,8 @@ function matchCard(r,full){
     </div>
     ${goalSummaryLine(r)}
     ${actions}
+    </div>
+    ${detailSlot}
   </div>`;
 }
 function renderMatchList(h){
@@ -1499,7 +1507,7 @@ function renderSpotlight(h){
     ${benchStrip(eA,KIT_A,"bot")}
   </div>`;
 }
-function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");viewHistory(id);}
+function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");setTimeout(()=>{toggleHistory(id);const wrap=document.getElementById("mcd-"+id);if(wrap)wrap.scrollIntoView({behavior:"smooth",block:"center"});},30);}
 
 // ============ VE SO DO ============
 function jersey(k){return `<svg class="jersey" viewBox="0 0 100 90" width="38" height="34"><path d="M30,8 L12,18 L4,40 L20,48 L26,40 L26,84 L74,84 L74,40 L80,48 L96,40 L88,18 L70,8 C70,8 64,20 50,20 C36,20 30,8 30,8 Z" fill="${k.body}" stroke="#00000055" stroke-width="2"/><path d="M30,8 L12,18 L4,40 L20,48 L26,38 L26,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M70,8 L88,18 L96,40 L80,48 L74,38 L74,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M34,9 Q50,21 66,9 L62,6 Q50,16 38,6 Z" fill="${k.trim}"/></svg>`;}
@@ -2509,7 +2517,7 @@ function saveMatch(){
 let histTab="upcoming";
 function setHistTab(t){histTab=t;showHistory();}
 function showHistory(){
-  const h=getHistory(); $("history-detail").innerHTML="";
+  const h=getHistory(); $("history-detail").innerHTML=""; histOpenId=null;
   const up=h.filter(r=>!r.score).sort((a,b)=>(a.kickoff||Infinity)-(b.kickoff||Infinity));
   const done=h.filter(r=>r.score).sort((a,b)=>b.id-a.id);   // sắp diễn ra trước, rồi đã kết thúc
   const list=up.concat(done);
@@ -2517,6 +2525,16 @@ function showHistory(){
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
 }
 function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
+// xổ/ẩn chi tiết NGAY DƯỚI item lịch sử (click item → hiện, click lại → ẩn)
+let histOpenId=null;
+function toggleHistory(id){
+  const slot=document.getElementById("mcd-"+id); if(!slot)return;
+  if(String(histOpenId)===String(id)){slot.innerHTML="";slot.classList.remove("on");histOpenId=null;return;}
+  if(histOpenId!=null){const prev=document.getElementById("mcd-"+histOpenId);if(prev){prev.innerHTML="";prev.classList.remove("on");}}
+  const r=getHistory().find(x=>String(x.id)===String(id)); if(!r)return;
+  render(r.result,r.subset,"mcd-"+id,r.review);
+  slot.classList.add("on"); histOpenId=id; setTimeout(fitMatch,0);
+}
 function setScore(id){
   if(!requireAdmin())return;
   const h=getHistory(), r=h.find(x=>x.id===id); if(!r)return;
