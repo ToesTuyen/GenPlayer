@@ -476,6 +476,18 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 /* lịch sử cập nhật cầu thủ */
 .ulog-grid{display:flex;flex-direction:column;gap:12px}
 .ulog-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:var(--sh-sm)}
+/* nhật ký thao tác trận */
+.mlog-tabs{margin-bottom:12px;flex-wrap:wrap}
+.mlog-card{border-left:4px solid var(--line)}
+.mlog-card.ml-del{border-left-color:#e5484d}
+.mlog-card.ml-score{border-left-color:#16a34a}
+.mlog-card.ml-goal{border-left-color:#0ea5e9}
+.mlog-card.ml-edit{border-left-color:#f59e0b}
+.mlog-card.ml-add{border-left-color:#8b5cf6}
+.mlog-card.ml-arch{border-left-color:#64748b}
+.mlog-card .ml-match{color:var(--muted);font-weight:700}
+.mlog-card .ml-det{margin-top:2px;padding-left:46px;font-size:13px;color:var(--muted)}
+.mlog-card .ml-det{word-break:break-word}
 .ulog-top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
 .ulog-top .avatar{width:36px;height:36px;font-size:12px}
 .ulog-id{min-width:0;flex:1}
@@ -731,6 +743,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="pc-bar-actions" style="margin-bottom:14px">
     <button class="btn alt sm" onclick="openScorer()">🥇 Vua phá lưới</button>
     <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none">⚽ Duyệt bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
+    <button class="btn alt sm" id="mlogBtn" onclick="openMatchLog()" style="display:none">🕓 Nhật ký thao tác</button>
   </div>
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
@@ -891,6 +904,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
 </div>
 
+<!-- ====== NHAT KY THAO TAC TRAN (admin) ====== -->
+<div class="pm-overlay" id="mlogModal" onclick="if(event.target===this)closeMatchLog()">
+  <div class="pm-panel">
+    <div class="pm-bar">
+      <div class="plog-title">🕓 Nhật ký thao tác trận</div>
+      <button class="pm-close" onclick="closeMatchLog()">✕</button>
+    </div>
+    <div id="mlog-body" class="plog-wrap"></div>
+  </div>
+</div>
+
 <!-- ====== VUA PHA LUOI ====== -->
 <div class="pm-overlay" id="scorerModal" onclick="if(event.target===this)closeScorer()">
   <div class="pm-panel">
@@ -938,7 +962,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
-const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback"};
+const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog"};
 const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng cầu thủ","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
@@ -983,7 +1007,7 @@ function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${enco
 function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
-let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], feedback:[], cloud:false, docRef:null};
+let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], feedback:[], matchLog:[], cloud:false, docRef:null, cloudHistoryLen:null, _allowShrink:false};
 function localLoad(){
   try{const s=localStorage.getItem(LS.players); if(s)STATE.players=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.history); if(s)STATE.history=JSON.parse(s);}catch(e){}
@@ -991,6 +1015,7 @@ function localLoad(){
   try{const s=localStorage.getItem(LS.requests); if(s)STATE.requests=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.goalReqs); if(s)STATE.goalReqs=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.feedback); if(s)STATE.feedback=JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem(LS.matchLog); if(s)STATE.matchLog=JSON.parse(s);}catch(e){}
   ensureRatings(STATE.players);
 }
 function getPlayers(){return STATE.players.map(p=>({...p}));}
@@ -998,12 +1023,27 @@ function getHistory(){return STATE.history.slice();}
 function getPlog(){return (STATE.plog||[]).slice();}
 function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
 function getGoalReqs(){return (STATE.goalReqs||[]).slice();}   // yêu cầu ghi nhận bàn thắng đang chờ admin duyệt
+function getMatchLog(){return (STATE.matchLog||[]).slice();}    // nhật ký thao tác trận (ai + hành động + lúc nào)
+// persist trả về TRUE nếu đã ghi cloud (hoặc không cần cloud), FALSE nếu guard chặn ghi.
+// Nhờ đó nơi gọi biết được có nên ghi dòng nhật ký (matchLog) hay không → tránh log "khống" cho thao tác bị chặn.
 function persist(){
-  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));}catch(e){}
-  if(STATE.cloud&&STATE.docRef){STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]}).catch(err=>console.warn("Lưu cloud lỗi:",err));}
+  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog||[]));}catch(e){}
+  const allowShrink=STATE._allowShrink; STATE._allowShrink=false;   // cờ 1-lần: chỉ cho phép ghi cloud ngắn hơn khi vừa xoá/gộp có xác nhận
+  if(STATE.cloud&&STATE.docRef){
+    // GUARD (B): từ chối ghi đè khi history local NGẮN hơn cloud mà KHÔNG phải xoá có chủ ý → tránh mất trận do đua ghi
+    if(typeof STATE.cloudHistoryLen==="number" && (STATE.history||[]).length < STATE.cloudHistoryLen && !allowShrink){
+      console.warn("Bỏ qua ghi cloud: history local ("+STATE.history.length+") < cloud ("+STATE.cloudHistoryLen+").");
+      try{toast("⚠️ Không đồng bộ được: dữ liệu trận trên máy đang cũ/thiếu so với đám mây. Đã LƯU cục bộ. Hãy tải lại trang rồi thao tác lại để tránh mất trận.","err",7000);}catch(e){}
+      return false;
+    }
+    // merge:true → KHÔNG xoá field khác (nhất là matchLog ghi bằng arrayUnion) khi set toàn bộ
+    STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]},{merge:true}).catch(err=>console.warn("Lưu cloud lỗi:",err));
+    STATE.cloudHistoryLen=(STATE.history||[]).length;   // vừa ghi xong → đồng bộ mốc ngay, tránh chặn nhầm thao tác kế tiếp trong lúc chờ snapshot
+  }
+  return true;
 }
-function setPlayers(a){STATE.players=a;persist();}
-function setHistory(a){STATE.history=a;persist();}
+function setPlayers(a){STATE.players=a;return persist();}
+function setHistory(a){STATE.history=a;return persist();}   // trả về kết quả persist để nơi gọi biết có ghi cloud thành công không
 function getBackups(){return (STATE.lineupBackups||[]).slice();}
 function setBackups(a){STATE.lineupBackups=a;persist();}
 function bkTeams(b){
@@ -1034,7 +1074,12 @@ function applyBackup(id){
   STATE.lineupBackups=nb;
   const h2=h.filter(r=>r.score);
   const m={...b}; delete m.bkStatus; delete m.bkAt;
-  h2.unshift(m); setHistory(h2);
+  h2.unshift(m);
+  if(h2.length<h.length)STATE._allowShrink=true;   // gỡ trận sắp tới cũ có chủ ý → cho phép ghi cloud dù ngắn hơn
+  if(setHistory(h2)){   // chỉ ghi nhật ký khi lưu cloud thành công
+    olds.forEach(r=>logMatchAct("archive",r.id,fmtKick(r.kickoff)||r.label||("#"+r.id),"gỡ khi áp dụng backup khác → Backup đội hình"));
+    logMatchAct("create",m.id,fmtKick(m.kickoff)||m.label||("#"+m.id),"khôi phục từ Backup đội hình làm trận sắp tới");
+  }
   showBackup(); if(typeof toast==="function")toast("Đã áp dụng đội hình này làm trận sắp tới.");
 }
 function rejectBackup(id){
@@ -1178,8 +1223,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];STATE.matchLog=Array.isArray(d.matchLog)?d.matchLog:[];STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]},{merge:true});
       ensureRatings(STATE.players);
       onCloudUpdate();
     },err=>{console.warn("Firebase:",err);STATE.cloud=false;setCloudBadge();});
@@ -1195,6 +1240,7 @@ function onCloudUpdate(){
   if($("reqModal")&&$("reqModal").classList.contains("on"))renderReq();
   if($("rankModal")&&$("rankModal").classList.contains("on"))renderRank();
   if($("goalReqModal")&&$("goalReqModal").classList.contains("on"))renderGoalReq();
+  if($("mlogModal")&&$("mlogModal").classList.contains("on"))renderMatchLog();
   if($("scorerModal")&&$("scorerModal").classList.contains("on"))renderScorer();
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
   if(!cur)return;
@@ -1336,6 +1382,63 @@ function renderHomeScorers(){
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
 function openPlog(){if(!requireAdmin())return;renderUpdateLog();$("plogModal").classList.add("on");}
 function closePlog(){$("plogModal").classList.remove("on");}
+
+// ====== 🕓 NHẬT KÝ THAO TÁC TRẬN (ai + hành động + trận + lúc nào) ======
+// Ghi từng dòng bằng Firestore arrayUnion → CHỐNG ĐUA GHI (không mất log khi web + app cùng lưu).
+// KHÔNG dính vào persist()/set() (persist đã đổi sang merge:true nên set toàn bộ cũng không xoá matchLog).
+const MLOG_ACT={
+  create:  {ic:"➕", lb:"Tạo trận",           cls:"ml-add"},
+  archive: {ic:"📦", lb:"Chuyển vào backup",  cls:"ml-arch"},
+  delete:  {ic:"🗑️", lb:"Xoá trận",           cls:"ml-del"},
+  edittime:{ic:"🕒", lb:"Sửa giờ/sân",        cls:"ml-edit"},
+  score:   {ic:"⚽", lb:"Nhập tỉ số",         cls:"ml-score"},
+  goal_save:{ic:"🥅", lb:"Lưu bàn thắng",     cls:"ml-goal"},
+  goal_approve:{ic:"✅", lb:"Duyệt bàn thắng", cls:"ml-goal"},
+  goal_reject:{ic:"🚫", lb:"Từ chối bàn thắng",cls:"ml-del"},
+};
+function logMatchAct(act,mid,mlabel,detail){
+  const entry={ id:Date.now()+"_"+Math.round(Math.random()*1e4), act:String(act),
+    by:sessionName||(isAdmin?"Admin":"?"), role:role||"guest",
+    mid:(mid==null?null:mid), mlabel:mlabel||"", detail:detail||"",
+    ts:nowStamp(), at:Date.now() };
+  STATE.matchLog=[entry,...(STATE.matchLog||[])].slice(0,500);   // bản sao cục bộ (mới → cũ)
+  try{localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog));}catch(e){}
+  if(STATE.cloud&&STATE.docRef&&typeof firebase!=="undefined"&&firebase.firestore&&firebase.firestore.FieldValue){
+    // set(...,{merge:true}) + arrayUnion: vừa TẠO field nếu chưa có, vừa append ATOMIC (chống đua ghi) — không cần fallback 2 bước.
+    // Firebase offline sẽ tự xếp hàng chờ (không reject) nên chỉ toast khi lỗi thật (permission/quota).
+    STATE.docRef.set({matchLog:firebase.firestore.FieldValue.arrayUnion(entry)},{merge:true})
+      .catch(e=>{ console.warn("log cloud:",e); try{toast("⚠️ Không ghi được nhật ký thao tác lên đám mây (thử lại ở thao tác sau).","err",5000);}catch(_){} });
+  }
+  if($("mlogModal")&&$("mlogModal").classList.contains("on"))renderMatchLog();
+}
+let mlogFilter="all";
+function openMatchLog(){ if(!requireAdmin())return; mlogFilter="all"; renderMatchLog(); $("mlogModal").classList.add("on"); }
+function closeMatchLog(){ $("mlogModal").classList.remove("on"); }
+function setMlogFilter(f){ mlogFilter=f; renderMatchLog(); }
+function mlogCard(e){
+  const m=MLOG_ACT[e.act]||{ic:"•",lb:e.act,cls:""};
+  const rl=e.role==="admin"?"👑 Admin":e.role==="user"?"👤 Thành viên":"👥 Khách";
+  const det=e.detail?`<div class="ml-det">${esc(e.detail)}</div>`:"";
+  return `<div class="ulog-card mlog-card ${m.cls}">
+      <div class="ulog-top"><span class="avatar" style="background:${avColor(e.by)}">${initials(e.by)}</span>
+        <div class="ulog-id"><div class="ulog-name">${m.ic} ${esc(m.lb)}${e.mlabel?` · <span class="ml-match">${esc(e.mlabel)}</span>`:""}</div>
+          <div class="ulog-by">👤 <b>${esc(e.by||"?")}</b> · ${rl} · ${esc(e.ts||"")}</div></div></div>
+      ${det}</div>`;
+}
+function renderMatchLog(){
+  const box=$("mlog-body"); if(!box)return;
+  let log=getMatchLog().slice().sort((a,b)=>(b.at||0)-(a.at||0));
+  const groups={all:null,del:["delete","goal_reject","archive"],score:["score","goal_save","goal_approve"],time:["create","edittime"]};
+  if(mlogFilter!=="all"){const set=new Set(groups[mlogFilter]||[]);log=log.filter(e=>set.has(e.act));}
+  const total=getMatchLog().length;
+  const tabs=`<div class="req-tabs mlog-tabs">
+      <button class="${mlogFilter==="all"?"on":""}" onclick="setMlogFilter('all')">Tất cả (${total})</button>
+      <button class="${mlogFilter==="score"?"on":""}" onclick="setMlogFilter('score')">⚽ Tỉ số/Bàn</button>
+      <button class="${mlogFilter==="time"?"on":""}" onclick="setMlogFilter('time')">🕒 Tạo/Giờ</button>
+      <button class="${mlogFilter==="del"?"on":""}" onclick="setMlogFilter('del')">🗑️ Xoá/Từ chối</button></div>`;
+  if(!log.length){box.innerHTML=tabs+`<div class="empty"><span class="big">🕓</span>${total?"Không có mục nào trong bộ lọc này.":"Chưa có thao tác trận nào được ghi.<br>Tạo/sửa/xoá/nhập tỉ số hay duyệt bàn thắng để bắt đầu ghi nhật ký."}</div>`;return;}
+  box.innerHTML=tabs+`<div class="ulog-grid">`+log.map(mlogCard).join("")+`</div>`;
+}
 
 // ====== TOAST (popup nhẹ theo theme, tự ẩn — thay alert mặc định) ======
 function toast(msg,type,ms){
@@ -1823,7 +1926,7 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   document.body.classList.toggle("can-edit",canEdit);
   const set=(id,show)=>{const el=$(id);if(el)el.style.display=show?"":"none";};
   set("editToggle",isAdmin); set("plogBtn",isAdmin); set("pmEdit",true); set("histBtn",isAdmin); set("reqBtn",isAdmin); set("backupNavBtn",isAdmin);
-  set("goalReqBtn",isAdmin);
+  set("goalReqBtn",isAdmin); set("mlogBtn",isAdmin);
   updateReqBadge(); updateGoalReqBadge(); updateFbBadge();
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
@@ -2037,7 +2140,7 @@ function saveGoals(){
   const goals=goalCollect();
   if(isAdmin){
     const h=getHistory(), rec=h.find(x=>String(x.id)===String(r.id));
-    if(rec){rec.goals=goals; setHistory(h);}
+    if(rec){rec.goals=goals; if(setHistory(h))logMatchAct("goal_save",r.id,fmtKick(r.kickoff)||r.label||("#"+r.id),goalSummaryTxt(goals));}
     closeGoalModal(); toast("Đã lưu bàn thắng trận này."); refreshAfterGoals();
   }else{
     const who=goalWho();
@@ -2103,15 +2206,25 @@ function goalReqMark(id,status){
 function approveGoalReq(id){
   const q=getGoalReqs().find(x=>String(x.id)===String(id)); if(!q||q.status)return;
   const h=getHistory(), rec=h.find(x=>String(x.id)===String(q.mid));
-  if(!rec){toast("Trận không còn tồn tại.","err"); rejectGoalReq(id,true); return;}
+  if(!rec){toast("Trận không còn tồn tại.","err"); rejectGoalReq(id,true,"tự động từ chối: trận không còn tồn tại"); return;}
   rec.goals=q.goals||{};
-  goalReqMark(id,"approved"); setHistory(h);   // setHistory persist cả history lẫn goalReqs (đã đổi STATE)
+  goalReqMark(id,"approved");   // setHistory persist cả history lẫn goalReqs (đã đổi STATE)
+  if(setHistory(h))logMatchAct("goal_approve",q.mid,q.mlabel||fmtKick(rec.kickoff)||("#"+q.mid),`từ ${q.by||"?"} · ${goalSummaryTxt(q.goals)}`);
   updateGoalReqBadge(); renderGoalReq(); refreshAfterGoals();
   toast("Đã duyệt bàn thắng (từ "+(q.by||"?")+").");
 }
-function rejectGoalReq(id,silent){
+function rejectGoalReq(id,silent,reason){
   if(!silent&&!confirm("Từ chối yêu cầu bàn thắng này?"))return;
-  goalReqMark(id,"rejected"); persist(); updateGoalReqBadge(); renderGoalReq();
+  const q=getGoalReqs().find(x=>String(x.id)===String(id));
+  goalReqMark(id,"rejected");
+  const ok=persist(); updateGoalReqBadge(); renderGoalReq();
+  if(q&&ok)logMatchAct("goal_reject",q.mid,q.mlabel||("#"+q.mid),(reason?reason+" · ":"")+`từ ${q.by||"?"} · ${goalSummaryTxt(q.goals)}`);   // reason: phân biệt admin bấm từ chối vs hệ thống tự từ chối
+}
+function goalSummaryTxt(goals){   // "Tổng 3 bàn · Tuyến(2), Hùng(1)"
+  const items=Object.entries(goals||{}).map(([n,g])=>[n,+g||0]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const total=items.reduce((s,x)=>s+x[1],0);
+  if(!total)return "0 bàn";
+  return `Tổng ${total} bàn · `+items.map(([n,g])=>`${n}(${g})`).join(", ");
 }
 function reopenGoalReq(id){
   const q=(STATE.goalReqs||[]).find(x=>String(x.id)===String(id)); if(!q||!q.status)return;
@@ -2593,19 +2706,40 @@ function saveMatch(){
   if(!canEdit){ alert("🔒 Tính năng này cần đăng nhập trước."); openAdminModal(); return; }
   const kickoff=parseKick($("mm-date").value,$("mm-time").value), venue=$("mm-venue").value.trim();
   const h=getHistory();
-  if(mmMode==="edit"){const r=h.find(x=>x.id===mmEditId); if(r){r.kickoff=kickoff;r.venue=venue;}}
+  let pendingLog=[];   // gom log để ghi SAU khi lưu thành công
+  if(mmMode==="edit"){const r=h.find(x=>x.id===mmEditId); if(r){
+      const oldK=r.kickoff,oldV=r.venue||""; r.kickoff=kickoff; r.venue=venue;
+      const parts=[]; if((oldK||0)!==(kickoff||0))parts.push(`giờ: ${fmtKick(oldK)||"—"} → ${fmtKick(kickoff)||"—"}`);
+      if(oldV!==venue)parts.push(`sân: ${oldV||"—"} → ${venue||"—"}`);
+      pendingLog.push(["edittime",r.id,fmtKick(kickoff)||r.label||("#"+r.id),parts.join(" · ")||"không đổi"]);
+  }}
   else{
     if(!mmDraft){closeMatchModal();return;}
     const now=new Date();
     const olds=h.filter(r=>!r.score);   // đội tuần này cũ -> đưa vào backup
-    if(olds.length){STATE.lineupBackups=[...olds.map(r=>({...r,bkStatus:"backup",bkAt:now.getTime()})),...getBackups()];}
+    if(olds.length){
+      // (B) KHÔNG gỡ trận âm thầm — hỏi rõ, và cảnh báo nếu có trận đã tới giờ mà chưa nhập tỉ số
+      const names=olds.map(r=>fmtKick(r.kickoff)||r.label||("#"+r.id)).join("\n• ");
+      const overdue=olds.filter(r=>r.kickoff&&r.kickoff<now.getTime()).length;
+      const untimed=olds.filter(r=>!r.kickoff).length;   // trận chưa đặt giờ → không biết đã đá hay chưa, vẫn phải cảnh báo
+      const warn=(overdue||untimed)
+        ? `\n\n⚠️ ${overdue?`CÓ ${overdue} trận ĐÃ QUA GIỜ`:""}${overdue&&untimed?" và ":""}${untimed?`${untimed} trận CHƯA đặt giờ (không rõ đã đá hay chưa)`:""} nhưng CHƯA nhập tỉ số. Nếu trận đã đá, hãy Huỷ và nhập tỉ số trước để không mất kết quả.`
+        : "";
+      if(!confirm(`Tạo đội tuần mới sẽ chuyển ${olds.length} trận CHƯA có tỉ số vào "Backup đội hình" và gỡ khỏi danh sách trận:\n• ${names}${warn}\n\nTiếp tục?`)){ closeMatchModal(); return; }
+      STATE.lineupBackups=[...olds.map(r=>({...r,bkStatus:"backup",bkAt:now.getTime()})),...getBackups()];
+      olds.forEach(r=>pendingLog.push(["archive",r.id,fmtKick(r.kickoff)||r.label||("#"+r.id),"gỡ khi tạo đội tuần mới → Backup đội hình"]));
+    }
     for(let i=h.length-1;i>=0;i--)if(!h[i].score)h.splice(i,1);   // bỏ trận sắp tới cũ khỏi history
-    h.unshift({id:now.getTime(),label:now.toLocaleDateString("vi-VN")+" "+now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),
+    const nid=now.getTime();
+    h.unshift({id:nid,label:now.toLocaleDateString("vi-VN")+" "+now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),
       n:mmDraft.n, subset:mmDraft.subset, result:mmDraft.result, kickoff, venue});
+    pendingLog.push(["create",nid,fmtKick(kickoff)||now.toLocaleDateString("vi-VN"),`${mmDraft.n} cầu thủ${venue?` · 📍 ${venue}`:""}`]);
+    if(olds.length)STATE._allowShrink=true;   // gộp có xác nhận → cho phép ghi cloud dù ngắn hơn
     $("saveWeek").textContent="✅ Đã lưu!"; setTimeout(()=>$("saveWeek").textContent="💾 Lưu làm đội tuần này",1500);
   }
   const isCreate=mmMode!=="edit";
-  setHistory(h); closeMatchModal();
+  if(setHistory(h)) pendingLog.forEach(a=>logMatchAct(a[0],a[1],a[2],a[3]));   // chỉ ghi nhật ký khi lưu cloud thành công
+  closeMatchModal();
   if(isCreate){show("home");return;}   // lưu trận mới → về trang chủ luôn
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
   if(cur&&cur.id==="screen-history")showHistory();
@@ -2639,8 +2773,10 @@ function setScore(id){
   const cur=r.score||{};
   const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
   const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
+  const had=cur.a!=null&&cur.b!=null;
   r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
-  setHistory(h); histTab="done"; showHistory();
+  if(setHistory(h))logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${r.score.a}:${r.score.b}${had?` (sửa từ ${cur.a}:${cur.b})`:""}`);   // chỉ log khi ghi cloud thành công
+  histTab="done"; showHistory();
 }
 
 // ---- Cảnh báo trận ĐÃ QUÁ GIỜ mà chưa có kết quả (admin xác nhận / phê duyệt) ----
@@ -2666,8 +2802,10 @@ function overdueScore(id){
   const cur=r.score||{};
   const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
   const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
+  const had=cur.a!=null&&cur.b!=null;
   r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
-  setHistory(h);            // persist + đồng bộ cloud
+  if(setHistory(h))         // persist + đồng bộ cloud; chỉ log khi ghi thành công
+    logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${r.score.a}:${r.score.b}${had?` (sửa từ ${cur.a}:${cur.b})`:""} · xác nhận trận quá giờ`);
   renderOverdue();          // cập nhật lại danh sách; hết thì tự đóng
   refreshScreen();          // vẽ lại "Trận sắp tới"/lịch sử → trận đã có KQ chuyển trạng thái ngay
 }
@@ -2678,7 +2816,15 @@ function refreshScreen(){   // vẽ lại màn đang mở sau khi đổi dữ li
   else if(cur.id==="screen-week")showWeek();
   else if(cur.id==="screen-history")showHistory();
 }
-function delHistory(id){if(!confirm("Xóa bản ghi này?"))return;setHistory(getHistory().filter(x=>x.id!==id));showHistory();}
+function delHistory(id){
+  const r=getHistory().find(x=>x.id===id); if(!r)return;
+  const lbl=fmtKick(r.kickoff)||r.label||("#"+id);
+  const scTxt=r.score?`tỉ số ${r.score.a}:${r.score.b}`:"CHƯA có tỉ số";
+  if(!confirm(`Xoá trận "${lbl}" (${scTxt})?\n\nHành động này sẽ được ghi vào 🕓 Nhật ký thao tác trận (kèm tài khoản & thời gian).`))return;
+  STATE._allowShrink=true;   // xoá có xác nhận → cho phép ghi cloud dù history ngắn đi
+  if(setHistory(getHistory().filter(x=>x.id!==id)))logMatchAct("delete",id,lbl,scTxt);   // log SAU khi xoá ghi cloud thành công
+  showHistory();
+}
 
 localLoad(); initCloud(); setCloudBadge(); applyRoleUI(); show("home");
 </script>
