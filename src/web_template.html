@@ -1416,7 +1416,7 @@ function renderHomeScorers(){
         <span class="rank-no${i<3?' top':''}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá</div></div>
-        <span class="rank-goals">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'} ${x.goals}</span>
+        <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
@@ -2325,7 +2325,7 @@ function renderScorer(){
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá${x.p?" · "+evalTitle(x.p):""}</div></div>
-        <span class="rank-goals">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'} ${x.goals}</span>
+        <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
