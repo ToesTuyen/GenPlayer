@@ -1415,7 +1415,7 @@ function renderHomeScorers(){
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(x.name)}')">
         <span class="rank-no${i<3?' top':''}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
-        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn</div></div>
+        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá</div></div>
         <span class="rank-goals">${i<3?GOLD_BALL:'⚽'} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
@@ -2297,10 +2297,18 @@ function playerGoals(name){
   return {total,matches};
 }
 function scorerBoard(){
-  const tally={};
-  getHistory().forEach(r=>{ if(r.goals)Object.entries(r.goals).forEach(([n,g])=>{g=+g||0; if(g>0){const t=tally[n]||(tally[n]={goals:0,matches:0});t.goals+=g;t.matches++;}});});
+  const tally={}, played={};
+  getHistory().forEach(r=>{
+    if(r.score&&r.subset&&r.result){   // đếm số trận ĐÃ ĐÁ (có tỉ số) mỗi người CÓ MẶT trong đội hình
+      const seen=new Set();
+      ["evA","evB"].forEach(k=>{ const ev=r.result[k]; if(!ev)return;
+        [...(ev.starters||[]),...(ev.bench||[])].forEach(idx=>{ const p=r.subset[idx]; if(p&&p.n)seen.add(p.n); }); });
+      seen.forEach(n=>played[n]=(played[n]||0)+1);
+    }
+    if(r.goals)Object.entries(r.goals).forEach(([n,g])=>{g=+g||0; if(g>0){const t=tally[n]||(tally[n]={goals:0,matches:0});t.goals+=g;t.matches++;}});
+  });
   const pls=getPlayers();
-  return Object.entries(tally).map(([n,t])=>({name:n,goals:t.goals,matches:t.matches,p:pls.find(x=>x.n===n)||null}))
+  return Object.entries(tally).map(([n,t])=>({name:n,goals:t.goals,matches:t.matches,played:played[n]||t.matches,p:pls.find(x=>x.n===n)||null}))
     .sort((a,b)=>b.goals-a.goals||b.matches-a.matches||a.name.localeCompare(b.name));
 }
 let scorerRows=[];
@@ -2315,7 +2323,7 @@ function renderScorer(){
       <div class="rank-row" onclick="openScorerRow(${i})">
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
-        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.matches} trận có bàn${x.p?" · "+evalTitle(x.p):""}</div></div>
+        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá${x.p?" · "+evalTitle(x.p):""}</div></div>
         <span class="rank-goals">${i<3?GOLD_BALL:'⚽'} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
