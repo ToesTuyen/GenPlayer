@@ -1785,6 +1785,37 @@ function card(m,o,ctxt,label,ev,sel){
   const plan=`${edges.sort((x,y)=>y.v-x.v)[0].t}; nhắm vào ${oWeakSlot} bên phía đối thủ và đưa bóng cho ${sel[topAtk].n} ở thời điểm quyết định`;
   return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
+// 🆚 Bảng SO KÈ theo vị trí (từng ô Đỏ vs Vàng theo ovAt) + cộng theo tuyến + tóm gọn 2 chiều
+function sokeTable(A,B,sel){
+  if(!sel||!A||!B||!A.starters||!B.starters)return "";
+  const SL=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
+  const LBL=["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"];
+  const raw=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
+  const so=(a,b)=>Math.abs(a-b)<0.4?`<span style="opacity:.55">cân</span>`:(a>b?`<b>🔴 +${(a-b).toFixed(1)}</b>`:`<b>🟡 +${(b-a).toFixed(1)}</b>`);
+  let rows="",upA=0,upB=0,dnA=0,dnB=0;
+  for(let c=0;c<7;c++){
+    const pa=sel[A.starters[c]],pb=sel[B.starters[c]]; if(!pa||!pb)continue;
+    const sa=ovAt(pa,SL[c]),sb=ovAt(pb,SL[c]);
+    if(c>=4){upA+=sa;upB+=sb;} if(c>=1&&c<=3){dnA+=sa;dnB+=sb;}
+    rows+=`<tr><td>${LBL[c]}</td><td>${esc(shortName(pa.n))} <b>${sa.toFixed(1)}</b></td><td>${esc(shortName(pb.n))} <b>${sb.toFixed(1)}</b></td><td style="text-align:center">${so(sa,sb)}</td></tr>`;
+  }
+  const ba=(A.bench||[]).slice().sort((x,y)=>raw(sel[y])-raw(sel[x])), bb=(B.bench||[]).slice().sort((x,y)=>raw(sel[y])-raw(sel[x]));
+  for(let i=0;i<Math.max(ba.length,bb.length);i++){
+    const pa=ba[i]!=null?sel[ba[i]]:null,pb=bb[i]!=null?sel[bb[i]]:null;
+    const ca=pa?`${esc(shortName(pa.n))} <b>${raw(pa).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
+    const cb=pb?`${esc(shortName(pb.n))} <b>${raw(pb).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
+    rows+=`<tr><td>🪑 Dự bị ${i+1}</td><td>${ca}</td><td>${cb}</td><td style="text-align:center">${pa&&pb?so(raw(pa),raw(pb)):`<span style="opacity:.55">—</span>`}</td></tr>`;
+  }
+  const ovA=A.starters.reduce((s,i)=>s+raw(sel[i]),0)/7, ovB=B.starters.reduce((s,i)=>s+raw(sel[i]),0)/7;
+  const bcA=(A.bench||[]).reduce((s,i)=>s+raw(sel[i]),0), bcB=(B.bench||[]).reduce((s,i)=>s+raw(sel[i]),0);
+  const lr=(lbl,a,b,dec)=>{const d=a-b,w=Math.abs(d)<0.05?"cân":(d>0?`🔴 Đỏ +${d.toFixed(dec)}`:`🟡 Vàng +${(-d).toFixed(dec)}`);return `<tr><td>${lbl}</td><td>${a.toFixed(dec)}</td><td>${b.toFixed(dec)}</td><td>${w}</td></tr>`;};
+  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr("Tuyến trên (3 mũi)",upA,upB,1)}${lr("Tuyến dưới (3 thủ)",dnA,dnB,1)}${lr("Overall đội chính",ovA,ovB,2)}${lr("Ghế dự bị",bcA,bcB,1)}</table>`;
+  const gkA=ovAt(sel[A.starters[0]],"GK"),gkB=ovAt(sel[B.starters[0]],"GK"),aP=[],bP=[];
+  const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
+  add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,"overall đội chính",0.05,2);add(bcA-bcB,"ghế dự bị",0.4,1);
+  const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
+  return `<h2>🆚 So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
+}
 function render(res,sel,target,review){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
@@ -1819,7 +1850,8 @@ function render(res,sel,target,review){
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
   </div></div>
   <div class="report"><h2>${hasRev?"⚖️ Đánh giá trận":"⚖️ Ưu – nhược điểm"}</h2>${narrative}
-  <h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table></div>`;
+  ${sokeTable(A,B,sel)}
+  ${_statTable}</div>`;
   fitMatch();
 }
 function fitMatch(){
