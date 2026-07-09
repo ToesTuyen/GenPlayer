@@ -1802,6 +1802,15 @@ function render(res,sel,target,review){
   const narrative=hasRev
     ? `<div class="ai-review">${review}</div>`
     : `<div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Team A",A,sel)}${card(B,A,CBtxt,"Team B",B,sel)}</div>`;
+  // 📊 bảng chỉ số: tô đậm ô đội THẮNG từng mục (higher=tốt hơn cho mọi chỉ số) + cột Ưu thế + kết luận bên nào hơn
+  let _aW=0,_bW=0,_tie=0;
+  const _statRows=rows.map(r=>{
+    const a=parseFloat(r[1]),b=parseFloat(r[2]),aw=a>b,bw=b>a; if(aw)_aW++;else if(bw)_bW++;else _tie++;
+    const cell=(v,win,c)=>`<td${win?` style="background:${c}26;font-weight:800"`:""}>${v}</td>`;
+    return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
+  }).join("");
+  const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
+  const _statTable=`<h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
