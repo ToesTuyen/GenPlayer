@@ -1715,7 +1715,7 @@ function renderMatchList(h){
   const sorted=h.slice().sort((a,b)=>(b.kickoff||b.id||0)-(a.kickoff||a.id||0));   // mới nhất (theo giờ đá) lên đầu
   box.innerHTML=`<div class="mc-list">`+sorted.map(r=>matchCard(r,false)).join("")+`</div>`;
 }
-// Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Team B (trên, vàng) vs Team A (dưới, đỏ)
+// Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Team A (trên, đỏ) vs Team B (dưới, vàng)
 function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
@@ -1726,7 +1726,7 @@ function vpitch(r){
   const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Team B (trên) — cả đội ở nửa sân trên
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
-  for(let c=0;c<7;c++){h+=mark(sel[eB.starters[c]],X[c],YB[c],KIT_B);h+=mark(sel[eA.starters[c]],X[c],YA[c],KIT_A);}
+  for(let c=0;c<7;c++){h+=mark(sel[eA.starters[c]],X[c],YB[c],KIT_A);h+=mark(sel[eB.starters[c]],X[c],YA[c],KIT_B);}
   return `<div class="vpitch"><div class="vp-box top"></div><div class="vp-box bot"></div><div class="vp-mid"></div><div class="vp-circle"></div>${h}</div>`;
 }
 function renderSpotlight(h){
@@ -1743,14 +1743,14 @@ function renderSpotlight(h){
   };
   box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
-      <span class="lu-team"><span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span>Team B</span>
+      <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span>
       <span class="lu-vs">VS</span>
-      <span class="lu-team r">Team A<span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span></span>
+      <span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span>
     </div>
     <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
-    ${benchStrip(eB,KIT_B,"top")}
+    ${benchStrip(eA,KIT_A,"top")}
     ${vpitch(r)}
-    ${benchStrip(eA,KIT_A,"bot")}
+    ${benchStrip(eB,KIT_B,"bot")}
   </div>`;
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");setTimeout(()=>{toggleHistory(id);const wrap=document.getElementById("mcd-"+id);if(wrap)wrap.scrollIntoView({behavior:"smooth",block:"center"});},30);}
