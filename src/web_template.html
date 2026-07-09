@@ -1799,15 +1799,16 @@ function sokeTable(A,B,sel){
     if(c>=4){upA+=sa;upB+=sb;} if(c>=1&&c<=3){dnA+=sa;dnB+=sb;}
     rows+=`<tr><td>${LBL[c]}</td><td>${esc(shortName(pa.n))} <b>${sa.toFixed(1)}</b></td><td>${esc(shortName(pb.n))} <b>${sb.toFixed(1)}</b></td><td style="text-align:center">${so(sa,sb)}</td></tr>`;
   }
-  const ba=(A.bench||[]).slice().sort((x,y)=>raw(sel[y])-raw(sel[x])), bb=(B.bench||[]).slice().sort((x,y)=>raw(sel[y])-raw(sel[x]));
+  // dự bị: chấm theo ĐIỂM VỊ TRÍ CHÍNH (ov = ovAt ở vị trí đăng ký), không dùng trung bình 8 chỉ số
+  const ba=(A.bench||[]).slice().sort((x,y)=>ov(sel[y])-ov(sel[x])), bb=(B.bench||[]).slice().sort((x,y)=>ov(sel[y])-ov(sel[x]));
   for(let i=0;i<Math.max(ba.length,bb.length);i++){
     const pa=ba[i]!=null?sel[ba[i]]:null,pb=bb[i]!=null?sel[bb[i]]:null;
-    const ca=pa?`${esc(shortName(pa.n))} <b>${raw(pa).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
-    const cb=pb?`${esc(shortName(pb.n))} <b>${raw(pb).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
-    rows+=`<tr><td>🪑 Dự bị ${i+1}</td><td>${ca}</td><td>${cb}</td><td style="text-align:center">${pa&&pb?so(raw(pa),raw(pb)):`<span style="opacity:.55">—</span>`}</td></tr>`;
+    const ca=pa?`${esc(shortName(pa.n))} <b>${ov(pa).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
+    const cb=pb?`${esc(shortName(pb.n))} <b>${ov(pb).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
+    rows+=`<tr><td>🪑 Dự bị ${i+1}</td><td>${ca}</td><td>${cb}</td><td style="text-align:center">${pa&&pb?so(ov(pa),ov(pb)):`<span style="opacity:.55">—</span>`}</td></tr>`;
   }
   const ovA=A.starters.reduce((s,i)=>s+raw(sel[i]),0)/7, ovB=B.starters.reduce((s,i)=>s+raw(sel[i]),0)/7;
-  const bcA=(A.bench||[]).reduce((s,i)=>s+raw(sel[i]),0), bcB=(B.bench||[]).reduce((s,i)=>s+raw(sel[i]),0);
+  const bcA=(A.bench||[]).reduce((s,i)=>s+ov(sel[i]),0), bcB=(B.bench||[]).reduce((s,i)=>s+ov(sel[i]),0);
   const lr=(lbl,a,b,dec)=>{const d=a-b,w=Math.abs(d)<0.05?"cân":(d>0?`🔴 Đỏ +${d.toFixed(dec)}`:`🟡 Vàng +${(-d).toFixed(dec)}`);return `<tr><td>${lbl}</td><td>${a.toFixed(dec)}</td><td>${b.toFixed(dec)}</td><td>${w}</td></tr>`;};
   const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr("Tuyến trên (3 mũi)",upA,upB,1)}${lr("Tuyến dưới (3 thủ)",dnA,dnB,1)}${lr("Overall đội chính",ovA,ovB,2)}${lr("Ghế dự bị",bcA,bcB,1)}</table>`;
   const gkA=ovAt(sel[A.starters[0]],"GK"),gkB=ovAt(sel[B.starters[0]],"GK"),aP=[],bP=[];
