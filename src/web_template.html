@@ -2,7 +2,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0e1a">
 <style>
 :root{
   --bg:#0a0e1a; --bg2:#070a12; --surface:#141b2e; --surface2:#1a2236; --surface3:#222c45;
@@ -2955,5 +2957,6 @@ function delHistory(id){
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyRoleUI(); show("home");
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));   // PWA: cài lên màn hình chính + offline
 </script>
 </body></html>
