@@ -404,7 +404,14 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .goalR{right:0;top:50%;transform:translateY(-50%);width:8px;height:55px;background:#ffffff66;border:0}
 .col{flex:1;display:flex;flex-direction:column;justify-content:space-around;align-items:center;position:relative;z-index:2}
 .gkcol{flex:.72}
-.player{display:flex;flex-direction:column;align-items:center;width:84px}
+.player{display:flex;flex-direction:column;align-items:center;width:84px;position:relative}
+.player .heat{position:absolute;top:-7px;right:6px;margin:0;z-index:3}
+.heat.mini{width:20px;height:26px}
+.heat.mini.heat-blaze .hf{width:20px;height:26px}
+.heat.mini.heat-fire .hf{width:17px;height:22px}
+.heat.mini.heat-smoke .hf{width:13px;height:17px}
+.heat.mini .ember{width:9px;height:9px;margin-left:-4.5px;bottom:1px}
+.heat.mini .sm{bottom:14px;width:6px;height:6px}
 .player.pop{animation:pop .5s cubic-bezier(.2,.7,.3,1) both}
 @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.82)}to{opacity:1;transform:none}}
 .jersey{filter:drop-shadow(0 2px 3px #0006)}
@@ -600,6 +607,46 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+/* ===== ngọn lửa phong độ (xếp hạng tỉ lệ thắng): cháy rực → nóng → chập chờn/khói → nguội → tắt ===== */
+.heat{position:relative;display:inline-flex;width:36px;height:46px;flex:0 0 auto;align-items:flex-end;justify-content:center;margin-right:2px}
+.hf-wrap{position:relative;width:100%;height:100%}
+.hf{position:absolute;left:50%;bottom:0;transform:translateX(-50%);transform-origin:50% 100%;display:none}
+.hf-o{fill:#e5390a}.hf-m{fill:#ff7d1f}.hf-i{fill:#ffd23b}
+.ember{position:absolute;left:50%;bottom:2px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#ff9a58,#ff6a1e 38%,#7a1f00 74%,rgba(122,31,0,0));opacity:0;display:none;filter:blur(.3px)}
+.sm{position:absolute;left:50%;bottom:22px;width:9px;height:9px;border-radius:50%;background:rgba(185,190,200,.5);opacity:0;filter:blur(2px);transform:translateX(-50%)}
+@keyframes hfFlick{0%,100%{transform:translateX(-50%) scaleY(1) scaleX(1) skewX(0deg) rotate(0deg)}18%{transform:translateX(-56%) scaleY(1.22) scaleX(.85) skewX(-8deg) rotate(-2.5deg)}38%{transform:translateX(-44%) scaleY(.82) scaleX(1.2) skewX(9deg) rotate(2.5deg)}58%{transform:translateX(-55%) scaleY(1.16) scaleX(.9) skewX(-6deg) rotate(-2deg)}78%{transform:translateX(-46%) scaleY(.93) scaleX(1.1) skewX(5deg) rotate(1.5deg)}}
+@keyframes hfCore{0%,100%{opacity:.95;transform:translateX(-50%) scaleY(1)}50%{opacity:.68;transform:translateX(-50%) scaleY(.9)}}
+@keyframes emberPulse{0%,100%{opacity:.32;transform:scale(.82)}50%{opacity:.78;transform:scale(1.1)}}
+@keyframes smRise{0%{opacity:0;transform:translate(-50%,0) scale(.5)}25%{opacity:.55}100%{opacity:0;transform:translate(-50%,-28px) scale(1.6)}}
+/* tia lửa bắn lên (lửa cháy dữ dội) */
+.sp{position:absolute;left:50%;bottom:26px;width:4.5px;height:4.5px;border-radius:50%;background:radial-gradient(circle,#fff2b0,#ff8a1e 65%,rgba(255,90,0,0));opacity:0;transform:translateX(-50%);filter:blur(.3px);display:none}
+@keyframes spFlyL{0%{opacity:0;transform:translate(-50%,4px) scale(.7)}18%{opacity:1}100%{opacity:0;transform:translate(-165%,-30px) scale(.15)}}
+@keyframes spFlyM{0%{opacity:0;transform:translate(-50%,4px) scale(.85)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-40px) scale(.15)}}
+@keyframes spFlyR{0%{opacity:0;transform:translate(-50%,4px) scale(.7)}18%{opacity:1}100%{opacity:0;transform:translate(60%,-32px) scale(.15)}}
+.heat-blaze .sp{display:block}
+.heat-blaze .p1{animation:spFlyL 1s ease-out infinite}
+.heat-blaze .p2{animation:spFlyM .85s ease-out .35s infinite}
+.heat-blaze .p3{animation:spFlyR 1.15s ease-out .6s infinite}
+.heat-fire .sp{display:block}
+.heat-fire .p1{animation:spFlyL 1.4s ease-out infinite;opacity:.85}
+.heat-fire .p3{animation:spFlyR 1.6s ease-out .7s infinite;opacity:.85}
+.heat.mini .sp{display:none!important}
+/* Cháy rực — lửa lớn, nhiều lưỡi, quầng sáng đỏ rực */
+.heat-blaze .hf{display:block;width:36px;height:46px;animation:hfFlick .42s ease-in-out infinite;filter:drop-shadow(0 0 11px rgba(255,100,0,1)) drop-shadow(0 0 24px rgba(255,45,0,.7)) drop-shadow(0 0 5px rgba(255,225,90,.85))}
+.heat-blaze .hf-o{fill:#e01700}.heat-blaze .hf-m{fill:#ff6d16}.heat-blaze .hf-i{fill:#ffe24d;transform-box:fill-box;transform-origin:50% 100%;animation:hfCore .5s ease-in-out infinite}
+/* Đang nóng — lửa vừa */
+.heat-fire .hf{display:block;width:30px;height:38px;animation:hfFlick .62s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,120,0,.9)) drop-shadow(0 0 3px rgba(255,205,70,.6))}
+.heat-fire .hf-o{fill:#e5390a}.heat-fire .hf-m{fill:#ff7d1f}.heat-fire .hf-i{fill:#ffcf3b;transform-box:fill-box;transform-origin:50% 100%;animation:hfCore .8s ease-in-out infinite}
+/* Chập chờn — lửa nhỏ + khói */
+.heat-smoke .hf{display:block;width:23px;height:29px;animation:hfFlick 1.4s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(230,110,40,.55));opacity:.92}
+.heat-smoke .hf-o{fill:#a8431d}.heat-smoke .hf-m{fill:#cf6a2a}.heat-smoke .hf-i{fill:#eaa63b}
+.heat-smoke .sm{animation:smRise 2.4s ease-in infinite}.heat-smoke .s2{animation-delay:.9s}.heat-smoke .s3{animation-delay:1.7s}
+/* Đang nguội — than hồng lụi + khói mờ */
+.heat-cool .ember{display:block;animation:emberPulse 2.1s ease-in-out infinite}
+.heat-cool .sm{animation:smRise 3s ease-in infinite;background:rgba(165,130,120,.42)}.heat-cool .s2{animation-delay:1.5s}.heat-cool .s3{display:none}
+/* Tắt hẳn — chỉ còn sợi khói tan */
+.heat-out .sm{animation:smRise 3.6s ease-in infinite;background:rgba(150,155,165,.42)}.heat-out .s2{animation-delay:1.2s}.heat-out .s3{animation-delay:2.4s}
+@media(prefers-reduced-motion:reduce){.heat *{animation:none!important}.heat-cool .ember{opacity:.62}.heat-smoke .sm,.heat-cool .sm,.heat-out .sm{opacity:.4;transform:translate(-50%,-12px)}}
 .rank-row .avatar.sm,.avatar.sm{width:34px;height:34px;font-size:12px;background-size:cover;background-position:center top}
 /* ----- bàn thắng: form nhập + chip ----- */
 .gl-info{font-size:13px;color:var(--text);font-weight:700;margin-bottom:4px}
@@ -1799,12 +1846,12 @@ function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.
 
 // ============ VE SO DO ============
 function jersey(k){return `<svg class="jersey" viewBox="0 0 100 90" width="38" height="34"><path d="M30,8 L12,18 L4,40 L20,48 L26,40 L26,84 L74,84 L74,40 L80,48 L96,40 L88,18 L70,8 C70,8 64,20 50,20 C36,20 30,8 30,8 Z" fill="${k.body}" stroke="#00000055" stroke-width="2"/><path d="M30,8 L12,18 L4,40 L20,48 L26,38 L26,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M70,8 L88,18 L96,40 L80,48 L74,38 L74,12 Z" fill="${k.sleeve}" stroke="#00000022" stroke-width="1"/><path d="M34,9 Q50,21 66,9 L62,6 Q50,16 38,6 Z" fill="${k.trim}"/></svg>`;}
-function chip(pl,label,kit,delay){const o=ov(pl);const star=isStar(pl)?' <span class="star">★</span>':'';return `<div class="player pop" style="animation-delay:${delay.toFixed(2)}s">${jersey(kit)}<div class="name">${pl.n}${star}</div><div class="sub">${POSNAME[label]||label} · ${o.toFixed(1)}</div></div>`;}
+function chip(pl,label,kit,delay,showHeat){const o=ov(pl);const star=isStar(pl)?' <span class="star">★</span>':'';return `<div class="player pop" style="animation-delay:${delay.toFixed(2)}s">${showHeat?heatHTML(pl.n,playerStats(pl.n).form,"mini"):""}${jersey(kit)}<div class="name">${pl.n}${star}</div><div class="sub">${POSNAME[label]||label} · ${o.toFixed(1)}</div></div>`;}
 function col(chips,gk){return `<div class="col${gk?' gkcol':''}">${chips.join("")}</div>`;}
 const SLAB=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
-function teamCols(ev,kit,sel,reverse){
+function teamCols(ev,kit,sel,reverse,showHeat){
   const bands=[[0],[2,1,3],[4],[5,6]];   // 1-3-1-2: GK · HV–Trung vệ(GIỮA)–HV · 1 tiền vệ giữa · 2 tiền đạo
-  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.24+j*0.07)),bi===0));
+  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.24+j*0.07,showHeat)),bi===0));
   if(reverse)cols=cols.reverse(); return cols.join("");
 }
 function subsItems(ev,sel){return ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`<span class="subchip">${sel[i].n} <b>${ov(sel[i]).toFixed(1)}</b></span>`).join("");}
@@ -1859,7 +1906,7 @@ function sokeTable(A,B,sel){
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
   return `<h2>🆚 So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
-function render(res,sel,target,review){
+function render(res,sel,target,review,showHeat){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
@@ -1889,7 +1936,7 @@ function render(res,sel,target,review){
   ${predBlock}
   <div class="matchwrap"><div class="match">
    <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div>
-   <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false)}${teamCols(B,KIT_B,sel,true)}</div>
+   <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div>
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
   </div></div>
   <div class="report"><h2>${hasRev?"⚖️ Đánh giá trận":"⚖️ Ưu – nhược điểm"}</h2>${narrative}
@@ -1959,7 +2006,7 @@ $("go").onclick=()=>{
     const key=sel.join(","); let fresh=false;
     if(key!==cstate.key){const subset=sel.map(i=>curPlayers[i]);const res=TeamSolver.solve(subset);if(res.error){$("status").innerHTML='<span style="color:#dc2626">'+res.error+'</span>';$("go").disabled=false;return;}cstate={key,results:res,idx:0,subset};fresh=true;}
     else cstate.idx=(cstate.idx+1)%cstate.results.length;
-    render(cstate.results[cstate.idx],cstate.subset,"result");
+    render(cstate.results[cstate.idx],cstate.subset,"result",null,true);
     $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo đội (Thuật Toán)</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
     $("saveWeek").style.display="inline-block";
     $("go").disabled=false;
@@ -2165,6 +2212,42 @@ let rankRows=[];
 function openRank(){renderRank();$("rankModal").classList.add("on");}
 function closeRank(){$("rankModal").classList.remove("on");}
 function openRankRow(i){const x=rankRows[i];if(!x)return;pmName=x.name;closeRank();renderPlayerProfile();$("playerModal").classList.add("on");}
+// ===== Ngọn lửa PHONG ĐỘ (xếp hạng tỉ lệ thắng): thắng liên tiếp = cháy rực → thua nhiều = tắt =====
+// form: mảng "W"/"D"/"L", trận mới nhất ở đầu (playerStats trả về form.slice(0,5))
+// số trận ĐÃ ĐÁ gần nhất (toàn đội) mà cầu thủ KHÔNG tham gia, đếm liên tiếp từ trận mới nhất
+function playerAbsentStreak(name){
+  const done=getHistory().filter(r=>r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>b.id-a.id);
+  let absent=0;
+  for(const r of done){
+    const idx=r.subset.findIndex(p=>p&&p.n===name);
+    if(idx>=0&&teamOfIdx(r,idx))break;   // đã ra sân trận này → dừng đếm
+    absent++;
+  }
+  return absent;
+}
+function heatTier(form,absent){
+  form=Array.isArray(form)?form:[]; absent=absent||0;
+  // NGHỈ/BỎ nhiều trận liền → mất lửa dù phong độ cũ tốt (ưu tiên trước kết quả)
+  if(absent>=3)return {k:"out", lbl:"Tắt lửa",   note:`vắng ${absent} trận gần đây`, icon:"💨"};
+  if(absent>=2)return {k:"cool",lbl:"Đang nguội",note:`nghỉ ${absent} trận gần đây`, icon:"🌫️"};
+  if(!form.length)return {k:"out",lbl:"Chưa có phong độ",note:"",icon:"·"};
+  let win=0,los=0;
+  for(const r of form){if(r==="W")win++;else break;}   // chuỗi thắng gần nhất
+  for(const r of form){if(r==="L")los++;else break;}   // chuỗi thua gần nhất
+  const w=form.filter(r=>r==="W").length, l=form.filter(r=>r==="L").length;
+  if(win>=3)return {k:"blaze",lbl:"Cháy rực",  note:`thắng ${win} trận liên tiếp`, icon:"🔥"};   // thắng liên tiếp
+  if(los>=3)return {k:"out",  lbl:"Tắt lửa",   note:`thua ${los} trận liên tiếp`, icon:"💨"};   // thua nhiều quá → tắt
+  if(win>=2)return {k:"fire", lbl:"Đang nóng", note:`thắng ${win} trận liên tiếp`, icon:"🔥"};
+  if(los>=2)return {k:"cool", lbl:"Đang nguội",note:`thua ${los} trận liên tiếp`, icon:"🌫️"};   // đang thua dần
+  if(form[0]==="W")return {k:"smoke",lbl:"Chập chờn",note:"vừa có chiến thắng", icon:"💨"};      // thỉnh thoảng thắng
+  if(l>w)      return {k:"cool", lbl:"Đang nguội",note:`gần đây thua ${l}/${form.length}`, icon:"🌫️"};
+  return {k:"smoke",lbl:"Chập chờn", note:"thắng–thua đan xen", icon:"💨"};
+}
+const HF_SVG=`<svg class="hf" viewBox="0 0 100 128" aria-hidden="true"><path class="hf-o" d="M12 86 Q14 66 24 58 Q29 66 32 68 Q33 46 38 32 Q42 44 44 46 Q45 22 50 4 Q55 22 56 46 Q58 44 62 32 Q67 46 68 68 Q71 66 76 58 Q86 66 88 86 Q90 108 50 118 Q10 108 12 86 Z"/><path class="hf-m" d="M24 84 Q26 66 34 60 Q38 68 40 68 Q41 44 50 24 Q59 44 60 68 Q62 66 66 60 Q74 66 76 84 Q78 104 50 112 Q22 104 24 84 Z"/><path class="hf-i" d="M36 88 Q34 72 44 54 Q48 48 50 46 Q52 48 56 54 Q66 72 64 88 Q64 104 50 110 Q36 104 36 88 Z"/></svg>`;
+function heatHTML(name,form,cls){
+  const t=heatTier(form,playerAbsentStreak(name));
+  return `<span class="heat${cls?" "+cls:""} heat-${t.k}" title="${t.icon} ${t.lbl}${t.note?" · "+t.note:""}"><span class="hf-wrap">${HF_SVG}<span class="ember"></span><span class="sm s1"></span><span class="sm s2"></span><span class="sm s3"></span><span class="sp p1"></span><span class="sp p2"></span><span class="sp p3"></span></span></span>`;
+}
 function renderRank(boxId){
   const box=$(boxId||"rank-body"); if(!box)return;
   rankRows=getPlayers().map(p=>({name:p.n,p,st:playerStats(p.n)})).filter(x=>x.st.played>0)
@@ -2176,6 +2259,7 @@ function renderRank(boxId){
       <span class="rank-no${i<3?" top":""}">${i+1}</span>
       <span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span>
       <div class="rank-id"><div class="rank-name">${p.n}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B</div></div>
+      ${heatHTML(p.n,st.form)}
       <span class="rank-wr">${st.winRate}%</span>
     </div>`;
   }).join("")+`</div>`;
@@ -2913,7 +2997,7 @@ function showWeek(){
   if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
-  render(r.result,r.subset,"week-result",r.review); setTimeout(fitMatch,0);
+  render(r.result,r.subset,"week-result",r.review,!r.score); setTimeout(fitMatch,0);
 }
 
 // ============ THONG TIN TRAN (tao / sua) ============
@@ -2997,7 +3081,7 @@ function showHistory(){
   if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
 }
-function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
+function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review,!r.score);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
 // xổ/ẩn chi tiết NGAY DƯỚI item lịch sử (click item → hiện, click lại → ẩn)
 let histOpenId=null;
 function toggleHistory(id){
@@ -3005,7 +3089,7 @@ function toggleHistory(id){
   if(String(histOpenId)===String(id)){slot.innerHTML="";slot.classList.remove("on");histOpenId=null;return;}
   if(histOpenId!=null){const prev=document.getElementById("mcd-"+histOpenId);if(prev){prev.innerHTML="";prev.classList.remove("on");}}
   const r=getHistory().find(x=>String(x.id)===String(id)); if(!r)return;
-  render(r.result,r.subset,"mcd-"+id,r.review);
+  render(r.result,r.subset,"mcd-"+id,r.review,!r.score);
   slot.classList.add("on"); histOpenId=id; setTimeout(fitMatch,0);
 }
 function setScore(id){
