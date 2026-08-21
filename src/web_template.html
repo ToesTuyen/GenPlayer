@@ -811,9 +811,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div id="screen-rank" class="screen">
   <div class="rk-wrap">
     <div class="req-tabs" id="rankTabs">
-      <button class="on" data-rt="players" onclick="setRankTab('players')">📊 Cầu thủ</button>
-      <button data-rt="win" onclick="setRankTab('win')">🏆 Tỉ lệ thắng</button>
+      <button class="on" data-rt="win" onclick="setRankTab('win')">🏆 Tỉ lệ thắng</button>
       <button data-rt="goals" onclick="setRankTab('goals')">🥇 Vua phá lưới</button>
+      <button data-rt="players" onclick="setRankTab('players')">📊 Cầu thủ</button>
     </div>
     <div id="rank2-body"></div>
   </div>
@@ -1534,8 +1534,8 @@ function show(id){
 // ===== Xếp hạng cầu thủ theo VỊ TRÍ ĐÁ CHÍNH (điểm theo vị trí, cao→thấp trong mỗi nhóm) =====
 const RANK_POS_ORDER=["GK","Thòng","HV","TVtt","TV","TĐ"];
 function openProfileByName(enc){pmName=decodeURIComponent(enc);renderPlayerProfile();$("playerModal").classList.add("on");}
-// ===== Màn Xếp hạng: 3 tab — Cầu thủ (theo vị trí) · Tỉ lệ thắng · Vua phá lưới =====
-let rankTab="players";
+// ===== Màn Xếp hạng: 3 tab — Tỉ lệ thắng · Vua phá lưới · Cầu thủ (theo vị trí) =====
+let rankTab="win";
 function setRankTab(t){rankTab=t;showRankScreen();}
 function showRankScreen(){
   document.querySelectorAll('#rankTabs button').forEach(b=>b.classList.toggle('on',b.dataset.rt===rankTab));
