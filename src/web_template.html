@@ -565,7 +565,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-wrap{display:flex;flex-direction:column}
 .mc-detail.on{margin-top:10px;animation:mcdIn .18s ease}
 @keyframes mcdIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.mc-main{display:grid;grid-template-columns:1fr minmax(92px,150px) 1fr;align-items:center;gap:8px}
+.mc-main{position:relative;display:grid;grid-template-columns:1fr minmax(92px,150px) 1fr;align-items:center;gap:8px;padding-bottom:44px}
 .mc-team{display:flex;align-items:center;gap:10px;min-width:0}
 .mc-team.r{justify-content:flex-end}
 .mc-logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:14px;flex:0 0 auto;box-shadow:var(--sh-sm)}
@@ -590,10 +590,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-actions{display:flex;gap:8px;margin-top:11px;justify-content:flex-end;flex-wrap:wrap}
 .score-action{background:linear-gradient(135deg,#f97316,#ef4444)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 5px 16px rgba(239,68,68,.24)}
 .score-action:hover{filter:brightness(1.08)}
-.mc-score-action{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:9px}.mc-score-action .btn{white-space:nowrap}
+.mc-item-actions{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:8px}.mc-item-actions .btn{white-space:nowrap}
 .week-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .mc-venue{margin-top:4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media(max-width:560px){.mc-tn{font-size:11px}.mc-sc{font-size:26px}}
+@media(max-width:560px){.mc-tn{font-size:11px}.mc-sc{font-size:26px}.mc-main{padding-bottom:82px}.mc-item-actions{left:0;right:0;justify-content:center;flex-wrap:wrap}}
 /* tabs Sắp diễn ra / Đã kết thúc */
 .seg-tabs{display:flex;gap:8px;margin-bottom:14px}
 .seg{flex:1;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;transition:.14s}
@@ -1837,12 +1837,11 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  // Hai lối nhập đặt trong chính khối tỉ số của từng thẻ lịch sử — luôn nằm ngay dưới tỷ số.
-  const scoreInline=full?`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button></div>`:`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
+  // Gắn thẳng vào mọi item (không phụ thuộc nhánh full/chi tiết) để luôn hiện cạnh thùng rác.
+  const itemActions=`<div class="mc-item-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button>${canEdit?`<button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:""}</div>`;
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
-      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
-      <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:"";
+      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>`:"";
   const actions=adminActs?`<div class="mc-actions">${adminActs}</div>`:"";
   const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
   const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
@@ -1850,8 +1849,9 @@ function matchCard(r,full){
     <div class="mc${full?` clk`:``}" onclick="${onclk}">
     <div class="mc-main">
       <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Team A")}</span><span class="mc-tn">TEAM A</span></div>
-      <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}${scoreInline}</div>
+      <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}</div>
       <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
+      ${itemActions}
     </div>
     ${goalSummaryLine(r)}
     ${actions}
