@@ -395,6 +395,8 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .score-dock-title{font-size:16px;color:#fff7ed}
 .score-dock-hint{font-size:12px;color:#fed7aa;font-weight:650;opacity:.9}
 .score-dock .score-action{font-size:14px;padding:9px 15px;white-space:nowrap}
+.score-entry-actions{max-width:832px;margin:0 auto 14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.score-entry-actions .btn{white-space:nowrap}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
 .mhead{display:flex;overflow:hidden}
@@ -1992,7 +1994,7 @@ function render(res,sel,target,review,showHeat,matchId){
   // Khi đang xem một trận đã lưu, để một lối vào tỉ số ngay sát sơ đồ sân.
   // Không phụ thuộc thẻ danh sách ở phía trên, nên luôn có mặt đúng màn người dùng đang xem.
   const savedMatch=matchId==null?null:getHistory().find(r=>String(r.id)===String(matchId));
-  const scoreDock=savedMatch?`<div class="score-dock score-dock-action" role="button" tabindex="0" aria-label="${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}" onclick="setScore(${savedMatch.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setScore(${savedMatch.id})}"><span class="score-dock-title">⚽ Kết quả trận đấu</span><span class="score-dock-hint">Nhập tỉ số và bàn thắng</span><button type="button" class="btn sm score-action" onclick="event.stopPropagation();setScore(${savedMatch.id})">${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button type="button" class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${savedMatch.id})">⚽ Bàn thắng</button></div>`:"";
+  const scoreDock=savedMatch?`<div class="score-dock score-dock-action" role="button" tabindex="0" aria-label="${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}" onclick="setScore(${savedMatch.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setScore(${savedMatch.id})}"><span class="score-dock-title">⚽ Kết quả trận đấu</span><span class="score-dock-hint">Chạm thanh này hoặc dùng các nút bên dưới</span></div><div class="score-entry-actions"><button type="button" class="btn score-action" onclick="setScore(${savedMatch.id})">⚽ ${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button type="button" class="btn alt" onclick="openGoalModal(${savedMatch.id})">⚽ Nhập bàn thắng</button></div>`:"";
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
