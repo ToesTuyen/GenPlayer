@@ -588,10 +588,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-res.aWin{color:#ff6b6b;background:rgba(255,80,104,.14)}
 .mc-res.bWin{color:var(--blue);background:var(--blue-soft)}
 .mc-actions{display:flex;gap:8px;margin-top:11px;justify-content:flex-end;flex-wrap:wrap}
-.mc-quick-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
 .score-action{background:linear-gradient(135deg,#f97316,#ef4444)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 5px 16px rgba(239,68,68,.24)}
 .score-action:hover{filter:brightness(1.08)}
-.mc-score-action{margin-top:9px}.mc-score-action .btn{white-space:nowrap}
+.mc-score-action{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:9px}.mc-score-action .btn{white-space:nowrap}
 .week-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .mc-venue{margin-top:4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:560px){.mc-tn{font-size:11px}.mc-sc{font-size:26px}}
@@ -1838,12 +1837,12 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  // Thẻ rút gọn vẫn có lối vào tỉ số; thẻ lịch sử đầy đủ đặt cả 2 nút ngay trên thẻ.
-  const scoreInline=!full?`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
-  const quickActions=full?`<div class="mc-quick-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button>${canEdit?`<button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:""}</div>`:"";
+  // Hai lối nhập đặt trong chính khối tỉ số của từng thẻ lịch sử — luôn nằm ngay dưới tỷ số.
+  const scoreInline=full?`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button></div>`:`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
-      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>`:"";
+      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
+      <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:"";
   const actions=adminActs?`<div class="mc-actions">${adminActs}</div>`:"";
   const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
   const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
@@ -1854,7 +1853,6 @@ function matchCard(r,full){
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}${scoreInline}</div>
       <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
     </div>
-    ${quickActions}
     ${goalSummaryLine(r)}
     ${actions}
     </div>
