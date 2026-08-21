@@ -1837,8 +1837,6 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  // Gắn thẳng vào mọi item (không phụ thuộc nhánh full/chi tiết) để luôn hiện cạnh thùng rác.
-  const itemActions=`<div class="mc-item-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button>${canEdit?`<button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:""}</div>`;
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>`:"";
@@ -1851,7 +1849,6 @@ function matchCard(r,full){
       <div class="mc-team l"><span class="mc-logo" style="background:${KIT_A.body};color:#fff">${initials("Team A")}</span><span class="mc-tn">TEAM A</span></div>
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}</div>
       <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
-      ${itemActions}
     </div>
     ${goalSummaryLine(r)}
     ${actions}
@@ -3149,6 +3146,21 @@ function saveMatch(){
 // ============ LICH SU THI DAU ============
 let histTab="upcoming";
 function setHistTab(t){histTab=t;showHistory();}
+function mountHistoryActions(list){
+  const cards=[...document.querySelectorAll("#history-list .mc")];
+  cards.forEach((card,i)=>{
+    const r=list[i], main=card.querySelector(".mc-main");
+    if(!r||!main||main.querySelector(".mc-item-actions"))return;
+    const bar=document.createElement("div"); bar.className="mc-item-actions";
+    const score=document.createElement("button"); score.className="btn sm score-action"; score.textContent=`⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}`;
+    score.onclick=e=>{e.stopPropagation();setScore(r.id);};
+    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Nhập bàn thắng";
+    goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
+    bar.append(score,goals);
+    if(canEdit){const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};bar.append(del);}
+    main.append(bar);
+  });
+}
 function showHistory(){
   const h=getHistory(); $("history-detail").innerHTML=""; histOpenId=null;
   const up=h.filter(r=>!r.score).sort((a,b)=>(a.kickoff||Infinity)-(b.kickoff||Infinity));
@@ -3156,6 +3168,7 @@ function showHistory(){
   const list=up.concat(done);
   if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
+  mountHistoryActions(list);
 }
 function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review,!r.score,id);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
 // xổ/ẩn chi tiết NGAY DƯỚI item lịch sử (click item → hiện, click lại → ẩn)
