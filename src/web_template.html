@@ -389,14 +389,6 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
 /* pitch */
 .pred{background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.32);border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#a7f3c4}
-.score-dock{max-width:832px;margin:0 auto 12px;padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(239,68,68,.12));border:1px solid rgba(249,115,22,.46);border-radius:13px;color:#ffd6ae;font-size:13px;font-weight:800}
-.score-dock-action{cursor:pointer;user-select:none;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;box-shadow:0 8px 20px rgba(0,0,0,.16)}
-.score-dock-action:hover,.score-dock-action:focus-visible{transform:translateY(-1px);border-color:#fb923c;box-shadow:0 12px 26px rgba(249,115,22,.2);outline:none}
-.score-dock-title{font-size:16px;color:#fff7ed}
-.score-dock-hint{font-size:12px;color:#fed7aa;font-weight:650;opacity:.9}
-.score-dock .score-action{font-size:14px;padding:9px 15px;white-space:nowrap}
-.score-entry-actions{max-width:832px;margin:0 auto 14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
-.score-entry-actions .btn{white-space:nowrap}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
 .mhead{display:flex;overflow:hidden}
@@ -596,7 +588,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-res.aWin{color:#ff6b6b;background:rgba(255,80,104,.14)}
 .mc-res.bWin{color:var(--blue);background:var(--blue-soft)}
 .mc-actions{display:flex;gap:8px;margin-top:11px;justify-content:flex-end;flex-wrap:wrap}
-.mc-entry-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.mc-quick-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
 .score-action{background:linear-gradient(135deg,#f97316,#ef4444)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 5px 16px rgba(239,68,68,.24)}
 .score-action:hover{filter:brightness(1.08)}
 .mc-score-action{margin-top:9px}.mc-score-action .btn{white-space:nowrap}
@@ -1846,14 +1838,13 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  const goalBtn=(full&&!canEdit)?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button>`:"";
-  // Thẻ rút gọn vẫn có lối vào tỉ số; thẻ lịch sử đầy đủ đặt nút cạnh thùng rác bên dưới.
+  // Thẻ rút gọn vẫn có lối vào tỉ số; thẻ lịch sử đầy đủ đặt cả 2 nút ngay trên thẻ.
   const scoreInline=!full?`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
+  const quickActions=full?`<div class="mc-quick-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button>${canEdit?`<button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:""}</div>`:"";
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
-      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
-      <span class="mc-entry-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Nhập bàn thắng</button><button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button></span>`:"";
-  const actions=(goalBtn||adminActs)?`<div class="mc-actions">${goalBtn}${adminActs}</div>`:"";
+      <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>`:"";
+  const actions=adminActs?`<div class="mc-actions">${adminActs}</div>`:"";
   const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
   const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
   return `<div class="mc-wrap">
@@ -1863,6 +1854,7 @@ function matchCard(r,full){
       <div class="mc-score"><div class="mc-line">${sc}</div><div class="mc-status">${when}</div>${venue}${scoreInline}</div>
       <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
     </div>
+    ${quickActions}
     ${goalSummaryLine(r)}
     ${actions}
     </div>
@@ -1991,10 +1983,6 @@ function sokeTable(A,B,sel){
 function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
-  // Khi đang xem một trận đã lưu, để một lối vào tỉ số ngay sát sơ đồ sân.
-  // Không phụ thuộc thẻ danh sách ở phía trên, nên luôn có mặt đúng màn người dùng đang xem.
-  const savedMatch=matchId==null?null:getHistory().find(r=>String(r.id)===String(matchId));
-  const scoreDock=savedMatch?`<div class="score-dock score-dock-action" role="button" tabindex="0" aria-label="${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}" onclick="setScore(${savedMatch.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setScore(${savedMatch.id})}"><span class="score-dock-title">⚽ Kết quả trận đấu</span><span class="score-dock-hint">Chạm thanh này hoặc dùng các nút bên dưới</span></div><div class="score-entry-actions"><button type="button" class="btn score-action" onclick="setScore(${savedMatch.id})">⚽ ${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button><button type="button" class="btn alt" onclick="openGoalModal(${savedMatch.id})">⚽ Nhập bàn thắng</button></div>`:"";
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
@@ -2019,7 +2007,6 @@ function render(res,sel,target,review,showHeat,matchId){
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
   const _statTable=`<h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
-  ${scoreDock}
   ${predBlock}
   <div class="matchwrap"><div class="match">
    <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div>
