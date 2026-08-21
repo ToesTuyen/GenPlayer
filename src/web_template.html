@@ -590,6 +590,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .mc-res.aWin{color:#ff6b6b;background:rgba(255,80,104,.14)}
 .mc-res.bWin{color:var(--blue);background:var(--blue-soft)}
 .mc-actions{display:flex;gap:8px;margin-top:11px;justify-content:flex-end;flex-wrap:wrap}
+.score-action{background:linear-gradient(135deg,#f97316,#ef4444)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 5px 16px rgba(239,68,68,.24)}
+.score-action:hover{filter:brightness(1.08)}
+.week-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .mc-venue{margin-top:4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:560px){.mc-tn{font-size:11px}.mc-sc{font-size:26px}}
 /* tabs Sắp diễn ra / Đã kết thúc */
@@ -858,6 +861,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== DOI TUAN NAY ====== -->
 <div id="screen-week" class="screen">
   <div id="week-info" class="status" style="margin:0 0 12px"></div>
+  <div id="week-actions"></div>
   <div id="week-result"></div>
 </div>
 
@@ -1831,12 +1835,13 @@ function matchCard(r,full){
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
   const goalBtn=full?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Bàn thắng</button>`:"";
+  const scoreAct=(full&&canEdit)?`
+      <button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button>`:"";
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
-      <button class="btn alt sm" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button>
       <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
       <button class="iconbtn" onclick="event.stopPropagation();delHistory(${r.id})" title="Xoá">🗑️</button>`:"";
-  const actions=(goalBtn||adminActs)?`<div class="mc-actions">${goalBtn}${adminActs}</div>`:"";
+  const actions=(goalBtn||scoreAct||adminActs)?`<div class="mc-actions">${goalBtn}${scoreAct}${adminActs}</div>`:"";
   const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
   const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
   return `<div class="mc-wrap">
@@ -1890,7 +1895,8 @@ function renderSpotlight(h){
       .map(i=>`<span class="vsub">${jersey(kit)}<span>${esc(shortName(sel[i].n))}</span></span>`).join("");
     return items?`<div class="vp-sub ${side}">${items}</div>`:"";
   };
-  box.innerHTML=`<div class="spot-lineup" onclick="openHistory(${r.id})">
+  const scoreAct=canEdit?`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Cập nhật tỉ số</button></div>`:"";
+  box.innerHTML=`${scoreAct}<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
       <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span>
       <span class="lu-vs">VS</span>
@@ -2171,6 +2177,7 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   const b=$("adminBtn");
   if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
   maybeWarnOverdue();   // admin vừa vào -> cảnh báo trận quá giờ chưa có kết quả
+  refreshScreen();      // đăng nhập/đăng xuất khi đang xem trận → vẽ lại đúng các nút theo quyền
 }
 function logout(){
   role="guest"; isAdmin=false; canEdit=false; applyRoleUI();
@@ -3061,9 +3068,10 @@ function applyQuick(){
 // ============ DOI TUAN NAY ============
 function showWeek(){
   const h=getHistory(), r=featuredMatch(h);
-  if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
+  if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
+  $("week-actions").innerHTML=canEdit?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
   render(r.result,r.subset,"week-result",r.review,!r.score); setTimeout(fitMatch,0);
 }
 
