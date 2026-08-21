@@ -1894,7 +1894,7 @@ function renderSpotlight(h){
       .map(i=>`<span class="vsub">${jersey(kit)}<span>${esc(shortName(sel[i].n))}</span></span>`).join("");
     return items?`<div class="vp-sub ${side}">${items}</div>`:"";
   };
-  const scoreAct=`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Cập nhật tỉ số</button></div>`;
+  const scoreAct=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button></div>`:"";
   box.innerHTML=`${scoreAct}<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
       <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span>
@@ -3069,7 +3069,7 @@ function showWeek(){
   if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
-  $("week-actions").innerHTML=`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
+  $("week-actions").innerHTML=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ Tỉ số</button></div>`:"";
   render(r.result,r.subset,"week-result",r.review,!r.score,r.id); setTimeout(fitMatch,0);
 }
 
@@ -3152,11 +3152,14 @@ function mountHistoryActions(list){
     const r=list[i], main=card.querySelector(".mc-main");
     if(!r||!main||main.querySelector(".mc-item-actions"))return;
     const bar=document.createElement("div"); bar.className="mc-item-actions";
-    const score=document.createElement("button"); score.className="btn sm score-action"; score.textContent=`⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}`;
-    score.onclick=e=>{e.stopPropagation();setScore(r.id);};
-    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Nhập bàn thắng (không cần đăng nhập)"; goals.title="Không cần đăng nhập — gửi cho admin duyệt";
+    if(isAdmin){
+      const score=document.createElement("button"); score.className="btn sm score-action"; score.textContent="⚽ Tỉ số";
+      score.onclick=e=>{e.stopPropagation();setScore(r.id);};
+      bar.append(score);
+    }
+    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Bàn thắng"; goals.title="Không cần đăng nhập — gửi cho admin duyệt";
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
-    bar.append(score,goals);
+    bar.append(goals);
     if(canEdit){const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};bar.append(del);}
     main.append(bar);
   });
