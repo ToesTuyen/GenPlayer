@@ -3240,6 +3240,6 @@ function delHistory(id){
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyRoleUI(); show("home");
-if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));   // PWA: cài lên màn hình chính + offline
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v3",{updateViaCache:"none"}));   // ép kiểm tra worker mới khi giao diện được cập nhật
 </script>
 </body></html>

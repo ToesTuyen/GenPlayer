@@ -2,7 +2,7 @@
 // index.html: network-first (bản mới trên Pages luôn thắng, cache chỉ dùng khi offline).
 // assets/ cùng origin: cache-first (ảnh nền/avatar không đổi tên khi đổi nội dung thì bump CACHE).
 // Mọi request khác origin (Firestore, gstatic...) đi thẳng mạng, không đụng vào.
-const CACHE = 'genplayer-v2';
+const CACHE = 'genplayer-v3';
 const PRECACHE = ['./', 'manifest.webmanifest', 'assets/favicon.png', 'assets/icon-192.png', 'assets/icon-512.png'];
 
 self.addEventListener('install', e => {
