@@ -389,8 +389,11 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
 /* pitch */
 .pred{background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.32);border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#a7f3c4}
-.score-dock{max-width:832px;margin:0 auto 12px;padding:11px 14px;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(239,68,68,.12));border:1px solid rgba(249,115,22,.46);border-radius:13px;color:#ffd6ae;font-size:13px;font-weight:800}
-.score-dock .score-action{font-size:14px;padding:9px 15px}
+.score-dock{max-width:832px;margin:0 auto 12px;padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(239,68,68,.12));border:1px solid rgba(249,115,22,.46);border-radius:13px;color:#ffd6ae;font-size:13px;font-weight:800}
+.score-dock-action{cursor:pointer;user-select:none;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;box-shadow:0 8px 20px rgba(0,0,0,.16)}
+.score-dock-action:hover,.score-dock-action:focus-visible{transform:translateY(-1px);border-color:#fb923c;box-shadow:0 12px 26px rgba(249,115,22,.2);outline:none}
+.score-dock-title{font-size:16px;color:#fff7ed}
+.score-dock-hint{font-size:12px;color:#fed7aa;font-weight:650;opacity:.9}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
 .mhead{display:flex;overflow:hidden}
@@ -1987,7 +1990,7 @@ function render(res,sel,target,review,showHeat,matchId){
   // Khi đang xem một trận đã lưu, để một lối vào tỉ số ngay sát sơ đồ sân.
   // Không phụ thuộc thẻ danh sách ở phía trên, nên luôn có mặt đúng màn người dùng đang xem.
   const savedMatch=matchId==null?null:getHistory().find(r=>String(r.id)===String(matchId));
-  const scoreDock=savedMatch?`<div class="score-dock"><span>⚽ Kết quả trận đấu</span><button class="btn sm score-action" onclick="setScore(${savedMatch.id})">${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
+  const scoreDock=savedMatch?`<div class="score-dock score-dock-action" role="button" tabindex="0" aria-label="${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}" onclick="setScore(${savedMatch.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setScore(${savedMatch.id})}"><span class="score-dock-title">⚽ ${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</span><span class="score-dock-hint">Chạm để nhập kết quả</span></div>`:"";
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
