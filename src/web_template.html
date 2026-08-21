@@ -389,6 +389,8 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
 /* pitch */
 .pred{background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.32);border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#a7f3c4}
+.score-dock{max-width:832px;margin:0 auto 12px;padding:11px 14px;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(239,68,68,.12));border:1px solid rgba(249,115,22,.46);border-radius:13px;color:#ffd6ae;font-size:13px;font-weight:800}
+.score-dock .score-action{font-size:14px;padding:9px 15px}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
 .mhead{display:flex;overflow:hidden}
@@ -1982,6 +1984,10 @@ function sokeTable(A,B,sel){
 function render(res,sel,target,review,showHeat){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
+  // Khi đang xem một trận đã lưu, để một lối vào tỉ số ngay sát sơ đồ sân.
+  // Không phụ thuộc thẻ danh sách ở phía trên, nên luôn có mặt đúng màn người dùng đang xem.
+  const savedMatch=getHistory().find(r=>r.result===res&&r.subset===sel);
+  const scoreDock=savedMatch?`<div class="score-dock"><span>⚽ Kết quả trận đấu</span><button class="btn sm score-action" onclick="setScore(${savedMatch.id})">${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const pct=100*Math.abs(A.startFit-B.startFit)/((A.startFit+B.startFit)/2);
@@ -2006,6 +2012,7 @@ function render(res,sel,target,review,showHeat){
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
   const _statTable=`<h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
+  ${scoreDock}
   ${predBlock}
   <div class="matchwrap"><div class="match">
    <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div>
