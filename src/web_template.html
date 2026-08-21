@@ -411,7 +411,7 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .heat.mini.heat-fire .hf{width:17px;height:22px}
 .heat.mini.heat-smoke .hf{width:13px;height:17px}
 .heat.mini .ember{width:9px;height:9px;margin-left:-4.5px;bottom:1px}
-.heat.mini .sm{bottom:14px;width:6px;height:6px}
+.heat.mini .heat-sm{bottom:14px;width:6px;height:6px}
 .player.pop{animation:pop .5s cubic-bezier(.2,.7,.3,1) both}
 @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.82)}to{opacity:1;transform:none}}
 .jersey{filter:drop-shadow(0 2px 3px #0006)}
@@ -646,7 +646,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .hf{position:absolute;left:50%;bottom:0;transform:translateX(-50%);transform-origin:50% 100%;display:none}
 .hf-o{fill:#e5390a}.hf-m{fill:#ff7d1f}.hf-i{fill:#ffd23b}
 .ember{position:absolute;left:50%;bottom:2px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#ff9a58,#ff6a1e 38%,#7a1f00 74%,rgba(122,31,0,0));opacity:0;display:none;filter:blur(.3px)}
-.sm{position:absolute;left:50%;bottom:22px;width:9px;height:9px;border-radius:50%;background:rgba(185,190,200,.5);opacity:0;filter:blur(2px);transform:translateX(-50%)}
+.heat-sm{position:absolute;left:50%;bottom:22px;width:9px;height:9px;border-radius:50%;background:rgba(185,190,200,.5);opacity:0;filter:blur(2px);transform:translateX(-50%)}
 @keyframes hfFlick{0%,100%{transform:translateX(-50%) scaleY(1) scaleX(1) skewX(0deg) rotate(0deg)}18%{transform:translateX(-56%) scaleY(1.22) scaleX(.85) skewX(-8deg) rotate(-2.5deg)}38%{transform:translateX(-44%) scaleY(.82) scaleX(1.2) skewX(9deg) rotate(2.5deg)}58%{transform:translateX(-55%) scaleY(1.16) scaleX(.9) skewX(-6deg) rotate(-2deg)}78%{transform:translateX(-46%) scaleY(.93) scaleX(1.1) skewX(5deg) rotate(1.5deg)}}
 @keyframes hfCore{0%,100%{opacity:.95;transform:translateX(-50%) scaleY(1)}50%{opacity:.68;transform:translateX(-50%) scaleY(.9)}}
 @keyframes emberPulse{0%,100%{opacity:.32;transform:scale(.82)}50%{opacity:.78;transform:scale(1.1)}}
@@ -693,17 +693,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 /* NẤC 5 — Lom dom (cân bằng): lửa nhỏ le lói + chút khói */
 .heat-flicker .hf{display:block;width:19px;height:24px;animation:hfFlick 1.5s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(220,110,40,.5));opacity:.9}
 .heat-flicker .hf-o{fill:#a8431d}.heat-flicker .hf-m{fill:#cf6a2a}.heat-flicker .hf-i{fill:#eaa63b}
-.heat-flicker .sm{animation:smRise 2.6s ease-in infinite}.heat-flicker .s2{animation-delay:1s}.heat-flicker .s3{animation-delay:1.9s}
+.heat-flicker .heat-sm{animation:smRise 2.6s ease-in infinite}.heat-flicker .s2{animation-delay:1s}.heat-flicker .s3{animation-delay:1.9s}
 /* Dáng lửa cổ điển: một ngọn nhiều lưỡi, chập chờn nhẹ như đội hình cũ. */
 .heat-smoke .hf{display:block;width:23px;height:29px;animation:hfFlick 1.4s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(230,110,40,.55));opacity:.92}
 .heat-smoke .hf-o{fill:#a8431d}.heat-smoke .hf-m{fill:#cf6a2a}.heat-smoke .hf-i{fill:#eaa63b}
-.heat-smoke .sm{animation:smRise 2.4s ease-in infinite}.heat-smoke .s2{animation-delay:.9s}.heat-smoke .s3{animation-delay:1.7s}
+.heat-smoke .heat-sm{animation:smRise 2.4s ease-in infinite}.heat-smoke .s2{animation-delay:.9s}.heat-smoke .s3{animation-delay:1.7s}
 /* Đang nguội — than hồng lụi + khói mờ */
 .heat-cool .ember{display:block;animation:emberPulse 2.1s ease-in-out infinite}
-.heat-cool .sm{animation:smRise 3s ease-in infinite;background:rgba(165,130,120,.42)}.heat-cool .s2{animation-delay:1.5s}.heat-cool .s3{display:none}
+.heat-cool .heat-sm{animation:smRise 3s ease-in infinite;background:rgba(165,130,120,.42)}.heat-cool .s2{animation-delay:1.5s}.heat-cool .s3{display:none}
 /* Tắt hẳn — chỉ còn sợi khói tan */
-.heat-out .sm{animation:smRise 3.6s ease-in infinite;background:rgba(150,155,165,.42)}.heat-out .s2{animation-delay:1.2s}.heat-out .s3{animation-delay:2.4s}
-@media(prefers-reduced-motion:reduce){.heat *{animation:none!important}.heat-cool .ember{opacity:.62}.heat-flicker .sm,.heat-cool .sm,.heat-out .sm{opacity:.4;transform:translate(-50%,-12px)}}
+.heat-out .heat-sm{animation:smRise 3.6s ease-in infinite;background:rgba(150,155,165,.42)}.heat-out .s2{animation-delay:1.2s}.heat-out .s3{animation-delay:2.4s}
+@media(prefers-reduced-motion:reduce){.heat *{animation:none!important}.heat-cool .ember{opacity:.62}.heat-flicker .heat-sm,.heat-cool .heat-sm,.heat-out .heat-sm{opacity:.4;transform:translate(-50%,-12px)}}
 .rank-row .avatar.sm,.avatar.sm{width:34px;height:34px;font-size:12px;background-size:cover;background-position:center top}
 /* ----- bàn thắng: form nhập + chip ----- */
 .gl-info{font-size:13px;color:var(--text);font-weight:700;margin-bottom:4px}
@@ -2318,7 +2318,7 @@ const LT_SVG=`<svg class="lt" viewBox="0 0 24 44" aria-hidden="true"><path d="M1
 const CLASSIC_FLAME_SVG=`<svg class="hf" viewBox="0 0 100 128" aria-hidden="true"><path class="hf-o" d="M12 86 Q14 66 24 58 Q29 66 32 68 Q33 46 38 32 Q42 44 44 46 Q45 22 50 4 Q55 22 56 46 Q58 44 62 32 Q67 46 68 68 Q71 66 76 58 Q86 66 88 86 Q90 108 50 118 Q10 108 12 86 Z"/><path class="hf-m" d="M24 84 Q26 66 34 60 Q38 68 40 68 Q41 44 50 24 Q59 44 60 68 Q62 66 66 60 Q74 66 76 84 Q78 104 50 112 Q22 104 24 84 Z"/><path class="hf-i" d="M36 88 Q34 72 44 54 Q48 48 50 46 Q52 48 56 54 Q66 72 64 88 Q64 104 50 110 Q36 104 36 88 Z"/></svg>`;
 function heatHTML(name,form,cls){
   const t=heatTier(form,playerAbsentStreak(name));
-  return `<span class="heat${cls?" "+cls:""} heat-${t.k}" title="${t.icon} ${t.lbl}${t.note?" · "+t.note:""}"><span class="hf-wrap">${CLASSIC_FLAME_SVG}<span class="ember"></span><span class="sm s1"></span><span class="sm s2"></span><span class="sm s3"></span><span class="sp p1"></span><span class="sp p2"></span><span class="sp p3"></span></span></span>`;
+  return `<span class="heat${cls?" "+cls:""} heat-${t.k}" title="${t.icon} ${t.lbl}${t.note?" · "+t.note:""}"><span class="hf-wrap">${CLASSIC_FLAME_SVG}<span class="ember"></span><span class="heat-sm s1"></span><span class="heat-sm s2"></span><span class="heat-sm s3"></span><span class="sp p1"></span><span class="sp p2"></span><span class="sp p3"></span></span></span>`;
 }
 function renderRank(boxId){
   const box=$(boxId||"rank-body"); if(!box)return;
