@@ -463,11 +463,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .modal{position:fixed;inset:0;background:rgba(4,7,15,.66);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal.on{display:flex}
 .modal-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:390px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+#scoreModal{z-index:90}
 .modal-box h3{margin-bottom:14px;font-size:17px;letter-spacing:-.01em}
 .mrow{margin:12px 0;font-size:13px}.mrow .lbl{font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
 .mrow label{display:inline-flex;align-items:center;gap:5px;margin-right:14px;cursor:pointer}
 .modal-box select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;width:100%;background:var(--surface2);color:var(--text)}
 .modal-box input[type=text],.modal-box input[type=date],.modal-box input[type=time]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:var(--surface2);color:var(--text);color-scheme:dark}
+.score-modal-box{max-width:440px;text-align:center}.score-match-info{margin:-5px 0 18px;color:var(--muted);font-size:12.5px;font-weight:700}.score-entry{display:grid;grid-template-columns:1fr 76px 24px 76px 1fr;align-items:center;gap:10px;margin:6px 0 20px}.score-team-name{font-size:13px;font-weight:800;color:var(--text)}.score-separator{font-size:28px;font-weight:900;color:var(--faint)}#scoreModal input[type=number]{width:76px;height:66px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);color:var(--text);font-size:30px;font-weight:900;text-align:center;outline:0;color-scheme:dark}#scoreModal input[type=number]:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}.score-modal-actions{display:flex;gap:8px;justify-content:center}
 .nm-hint{margin-top:8px;font-size:11.5px;line-height:1.45;color:var(--faint)}
 .nm-err{display:none;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--red)}
 .nm-err.show{display:block}
@@ -906,6 +908,22 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="mrow"><span class="lbl">Giờ đá</span><input type="time" id="mm-time"></div>
     <div class="mrow"><span class="lbl">Sân</span><input type="text" id="mm-venue" placeholder="VD: Sân Mỹ Đình" maxlength="60"></div>
     <div style="display:flex;gap:8px;margin-top:16px"><button class="btn sm" onclick="saveMatch()">💾 Lưu trận</button><button class="btn alt sm" onclick="closeMatchModal()">Hủy</button></div>
+  </div>
+</div>
+
+<!-- ====== CAP NHAT TI SO ====== -->
+<div class="modal" id="scoreModal" onclick="if(event.target===this)closeScoreModal()">
+  <div class="modal-box score-modal-box">
+    <h3>⚽ Cập nhật tỉ số</h3>
+    <div class="score-match-info" id="score-match-info"></div>
+    <div class="score-entry">
+      <div class="score-team-name">TEAM A</div>
+      <input type="number" id="score-a" min="0" max="99" inputmode="numeric" onkeydown="if(event.key==='Enter')saveScoreModal()">
+      <div class="score-separator">:</div>
+      <input type="number" id="score-b" min="0" max="99" inputmode="numeric" onkeydown="if(event.key==='Enter')saveScoreModal()">
+      <div class="score-team-name">TEAM B</div>
+    </div>
+    <div class="score-modal-actions"><button class="btn sm score-action" onclick="saveScoreModal()">💾 Lưu tỉ số</button><button class="btn alt sm" onclick="closeScoreModal()">Hủy</button></div>
   </div>
 </div>
 
@@ -3184,21 +3202,35 @@ function toggleHistory(id){
   render(r.result,r.subset,"mcd-"+id,r.review,!r.score,id);
   slot.classList.add("on"); histOpenId=id; setTimeout(fitMatch,0);
 }
-function setScore(id){
+let scoreMatchId=null, scoreFromOverdue=false;
+function openScoreModal(id,fromOverdue=false){
   if(!requireAdmin())return;
-  const r0=getHistory().find(x=>x.id===id); if(!r0)return;
-  const cur=r0.score||{};
-  const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
-  const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
-  const had=cur.a!=null&&cur.b!=null;
-  freshDoc(()=>{   // đọc cloud tươi rồi sửa trên nền tươi → không đè mất tỉ số/bàn thắng trận khác admin khác vừa nhập
-    const h=getHistory(), r=h.find(x=>x.id===id);
-    if(!r){ toast("Trận này đã bị xoá ở nơi khác rồi.","warn"); showHistory(); return; }
-    r.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
-    if(setHistory(h))logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${r.score.a}:${r.score.b}${had?` (sửa từ ${cur.a}:${cur.b})`:""}`);
-    histTab="done"; showHistory();
+  const r=getHistory().find(x=>String(x.id)===String(id)); if(!r)return;
+  const cur=r.score||{};
+  scoreMatchId=id; scoreFromOverdue=fromOverdue;
+  $("score-match-info").textContent=fmtKick(r.kickoff)||r.label||"";
+  $("score-a").value=cur.a!=null?cur.a:""; $("score-b").value=cur.b!=null?cur.b:"";
+  $("scoreModal").classList.add("on");
+  setTimeout(()=>{const input=$("score-a");if(input){input.focus();input.select();}},30);
+}
+function closeScoreModal(){$("scoreModal").classList.remove("on");scoreMatchId=null;scoreFromOverdue=false;}
+function saveScoreModal(){
+  const id=scoreMatchId; if(id==null)return;
+  const r0=getHistory().find(x=>String(x.id)===String(id)); if(!r0){closeScoreModal();return;}
+  const cur=r0.score||{}, had=cur.a!=null&&cur.b!=null, fromOverdue=scoreFromOverdue;
+  const a=Math.max(0,Math.min(99,Math.round(+$("score-a").value||0)));
+  const b=Math.max(0,Math.min(99,Math.round(+$("score-b").value||0)));
+  freshDoc(()=>{   // đọc cloud tươi rồi sửa trên nền tươi → không đè mất dữ liệu trận khác vừa nhập
+    const h=getHistory(), r=h.find(x=>String(x.id)===String(id));
+    if(!r){toast("Trận này đã bị xoá ở nơi khác rồi.","warn");closeScoreModal();if(fromOverdue)renderOverdue();else showHistory();return;}
+    r.score={a,b};
+    if(setHistory(h))logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${a}:${b}${had?` (sửa từ ${cur.a}:${cur.b})`:""}${fromOverdue?" · xác nhận trận quá giờ":""}`);
+    closeScoreModal();
+    if(fromOverdue){renderOverdue();refreshScreen();}
+    else {histTab="done";showHistory();}
   });
 }
+function setScore(id){openScoreModal(id);}
 
 // ---- Cảnh báo trận ĐÃ QUÁ GIỜ mà chưa có kết quả (admin xác nhận / phê duyệt) ----
 let overdueShown=false;   // chỉ tự bật 1 lần/phiên cho đỡ phiền
@@ -3217,23 +3249,7 @@ function renderOverdue(){
       </div>`).join("")+
     `<div class="od-foot"><button class="btn alt sm" onclick="closeOverdue()">Để sau</button></div>`;
 }
-function overdueScore(id){
-  if(!isAdmin)return;
-  const h=getHistory(), r=h.find(x=>x.id===id); if(!r)return;
-  const cur=r.score||{};
-  const a=prompt("Số bàn Team A:",cur.a!=null?cur.a:""); if(a===null)return;
-  const b=prompt("Số bàn Team B:",cur.b!=null?cur.b:""); if(b===null)return;
-  const had=cur.a!=null&&cur.b!=null;
-  freshDoc(()=>{   // đọc cloud tươi rồi sửa trên nền tươi → không đè mất dữ liệu trận khác vừa nhập nơi khác
-    const h=getHistory(), rr=h.find(x=>x.id===id);
-    if(!rr){ toast("Trận này đã bị xoá ở nơi khác rồi.","warn"); renderOverdue(); refreshScreen(); return; }
-    rr.score={a:Math.max(0,Math.round(+a||0)),b:Math.max(0,Math.round(+b||0))};
-    if(setHistory(h))
-      logMatchAct("score",id,fmtKick(rr.kickoff)||rr.label||("#"+id),`${rr.score.a}:${rr.score.b}${had?` (sửa từ ${cur.a}:${cur.b})`:""} · xác nhận trận quá giờ`);
-    renderOverdue();          // cập nhật lại danh sách; hết thì tự đóng
-    refreshScreen();          // vẽ lại "Trận sắp tới"/lịch sử → trận đã có KQ chuyển trạng thái ngay
-  });
-}
+function overdueScore(id){openScoreModal(id,true);}
 function refreshScreen(){   // vẽ lại màn đang mở sau khi đổi dữ liệu trận
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
   if(!cur)return;
