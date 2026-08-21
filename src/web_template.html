@@ -725,7 +725,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .gl-stepper{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .gl-bt{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:16px;font-weight:800;cursor:pointer;line-height:1;display:grid;place-items:center}
 .gl-bt:active{background:var(--surface3)}
-.gl-in{width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);font-size:15px;font-weight:800;color-scheme:dark;-moz-appearance:textfield}
+.gl-in{width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);font-size:15px;font-weight:800;color-scheme:dark;-moz-appearance:textfield;transition:.15s}
+.gl-in.has-goal{color:#ffd35f;border-color:rgba(255,211,95,.72);background:rgba(255,188,67,.15);box-shadow:0 0 0 2px rgba(255,199,73,.10)}
 .gl-in::-webkit-outer-spin-button,.gl-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .gl-empty{font-size:12.5px;color:var(--faint);padding:6px 0}
 .gl-acts{display:flex;gap:8px;margin-top:6px}
@@ -2426,7 +2427,8 @@ function goalCollect(){
 }
 function goalRecount(){
   const r=matchById(goalMatchId); if(!r)return;
-  const t=goalsByTeam(r,goalCollect()), hasScore=!!r.score;
+  const goals=goalCollect(), t=goalsByTeam(r,goals), hasScore=!!r.score;
+  document.querySelectorAll("#goal-body .gl-in").forEach(inp=>inp.classList.toggle("has-goal",(+inp.value||0)>0));
   ["A","B"].forEach(side=>{const el=$("gl-sum-"+side); if(!el)return;
     el.textContent=t[side];
     if(!hasScore){el.className="gl-sum";return;}                 // chưa có tỉ số → không tô đúng/sai
