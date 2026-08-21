@@ -1867,14 +1867,15 @@ function renderMatchList(h){
 function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
-  // 1-3-1-2: GK · 3 thủ · 1 tiền vệ giữa (slot 4) · 2 tiền đạo (slot 5,6)
+  const slots=lineupSlots(eA), six=slots.length===6;
+  // 7v7: 1-3-1-2 · 6v6: 1-2-2-1
   // MỖI ĐỘI nằm GỌN trong nửa sân của mình (không vượt vạch giữa) → màu áo không lẫn sang nửa kia
-  const X ={0:50,1:50,2:18,3:82,4:50,5:30,6:70};   // slot1=Thòng (Trung vệ) ở GIỮA hàng thủ; slot2,3=HV biên 2 bên
-  const YA={0:92,1:78,2:78,3:78,4:65,5:55,6:55};   // Team A (dưới) — cả đội ở nửa sân dưới, tiền đạo áp vạch giữa
-  const YB={0:8,1:22,2:22,3:22,4:35,5:45,6:45};    // Team B (trên) — cả đội ở nửa sân trên
+  const X =six?{0:50,1:30,2:70,3:30,4:70,5:50}:{0:50,1:50,2:18,3:82,4:50,5:30,6:70};
+  const YA=six?{0:92,1:77,2:77,3:62,4:62,5:52}:{0:92,1:78,2:78,3:78,4:65,5:55,6:55};
+  const YB=six?{0:8,1:23,2:23,3:38,4:38,5:48}:{0:8,1:22,2:22,3:22,4:35,5:45,6:45};
   const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
-  for(let c=0;c<7;c++){h+=mark(sel[eA.starters[c]],X[c],YB[c],KIT_A);h+=mark(sel[eB.starters[c]],X[c],YA[c],KIT_B);}
+  for(let c=0;c<slots.length;c++){h+=mark(sel[eA.starters[c]],X[c],YB[c],KIT_A);h+=mark(sel[eB.starters[c]],X[c],YA[c],KIT_B);}
   return `<div class="vpitch"><div class="vp-box top"></div><div class="vp-box bot"></div><div class="vp-mid"></div><div class="vp-circle"></div>${h}</div>`;
 }
 function renderSpotlight(h){
@@ -1895,7 +1896,7 @@ function renderSpotlight(h){
       <span class="lu-vs">VS</span>
       <span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span>
     </div>
-    <div class="lu-meta">${when}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
+    <div class="lu-meta">${when}${r.format?` · ${esc(r.format)}`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
     ${benchStrip(eA,KIT_A,"top")}
     ${vpitch(r)}
     ${benchStrip(eB,KIT_B,"bot")}
@@ -1908,20 +1909,23 @@ function jersey(k){return `<svg class="jersey" viewBox="0 0 100 90" width="38" h
 function chip(pl,label,kit,delay,showHeat){const o=ov(pl);const star=isStar(pl)?' <span class="star">★</span>':'';return `<div class="player pop" style="animation-delay:${delay.toFixed(2)}s">${showHeat?heatHTML(pl.n,playerStats(pl.n).form,"mini"):""}${jersey(kit)}<div class="name">${pl.n}${star}</div><div class="sub">${POSNAME[label]||label} · ${o.toFixed(1)}</div></div>`;}
 function col(chips,gk){return `<div class="col${gk?' gkcol':''}">${chips.join("")}</div>`;}
 const SLAB=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
+const SLAB6=["GK","Thòng","HV","TVtt","TV","TĐ"];
+function lineupSlots(ev){return ev&&Array.isArray(ev.starters)&&ev.starters.length===6?SLAB6:SLAB;}
 function teamCols(ev,kit,sel,reverse,showHeat){
-  const bands=[[0],[2,1,3],[4],[5,6]];   // 1-3-1-2: GK · HV–Trung vệ(GIỮA)–HV · 1 tiền vệ giữa · 2 tiền đạo
-  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],SLAB[c],kit,bi*0.24+j*0.07,showHeat)),bi===0));
+  const slots=lineupSlots(ev), bands=slots.length===6?[[0],[1,2],[3,4],[5]]:[[0],[2,1,3],[4],[5,6]];
+  let cols=bands.map((band,bi)=>col(band.map((c,j)=>chip(sel[ev.starters[c]],slots[c],kit,bi*0.24+j*0.07,showHeat)),bi===0));
   if(reverse)cols=cols.reverse(); return cols.join("");
 }
 function subsItems(ev,sel){return ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`<span class="subchip">${sel[i].n} <b>${ov(sel[i]).toFixed(1)}</b></span>`).join("");}
 function card(m,o,ctxt,label,ev,sel){
-  const SL=["thủ môn","trung vệ","hậu vệ","hậu vệ","tiền vệ trung tâm","tiền vệ cánh","tiền đạo"];
+  const six=lineupSlots(ev).length===6;
+  const SL=six?["thủ môn","trung vệ","hậu vệ","tiền vệ trung tâm","tiền vệ cánh","tiền đạo"]:["thủ môn","trung vệ","hậu vệ","hậu vệ","tiền vệ trung tâm","tiền vệ cánh","tiền đạo"];
   const idx=c=>ev.starters[c];
-  const topAtk=[4,5,6].map(idx).sort((a,b)=>(sel[b].DD-sel[a].DD)||(ov(sel[b])-ov(sel[a])))[0];
-  const anchor=[1,2,3].map(idx).sort((a,b)=>(sel[b].PN-sel[a].PN)||(ov(sel[b])-ov(sel[a])))[0];
+  const topAtk=(six?[3,4,5]:[4,5,6]).map(idx).sort((a,b)=>(sel[b].DD-sel[a].DD)||(ov(sel[b])-ov(sel[a])))[0];
+  const anchor=(six?[1,2]:[1,2,3]).map(idx).sort((a,b)=>(sel[b].PN-sel[a].PN)||(ov(sel[b])-ov(sel[a])))[0];
   const gkEdge=m.gkFit-o.gkFit, paceEdge=m.pace-o.pace;
   const tb=ev.bench.slice().sort((a,b)=>ov(sel[b])-ov(sel[a]))[0];
-  const oWeak=[1,2,3,4,5,6].map(c=>o.starters[c]).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
+  const oWeak=Array.from({length:SL.length-1},(_,i)=>i+1).map(c=>o.starters[c]).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
   const oWeakSlot=SL[o.starters.indexOf(oWeak)];
   const b=[];
   b.push(`🎯 <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
@@ -1936,15 +1940,16 @@ function card(m,o,ctxt,label,ev,sel){
 // 🆚 Bảng SO KÈ theo vị trí (từng ô Đỏ vs Vàng theo ovAt) + cộng theo tuyến + tóm gọn 2 chiều
 function sokeTable(A,B,sel){
   if(!sel||!A||!B||!A.starters||!B.starters)return "";
-  const SL=["GK","Thòng","HV","HV","TVtt","TV","TĐ"];
-  const LBL=["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"];
+  const six=lineupSlots(A).length===6;
+  const SL=lineupSlots(A);
+  const LBL=six?["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"]:["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"];
   const raw=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
   const so=(a,b)=>Math.abs(a-b)<0.4?`<span style="opacity:.55">cân</span>`:(a>b?`<b>🔴 +${(a-b).toFixed(1)}</b>`:`<b>🟡 +${(b-a).toFixed(1)}</b>`);
   let rows="",upA=0,upB=0,dnA=0,dnB=0;
-  for(let c=0;c<7;c++){
+  for(let c=0;c<SL.length;c++){
     const pa=sel[A.starters[c]],pb=sel[B.starters[c]]; if(!pa||!pb)continue;
     const sa=ovAt(pa,SL[c]),sb=ovAt(pb,SL[c]);
-    if(c>=4){upA+=sa;upB+=sb;} if(c>=1&&c<=3){dnA+=sa;dnB+=sb;}
+    if(c>=(six?3:4)){upA+=sa;upB+=sb;} if(c>=1&&c<=(six?2:3)){dnA+=sa;dnB+=sb;}
     rows+=`<tr><td>${LBL[c]}</td><td>${esc(shortName(pa.n))} <b>${sa.toFixed(1)}</b></td><td>${esc(shortName(pb.n))} <b>${sb.toFixed(1)}</b></td><td style="text-align:center">${so(sa,sb)}</td></tr>`;
   }
   // dự bị: chấm theo ĐIỂM VỊ TRÍ CHÍNH (ov = ovAt ở vị trí đăng ký), không dùng trung bình 8 chỉ số
@@ -1955,10 +1960,10 @@ function sokeTable(A,B,sel){
     const cb=pb?`${esc(shortName(pb.n))} <b>${ov(pb).toFixed(1)}</b>`:`<span style="opacity:.55">—</span>`;
     rows+=`<tr><td>🪑 Dự bị ${i+1}</td><td>${ca}</td><td>${cb}</td><td style="text-align:center">${pa&&pb?so(ov(pa),ov(pb)):`<span style="opacity:.55">—</span>`}</td></tr>`;
   }
-  const ovA=A.starters.reduce((s,i)=>s+raw(sel[i]),0)/7, ovB=B.starters.reduce((s,i)=>s+raw(sel[i]),0)/7;
+  const ovA=A.starters.reduce((s,i)=>s+raw(sel[i]),0)/A.starters.length, ovB=B.starters.reduce((s,i)=>s+raw(sel[i]),0)/B.starters.length;
   const bcA=(A.bench||[]).reduce((s,i)=>s+ov(sel[i]),0), bcB=(B.bench||[]).reduce((s,i)=>s+ov(sel[i]),0);
   const lr=(lbl,a,b,dec)=>{const d=a-b,w=Math.abs(d)<0.05?"cân":(d>0?`🔴 Đỏ +${d.toFixed(dec)}`:`🟡 Vàng +${(-d).toFixed(dec)}`);return `<tr><td>${lbl}</td><td>${a.toFixed(dec)}</td><td>${b.toFixed(dec)}</td><td>${w}</td></tr>`;};
-  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr("Tuyến trên (3 mũi)",upA,upB,1)}${lr("Tuyến dưới (3 thủ)",dnA,dnB,1)}${lr("Overall đội chính",ovA,ovB,2)}${lr("Ghế dự bị",bcA,bcB,1)}</table>`;
+  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr("Tuyến trên (3 mũi)",upA,upB,1)}${lr(`Tuyến dưới (${six?2:3} thủ)`,dnA,dnB,1)}${lr("Overall đội chính",ovA,ovB,2)}${lr("Ghế dự bị",bcA,bcB,1)}</table>`;
   const gkA=ovAt(sel[A.starters[0]],"GK"),gkB=ovAt(sel[B.starters[0]],"GK"),aP=[],bP=[];
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
   add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,"overall đội chính",0.05,2);add(bcA-bcB,"ghế dự bị",0.4,1);
@@ -3058,7 +3063,7 @@ function showWeek(){
   const h=getHistory(), r=featuredMatch(h);
   if(!r){$("week-info").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
-  $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
+  $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
   render(r.result,r.subset,"week-result",r.review,!r.score); setTimeout(fitMatch,0);
 }
 
