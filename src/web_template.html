@@ -1839,7 +1839,7 @@ function matchCard(r,full){
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
   const goalBtn=full?`<button class="btn alt sm" onclick="event.stopPropagation();openGoalModal(${r.id})">⚽ Bàn thắng</button>`:"";
   // Đặt ngay trong đầu thẻ để luôn nhìn thấy, kể cả khi hàng hành động bên dưới bị thu gọn.
-  const scoreInline=canEdit?`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
+  const scoreInline=`<div class="mc-score-action"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ ${res.played?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
   const adminActs=(full&&canEdit)?`
       <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>
       <button class="btn alt sm" onclick="event.stopPropagation();toggleHistory(${r.id})">👁️ Xem</button>
@@ -1898,7 +1898,7 @@ function renderSpotlight(h){
       .map(i=>`<span class="vsub">${jersey(kit)}<span>${esc(shortName(sel[i].n))}</span></span>`).join("");
     return items?`<div class="vp-sub ${side}">${items}</div>`:"";
   };
-  const scoreAct=canEdit?`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Cập nhật tỉ số</button></div>`:"";
+  const scoreAct=`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Cập nhật tỉ số</button></div>`;
   box.innerHTML=`${scoreAct}<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
       <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span>
@@ -3073,7 +3073,7 @@ function showWeek(){
   if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
-  $("week-actions").innerHTML=canEdit?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
+  $("week-actions").innerHTML=`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
   render(r.result,r.subset,"week-result",r.review,!r.score); setTimeout(fitMatch,0);
 }
 
