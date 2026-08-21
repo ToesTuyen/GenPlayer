@@ -36,7 +36,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;heigh
 .ab-admin:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);background:rgba(34,224,122,.12)}
 .ab-brand{color:var(--brand);display:inline-flex;align-items:center;gap:7px}
-.ab-logo{height:38px;width:auto;vertical-align:middle;mix-blend-mode:multiply;filter:contrast(1.1) saturate(1.18)}
+.ab-logo{height:38px;width:auto;vertical-align:middle;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
 /* ===== dashboard layout ===== */
 .dash-top{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;align-items:start}
 .dash-main{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;margin-top:16px;align-items:start}
@@ -1517,10 +1517,25 @@ function quickScores(tier,positions,spd,wr){
 }
 
 // ---- nav ----
+// File logo gốc có nền sáng; tách nền đó khi hiển thị để logo hoà vào mọi màu theme mà không sửa asset gốc.
+function keyLogoBackground(img){
+  if(!img||img.dataset.keyedLogo)return;
+  const apply=()=>{try{
+    if(!img.naturalWidth||img.dataset.keyedLogo)return;
+    const c=document.createElement("canvas"); c.width=img.naturalWidth; c.height=img.naturalHeight;
+    const ctx=c.getContext("2d"); ctx.drawImage(img,0,0);
+    const px=ctx.getImageData(0,0,c.width,c.height);
+    for(let i=0;i<px.data.length;i+=4){const r=px.data[i],g=px.data[i+1],b=px.data[i+2]; if(Math.min(r,g,b)>190&&Math.max(r,g,b)-Math.min(r,g,b)<20)px.data[i+3]=0;}
+    ctx.putImageData(px,0,0); img.dataset.keyedLogo="1"; img.src=c.toDataURL("image/png");
+  }catch(e){/* giữ logo gốc nếu trình duyệt không hỗ trợ canvas */}};
+  if(img.complete)apply();else img.addEventListener("load",apply,{once:true});
+}
+function keyLogoBackgrounds(){document.querySelectorAll(".ab-logo").forEach(keyLogoBackground);}
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
+  keyLogoBackgrounds();
   $("backBtn").style.display=id==="home"?"none":"flex";
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
