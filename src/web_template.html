@@ -486,10 +486,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .admin-login-sub{margin:6px 0 0;color:rgba(255,255,255,.77);font-size:12.5px;line-height:1.45}
 #adminModal .mrow{margin:0}
 #adminModal .mrow .lbl{margin:0 0 7px;color:rgba(255,255,255,.82);font-size:12px;letter-spacing:.02em}
-.admin-login-field{display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(255,255,255,.48);padding:8px 2px 7px;color:rgba(255,255,255,.88);transition:.16s}
+.admin-login-field{display:flex;align-items:center;gap:11px;min-height:56px;border-bottom:2px solid rgba(255,255,255,.48);padding:11px 4px 10px;color:rgba(255,255,255,.88);transition:.16s}
 .admin-login-field:focus-within{border-color:#fff;box-shadow:0 5px 14px rgba(233,236,255,.16)}
 .admin-login-field svg{width:18px;height:18px;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}
-#adminModal .admin-login-field input[type=password]{width:100%;min-width:0;padding:0;border:0;border-radius:0;background:transparent;color:#fff;font-size:14px;outline:0;box-shadow:none}
+#adminModal .admin-login-field input[type=password]{width:100%;min-width:0;padding:0;border:0;border-radius:0;background:transparent;color:#fff;font-size:18px;outline:0;box-shadow:none}
 #adminModal .admin-login-field input[type=password]::placeholder{color:rgba(255,255,255,.62)}
 #adminModal .nm-hint{margin:13px 0 0;color:rgba(255,255,255,.73);font-size:11.5px;line-height:1.5}
 #adminModal .nm-hint b{color:#fff}
@@ -2398,7 +2398,7 @@ function renderGoalForm(){
   };
   box.innerHTML=`
     <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · ${hasScore?`Tỉ số <b>${sa} : ${sb}</b>`:`<span style="color:var(--muted)">Chưa có tỉ số</span>`}</div>
-    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"Nhập xong sẽ <b>gửi cho admin duyệt</b>."}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
+    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"<b>Không cần đăng nhập.</b> Nhập xong sẽ gửi cho admin duyệt."}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
     ${teamBlock("A")}${teamBlock("B")}
     <div class="gl-acts">
       <button class="btn sm" onclick="saveGoals()">${isAdmin?"💾 Lưu bàn thắng":"📤 Gửi cho admin"}</button>
@@ -3154,7 +3154,7 @@ function mountHistoryActions(list){
     const bar=document.createElement("div"); bar.className="mc-item-actions";
     const score=document.createElement("button"); score.className="btn sm score-action"; score.textContent=`⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}`;
     score.onclick=e=>{e.stopPropagation();setScore(r.id);};
-    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Nhập bàn thắng";
+    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Nhập bàn thắng (không cần đăng nhập)"; goals.title="Không cần đăng nhập — gửi cho admin duyệt";
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(score,goals);
     if(canEdit){const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};bar.append(del);}
