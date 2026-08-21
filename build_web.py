@@ -63,7 +63,9 @@ html=(tpl.replace("/*__OPTIMIZER__*/",opt)
          .replace("/*__HEROBG__*/",herobg))
 
 open(ROOT+"index.html","w",encoding="utf-8").write(html)
-print("Đã tạo index.html ·",len(players),"cầu thủ (nguồn: Firestore DB) · Firebase:",
+# Lối vào riêng không nằm trong cache của index/PWA cũ; cùng nội dung, cùng dữ liệu thời gian thực.
+open(ROOT+"score-update.html","w",encoding="utf-8").write(html)
+print("Đã tạo index.html + score-update.html ·",len(players),"cầu thủ (nguồn: Firestore DB) · Firebase:",
       ("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(bgfiles),"nền banner ·",len(html),"ký tự")
 assert not any(ph in html for ph in ("/*__OPTIMIZER__*/","/*__PLAYERS__*/","/*__FIREBASE__*/","/*__HEROBG__*/")), "Còn placeholder!"
 print("OK: không còn placeholder")

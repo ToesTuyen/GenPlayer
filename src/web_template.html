@@ -1981,12 +1981,12 @@ function sokeTable(A,B,sel){
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
   return `<h2>🆚 So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
-function render(res,sel,target,review,showHeat){
+function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
   if(!res||res.error){box.innerHTML="";return;}
   // Khi đang xem một trận đã lưu, để một lối vào tỉ số ngay sát sơ đồ sân.
   // Không phụ thuộc thẻ danh sách ở phía trên, nên luôn có mặt đúng màn người dùng đang xem.
-  const savedMatch=getHistory().find(r=>r.result===res&&r.subset===sel);
+  const savedMatch=matchId==null?null:getHistory().find(r=>String(r.id)===String(matchId));
   const scoreDock=savedMatch?`<div class="score-dock"><span>⚽ Kết quả trận đấu</span><button class="btn sm score-action" onclick="setScore(${savedMatch.id})">${savedMatch.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`:"";
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
@@ -3081,7 +3081,7 @@ function showWeek(){
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
   $("week-actions").innerHTML=`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ ${r.score?"Sửa tỉ số":"Cập nhật tỉ số"}</button></div>`;
-  render(r.result,r.subset,"week-result",r.review,!r.score); setTimeout(fitMatch,0);
+  render(r.result,r.subset,"week-result",r.review,!r.score,r.id); setTimeout(fitMatch,0);
 }
 
 // ============ THONG TIN TRAN (tao / sua) ============
@@ -3165,7 +3165,7 @@ function showHistory(){
   if(!list.length){$("history-list").innerHTML=`<div class="empty"><span class="big">🕐</span>Chưa có trận nào.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   $("history-list").innerHTML=`<div class="mc-list">`+list.map(r=>matchCard(r,true)).join("")+`</div>`;
 }
-function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review,!r.score);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
+function viewHistory(id){const r=getHistory().find(x=>x.id===id);if(!r)return;render(r.result,r.subset,"history-detail",r.review,!r.score,id);$("history-detail").scrollIntoView({behavior:"smooth"});setTimeout(fitMatch,0);}
 // xổ/ẩn chi tiết NGAY DƯỚI item lịch sử (click item → hiện, click lại → ẩn)
 let histOpenId=null;
 function toggleHistory(id){
@@ -3173,7 +3173,7 @@ function toggleHistory(id){
   if(String(histOpenId)===String(id)){slot.innerHTML="";slot.classList.remove("on");histOpenId=null;return;}
   if(histOpenId!=null){const prev=document.getElementById("mcd-"+histOpenId);if(prev){prev.innerHTML="";prev.classList.remove("on");}}
   const r=getHistory().find(x=>String(x.id)===String(id)); if(!r)return;
-  render(r.result,r.subset,"mcd-"+id,r.review,!r.score);
+  render(r.result,r.subset,"mcd-"+id,r.review,!r.score,id);
   slot.classList.add("on"); histOpenId=id; setTimeout(fitMatch,0);
 }
 function setScore(id){
