@@ -1837,9 +1837,6 @@ function matchCard(r,full){
     : `<span class="mc-sc dash">-</span><span class="mc-sep">:</span><span class="mc-sc dash">-</span>`;
   const when=r.kickoff?fmtKick(r.kickoff):(res.played?(r.label||""):"⏳ Chưa đá");
   const venue=r.venue?`<div class="mc-venue">📍 ${esc(r.venue)}</div>`:"";
-  const adminActs=(full&&canEdit)?`
-      <button class="btn alt sm" onclick="event.stopPropagation();openMatchModal('edit',${r.id})">📋 Sửa trận</button>`:"";
-  const actions=adminActs?`<div class="mc-actions">${adminActs}</div>`:"";
   const detailSlot=full?`<div class="mc-detail" id="mcd-${r.id}"></div>`:"";
   const onclk=full?`toggleHistory(${r.id})`:`openHistory(${r.id})`;
   return `<div class="mc-wrap">
@@ -1850,7 +1847,6 @@ function matchCard(r,full){
       <div class="mc-team r"><span class="mc-tn">TEAM B</span><span class="mc-logo" style="background:${KIT_B.body};color:#11224f">${initials("Team B")}</span></div>
     </div>
     ${goalSummaryLine(r)}
-    ${actions}
     </div>
     ${detailSlot}
   </div>`;
@@ -3159,7 +3155,12 @@ function mountHistoryActions(list){
     const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Bàn thắng"; goals.title="Không cần đăng nhập — gửi cho admin duyệt";
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(goals);
-    if(canEdit){const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};bar.append(del);}
+    if(canEdit){
+      const edit=document.createElement("button"); edit.className="btn alt sm"; edit.textContent="📋 Sửa trận";
+      edit.onclick=e=>{e.stopPropagation();openMatchModal("edit",r.id);};
+      const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};
+      bar.append(edit,del);
+    }
     main.append(bar);
   });
 }
