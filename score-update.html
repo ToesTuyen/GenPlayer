@@ -2012,22 +2012,26 @@ function renderUpdateLog(){
 const HERO_FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
 const HERO_BG=["assets/bg-1.jpg", "assets/bg-2.jpg", "assets/bg-3.jpg", "assets/bg-4.jpg", "assets/bg-5.jpg", "assets/bg-6.jpg", "assets/bg-7.jpg", "assets/bg-8.jpg", "assets/bg-9.jpg", "assets/bg-10.jpg"];   // tự quét assets/bg-*.jpg lúc build (thả thêm file là tự dùng)
 let heroSlides=[], heroIdx=0, heroTimer=null;
-// Nhận định banner lấy từ kết quả thật, không dùng đoạn mô tả chỉ số tĩnh của hồ sơ.
-function heroPerformanceDesc(p){
+// Mô tả banner giữ phong cách ngắn, giàu hình ảnh như cũ; phong độ chỉ là chất liệu cho câu chữ.
+function heroNarrativeDesc(p){
   const st=playerStats(p.n), goals=playerGoals(p.n), form=st.form||[];
-  if(!st.played)return "Chưa có trận nào đã chốt tỉ số để ghi nhận phong độ. Sau trận đầu tiên, thành tích thắng–hòa–thua và bàn thắng sẽ hiện tại đây.";
-  const formShort={W:"T",D:"H",L:"B"}, formWord={W:"thắng",D:"hòa",L:"thua"};
-  const recent=form.map(x=>formShort[x]||"–").join("–");
-  const formPeriod=`${form.length} trận gần đây`;
+  const {head,second}=evalData(p);
+  const strengths=second&&second.v>=5
+    ? `${head.name.toLowerCase()} và ${second.name.toLowerCase()}`
+    : head.name.toLowerCase();
   let streak=0; while(streak<form.length&&form[streak]===form[0])streak++;
-  let recentText=`${formPeriod}: ${recent}.`;
-  if(form[0]==="W"&&streak>=2)recentText=`Đang có chuỗi ${streak} trận thắng; ${formPeriod}: ${recent}.`;
-  else if(form[0]==="L"&&streak>=2)recentText=`Đang trải qua ${streak} trận thua liên tiếp; cần phản ứng ở trận tới.`;
-  else if(form[0])recentText=`Trận gần nhất ${formWord[form[0]]}; ${form.length>1?`${formPeriod}: ${recent}.`:"đây cũng là trận duy nhất được ghi nhận."}`;
-  const goalText=goals.total
-    ? `Đã ghi ${goals.total} bàn trong ${goals.matches} trận nổ súng.`
-    : "Chưa có bàn thắng được ghi nhận.";
-  return `Sau ${st.played} trận: ${st.w} thắng, ${st.d} hòa, ${st.l} thua (tỉ lệ thắng ${st.winRate}%). ${goalText} ${recentText}`;
+  let pulse="Đang chờ những trận có tỉ số để tạo dấu ấn rõ nét hơn.";
+  if(st.played){
+    if(form[0]==="W"&&streak>=2)pulse="Phong độ đang lên rõ rệt, chơi đầy tự tin và là điểm tựa đáng tin trong các pha quyết định.";
+    else if(form[0]==="W")pulse="Vừa có một màn thể hiện tích cực, sẵn sàng nối tiếp đà hưng phấn ở trận tới.";
+    else if(form[0]==="D")pulse="Giữ được nhịp thi đấu ổn định, phù hợp cho những trận cần sự điềm tĩnh và tính toán.";
+    else if(form[0]==="L"&&streak>=2)pulse="Đang cần một màn đáp trả mạnh mẽ để tìm lại nhịp chơi quen thuộc.";
+    else pulse="Vẫn là phương án đáng tin để làm mới thế trận và tạo khác biệt khi đội cần.";
+  }
+  const finish=goals.total
+    ? "Đã để lại dấu ấn bằng những pha kết thúc trong các trận đã qua."
+    : "Đóng góp nhiều hơn ở cách di chuyển, liên kết và hỗ trợ cấu trúc đội hình.";
+  return `${POS_LABEL[posCodeOf(p)]} có điểm mạnh ở ${strengths}. ${pulse} ${finish}`;
 }
 function heroSlideHTML(p,idx,total){
   const bg=`<div class="hf-bg" style="background-image:url('${HERO_BG[((idx||0)%HERO_BG.length)]}')"></div>`;
@@ -2040,7 +2044,7 @@ function heroSlideHTML(p,idx,total){
       <div class="hf-top"><span class="hf-tag">★ Cầu thủ nổi bật</span><span class="hf-count">${idx+1}/${total}</span></div>
       <h1 class="hf-title"><span class="hf-nmwrap">${esc((p.n||"").toUpperCase())}${star?'<span class="hf-star">★</span>':''}</span></h1>
       <div class="hf-meta">${POS_LABEL[pos]} · Điểm theo vị trí ${o}/10</div>
-      <div class="hf-desc">${esc(heroPerformanceDesc(p))}</div>`;
+      <div class="hf-desc">${esc(heroNarrativeDesc(p))}</div>`;
 }
 function renderHero(){
   const el=$("heroFeat"); if(!el)return;
