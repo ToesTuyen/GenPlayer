@@ -3001,8 +3001,8 @@ function renderPlayerProfile(){
         <div><div class="pm-sec">Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
       </div>${evalBarsHTML(p,true)}</div>
     </div>
-    <div class="pm-stats-wrap" id="pmGoalSection">${goalsChartPanel(p.n)}</div>
-    <div class="pm-stats-wrap">${statsPanel(p.n)}</div>`;
+    <div class="pm-stats-wrap">${statsPanel(p.n)}</div>
+    <div class="pm-stats-wrap" id="pmGoalSection">${goalsChartPanel(p.n)}</div>`;
 }
 // ADMIN: modal lịch sử sửa chỉ số theo từng user (xoá lượt -> tự áp dụng vào điểm hiện tại)
 function openHist(){ if(!isAdmin)return; if(!pmFind())return; renderHist(); $("histModal").classList.add("on"); }
