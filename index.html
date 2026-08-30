@@ -2012,26 +2012,37 @@ function renderUpdateLog(){
 const HERO_FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
 const HERO_BG=["assets/bg-1.jpg", "assets/bg-2.jpg", "assets/bg-3.jpg", "assets/bg-4.jpg", "assets/bg-5.jpg", "assets/bg-6.jpg", "assets/bg-7.jpg", "assets/bg-8.jpg", "assets/bg-9.jpg", "assets/bg-10.jpg"];   // tự quét assets/bg-*.jpg lúc build (thả thêm file là tự dùng)
 let heroSlides=[], heroIdx=0, heroTimer=null;
-// Mô tả banner giữ phong cách ngắn, giàu hình ảnh như cũ; phong độ chỉ là chất liệu cho câu chữ.
+// Tổng hợp một tháng gần nhất để banner nhận định theo giai đoạn, không phản ứng theo một trận lẻ.
+function heroMonthStats(name){
+  const end=Date.now(), start=end-30*24*60*60*1000;
+  let played=0,w=0,d=0,l=0,goals=0;
+  getHistory().forEach(r=>{
+    const when=+(r.kickoff||r.id||0);
+    if(!r.score||!Array.isArray(r.subset)||!r.result||when<start||when>end)return;
+    const idx=r.subset.findIndex(p=>p&&p.n===name), team=idx<0?null:teamOfIdx(r,idx);
+    if(!team)return;
+    played++;
+    const a=+r.score.a||0,b=+r.score.b||0;
+    if(a===b)d++; else if((team==="A"&&a>b)||(team==="B"&&b>a))w++; else l++;
+    goals+=r.goals?(+r.goals[name]||0):0;
+  });
+  return {played,w,d,l,goals};
+}
+// Mô tả banner giữ phong cách ngắn, giàu hình ảnh như cũ; số liệu tháng vừa rồi là chất liệu cho câu chữ.
 function heroNarrativeDesc(p){
-  const st=playerStats(p.n), goals=playerGoals(p.n), form=st.form||[];
+  const st=heroMonthStats(p.n);
   const {head,second}=evalData(p);
   const strengths=second&&second.v>=5
     ? `${head.name.toLowerCase()} và ${second.name.toLowerCase()}`
     : head.name.toLowerCase();
-  let streak=0; while(streak<form.length&&form[streak]===form[0])streak++;
-  let pulse="Đang chờ những trận có tỉ số để tạo dấu ấn rõ nét hơn.";
-  if(st.played){
-    if(form[0]==="W"&&streak>=2)pulse="Phong độ đang lên rõ rệt, chơi đầy tự tin và là điểm tựa đáng tin trong các pha quyết định.";
-    else if(form[0]==="W")pulse="Vừa có một màn thể hiện tích cực, sẵn sàng nối tiếp đà hưng phấn ở trận tới.";
-    else if(form[0]==="D")pulse="Giữ được nhịp thi đấu ổn định, phù hợp cho những trận cần sự điềm tĩnh và tính toán.";
-    else if(form[0]==="L"&&streak>=2)pulse="Đang cần một màn đáp trả mạnh mẽ để tìm lại nhịp chơi quen thuộc.";
-    else pulse="Vẫn là phương án đáng tin để làm mới thế trận và tạo khác biệt khi đội cần.";
-  }
-  const finish=goals.total
-    ? "Đã để lại dấu ấn bằng những pha kết thúc trong các trận đã qua."
-    : "Đóng góp nhiều hơn ở cách di chuyển, liên kết và hỗ trợ cấu trúc đội hình.";
-  return `${POS_LABEL[posCodeOf(p)]} có điểm mạnh ở ${strengths}. ${pulse} ${finish}`;
+  if(!st.played)return `${POS_LABEL[posCodeOf(p)]} có điểm mạnh ở ${strengths}. Tháng vừa rồi chưa có đủ trận đã chốt tỉ số để đánh giá phong độ, nhưng vẫn là phương án đáng chờ đợi khi đội cần tạo khác biệt.`;
+  const record=`Tháng vừa rồi đá ${st.played} trận: ${st.w} thắng, ${st.d} hòa, ${st.l} thua`;
+  const goalText=st.goals?` và ghi ${st.goals} bàn`:"";
+  let assessment="Giữ vai trò kết nối, giúp đội hình chơi mạch lạc hơn ở các thời điểm then chốt.";
+  if(st.w>st.l)assessment="Kết quả tích cực cho thấy sự tự tin và tính ổn định đang được duy trì.";
+  else if(st.l>st.w)assessment="Kết quả chưa như ý, nhưng đây là thời điểm phù hợp để điều chỉnh và tìm lại nhịp chơi quen thuộc.";
+  else if(st.goals)assessment="Có dấu ấn trực tiếp ở khâu kết thúc và vẫn là mối đe doạ khi đội đẩy cao nhịp độ.";
+  return `${POS_LABEL[posCodeOf(p)]} có điểm mạnh ở ${strengths}. ${record}${goalText}. ${assessment}`;
 }
 function heroSlideHTML(p,idx,total){
   const bg=`<div class="hf-bg" style="background-image:url('${HERO_BG[((idx||0)%HERO_BG.length)]}')"></div>`;
