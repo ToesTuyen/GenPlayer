@@ -638,7 +638,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-no.top{background:var(--amber-soft);color:var(--gold)}
 .rank-row .avatar{width:34px;height:34px;font-size:12px}
 .rank-id{flex:1;min-width:0}
-.rank-name{font-weight:800;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-name{font-family:Arial,"Helvetica Neue","Noto Sans",sans-serif;font-weight:800;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-kerning:normal}
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
@@ -1569,7 +1569,7 @@ function showPosRank(){
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(p.n)}')">
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</span>
-        <div class="rank-id"><div class="rank-name">${p.n}${isStar(p)?' <span class="pc-star">★</span>':''}</div><div class="rank-sub">${evalTitle(p)}</div></div>
+        <div class="rank-id"><div class="rank-name">${rankName(p.n)}${isStar(p)?' <span class="pc-star">★</span>':''}</div><div class="rank-sub">${evalTitle(p)}</div></div>
         <span class="rank-wr">${ov(p).toFixed(1)}</span>
       </div>`).join("")+`</div>`;
   });
@@ -1599,7 +1599,7 @@ function renderHomeScorers(){
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(x.name)}')">
         <span class="rank-no${i<3?' top':''}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
-        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá</div></div>
+        <div class="rank-id"><div class="rank-name">${rankName(x.name)}</div><div class="rank-sub">${x.played} trận đá</div></div>
         <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
@@ -1848,6 +1848,8 @@ function openHeroPlayer(){   // click banner → mở hồ sơ cầu thủ đang
 }
 // ---- thông tin trận (ngày giờ / sân) ----
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+// Chuẩn hoá Unicode và ép fallback font có đủ dấu tiếng Việt cho mọi tên trong bảng xếp hạng.
+function rankName(s){return `<span lang="vi">${esc(String(s==null?"":s).normalize("NFC"))}</span>`;}
 function todayStr(){const d=new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
 function parseKick(dateStr,timeStr){if(!dateStr)return null;const ms=new Date(dateStr+"T"+(timeStr||"00:00")).getTime();return isNaN(ms)?null:ms;}
 function fmtKick(ms){if(!ms)return"";const d=new Date(ms),p=n=>String(n).padStart(2,"0");const date=p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();const hm=(d.getHours()||d.getMinutes())?(" · "+p(d.getHours())+":"+p(d.getMinutes())):"";return date+hm;}
@@ -2359,7 +2361,7 @@ function renderRank(boxId){
     return `<div class="rank-row" onclick="openRankRow(${i})">
       <span class="rank-no${i<3?" top":""}">${i+1}</span>
       <span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span>
-      <div class="rank-id"><div class="rank-name">${p.n}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B</div></div>
+      <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B</div></div>
       ${heatHTML(p.n,st.form)}
       <span class="rank-wr">${st.winRate}%</span>
     </div>`;
@@ -2662,7 +2664,7 @@ function renderScorer(boxId){
       <div class="rank-row" onclick="openScorerRow(${i})">
         <span class="rank-no${i<3?" top":""}">${i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
-        <div class="rank-id"><div class="rank-name">${esc(x.name)}</div><div class="rank-sub">${x.played} trận đá${x.p?" · "+evalTitle(x.p):""}</div></div>
+        <div class="rank-id"><div class="rank-name">${rankName(x.name)}</div><div class="rank-sub">${x.played} trận đá${x.p?" · "+evalTitle(x.p):""}</div></div>
         <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
