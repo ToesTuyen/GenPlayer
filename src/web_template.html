@@ -247,6 +247,13 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 /* đánh giá chỉ số */
 .pm-eval{padding:0 20px 20px}
 @media(max-width:680px){.pm-eval{padding:0 16px 18px}}
+.pm-eval-compact{margin-top:14px;padding:14px 0 0;border-top:1px solid var(--line)}
+.pm-eval-compact .pm-sec{margin-bottom:8px}
+.pm-eval-compact .ev-apts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 20px;margin:0}
+.pm-eval-compact .ev-apt{grid-template-columns:68px minmax(0,1fr) 29px;gap:7px}
+.pm-eval-compact .ev-apt-n,.pm-eval-compact .ev-apt-v{font-size:11.5px}
+.pm-eval-compact .ev-bar{height:6px}
+@media(max-width:520px){.pm-eval-compact .ev-apts{grid-template-columns:1fr}}
 .ev-arch{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:14px}
 .ev-arch-name{font-size:16px;font-weight:800;color:var(--text)}
 .ev-arch-desc{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.42}
@@ -2739,8 +2746,9 @@ function evalAptsHTML(p){
 }
 // danh hiệu (vd "Mũi nhọn săn bàn") + mô tả — hiện ở NỬA PHẢI header hồ sơ
 function evalArch(p){const {title,desc}=evalData(p);return `<div class="pm-arch"><div class="pm-arch-name">🏅 ${title}</div><div class="pm-arch-desc">${desc}</div></div>`;}
-// khối "Đánh giá chỉ số" chỉ gồm các thanh (KHÔNG kèm danh hiệu) — đặt ở vùng dưới lưới
-function evalBarsHTML(p){return `<div class="pm-eval"><div class="pm-sec">Đánh giá chỉ số</div>${evalAptsHTML(p)}</div>`;}
+// khối "Đánh giá chỉ số" chỉ gồm các thanh (KHÔNG kèm danh hiệu).
+// Ở hồ sơ: nằm gọn trong cột phải, dưới Kỹ thuật + Thể chất & tinh thần.
+function evalBarsHTML(p,compact){return `<div class="pm-eval${compact?' pm-eval-compact':''}"><div class="pm-sec">Đánh giá chỉ số</div>${evalAptsHTML(p)}</div>`;}
 // bản đầy đủ (danh hiệu + thanh) — dùng cho PREVIEW khi sửa điểm
 function evalBlock(p){const {title,desc}=evalData(p);
   return `<div class="pm-eval">
@@ -2779,9 +2787,8 @@ function renderPlayerProfile(){
       <div class="pm-right"><div class="pm-cols">
         <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.filter(([k])=>showAttr(k)).map(([k,l])=>attrRow(l,p[k])).join("")}</div>
         <div><div class="pm-sec">Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
-      </div></div>
+      </div>${evalBarsHTML(p,true)}</div>
     </div>
-    ${evalBarsHTML(p)}
     <div class="pm-stats-wrap" id="pmGoalSection">${goalsChartPanel(p.n)}</div>
     <div class="pm-stats-wrap">${statsPanel(p.n)}</div>`;
 }
