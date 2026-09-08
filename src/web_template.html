@@ -773,6 +773,22 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .fb-card .fb-txt{font-size:14px;line-height:1.5;color:var(--text);margin:4px 0;white-space:pre-wrap;word-break:break-word}
 .fb-card .fb-meta{font-size:11.5px;color:var(--muted)}
 .fb-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+/* ===== Quản lý thu chi ===== */
+.fin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.fin-title{font-size:21px;font-weight:800}.fin-sub{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:4px}
+.fin-summary{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.fin-kpi{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:15px;padding:15px 16px;background:linear-gradient(145deg,rgba(50,35,99,.84),rgba(19,31,71,.88));box-shadow:var(--sh-sm)}
+.fin-kpi::after{content:'';position:absolute;width:92px;height:92px;right:-34px;top:-38px;border-radius:50%;background:rgba(255,255,255,.07)}
+.fin-kpi.balance{background:linear-gradient(135deg,rgba(68,105,207,.88),rgba(92,51,157,.9))}.fin-kpi.in .fin-kpi-val{color:#56e69a}.fin-kpi.out .fin-kpi-val{color:#ff9eae}
+.fin-kpi-lab{position:relative;z-index:1;text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;font-weight:800;color:var(--muted)}
+.fin-kpi-val{position:relative;z-index:1;font-size:22px;font-weight:800;letter-spacing:-.025em;margin-top:7px;white-space:nowrap}.fin-kpi-note{position:relative;z-index:1;font-size:11px;color:var(--muted);margin-top:4px}
+.fin-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}.fin-toolbar .sp{flex:1}.fin-month{min-height:36px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);padding:6px 9px;font-size:13px}
+.fin-list{display:flex;flex-direction:column;gap:9px}.fin-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(50,35,94,.72),rgba(19,31,71,.78));border:1px solid rgba(231,232,255,.15);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.fin-type{width:39px;height:39px;display:grid;place-items:center;border-radius:11px;font-size:18px;font-weight:800}.fin-type.in{background:rgba(55,211,127,.14);color:#4fe08d}.fin-type.out{background:rgba(255,81,104,.14);color:#ff8fa1}
+.fin-main{min-width:0}.fin-name{font-size:14px;font-weight:800;line-height:1.28;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fin-meta{margin-top:3px;color:var(--muted);font-size:11.5px;line-height:1.35}.fin-amt{font-size:15px;font-weight:800;white-space:nowrap;text-align:right}.fin-amt.in{color:#56e69a}.fin-amt.out{color:#ff9eae}.fin-edit{display:flex;gap:5px}.fin-icon-btn{width:32px;height:32px;border-radius:9px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);cursor:pointer;font-size:14px}.fin-icon-btn:hover{color:var(--text);background:var(--surface3)}
+.fin-empty{padding:32px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);line-height:1.55;background:rgba(20,29,63,.46)}.fin-empty .big{font-size:28px;display:block;margin-bottom:5px}
+.fin-form-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}.fin-error{display:none;margin-top:10px;font-size:12px;color:#ff9eae}.fin-error.show{display:block}
+@media(max-width:620px){.fin-summary{grid-template-columns:1fr}.fin-kpi-val{font-size:21px}.fin-row{grid-template-columns:auto minmax(0,1fr) auto}.fin-edit{grid-column:2/4;justify-content:flex-end;margin-top:-3px}.fin-toolbar .sp{display:none}.fin-toolbar .btn{flex:1}.fin-month{flex:1;min-width:134px}}
 </style></head><body>
 
 <header class="appbar">
@@ -797,6 +813,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
+        <button class="ap-btn" onclick="show('screen-finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/><path d="M7 3h10"/></svg><span>Thu chi</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span>Backup</span></button>
       </div>
     </section>
@@ -878,6 +895,21 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div id="week-result"></div>
 </div>
 
+<!-- ====== QUAN LY THU CHI ====== -->
+<div id="screen-finance" class="screen">
+  <div class="fin-head">
+    <div><div class="fin-title">💰 Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
+    <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')">＋ Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')">－ Ghi chi</button></div>
+  </div>
+  <div class="fin-summary" id="finance-summary"></div>
+  <div class="fin-toolbar">
+    <input class="fin-month" type="month" id="finance-month" onchange="setFinanceMonth(this.value)" aria-label="Lọc theo tháng">
+    <button class="btn alt sm" onclick="showAllFinance()">Tất cả</button><span class="sp"></span>
+    <button class="btn alt sm" onclick="exportFinanceCSV()">⇩ Xuất CSV</button>
+  </div>
+  <div class="fin-list" id="finance-list"></div>
+</div>
+
 <!-- ====== LICH SU ====== -->
 <div id="screen-backup" class="screen">
   <div id="backup-list"></div>
@@ -932,6 +964,23 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="score-team-name">TEAM B</div>
     </div>
     <div class="score-modal-actions"><button class="btn sm score-action" onclick="saveScoreModal()">💾 Lưu tỉ số</button><button class="btn alt sm" onclick="closeScoreModal()">Hủy</button></div>
+  </div>
+</div>
+
+<!-- ====== GIAO DICH THU CHI ====== -->
+<div class="modal" id="financeModal" onclick="if(event.target===this)closeFinanceEntry()">
+  <div class="modal-box">
+    <h3 id="finance-modal-title">💰 Ghi thu</h3>
+    <div class="mrow"><span class="lbl">Loại giao dịch</span>
+      <select id="fin-type" onchange="syncFinanceCategories()"><option value="income">➕ Khoản thu</option><option value="expense">➖ Khoản chi</option></select></div>
+    <div class="mrow"><span class="lbl">Số tiền (VNĐ)</span><input id="fin-amount" type="number" min="1" max="1000000000" step="1000" inputmode="numeric" placeholder="VD: 300000"></div>
+    <div class="mrow"><span class="lbl">Hạng mục</span><select id="fin-category"></select></div>
+    <div class="mrow"><span class="lbl">Ngày giao dịch</span><input id="fin-date" type="date"></div>
+    <div class="mrow"><span class="lbl">Người nộp / chi</span><input id="fin-person" type="text" maxlength="60" placeholder="VD: Tuyên"></div>
+    <div class="mrow"><span class="lbl">Ghi chú</span><input id="fin-note" type="text" maxlength="160" placeholder="VD: Tiền sân thứ 6"></div>
+    <div class="fin-form-note">Số dư sẽ tự tính lại ngay sau khi lưu. Chỉ admin có thể thêm, sửa hoặc xóa giao dịch.</div>
+    <div id="fin-error" class="fin-error">Nhập số tiền hợp lệ lớn hơn 0.</div>
+    <div style="display:flex;gap:8px;margin-top:16px"><button class="btn sm" onclick="saveFinanceEntry()">💾 Lưu giao dịch</button><button class="btn alt sm" onclick="closeFinanceEntry()">Hủy</button></div>
   </div>
 </div>
 
@@ -1129,8 +1178,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
-const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog"};
-const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng","screen-week":"📋 Trận sắp tới","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
+const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
+const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng","screen-week":"📋 Trận sắp tới","screen-finance":"💰 Quản lý thu chi","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#fcba03";
@@ -1174,7 +1223,7 @@ function avaStyle(n){const ph=photoOf(n);return ph?`background-image:url('${enco
 function avaInner(n){return photoOf(n)?"":initials(n);}   // có ảnh thì không hiện chữ viết tắt
 
 // ---- data (JSON; localStorage + Firebase real-time nếu có config) ----
-let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], feedback:[], matchLog:[], cloud:false, docRef:null, cloudHistoryLen:null, _allowShrink:false, _lastWritten:{}};
+let STATE={players:DEFAULT_PLAYERS.map(p=>({...p})), history:[], plog:[], requests:[], goalReqs:[], feedback:[], matchLog:[], finance:[], cloud:false, docRef:null, cloudHistoryLen:null, _allowShrink:false, _lastWritten:{}};
 function localLoad(){
   try{const s=localStorage.getItem(LS.players); if(s)STATE.players=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.history); if(s)STATE.history=JSON.parse(s);}catch(e){}
@@ -1183,6 +1232,7 @@ function localLoad(){
   try{const s=localStorage.getItem(LS.goalReqs); if(s)STATE.goalReqs=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.feedback); if(s)STATE.feedback=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem(LS.matchLog); if(s)STATE.matchLog=JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem(LS.finance); if(s)STATE.finance=JSON.parse(s);}catch(e){}
   ensureRatings(STATE.players);
 }
 function getPlayers(){return STATE.players.map(p=>({...p}));}
@@ -1191,15 +1241,16 @@ function getPlog(){return (STATE.plog||[]).slice();}
 function getRequests(){return (STATE.requests||[]).slice();}   // yêu cầu sửa đang chờ admin duyệt
 function getGoalReqs(){return (STATE.goalReqs||[]).slice();}   // yêu cầu ghi nhận bàn thắng đang chờ admin duyệt
 function getMatchLog(){return (STATE.matchLog||[]).slice();}    // nhật ký thao tác trận (ai + hành động + lúc nào)
+function getFinance(){return (STATE.finance||[]).slice();}
 // Ảnh chụp 7 field đồng bộ cloud (dùng chung cho persist + seed mốc "đã ghi").
-function _fieldSnapshot(){return {players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]};}
+function _fieldSnapshot(){return {players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]};}
 // Ghi lại mốc "đã đồng bộ với cloud" cho từng field — gọi sau khi NHẬN snapshot hoặc GHI xong.
 function _seedLastWritten(){const a=_fieldSnapshot(),o={};for(const k in a)o[k]=JSON.stringify(a[k]);STATE._lastWritten=o;}
 // persist(): CHỈ ghi field ĐÃ ĐỔI so với bản cloud gần nhất (per-field) → không ghi đè field mà web/app khác vừa sửa.
 // Trả về TRUE nếu đã ghi (hoặc không có gì cần ghi / không cloud), FALSE nếu guard chặn ghi history.
 // Nhờ đó nơi gọi biết có nên ghi dòng nhật ký (matchLog) hay không → tránh log "khống" cho thao tác bị chặn.
 function persist(){
-  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog||[]));}catch(e){}
+  try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog||[]));localStorage.setItem(LS.finance,JSON.stringify(STATE.finance||[]));}catch(e){}
   const allowShrink=STATE._allowShrink; STATE._allowShrink=false;   // cờ 1-lần: chỉ cho phép ghi cloud ngắn hơn khi vừa xoá/gộp có xác nhận
   if(!(STATE.cloud&&STATE.docRef)) return true;
   const all=_fieldSnapshot(), lw=STATE._lastWritten||(STATE._lastWritten={});
@@ -1220,6 +1271,7 @@ function persist(){
 }
 function setPlayers(a){STATE.players=a;return persist();}
 function setHistory(a){STATE.history=a;return persist();}   // trả về kết quả persist để nơi gọi biết có ghi cloud thành công không
+function setFinance(a){STATE.finance=a;return persist();}
 function getBackups(){return (STATE.lineupBackups||[]).slice();}
 function setBackups(a){STATE.lineupBackups=a;persist();}
 // RE-READ trước khi ghi: đọc TOÀN BỘ doc MỚI NHẤT từ cloud, đồng bộ local + mốc từng field,
@@ -1237,6 +1289,7 @@ function freshDoc(cb){
       STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];
       STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];
       STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];
+      STATE.finance=Array.isArray(d.finance)?d.finance:[];
       STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;
     }
     _seedLastWritten();   // mốc từng field = cloud tươi → persist sau chỉ ghi field ta đổi trên nền tươi
@@ -1425,8 +1478,8 @@ function initCloud(){
     STATE.docRef=firebase.firestore().collection("genplayer").doc("data");
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
-      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];STATE.matchLog=Array.isArray(d.matchLog)?d.matchLog:[];STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[]},{merge:true});
+      if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];STATE.matchLog=Array.isArray(d.matchLog)?d.matchLog:[];STATE.finance=Array.isArray(d.finance)?d.finance:[];STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;}
+      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]},{merge:true});
       _seedLastWritten();   // vừa đồng bộ với cloud → chốt mốc từng field để persist() sau chỉ ghi field THỰC SỰ đổi
       ensureRatings(STATE.players);
       onCloudUpdate();
@@ -1449,6 +1502,7 @@ function onCloudUpdate(){
   if(!cur)return;
   if(cur.id==="home")renderHome();
   if(cur.id==="screen-week")showWeek();
+  if(cur.id==="screen-finance")renderFinance();
   if(cur.id==="screen-history")showHistory();
   if($("overdueModal")&&$("overdueModal").classList.contains("on"))renderOverdue();   // đang mở -> refresh khi cloud đổi
   maybeWarnOverdue();   // dữ liệu tải/đổi -> kiểm tra trận quá giờ (chỉ tự bật 1 lần/phiên)
@@ -1510,6 +1564,83 @@ function deleteFb(id){
   freshDoc(()=>{ STATE.feedback=getFeedback().filter(x=>String(x.id)!==String(id)); persist(); updateFbBadge(); renderFbInbox(); });
 }
 
+// ===== QUẢN LÝ THU CHI (field `finance`; chỉ admin được thay đổi) =====
+const FIN_CATS={income:["Đóng quỹ","Ủng hộ","Hoàn tiền","Khác"],expense:["Sân bãi","Nước uống","Bóng / dụng cụ","Áo / in ấn","Liên hoan","Khác"]};
+let financeMonth="", financeEditId=null;
+function finToday(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function finMoney(n){return new Intl.NumberFormat("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0}).format(Math.abs(+n||0));}
+function finDate(s){const a=String(s||"").split("-");return a.length===3?`${a[2]}/${a[1]}/${a[0]}`:(s||"—");}
+function finType(t){return t==="income"?"income":"expense";}
+function finTotals(rows){return rows.reduce((o,x)=>{const a=Math.max(0,+x.amount||0);if(finType(x.type)==="income")o.income+=a;else o.expense+=a;return o;},{income:0,expense:0});}
+function finSorted(rows){return rows.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||(+b.updatedAt||+b.createdAt||0)-(+a.updatedAt||+a.createdAt||0));}
+function setFinanceMonth(v){financeMonth=v||"";renderFinance();}
+function showAllFinance(){financeMonth="";const el=$("finance-month");if(el)el.value="";renderFinance();}
+function financeRows(){const all=getFinance();return financeMonth?all.filter(x=>String(x.date||"").slice(0,7)===financeMonth):all;}
+function renderFinance(){
+  const sum=$("finance-summary"), list=$("finance-list"), month=$("finance-month"), acts=$("finance-admin-actions"); if(!sum||!list)return;
+  if(month&&month.value!==financeMonth)month.value=financeMonth;
+  if(acts)acts.style.display=isAdmin?"flex":"none";
+  const all=finTotals(getFinance()), rows=finSorted(financeRows()), period=finTotals(rows);
+  const periodLabel=financeMonth?`trong ${finDate(financeMonth+"-01").slice(3)}`:"toàn thời gian";
+  sum.innerHTML=`<div class="fin-kpi balance"><div class="fin-kpi-lab">Số dư quỹ</div><div class="fin-kpi-val">${finMoney(all.income-all.expense)}</div><div class="fin-kpi-note">Thu ${finMoney(all.income)} · chi ${finMoney(all.expense)}</div></div>
+    <div class="fin-kpi in"><div class="fin-kpi-lab">Tổng thu</div><div class="fin-kpi-val">+${finMoney(period.income)}</div><div class="fin-kpi-note">${periodLabel}</div></div>
+    <div class="fin-kpi out"><div class="fin-kpi-lab">Tổng chi</div><div class="fin-kpi-val">−${finMoney(period.expense)}</div><div class="fin-kpi-note">${periodLabel}</div></div>`;
+  if(!rows.length){list.innerHTML=`<div class="fin-empty"><span class="big">💳</span>${financeMonth?"Chưa có giao dịch trong tháng này.":"Quỹ chưa có giao dịch nào."}${isAdmin?"<br>Chọn <b>Ghi thu</b> hoặc <b>Ghi chi</b> để bắt đầu.":""}</div>`;return;}
+  list.innerHTML=rows.map(x=>{
+    const income=finType(x.type)==="income", cat=esc(x.category||"Khác"), note=esc(x.note||""), person=esc(x.person||"");
+    const title=note||cat, meta=[finDate(x.date),cat,person].filter(Boolean).join(" · ");
+    const edit=isAdmin?`<div class="fin-edit"><button class="fin-icon-btn" title="Sửa giao dịch" onclick="openFinanceEntry('', '${encodeURIComponent(String(x.id))}')">✏️</button><button class="fin-icon-btn" title="Xoá giao dịch" onclick="deleteFinanceEntry('${encodeURIComponent(String(x.id))}')">🗑️</button></div>`:"";
+    return `<div class="fin-row"><div class="fin-type ${income?"in":"out"}">${income?"↙":"↗"}</div><div class="fin-main"><div class="fin-name">${title}</div><div class="fin-meta">${meta}</div></div><div class="fin-amt ${income?"in":"out"}">${income?"+":"−"}${finMoney(x.amount)}</div>${edit}</div>`;
+  }).join("");
+}
+function syncFinanceCategories(selected){
+  const type=finType($("fin-type").value), sel=$("fin-category"), choices=FIN_CATS[type]||[];
+  const pick=selected||sel.value||choices[0];
+  sel.innerHTML=choices.map(x=>`<option value="${esc(x)}" ${x===pick?"selected":""}>${esc(x)}</option>`).join("");
+  if(!choices.includes(pick))sel.insertAdjacentHTML("beforeend",`<option value="${esc(pick)}" selected>${esc(pick)}</option>`);
+}
+function openFinanceEntry(type,id){
+  if(!requireAdmin())return;
+  financeEditId=id?decodeURIComponent(id):null;
+  const old=financeEditId?getFinance().find(x=>String(x.id)===String(financeEditId)):null;
+  if(financeEditId&&!old){toast("Giao dịch này không còn tồn tại.","warn");return;}
+  $("finance-modal-title").textContent=old?"✏️ Sửa giao dịch":(finType(type)==="income"?"💰 Ghi khoản thu":"💸 Ghi khoản chi");
+  $("fin-type").value=old?finType(old.type):finType(type);
+  $("fin-amount").value=old?Math.round(+old.amount||0):"";
+  $("fin-date").value=old?(old.date||finToday()):finToday();
+  $("fin-person").value=old?(old.person||""):(sessionName||"");
+  $("fin-note").value=old?(old.note||""):"";
+  syncFinanceCategories(old&&old.category);
+  $("fin-error").classList.remove("show"); $("financeModal").classList.add("on");
+  setTimeout(()=>$("fin-amount").focus(),30);
+}
+function closeFinanceEntry(){$("financeModal").classList.remove("on");financeEditId=null;}
+function saveFinanceEntry(){
+  if(!requireAdmin())return;
+  const amount=Math.round(+$("fin-amount").value||0), err=$("fin-error");
+  if(!amount||amount<1){err.classList.add("show");$("fin-amount").focus();return;}
+  const type=finType($("fin-type").value), entry={type,amount,category:$("fin-category").value||"Khác",date:$("fin-date").value||finToday(),person:$("fin-person").value.trim(),note:$("fin-note").value.trim()};
+  freshDoc(()=>{
+    const rows=getFinance(), at=Date.now();
+    const wasEdit=!!financeEditId;
+    if(wasEdit){const i=rows.findIndex(x=>String(x.id)===String(financeEditId));if(i<0){toast("Giao dịch đã bị xoá ở nơi khác.","warn");closeFinanceEntry();renderFinance();return;}rows[i]={...rows[i],...entry,updatedAt:at,updatedBy:sessionName||"Admin"};}
+    else rows.unshift({id:at+"_"+Math.round(Math.random()*1e4),...entry,createdAt:at,createdBy:sessionName||"Admin"});
+    setFinance(rows); closeFinanceEntry(); renderFinance(); toast(wasEdit?"Đã cập nhật giao dịch.":"Đã ghi giao dịch vào sổ quỹ.");
+  });
+}
+function deleteFinanceEntry(id){
+  if(!requireAdmin())return;
+  const key=decodeURIComponent(id), tx=getFinance().find(x=>String(x.id)===String(key));if(!tx)return;
+  if(!confirm(`Xoá ${finType(tx.type)==="income"?"khoản thu":"khoản chi"} ${finMoney(tx.amount)}${tx.note?` — ${tx.note}`:""}?`))return;
+  freshDoc(()=>{const rows=getFinance();if(!rows.some(x=>String(x.id)===String(key))){toast("Giao dịch đã được xoá ở nơi khác.","warn");renderFinance();return;}setFinance(rows.filter(x=>String(x.id)!==String(key)));renderFinance();toast("Đã xoá giao dịch.");});
+}
+function csvCell(v){return `"${String(v==null?"":v).replace(/"/g,'""')}"`;}
+function exportFinanceCSV(){
+  const rows=finSorted(financeRows());
+  const csv=["Loại,Ngày,Hạng mục,Số tiền (VNĐ),Người nộp / chi,Ghi chú",...rows.map(x=>[finType(x.type)==="income"?"Thu":"Chi",x.date||"",x.category||"",Math.round(+x.amount||0),x.person||"",x.note||""].map(csvCell).join(","))].join("\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`thu-chi${financeMonth?"-"+financeMonth:"-tat-ca"}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
 // ---- quy diem nhanh ----
 function quickScores(tier,positions,spd,wr){
   const BASE={NS:8.5,K:7.0,TB:5.5,Y:4.0};
@@ -1551,6 +1682,7 @@ function show(id){
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
+  if(id==="screen-finance") renderFinance();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
 }
@@ -3313,6 +3445,7 @@ function refreshScreen(){   // vẽ lại màn đang mở sau khi đổi dữ li
   if(!cur)return;
   if(cur.id==="home")renderHome();
   else if(cur.id==="screen-week")showWeek();
+  else if(cur.id==="screen-finance")renderFinance();
   else if(cur.id==="screen-history")showHistory();
 }
 function delHistory(id){
