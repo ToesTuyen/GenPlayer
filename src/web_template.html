@@ -2070,7 +2070,13 @@ function renderMatchList(h){
   box.innerHTML=html;
 }
 // Ô = Trận sắp tới — SƠ ĐỒ SÂN dọc: Team A (trên, đỏ) vs Team B (dưới, vàng)
-function shortName(n){const w=String(n||"").trim().split(/\s+/);return w.slice(-2).join(" ");}
+function shortName(n){
+  const s=String(n||"").trim();
+  // Tên khách là một nhãn hoàn chỉnh. Không cắt hai từ cuối, nếu không
+  // "Khách (bạn Khắc Trọng)" sẽ bị hiển thị thành "Khắc Trọng)" trên sân.
+  if(/^Khách\s*\(bạn\b/i.test(s))return s;
+  const w=s.split(/\s+/);return w.slice(-2).join(" ");
+}
 function vpitch(r){
   const sel=r.subset, eA=r.result.evA, eB=r.result.evB;
   const slots=lineupSlots(eA), six=slots.length===6;
