@@ -2561,7 +2561,7 @@ function renderLossStreakRank(){
   }).filter(x=>x.st.played>0)
     .sort((a,b)=>b.chain-a.chain||a.absent-b.absent||b.st.l-a.st.l||b.st.played-a.st.played||ov(b.p)-ov(a.p));
   if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">💨</span>Chưa có trận nào kết thúc để tính chuỗi bại.</div>`;return;}
-  box.innerHTML=`<div class="rank-note">💨 <b>Chuỗi bại</b> tính từ trận gần nhất mà cầu thủ có ra sân; chỉ từ <b>2 trận thua liên tiếp</b> mới được xếp là chuỗi.</div><div class="rank-list">`+rankRows.map((x,i)=>{
+  box.innerHTML=`<div class="rank-list">`+rankRows.map((x,i)=>{
     const {p,st,absent,chain}=x;
     const note=chain
       ? `thua ${chain} trận liên tiếp${absent?` · vắng ${absent} trận gần đây`:""}`
