@@ -649,9 +649,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
-.rank-streak{min-width:74px;padding:5px 8px;border-radius:8px;text-align:center;font-size:11px;font-weight:900;line-height:1.15;flex:0 0 auto}
-.rank-streak.loss{background:rgba(255,92,92,.13);border:1px solid rgba(255,116,116,.36);color:#ff9a9a}
-.rank-streak.clear{background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+.rank-losses{display:flex;gap:4px;min-width:74px;justify-content:flex-end;flex:0 0 auto}
+.rank-loss-chip{width:21px;height:21px;border-radius:6px;display:grid;place-items:center;background:#df4c59;color:#fff;font-size:11px;font-weight:900;box-shadow:inset 0 1px rgba(255,255,255,.25),0 2px 5px rgba(116,24,36,.24)}
+.rank-loss-more{height:21px;display:flex;align-items:center;color:#ff9a9a;font-size:11px;font-weight:900}
+.rank-loss-empty{min-width:74px;text-align:right;color:var(--muted);font-weight:800;flex:0 0 auto}
 /* ===== ngọn lửa phong độ: 5 nấc lửa (ngùn ngụt→rực→nóng→bén→lom dom) + nguội + tắt ===== */
 .heat{position:relative;display:inline-flex;width:36px;height:46px;flex:0 0 auto;align-items:flex-end;justify-content:center;margin-right:2px}
 .hf-wrap{position:relative;width:100%;height:100%}
@@ -2551,23 +2552,27 @@ function renderRank(boxId){
     </div>`;
   }).join("")+`</div>`;
 }
-// Chuỗi bại đang có: xếp cầu thủ thua liên tiếp nhiều nhất lên đầu.
+// Chuỗi bại đang có: chỉ từ 2 trận thua liên tiếp mới tính là một chuỗi.
 // Người vắng trận vẫn hiện để không mất dữ liệu, nhưng được ghi chú rõ để tránh hiểu là phong độ vừa diễn ra.
 function renderLossStreakRank(){
   const box=$("rank2-body"); if(!box)return;
-  rankRows=getPlayers().map(p=>({name:p.n,p,st:playerStats(p.n),absent:playerAbsentStreak(p.n)})).filter(x=>x.st.played>0)
-    .sort((a,b)=>b.st.lossStreak-a.st.lossStreak||a.absent-b.absent||b.st.l-a.st.l||b.st.played-a.st.played||ov(b.p)-ov(a.p));
+  rankRows=getPlayers().map(p=>{
+    const st=playerStats(p.n); return {name:p.n,p,st,absent:playerAbsentStreak(p.n),chain:st.lossStreak>=2?st.lossStreak:0};
+  }).filter(x=>x.st.played>0)
+    .sort((a,b)=>b.chain-a.chain||a.absent-b.absent||b.st.l-a.st.l||b.st.played-a.st.played||ov(b.p)-ov(a.p));
   if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">💨</span>Chưa có trận nào kết thúc để tính chuỗi bại.</div>`;return;}
-  box.innerHTML=`<div class="rank-note">💨 <b>Chuỗi bại</b> tính từ trận gần nhất mà cầu thủ có ra sân. Chuỗi dài hơn đứng trước.</div><div class="rank-list">`+rankRows.map((x,i)=>{
-    const {p,st,absent}=x, streak=st.lossStreak;
-    const note=streak
-      ? `thua ${streak} trận liên tiếp${absent?` · vắng ${absent} trận gần đây`:""}`
-      : (absent?`không có chuỗi thua · vắng ${absent} trận gần đây`:"không có chuỗi thua");
+  box.innerHTML=`<div class="rank-note">💨 <b>Chuỗi bại</b> tính từ trận gần nhất mà cầu thủ có ra sân; chỉ từ <b>2 trận thua liên tiếp</b> mới được xếp là chuỗi.</div><div class="rank-list">`+rankRows.map((x,i)=>{
+    const {p,st,absent,chain}=x;
+    const note=chain
+      ? `thua ${chain} trận liên tiếp${absent?` · vắng ${absent} trận gần đây`:""}`
+      : (st.lossStreak===1?`vừa thua trận gần nhất${absent?` · vắng ${absent} trận gần đây`:""}`:(absent?`không có chuỗi bại · vắng ${absent} trận gần đây`:"không có chuỗi bại"));
+    const shown=Math.min(chain,7);
+    const chainUI=chain?`<span class="rank-losses" title="Chuỗi bại ${chain} trận">${Array.from({length:shown},()=>`<span class="rank-loss-chip">B</span>`).join("")}${chain>shown?`<span class="rank-loss-more">+${chain-shown}</span>`:""}</span>`:`<span class="rank-loss-empty">—</span>`;
     return `<div class="rank-row" onclick="openRankRow(${i})">
       <span class="rank-no${i<3?" top":""}">${i+1}</span>
       <span class="avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</span>
       <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${note}</div></div>
-      <span class="rank-streak ${streak?"loss":"clear"}">${streak?`💨 ${streak} B`:`—`}</span>
+      ${chainUI}
     </div>`;
   }).join("")+`</div>`;
 }
