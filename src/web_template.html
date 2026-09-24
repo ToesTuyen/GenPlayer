@@ -649,6 +649,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .rank-sub{font-size:11.5px;color:var(--muted)}
 .rank-wr{font-weight:900;font-size:16px;color:#22e07a;flex:0 0 auto}
 .rank-goals{font-weight:900;font-size:16px;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+.rank-streak{min-width:74px;padding:5px 8px;border-radius:8px;text-align:center;font-size:11px;font-weight:900;line-height:1.15;flex:0 0 auto}
+.rank-streak.loss{background:rgba(255,92,92,.13);border:1px solid rgba(255,116,116,.36);color:#ff9a9a}
+.rank-streak.clear{background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
 /* ===== ngọn lửa phong độ: 5 nấc lửa (ngùn ngụt→rực→nóng→bén→lom dom) + nguội + tắt ===== */
 .heat{position:relative;display:inline-flex;width:36px;height:46px;flex:0 0 auto;align-items:flex-end;justify-content:center;margin-right:2px}
 .hf-wrap{position:relative;width:100%;height:100%}
@@ -838,6 +841,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="req-tabs" id="rankTabs">
       <button class="on" data-rt="win" onclick="setRankTab('win')">🏆 Tỉ lệ thắng</button>
       <button data-rt="goals" onclick="setRankTab('goals')">🥇 Vua phá lưới</button>
+      <button data-rt="loss" onclick="setRankTab('loss')">💨 Chuỗi bại</button>
       <button data-rt="players" onclick="setRankTab('players')">📊 Cầu thủ</button>
     </div>
     <div id="rank2-body"></div>
@@ -1689,13 +1693,14 @@ function show(id){
 // ===== Xếp hạng cầu thủ theo VỊ TRÍ ĐÁ CHÍNH (điểm theo vị trí, cao→thấp trong mỗi nhóm) =====
 const RANK_POS_ORDER=["GK","Thòng","HV","TVtt","TV","TĐ"];
 function openProfileByName(enc){pmName=decodeURIComponent(enc);renderPlayerProfile();$("playerModal").classList.add("on");}
-// ===== Màn Xếp hạng: 3 tab — Tỉ lệ thắng · Vua phá lưới · Cầu thủ (theo vị trí) =====
+// ===== Màn Xếp hạng: Tỉ lệ thắng · Vua phá lưới · Chuỗi bại · Cầu thủ (theo vị trí) =====
 let rankTab="win";
 function setRankTab(t){rankTab=t;showRankScreen();}
 function showRankScreen(){
   document.querySelectorAll('#rankTabs button').forEach(b=>b.classList.toggle('on',b.dataset.rt===rankTab));
   if(rankTab==="win")renderRank("rank2-body");
   else if(rankTab==="goals")renderScorer("rank2-body");
+  else if(rankTab==="loss")renderLossStreakRank();
   else showPosRank();
 }
 function showPosRank(){
@@ -2470,7 +2475,9 @@ function playerStats(name){
     form.push(res);
   }
   const played=w+d+l;
-  return {played,w,d,l,winRate:played?Math.round(100*w/played):0,form:form.slice(0,5)};
+  let lossStreak=0;
+  for(const r of form){if(r!=="L")break;lossStreak++;}
+  return {played,w,d,l,winRate:played?Math.round(100*w/played):0,form:form.slice(0,5),lossStreak};
 }
 const FCHIP={W:["T","w"],D:["H","d"],L:["B","l"]};
 function statsPanel(name){
@@ -2541,6 +2548,26 @@ function renderRank(boxId){
       <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B</div></div>
       ${heatHTML(p.n,st.form)}
       <span class="rank-wr">${st.winRate}%</span>
+    </div>`;
+  }).join("")+`</div>`;
+}
+// Chuỗi bại đang có: xếp cầu thủ thua liên tiếp nhiều nhất lên đầu.
+// Người vắng trận vẫn hiện để không mất dữ liệu, nhưng được ghi chú rõ để tránh hiểu là phong độ vừa diễn ra.
+function renderLossStreakRank(){
+  const box=$("rank2-body"); if(!box)return;
+  rankRows=getPlayers().map(p=>({name:p.n,p,st:playerStats(p.n),absent:playerAbsentStreak(p.n)})).filter(x=>x.st.played>0)
+    .sort((a,b)=>b.st.lossStreak-a.st.lossStreak||a.absent-b.absent||b.st.l-a.st.l||b.st.played-a.st.played||ov(b.p)-ov(a.p));
+  if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">💨</span>Chưa có trận nào kết thúc để tính chuỗi bại.</div>`;return;}
+  box.innerHTML=`<div class="rank-note">💨 <b>Chuỗi bại</b> tính từ trận gần nhất mà cầu thủ có ra sân. Chuỗi dài hơn đứng trước.</div><div class="rank-list">`+rankRows.map((x,i)=>{
+    const {p,st,absent}=x, streak=st.lossStreak;
+    const note=streak
+      ? `thua ${streak} trận liên tiếp${absent?` · vắng ${absent} trận gần đây`:""}`
+      : (absent?`không có chuỗi thua · vắng ${absent} trận gần đây`:"không có chuỗi thua");
+    return `<div class="rank-row" onclick="openRankRow(${i})">
+      <span class="rank-no${i<3?" top":""}">${i+1}</span>
+      <span class="avatar" style="${avaStyle(p.n)}">${avaInner(p.n)}</span>
+      <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${note}</div></div>
+      <span class="rank-streak ${streak?"loss":"clear"}">${streak?`💨 ${streak} B`:`—`}</span>
     </div>`;
   }).join("")+`</div>`;
 }
