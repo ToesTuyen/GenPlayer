@@ -2552,19 +2552,22 @@ function renderRank(boxId){
   }).join("")+`</div>`;
 }
 // Chuỗi bại đang có: chỉ từ 2 trận thua liên tiếp mới tính là một chuỗi.
-// Người vắng trận vẫn hiện để không mất dữ liệu, nhưng được ghi chú rõ để tránh hiểu là phong độ vừa diễn ra.
+// Sau chuỗi đang diễn ra, ưu tiên người thua nhiều hơn trong đúng 5 lần ra sân gần nhất.
+// Nhờ vậy người bất bại hoặc ít thua không bị chen vào giữa nhóm phong độ xấu.
 function renderLossStreakRank(){
   const box=$("rank2-body"); if(!box)return;
   rankRows=getPlayers().map(p=>{
-    const st=playerStats(p.n); return {name:p.n,p,st,absent:playerAbsentStreak(p.n),chain:st.lossStreak>=2?st.lossStreak:0};
+    const st=playerStats(p.n), recentLosses=st.form.filter(x=>x==="L").length;
+    return {name:p.n,p,st,absent:playerAbsentStreak(p.n),chain:st.lossStreak>=2?st.lossStreak:0,recentLosses};
   }).filter(x=>x.st.played>0)
-    .sort((a,b)=>b.chain-a.chain||a.absent-b.absent||b.st.l-a.st.l||b.st.played-a.st.played||ov(b.p)-ov(a.p));
+    .sort((a,b)=>b.chain-a.chain||b.recentLosses-a.recentLosses||b.st.form.length-a.st.form.length||a.absent-b.absent||ov(b.p)-ov(a.p));
   if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">💨</span>Chưa có trận nào kết thúc để tính chuỗi bại.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+rankRows.map((x,i)=>{
-    const {p,st,absent,chain}=x;
+    const {p,st,absent,chain,recentLosses}=x;
+    const recent=`${recentLosses}B/${st.form.length} trận gần nhất`;
     const note=chain
-      ? `thua ${chain} trận liên tiếp${absent?` · vắng ${absent} trận gần đây`:""}`
-      : (st.lossStreak===1?`vừa thua trận gần nhất${absent?` · vắng ${absent} trận gần đây`:""}`:(absent?`không có chuỗi bại · vắng ${absent} trận gần đây`:"không có chuỗi bại"));
+      ? `thua ${chain} trận liên tiếp · ${recent}${absent?` · vắng ${absent} trận gần đây`:""}`
+      : (st.lossStreak===1?`vừa thua trận gần nhất · ${recent}${absent?` · vắng ${absent} trận gần đây`:""}`:`${recent}${absent?` · vắng ${absent} trận gần đây`:""}`);
     // Cầu thủ nào cũng xem được 5 trận gần nhất; đọc từ trái sang phải là cũ → mới,
     // nên ô ngoài cùng bên phải luôn là trận gần nhất.
     const formUI=st.form.length
