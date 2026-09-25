@@ -2657,9 +2657,8 @@ function renderLossStreakRank(){
 // sau thời điểm đó chỉ admin mới có thể mở khóa để sửa lại.
 function matchById(id){return getHistory().find(r=>String(r.id)===String(id));}
 function teamSideName(side){return side==="A"?"Team A":"Team B";}
-// Các trận cũ đã có tỉ số được coi là đã chốt để không biến lịch sử thành danh sách cần duyệt.
-// Trận theo luồng mới có `goalsOpen:true` ngay khi nhập tỉ số hoặc có người nhập bàn.
-function isGoalsLocked(r){return !!(r&&(r.goalsLocked||r.goalsFinalized||(!r.goalsOpen&&r.score)));}
+// Chỉ admin bấm "Xong" mới khóa. Có tỉ số không đồng nghĩa bàn thắng đã được chốt.
+function isGoalsLocked(r){return !!(r&&(r.goalsLocked||r.goalsFinalized));}
 function matchLineup(r){   // [{n,idx,team}] những cầu thủ đã ra sân trận r (kèm đội A/B)
   const sub=Array.isArray(r&&r.subset)?r.subset:[];
   return sub.map((p,idx)=>({n:p&&p.n,idx,team:teamOfIdx(r,idx)})).filter(x=>x.n&&x.team);
@@ -2714,7 +2713,7 @@ function renderGoalForm(){
   };
   const lockInfo=locked?`<div class="gl-lock">🔒 <b>Đã chốt bàn thắng</b>${r.goalsLockedBy?` bởi ${esc(r.goalsLockedBy)}`:""}${r.goalsLockedTs?` · ${esc(r.goalsLockedTs)}`:""}.${isAdmin?" Bạn có thể mở lại nếu cần chỉnh sửa.":""}</div>`:"";
   const actions=locked
-    ? (isAdmin?`<button class="btn alt sm" onclick="reopenGoals()">🔓 Mở lại nhập</button><button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`:`<button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`)
+    ? (isAdmin?`<button class="btn sm" onclick="reopenGoals()">🔓 Mở lại cho mọi người sửa</button><button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`:`<button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`)
     : `<button class="btn sm" onclick="saveGoals()">💾 Lưu bàn thắng</button>${isAdmin?`<button class="btn alt sm" onclick="finalizeGoals()">✅ Xong — chốt bàn thắng</button>`:""}<button class="btn alt sm" onclick="closeGoalModal()">Hủy</button>`;
   box.innerHTML=`
     <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · ${hasScore?`Tỉ số <b>${sa} : ${sb}</b>`:`<span style="color:var(--muted)">Chưa có tỉ số</span>`}</div>
@@ -2747,7 +2746,7 @@ function saveGoals(){
     const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid));
     if(!rec){ toast("Trận này đã bị xoá ở nơi khác rồi.","warn"); closeGoalModal(); refreshAfterGoals(); return; }
     if(isGoalsLocked(rec)){toast("Admin đã chốt bàn thắng trước khi bạn lưu.","warn"); closeGoalModal(); refreshAfterGoals(); return;}
-    rec.goals=goals; rec.goalsOpen=true;
+    rec.goals=goals;
     if(setHistory(h))logMatchAct("goal_save",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),`${isAdmin?"admin":"cộng đồng"} · ${goalSummaryTxt(goals)}`);
     closeGoalModal(); updateGoalReqBadge(); refreshAfterGoals();
     toast(isAdmin?"Đã cập nhật bản ghi bàn thắng.":"Đã lưu bàn thắng chung. Admin sẽ rà soát trước khi chốt.");
@@ -2760,18 +2759,17 @@ function finalizeGoals(){
     const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid));
     if(!rec){toast("Trận này không còn tồn tại.","err");closeGoalModal();return;}
     if(isGoalsLocked(rec)){renderGoalForm();return;}
-    rec.goals=goals; rec.goalsOpen=false; rec.goalsLocked=true; rec.goalsLockedBy=sessionName||"Admin"; rec.goalsLockedTs=nowStamp(); rec.goalsLockedAt=Date.now();
+    rec.goals=goals; rec.goalsLocked=true; rec.goalsLockedBy=sessionName||"Admin"; rec.goalsLockedTs=nowStamp(); rec.goalsLockedAt=Date.now();
     if(setHistory(h))logMatchAct("goal_finalize",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),`${goalSummaryTxt(goals)} · chốt bởi ${rec.goalsLockedBy}`);
-    updateGoalReqBadge(); closeGoalModal(); refreshAfterGoals(); toast("Đã chốt bàn thắng — người dùng không thể nhập thêm.");
+    updateGoalReqBadge(); renderGoalForm(); refreshAfterGoals(); toast("Đã chốt bàn thắng — người dùng không thể nhập thêm.");
   });
 }
 function reopenGoals(){
   if(!requireAdmin()||goalMatchId==null)return;
-  if(!confirm("Mở lại nhập bàn thắng cho trận này? Người dùng sẽ có thể chỉnh sửa đến khi admin chốt lại."))return;
   const mid=goalMatchId;
   freshDoc(()=>{
     const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid)); if(!rec)return;
-    rec.goalsOpen=true; delete rec.goalsLocked; delete rec.goalsFinalized; delete rec.goalsLockedBy; delete rec.goalsLockedTs; delete rec.goalsLockedAt;
+    delete rec.goalsLocked; delete rec.goalsFinalized; delete rec.goalsLockedBy; delete rec.goalsLockedTs; delete rec.goalsLockedAt;
     if(setHistory(h))logMatchAct("goal_reopen",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),"mở lại nhập bàn thắng");
     updateGoalReqBadge(); renderGoalForm(); refreshAfterGoals(); toast("Đã mở lại nhập bàn thắng.");
   });
@@ -3558,9 +3556,6 @@ function saveScoreModal(){
     const h=getHistory(), r=h.find(x=>String(x.id)===String(id));
     if(!r){toast("Trận này đã bị xoá ở nơi khác rồi.","warn");closeScoreModal();if(fromOverdue)renderOverdue();else showHistory();return;}
     r.score={a,b};
-    // Trận vừa có tỉ số theo luồng mới: mở sẵn phần bàn thắng để mọi người cùng nhập,
-    // sau đó admin sẽ rà soát và chốt. Trận cũ đã chốt thì giữ nguyên khóa.
-    if(!had&&r.goalsOpen===undefined&&!r.goalsLocked&&!r.goalsFinalized)r.goalsOpen=true;
     if(setHistory(h))logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${a}:${b}${had?` (sửa từ ${cur.a}:${cur.b})`:""}${fromOverdue?" · xác nhận trận quá giờ":""}`);
     closeScoreModal();
     if(fromOverdue){renderOverdue();refreshScreen();}
