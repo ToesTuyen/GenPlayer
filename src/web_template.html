@@ -2714,11 +2714,13 @@ function renderGoalForm(){
   const lockInfo=locked?`<div class="gl-lock">🔒 <b>Đã chốt bàn thắng</b>${r.goalsLockedBy?` bởi ${esc(r.goalsLockedBy)}`:""}${r.goalsLockedTs?` · ${esc(r.goalsLockedTs)}`:""}.${isAdmin?" Bạn có thể mở lại nếu cần chỉnh sửa.":""}</div>`:"";
   const actions=locked
     ? (isAdmin?`<button class="btn sm" onclick="reopenGoals()">🔓 Mở lại cho mọi người sửa</button><button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`:`<button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`)
-    : `<button class="btn sm" onclick="saveGoals()">💾 Lưu bàn thắng</button>${isAdmin?`<button class="btn alt sm" onclick="finalizeGoals()">✅ Xong — chốt bàn thắng</button>`:""}<button class="btn alt sm" onclick="closeGoalModal()">Hủy</button>`;
+    : (isAdmin
+      ? `<button class="btn sm" onclick="finalizeGoals()">✅ Phê duyệt &amp; chốt</button><button class="btn alt sm" onclick="closeGoalModal()">Hủy</button>`
+      : `<button class="btn sm" onclick="saveGoals()">💾 Lưu &amp; hiển thị ngay</button><button class="btn alt sm" onclick="closeGoalModal()">Hủy</button>`);
   box.innerHTML=`
     <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · ${hasScore?`Tỉ số <b>${sa} : ${sb}</b>`:`<span style="color:var(--muted)">Chưa có tỉ số</span>`}</div>
     ${lockInfo}
-    <div class="gl-hint">${locked?"Bản ghi đã khóa cho người dùng.":(isAdmin?"Bạn đang rà soát bản ghi chung. Khi đúng, bấm <b>Xong — chốt bàn thắng</b> để khóa nhập.":"<b>Mọi thay đổi được lưu chung.</b> Admin sẽ rà soát và chốt sau.")}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
+    <div class="gl-hint">${locked?"Bản ghi đã khóa cho người dùng.":(isAdmin?"Bạn đang rà soát bản ghi chung. Khi đúng, bấm <b>Phê duyệt &amp; chốt</b> để khóa nhập.":"<b>Mọi thay đổi được lưu và hiển thị ngay.</b> Admin chỉ rà soát và chốt sau.")}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
     ${teamBlock("A")}${teamBlock("B")}
     <div class="gl-acts">${actions}</div>`;
   goalRecount();
@@ -2828,7 +2830,7 @@ function renderGoalReq(){
       ? `<div class="gl-warn">⚠️ Đang ghi ${t.A}:${t.B}, khác tỉ số ${sc.a}:${sc.b}.</div>`:"";
     return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">⚽ ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
   };
-  box.innerHTML=`<div class="gl-hint">Các trận dưới vẫn đang mở cho người dùng nhập. Kiểm tra lại rồi bấm <b>Xong — chốt bàn thắng</b> trong từng trận.</div><div class="ulog-grid">${list.map(card).join("")}</div>`;
+  box.innerHTML=`<div class="gl-hint">Các trận dưới vẫn đang mở cho người dùng nhập. Kiểm tra lại rồi bấm <b>Phê duyệt &amp; chốt</b> trong từng trận.</div><div class="ulog-grid">${list.map(card).join("")}</div>`;
 }
 function goalReqMark(id,status){
   const reqs=getGoalReqs(), q=reqs.find(x=>String(x.id)===String(id)); if(!q)return null;
@@ -3605,6 +3607,6 @@ function delHistory(id){
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); show("home");
-if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v3",{updateViaCache:"none"}));   // ép kiểm tra worker mới khi giao diện được cập nhật
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"}));   // ép tải service worker mới khi giao diện được cập nhật
 </script>
 </body></html>
