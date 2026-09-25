@@ -741,6 +741,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .gl-in{width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);font-size:15px;font-weight:800;color-scheme:dark;-moz-appearance:textfield;transition:.15s}
 .gl-in.has-goal{color:#ffd35f;border-color:rgba(255,211,95,.72);background:rgba(255,188,67,.15);box-shadow:0 0 0 2px rgba(255,199,73,.10)}
 .gl-in::-webkit-outer-spin-button,.gl-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.gl-bt:disabled,.gl-in:disabled{opacity:.52;cursor:not-allowed}.gl-in:disabled{background:var(--surface);box-shadow:none}
+.gl-lock{margin-bottom:12px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--muted);font-size:12.5px;line-height:1.45}
+.gl-lock b{color:var(--text)}
 .gl-empty{font-size:12.5px;color:var(--faint);padding:6px 0}
 .gl-acts{display:flex;gap:8px;margin-top:6px}
 .gl-chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
@@ -958,7 +961,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <div id="screen-history" class="screen">
   <div class="pc-bar-actions" style="margin-bottom:14px">
-    <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none">⚽ Duyệt bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
+    <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none">⚽ Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
     <button class="btn alt sm" id="mlogBtn" onclick="openMatchLog()" style="display:none">🕓 Nhật ký thao tác</button>
   </div>
   <div id="history-list"></div>
@@ -1154,7 +1157,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="goalReqModal" onclick="if(event.target===this)closeGoalReq()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">⚽ Duyệt bàn thắng</div>
+      <div class="plog-title">⚽ Rà soát &amp; chốt bàn thắng</div>
       <button class="pm-close" onclick="closeGoalReq()">✕</button>
     </div>
     <div id="goalreq-body" class="plog-wrap"></div>
@@ -2631,11 +2634,14 @@ function renderLossStreakRank(){
     </div>`;
   }).join("")+`</div>`;
 }
-// ============ BÀN THẮNG (nhập + admin duyệt + Vua phá lưới) ============
-// Bàn thắng đã duyệt lưu NGAY TRONG record trận: r.goals = { "Tên cầu thủ": số bàn }.
-// Người thường nhập -> gửi yêu cầu (STATE.goalReqs, chờ admin duyệt); admin nhập -> áp thẳng.
+// ============ BÀN THẮNG (cùng nhập → admin rà soát & chốt → Vua phá lưới) ============
+// Mọi người cùng cập nhật r.goals trong lúc trận còn mở. Admin chốt bằng r.goalsLocked;
+// sau thời điểm đó chỉ admin mới có thể mở khóa để sửa lại.
 function matchById(id){return getHistory().find(r=>String(r.id)===String(id));}
 function teamSideName(side){return side==="A"?"Team A":"Team B";}
+// Các trận cũ đã có tỉ số được coi là đã chốt để không biến lịch sử thành danh sách cần duyệt.
+// Trận theo luồng mới có `goalsOpen:true` ngay khi nhập tỉ số hoặc có người nhập bàn.
+function isGoalsLocked(r){return !!(r&&(r.goalsLocked||r.goalsFinalized||(!r.goalsOpen&&r.score)));}
 function matchLineup(r){   // [{n,idx,team}] những cầu thủ đã ra sân trận r (kèm đội A/B)
   const sub=Array.isArray(r&&r.subset)?r.subset:[];
   return sub.map((p,idx)=>({n:p&&p.n,idx,team:teamOfIdx(r,idx)})).filter(x=>x.n&&x.team);
@@ -2660,18 +2666,15 @@ function goalWho(){return sessionName||"Khách";}   // không hỏi tên nữa: 
 function openGoalModal(id){
   const r=matchById(id); if(!r){toast("Không tìm thấy trận.","err");return;}
   if(!matchLineup(r).length){toast("Trận này không có đội hình để gán bàn thắng.","warn");return;}
+  if(isGoalsLocked(r)&&!isAdmin){toast("Bàn thắng trận này đã được admin chốt.","warn");return;}
   goalMatchId=id; renderGoalForm(); $("goalModal").classList.add("on");   // mở thẳng form, chọn cầu thủ + nhập số bàn
 }
 function closeGoalModal(){$("goalModal").classList.remove("on");goalMatchId=null;}
-function goalPrefill(r){   // ưu tiên: yêu cầu đang chờ của CHÍNH người này -> điểm đã duyệt r.goals
-  const mine=getGoalReqs().find(q=>(!q.status||q.status==="pending")&&String(q.mid)===String(r.id)&&(q.by||"")===goalWho());
-  if(mine&&mine.goals)return mine.goals;
-  return r.goals||{};
-}
+function goalPrefill(r){return r.goals||{};}
 function renderGoalForm(){
   const box=$("goal-body"); if(!box)return;
   const r=matchById(goalMatchId); if(!r){box.innerHTML="";return;}
-  const pre=goalPrefill(r), lu=matchLineup(r), hasScore=!!r.score, sa=+(r.score||{}).a||0, sb=+(r.score||{}).b||0;
+  const pre=goalPrefill(r), lu=matchLineup(r), hasScore=!!r.score, sa=+(r.score||{}).a||0, sb=+(r.score||{}).b||0, locked=isGoalsLocked(r);
   const teamBlock=(side)=>{
     const col=side==="A"?KIT_A.body:KIT_B.body, txtc=side==="A"?"#fff":"#11224f", sc=side==="A"?sa:sb;
     const need=hasScore?`<span class="gl-need">cần ${sc}</span>`:"";
@@ -2680,9 +2683,9 @@ function renderGoalForm(){
         <span class="avatar sm" style="${avaStyle(x.n)}">${avaInner(x.n)}</span>
         <span class="gl-nm">${esc(x.n)}</span>
         <div class="gl-stepper">
-          <button type="button" class="gl-bt" onclick="goalStep('${enc}',-1)">−</button>
-          <input type="number" min="0" max="50" class="gl-in" id="gl-${enc}" value="${+pre[x.n]||0}" data-n="${esc(x.n)}" oninput="goalRecount()">
-          <button type="button" class="gl-bt" onclick="goalStep('${enc}',1)">＋</button>
+          <button type="button" class="gl-bt" onclick="goalStep('${enc}',-1)" ${locked?"disabled":""}>−</button>
+          <input type="number" min="0" max="50" class="gl-in" id="gl-${enc}" value="${+pre[x.n]||0}" data-n="${esc(x.n)}" oninput="goalRecount()" ${locked?"disabled":""}>
+          <button type="button" class="gl-bt" onclick="goalStep('${enc}',1)" ${locked?"disabled":""}>＋</button>
         </div>
       </div>`;}).join("")||`<div class="gl-empty">Không có cầu thủ ${teamSideName(side)}.</div>`;
     return `<div class="gl-team">
@@ -2691,13 +2694,16 @@ function renderGoalForm(){
         <span class="gl-sum" id="gl-sum-${side}">0</span></div>
       ${rows}</div>`;
   };
+  const lockInfo=locked?`<div class="gl-lock">🔒 <b>Đã chốt bàn thắng</b>${r.goalsLockedBy?` bởi ${esc(r.goalsLockedBy)}`:""}${r.goalsLockedTs?` · ${esc(r.goalsLockedTs)}`:""}.${isAdmin?" Bạn có thể mở lại nếu cần chỉnh sửa.":""}</div>`:"";
+  const actions=locked
+    ? (isAdmin?`<button class="btn alt sm" onclick="reopenGoals()">🔓 Mở lại nhập</button><button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`:`<button class="btn alt sm" onclick="closeGoalModal()">Đóng</button>`)
+    : `<button class="btn sm" onclick="saveGoals()">💾 Lưu bàn thắng</button>${isAdmin?`<button class="btn alt sm" onclick="finalizeGoals()">✅ Xong — chốt bàn thắng</button>`:""}<button class="btn alt sm" onclick="closeGoalModal()">Hủy</button>`;
   box.innerHTML=`
     <div class="gl-info">${esc(fmtKick(r.kickoff)||r.label||"")} · ${hasScore?`Tỉ số <b>${sa} : ${sb}</b>`:`<span style="color:var(--muted)">Chưa có tỉ số</span>`}</div>
-    <div class="gl-hint">${isAdmin?"Bạn là admin — bấm lưu là áp dụng ngay.":"<b>Không cần đăng nhập.</b> Nhập xong sẽ gửi cho admin duyệt."}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
+    ${lockInfo}
+    <div class="gl-hint">${locked?"Bản ghi đã khóa cho người dùng.":(isAdmin?"Bạn đang rà soát bản ghi chung. Khi đúng, bấm <b>Xong — chốt bàn thắng</b> để khóa nhập.":"<b>Mọi thay đổi được lưu chung.</b> Admin sẽ rà soát và chốt sau.")}${hasScore?" Tổng bàn mỗi đội nên khớp tỉ số (trừ phản lưới).":""}</div>
     ${teamBlock("A")}${teamBlock("B")}
-    <div class="gl-acts">
-      <button class="btn sm" onclick="saveGoals()">${isAdmin?"💾 Lưu bàn thắng":"📤 Gửi cho admin"}</button>
-      <button class="btn alt sm" onclick="closeGoalModal()">Hủy</button></div>`;
+    <div class="gl-acts">${actions}</div>`;
   goalRecount();
 }
 function goalStep(enc,d){const el=$("gl-"+enc); if(!el)return; el.value=Math.max(0,Math.min(50,(+el.value||0)+d)); goalRecount();}
@@ -2719,23 +2725,38 @@ function goalRecount(){
 function saveGoals(){
   const r0=matchById(goalMatchId); if(!r0)return;
   const goals=goalCollect(), mid=goalMatchId;
-  if(isAdmin){
-    freshDoc(()=>{   // đọc cloud tươi rồi gắn bàn thắng trên nền tươi → không đè mất tỉ số/bàn trận khác vừa nhập
-      const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid));
-      if(!rec){ toast("Trận này đã bị xoá ở nơi khác rồi.","warn"); closeGoalModal(); refreshAfterGoals(); return; }
-      rec.goals=goals; if(setHistory(h))logMatchAct("goal_save",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),goalSummaryTxt(goals));
-      closeGoalModal(); toast("Đã lưu bàn thắng trận này."); refreshAfterGoals();
-    });
-  }else{
-    freshDoc(()=>{   // đọc cloud tươi rồi thêm yêu cầu → không đè mất yêu cầu người khác vừa gửi
-      const who=goalWho();
-      const reqs=getGoalReqs().filter(q=>!(String(q.mid)===String(mid)&&(q.by||"")===who));   // 1 người · 1 trận = giữ bản mới nhất
-      reqs.unshift({id:Date.now()+"_"+Math.round(Math.random()*1e4), by:who, mid:mid,
-        mlabel:(fmtKick(r0.kickoff)||r0.label||""), score:r0.score?{a:+r0.score.a||0,b:+r0.score.b||0}:null, goals, ts:nowStamp(), at:Date.now()});
-      STATE.goalReqs=reqs; persist(); closeGoalModal(); updateGoalReqBadge();
-      toast("Đã gửi bàn thắng cho admin duyệt.");
-    });
-  }
+  freshDoc(()=>{   // đọc cloud tươi rồi ghi bản chung, tránh đè dữ liệu trận khác
+    const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid));
+    if(!rec){ toast("Trận này đã bị xoá ở nơi khác rồi.","warn"); closeGoalModal(); refreshAfterGoals(); return; }
+    if(isGoalsLocked(rec)){toast("Admin đã chốt bàn thắng trước khi bạn lưu.","warn"); closeGoalModal(); refreshAfterGoals(); return;}
+    rec.goals=goals; rec.goalsOpen=true;
+    if(setHistory(h))logMatchAct("goal_save",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),`${isAdmin?"admin":"cộng đồng"} · ${goalSummaryTxt(goals)}`);
+    closeGoalModal(); updateGoalReqBadge(); refreshAfterGoals();
+    toast(isAdmin?"Đã cập nhật bản ghi bàn thắng.":"Đã lưu bàn thắng chung. Admin sẽ rà soát trước khi chốt.");
+  });
+}
+function finalizeGoals(){
+  if(!requireAdmin())return;
+  const mid=goalMatchId, goals=goalCollect(); if(mid==null)return;
+  freshDoc(()=>{
+    const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid));
+    if(!rec){toast("Trận này không còn tồn tại.","err");closeGoalModal();return;}
+    if(isGoalsLocked(rec)){renderGoalForm();return;}
+    rec.goals=goals; rec.goalsOpen=false; rec.goalsLocked=true; rec.goalsLockedBy=sessionName||"Admin"; rec.goalsLockedTs=nowStamp(); rec.goalsLockedAt=Date.now();
+    if(setHistory(h))logMatchAct("goal_finalize",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),`${goalSummaryTxt(goals)} · chốt bởi ${rec.goalsLockedBy}`);
+    updateGoalReqBadge(); closeGoalModal(); refreshAfterGoals(); toast("Đã chốt bàn thắng — người dùng không thể nhập thêm.");
+  });
+}
+function reopenGoals(){
+  if(!requireAdmin()||goalMatchId==null)return;
+  if(!confirm("Mở lại nhập bàn thắng cho trận này? Người dùng sẽ có thể chỉnh sửa đến khi admin chốt lại."))return;
+  const mid=goalMatchId;
+  freshDoc(()=>{
+    const h=getHistory(), rec=h.find(x=>String(x.id)===String(mid)); if(!rec)return;
+    rec.goalsOpen=true; delete rec.goalsLocked; delete rec.goalsFinalized; delete rec.goalsLockedBy; delete rec.goalsLockedTs; delete rec.goalsLockedAt;
+    if(setHistory(h))logMatchAct("goal_reopen",mid,fmtKick(rec.kickoff)||rec.label||("#"+mid),"mở lại nhập bàn thắng");
+    updateGoalReqBadge(); renderGoalForm(); refreshAfterGoals(); toast("Đã mở lại nhập bàn thắng.");
+  });
 }
 function refreshAfterGoals(){
   const cur=[...document.querySelectorAll(".screen")].find(s=>s.style.display==="block");
@@ -2747,9 +2768,17 @@ function refreshAfterGoals(){
 // ----- ADMIN: duyệt yêu cầu bàn thắng -----
 function goalReqPending(){return getGoalReqs().filter(q=>!q.status||q.status==="pending").sort((a,b)=>(b.at||0)-(a.at||0));}
 function goalReqDone(){return getGoalReqs().filter(q=>q.status==="approved"||q.status==="rejected").sort((a,b)=>(b.actedAt||b.at||0)-(a.actedAt||a.at||0));}
-function updateGoalReqBadge(){const n=goalReqPending().length,b=$("goalReqBadge"); if(!b)return; b.textContent=n; b.style.display=(isAdmin&&n>0)?"":"none";}
+function goalReviewMatches(){
+  return getHistory().filter(r=>matchLineup(r).length&&!isGoalsLocked(r)&&(!!r.score||Object.keys(r.goals||{}).length))
+    .sort((a,b)=>(b.kickoff||b.id||0)-(a.kickoff||a.id||0));
+}
+function updateGoalReqBadge(){
+  const n=goalReviewMatches().length, btn=$("goalReqBtn");
+  if(btn)btn.innerHTML=`⚽ Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:${isAdmin&&n>0?"":"none"}">${n}</span>`;
+  const badge=$("goalReqBadge"); if(!badge)return; badge.textContent=n; badge.style.display=(isAdmin&&n>0)?"":"none";
+}
 let goalReqTab="pending";
-function openGoalReq(){ if(!requireAdmin())return; goalReqTab="pending"; renderGoalReq(); $("goalReqModal").classList.add("on"); }
+function openGoalReq(){ if(!requireAdmin())return; renderGoalReq(); $("goalReqModal").classList.add("on"); }
 function closeGoalReq(){ $("goalReqModal").classList.remove("on"); }
 function setGoalReqTab(t){ goalReqTab=t; renderGoalReq(); }
 function goalReqCard(q){
@@ -2774,13 +2803,16 @@ function goalReqCard(q){
 }
 function renderGoalReq(){
   const box=$("goalreq-body"); if(!box)return;
-  const pend=goalReqPending(), done=goalReqDone();
-  const tabs=`<div class="req-tabs">
-      <button class="${goalReqTab==="pending"?"on":""}" onclick="setGoalReqTab('pending')">Đang chờ (${pend.length})</button>
-      <button class="${goalReqTab==="done"?"on":""}" onclick="setGoalReqTab('done')">Đã xử lý (${done.length})</button></div>`;
-  const list=goalReqTab==="done"?done:pend;
-  if(!list.length){box.innerHTML=tabs+`<div class="empty"><span class="big">⚽</span>${goalReqTab==="done"?"Chưa có yêu cầu nào được xử lý.":"Không có yêu cầu bàn thắng nào đang chờ."}</div>`;return;}
-  box.innerHTML=tabs+`<div class="ulog-grid">`+list.map(goalReqCard).join("")+`</div>`;
+  const list=goalReviewMatches();
+  if(!list.length){box.innerHTML=`<div class="empty"><span class="big">✅</span>Không còn trận nào cần rà soát.<br>Bàn thắng của các trận đã được admin chốt.</div>`;return;}
+  const card=r=>{
+    const goals=r.goals||{}, items=Object.entries(goals).filter(([,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1])
+      .map(([n,g])=>`<span class="gl-chip">⚽ ${esc(n)} <b>${g}</b></span>`).join("")||`<span class="gl-chip muted">Chưa có bàn thắng nào được nhập</span>`;
+    const t=goalsByTeam(r,goals), sc=r.score, warn=sc&&(t.A!==+sc.a||t.B!==+sc.b)
+      ? `<div class="gl-warn">⚠️ Đang ghi ${t.A}:${t.B}, khác tỉ số ${sc.a}:${sc.b}.</div>`:"";
+    return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">⚽ ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
+  };
+  box.innerHTML=`<div class="gl-hint">Các trận dưới vẫn đang mở cho người dùng nhập. Kiểm tra lại rồi bấm <b>Xong — chốt bàn thắng</b> trong từng trận.</div><div class="ulog-grid">${list.map(card).join("")}</div>`;
 }
 function goalReqMark(id,status){
   const reqs=getGoalReqs(), q=reqs.find(x=>String(x.id)===String(id)); if(!q)return null;
@@ -3453,7 +3485,8 @@ function mountHistoryActions(list){
       score.onclick=e=>{e.stopPropagation();setScore(r.id);};
       bar.append(score);
     }
-    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent="⚽ Bàn thắng"; goals.title="Không cần đăng nhập — gửi cho admin duyệt";
+    const locked=isGoalsLocked(r);
+    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent=locked?"🔒 Bàn thắng đã chốt":"⚽ Bàn thắng"; goals.title=locked?(isAdmin?"Bàn thắng đã chốt — admin có thể mở lại khi cần.":"Bàn thắng đã được admin chốt."):(isAdmin?"Rà soát hoặc chốt bàn thắng":"Nhập bàn thắng chung; admin sẽ rà soát và chốt.");
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(goals);
     if(canEdit){
@@ -3507,6 +3540,9 @@ function saveScoreModal(){
     const h=getHistory(), r=h.find(x=>String(x.id)===String(id));
     if(!r){toast("Trận này đã bị xoá ở nơi khác rồi.","warn");closeScoreModal();if(fromOverdue)renderOverdue();else showHistory();return;}
     r.score={a,b};
+    // Trận vừa có tỉ số theo luồng mới: mở sẵn phần bàn thắng để mọi người cùng nhập,
+    // sau đó admin sẽ rà soát và chốt. Trận cũ đã chốt thì giữ nguyên khóa.
+    if(!had&&r.goalsOpen===undefined&&!r.goalsLocked&&!r.goalsFinalized)r.goalsOpen=true;
     if(setHistory(h))logMatchAct("score",id,fmtKick(r.kickoff)||r.label||("#"+id),`${a}:${b}${had?` (sửa từ ${cur.a}:${cur.b})`:""}${fromOverdue?" · xác nhận trận quá giờ":""}`);
     closeScoreModal();
     if(fromOverdue){renderOverdue();refreshScreen();}
