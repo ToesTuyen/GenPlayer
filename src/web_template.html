@@ -5,6 +5,7 @@
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a0e1a">
+<script>try{if(localStorage.getItem("gp_theme")==="light")document.documentElement.dataset.theme="light";}catch(e){}</script>
 <style>
 :root{
   --bg:#090b1e; --bg2:#060713; --surface:#151b3b; --surface2:#202653; --surface3:#2c3470;
@@ -35,6 +36,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;heigh
 .ab-admin{flex:0 0 auto;margin-left:auto;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.12);color:#eef0ff;border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
 .ab-admin:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);background:rgba(34,224,122,.12)}
+.ab-theme{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.12);color:var(--text);font-size:18px;cursor:pointer;display:grid;place-items:center;transition:.15s}
+.ab-theme:hover{background:var(--surface3);border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
 .ab-brand{color:var(--brand);display:inline-flex;align-items:center;gap:7px}
 .ab-logo{height:38px;width:auto;vertical-align:middle;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
 /* ===== dashboard layout ===== */
@@ -792,11 +795,45 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .fin-empty{padding:32px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);line-height:1.55;background:rgba(20,29,63,.46)}.fin-empty .big{font-size:28px;display:block;margin-bottom:5px}
 .fin-form-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}.fin-error{display:none;margin-top:10px;font-size:12px;color:#ff9eae}.fin-error.show{display:block}
 @media(max-width:620px){.fin-summary{grid-template-columns:1fr}.fin-kpi-val{font-size:21px}.fin-row{grid-template-columns:auto minmax(0,1fr) auto}.fin-edit{grid-column:2/4;justify-content:flex-end;margin-top:-3px}.fin-toolbar .sp{display:none}.fin-toolbar .btn{flex:1}.fin-month{flex:1;min-width:134px}}
+
+/* ===== Theme sáng ===== */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f7ff; --bg2:#e9edfa; --surface:#ffffff; --surface2:#f1f4ff; --surface3:#e3e9fb;
+  --line:rgba(39,59,113,.18); --line2:rgba(39,59,113,.11);
+  --text:#17213d; --muted:#596987; --faint:#73819c;
+  --brand:#7c3aed; --brand-d:#6d28d9; --brand-soft:rgba(124,58,237,.13);
+  --blue:#496fdb; --blue-soft:rgba(73,111,219,.14); --amber:#b97808; --amber-soft:rgba(225,157,28,.15); --slate-soft:rgba(35,52,92,.10);
+  --gold:#af7109; --red:#d93e56;
+  --sh:0 2px 7px rgba(26,43,84,.10),0 14px 34px rgba(40,59,112,.10);
+  --sh-sm:0 1px 3px rgba(26,43,84,.10);
+}
+:root[data-theme="light"] body{background:radial-gradient(68% 52% at 7% -8%,rgba(239,167,215,.46),transparent 66%),radial-gradient(60% 54% at 98% 7%,rgba(174,197,255,.55),transparent 68%),radial-gradient(65% 52% at 45% 104%,rgba(210,196,255,.38),transparent 72%),linear-gradient(145deg,#f9faff 0%,#eff3ff 48%,#e8edff 100%) fixed}
+:root[data-theme="light"] .appbar{background:linear-gradient(100deg,rgba(247,238,255,.90),rgba(233,240,255,.92) 58%,rgba(232,240,255,.90)),rgba(250,251,255,.86);border-color:rgba(39,59,113,.15);box-shadow:0 6px 22px rgba(56,76,130,.12)}
+:root[data-theme="light"] .ab-back,:root[data-theme="light"] .ab-theme,:root[data-theme="light"] .ab-admin{border-color:rgba(39,59,113,.16);background:rgba(255,255,255,.72);color:var(--text)}
+:root[data-theme="light"] .ab-back:hover,:root[data-theme="light"] .ab-theme:hover,:root[data-theme="light"] .ab-admin:hover{background:var(--surface3);border-color:rgba(39,59,113,.28)}
+:root[data-theme="light"] .card-box,:root[data-theme="light"] .m-row,:root[data-theme="light"] .spot-card,:root[data-theme="light"] .pcard,:root[data-theme="light"] .history-item,:root[data-theme="light"] .mc,:root[data-theme="light"] .fin-row{background:var(--surface);border-color:var(--line);box-shadow:var(--sh-sm)}
+:root[data-theme="light"] .m-row:hover{background:var(--surface2);border-color:rgba(39,59,113,.28)}
+:root[data-theme="light"] .pcard{background:radial-gradient(110% 96% at 78% 4%,rgba(181,139,241,.22) 0%,transparent 52%),var(--surface)}
+:root[data-theme="light"] .btn.alt{background:var(--surface);border-color:var(--line);box-shadow:none}
+:root[data-theme="light"] .btn.alt:hover{background:var(--surface3);border-color:rgba(39,59,113,.28)}
+:root[data-theme="light"] .pm-panel{background:var(--surface);border-color:var(--line);box-shadow:0 24px 60px rgba(35,52,95,.22)}
+:root[data-theme="light"] .pm-head{background:linear-gradient(120deg,#f4f6ff,#e6ecff)}
+:root[data-theme="light"] .pm-arch,:root[data-theme="light"] .pm-pos-row{background:var(--surface2)}
+:root[data-theme="light"] .pm-attr .lab,:root[data-theme="light"] .ps-row,:root[data-theme="light"] .persuade,:root[data-theme="light"] .ai-review{color:var(--muted)}
+:root[data-theme="light"] .ai-review b,:root[data-theme="light"] .ai-review .rv-lead{color:var(--text)}
+:root[data-theme="light"] .modal{background:rgba(28,42,76,.32)}
+:root[data-theme="light"] .modal-box{background:linear-gradient(145deg,#ffffff,#edf2ff);border-color:var(--line);box-shadow:0 24px 60px rgba(35,52,95,.22)}
+:root[data-theme="light"] .modal-box input[type=text],:root[data-theme="light"] .modal-box input[type=date],:root[data-theme="light"] .modal-box input[type=time],:root[data-theme="light"] #scoreModal input[type=number],:root[data-theme="light"] .gl-in{color-scheme:light}
+:root[data-theme="light"] .bk-status{background:#e8eefb;color:#47618d}
+:root[data-theme="light"] .fin-empty{background:var(--surface)}
+:root[data-theme="light"] .page-banner{border-color:var(--line)}
 </style></head><body>
 
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
   <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
+  <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện sáng" aria-label="Chuyển sang giao diện sáng">☀︎</button>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()">🔒 Admin</button>
 </header>
 
@@ -1659,6 +1696,19 @@ function quickScores(tier,positions,spd,wr){
 }
 
 // ---- nav ----
+const THEME_KEY="gp_theme";
+function currentTheme(){return document.documentElement.dataset.theme==="light"?"light":"dark";}
+function applyThemeUI(){
+  const light=currentTheme()==="light", b=$("themeBtn"), meta=document.querySelector('meta[name="theme-color"]');
+  if(b){b.textContent=light?"☾":"☀︎";b.title=light?"Chuyển sang giao diện tối":"Chuyển sang giao diện sáng";b.setAttribute("aria-label",b.title);}
+  if(meta)meta.content=light?"#f5f7ff":"#0a0e1a";
+}
+function toggleTheme(){
+  const next=currentTheme()==="light"?"dark":"light";
+  if(next==="light")document.documentElement.dataset.theme="light";else delete document.documentElement.dataset.theme;
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+  applyThemeUI(); toast(next==="light"?"Đã bật giao diện sáng ☀︎":"Đã bật giao diện tối ☾");
+}
 // File logo gốc có nền sáng; tách nền đó khi hiển thị để logo hoà vào mọi màu theme mà không sửa asset gốc.
 function keyLogoBackground(img){
   if(!img||img.dataset.keyedLogo)return;
@@ -3505,7 +3555,7 @@ function delHistory(id){
   });
 }
 
-localLoad(); initCloud(); setCloudBadge(); applyRoleUI(); show("home");
+localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); show("home");
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v3",{updateViaCache:"none"}));   // ép kiểm tra worker mới khi giao diện được cập nhật
 </script>
 </body></html>
