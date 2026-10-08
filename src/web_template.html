@@ -798,6 +798,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .fin-empty{padding:32px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);line-height:1.55;background:rgba(20,29,63,.46)}.fin-empty .big{font-size:28px;display:block;margin-bottom:5px}
 .fin-form-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}.fin-error{display:none;margin-top:10px;font-size:12px;color:#ff9eae}.fin-error.show{display:block}
 @media(max-width:620px){.fin-summary{grid-template-columns:1fr}.fin-kpi-val{font-size:21px}.fin-row{grid-template-columns:auto minmax(0,1fr) auto}.fin-edit{grid-column:2/4;justify-content:flex-end;margin-top:-3px}.fin-toolbar .sp{display:none}.fin-toolbar .btn{flex:1}.fin-month{flex:1;min-width:134px}}
+/* ===== Tình trạng cầu thủ · AI Form ===== */
+.pstat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}.pstat-title{font-size:21px;font-weight:800}.pstat-sub{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;max-width:670px}.pstat-source{font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(113,149,255,.26);padding:6px 9px;border-radius:9px;white-space:nowrap}
+.pstat-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.pstat-kpi{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:linear-gradient(145deg,rgba(50,35,99,.78),rgba(19,31,71,.82));box-shadow:var(--sh-sm)}.pstat-kpi::after{content:'';position:absolute;width:72px;height:72px;right:-27px;top:-28px;border-radius:50%;background:rgba(255,255,255,.06)}.pstat-kpi .lab{position:relative;z-index:1;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em;color:var(--muted)}.pstat-kpi .val{position:relative;z-index:1;font-size:21px;font-weight:900;color:var(--text);margin-top:5px;line-height:1.12}.pstat-kpi.hot .val{color:#50e89a}.pstat-kpi.cold .val{color:#7fb4ff}.pstat-kpi.goal .val{color:var(--gold)}
+.pstat-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px}.pstat-filter{border:1px solid var(--line);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:800;border-radius:9px;padding:7px 10px;cursor:pointer}.pstat-filter.on{background:var(--brand-soft);border-color:var(--brand);color:var(--text)}.pstat-count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
+.pstat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pstat-card{background:linear-gradient(145deg,rgba(51,36,99,.78),rgba(18,29,66,.86));border:1px solid var(--line);border-radius:15px;padding:14px 15px;box-shadow:var(--sh-sm);cursor:pointer;transition:.14s}.pstat-card:hover{transform:translateY(-2px);border-color:rgba(126,154,255,.42)}.pstat-top{display:flex;align-items:center;gap:10px;min-width:0}.pstat-avatar{width:42px;height:42px;border-radius:13px;font-size:14px}.pstat-ident{min-width:0;flex:1}.pstat-name{font-size:15px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pstat-pos{font-size:11.5px;color:var(--muted);margin-top:2px}.pstat-state{font-size:10.5px;font-weight:900;border-radius:20px;padding:4px 8px;white-space:nowrap}.pstat-state.hot{background:rgba(51,217,126,.15);color:#51e69a}.pstat-state.steady{background:rgba(113,149,255,.15);color:#9ab7ff}.pstat-state.watch{background:var(--amber-soft);color:var(--gold)}.pstat-state.cold{background:rgba(100,168,255,.15);color:#8fbfff}.pstat-state.new{background:var(--surface3);color:var(--muted)}
+.pstat-form{display:flex;align-items:center;gap:5px;margin:12px 0 10px}.pstat-form-label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}.pstat-form .fc{width:21px;height:21px;font-size:10px}.pstat-form-empty{font-size:11.5px;color:var(--muted)}
+.pstat-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:9px 0}.pstat-metric{text-align:center;min-width:0}.pstat-metric b{display:block;color:var(--text);font-size:14px;line-height:1.1;font-variant-numeric:tabular-nums}.pstat-metric span{display:block;margin-top:2px;color:var(--faint);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pstat-metric.goal b{color:var(--gold)}
+.pstat-ai{font-size:12.5px;color:var(--text);line-height:1.52;margin-top:10px}.pstat-ai b{color:var(--blue)}.pstat-meme{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:7px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.045)}.pstat-empty{grid-column:1/-1;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);background:var(--surface)}
+@media(max-width:720px){.pstat-summary{grid-template-columns:repeat(2,1fr)}.pstat-grid{grid-template-columns:1fr}}@media(max-width:440px){.pstat-toolbar{gap:6px}.pstat-filter{padding:6px 8px;font-size:11px}.pstat-count{width:100%;margin:2px 0 0}.pstat-metrics{gap:3px}.pstat-card{padding:13px}.pstat-state{font-size:10px;padding:4px 6px}}
 
 /* ===== Theme sáng ===== */
 :root[data-theme="light"]{
@@ -836,6 +845,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme="light"] .vsub,:root[data-theme="light"] .subchip{color:var(--text)}
 :root[data-theme="light"] .pred{color:#3a9270;background:rgba(56,159,111,.10);border-color:rgba(56,159,111,.23)}
 :root[data-theme="light"] .ai-review .rv-pred,:root[data-theme="light"] .ai-review .rv-pred b{color:#3a9270}
+:root[data-theme="light"] .pstat-kpi,:root[data-theme="light"] .pstat-card{background:linear-gradient(145deg,#ffffff,#edf2ff);border-color:var(--line);box-shadow:0 8px 20px rgba(42,61,112,.09)}:root[data-theme="light"] .pstat-meme{background:#f3f6ff}:root[data-theme="light"] .pstat-card:hover{border-color:rgba(58,88,170,.38)}
 :root[data-theme="light"] .wk{color:#b27b25}
 :root[data-theme="light"] .pl-win{color:#3d9270}
 :root[data-theme="light"] .gl-in.has-goal{color:#a77424;border-color:rgba(190,139,46,.44);background:rgba(225,166,42,.14)}
@@ -874,6 +884,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
+        <button class="ap-btn" onclick="show('screen-player-status')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 17l5-5 4 3 7-8"/><path d="M17 7h3v3"/><circle cx="9" cy="12" r="1"/></svg><span>Tình trạng cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/><path d="M7 3h10"/></svg><span>Thu chi</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span>Backup</span></button>
       </div>
@@ -955,6 +966,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div id="week-info" class="status" style="margin:0 0 12px"></div>
   <div id="week-actions"></div>
   <div id="week-result"></div>
+</div>
+
+<!-- ====== TINH TRANG CAU THU ====== -->
+<div id="screen-player-status" class="screen">
+  <div class="pstat-head">
+    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form tổng hợp 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi. Dữ liệu đi từ cũ → mới; không tự bịa kết quả.</div></div>
+    <div class="pstat-source">🤖 AI Form · lịch sử đã chốt</div>
+  </div>
+  <div id="pstat-summary" class="pstat-summary"></div>
+  <div id="pstat-toolbar" class="pstat-toolbar"></div>
+  <div id="pstat-list" class="pstat-grid"></div>
 </div>
 
 <!-- ====== QUAN LY THU CHI ====== -->
@@ -1241,7 +1263,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
-const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng","screen-week":"📋 Trận sắp tới","screen-finance":"💰 Quản lý thu chi","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
+const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng","screen-week":"📋 Trận sắp tới","screen-player-status":"🧠 Tình trạng cầu thủ","screen-finance":"💰 Quản lý thu chi","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#fcba03";
@@ -1564,6 +1586,7 @@ function onCloudUpdate(){
   if(!cur)return;
   if(cur.id==="home")renderHome();
   if(cur.id==="screen-week")showWeek();
+  if(cur.id==="screen-player-status")renderPlayerStatus();
   if(cur.id==="screen-finance")renderFinance();
   if(cur.id==="screen-history")showHistory();
   if($("overdueModal")&&$("overdueModal").classList.contains("on"))renderOverdue();   // đang mở -> refresh khi cloud đổi
@@ -1757,6 +1780,7 @@ function show(id){
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
+  if(id==="screen-player-status") renderPlayerStatus();
   if(id==="screen-finance") renderFinance();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
@@ -2883,6 +2907,77 @@ function playerGoals(name){
   let total=0,matches=0;
   getHistory().forEach(r=>{ if(r.goals&&(+r.goals[name]||0)>0){total+=+r.goals[name];matches++;} });
   return {total,matches};
+}
+// ===== TÌNH TRẠNG CẦU THỦ · AI Form (chỉ đọc dữ liệu trận đã chốt) =====
+let playerStatusFilter="all";
+function statusStreak(form,result){let n=0;for(const x of form){if(x!==result)break;n++;}return n;}
+function recentGoalStats(name,limit=5){
+  const done=getHistory().filter(r=>r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>b.id-a.id);
+  let played=0,goals=0;
+  for(const r of done){
+    const idx=r.subset.findIndex(p=>p&&p.n===name); if(idx<0||!teamOfIdx(r,idx))continue;
+    played++; goals+=+(r.goals&&r.goals[name]||0);
+    if(played>=limit)break;
+  }
+  return {played,goals};
+}
+function playerStatusModel(p){
+  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W");
+  const goalText=goals.total?`${goals.total} bàn${goals.matches?`/${goals.matches} trận có bàn`:""}`:"chưa có bàn";
+  let state="watch",label="Tìm nhịp",icon="🛠️",analysis="",meme="";
+  if(!st.played){
+    state="new";label="Chưa đủ dữ liệu";icon="🧪";
+    analysis="Chưa có trận nào đã chốt để AI đọc phong độ. Khi có kết quả, thẻ này sẽ tự cập nhật theo số liệu thật.";
+    meme="🧪 Meme: AI đang nhìn bảng dữ liệu như nhìn đề thi chưa phát.";
+  }else if(st.lossStreak>=2||((st.played>=4)&&st.winRate<30)){
+    state="cold";label="Cần reset";icon="🧊";
+    analysis=`${st.lossStreak>=2?`Đang có ${st.lossStreak} trận thua liên tiếp. `:"Tỉ lệ thắng hiện còn thấp. "}${goalText[0].toUpperCase()+goalText.slice(1)}; ưu tiên một trận gọn gàng để lấy lại nhịp.`;
+    meme="🧊 Meme: máy đang khởi động lại — đừng vội gọi xe cứu thương.";
+  }else if(winStreak>=3||(st.played>=4&&st.winRate>=75)||(winStreak>=2&&recent.goals>=2)){
+    state="hot";label="Đang bay";icon="🔥";
+    analysis=`${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy. `:"Tỉ lệ thắng đang rất cao. "}${goalText[0].toUpperCase()+goalText.slice(1)}; form hiện tại đủ nóng để tạo khác biệt.`;
+    meme="🔥 Meme: pin sạc 100% — vừa chạm bóng là hệ thống bật nhạc chiến thắng.";
+  }else if(st.played>=3&&st.winRate>=50){
+    state="steady";label="Ổn định";icon="😎";
+    analysis=`${st.w} thắng, ${st.d} hòa, ${st.l} thua sau ${st.played} trận. ${goalText[0].toUpperCase()+goalText.slice(1)}; phong độ đủ đều để làm điểm tựa cho đội.`;
+    meme="😎 Meme: không cần flash sale, form vẫn bán đều.";
+  }else{
+    analysis=`${st.w} thắng, ${st.d} hòa, ${st.l} thua sau ${st.played} trận. ${goalText[0].toUpperCase()+goalText.slice(1)}; cần thêm vài trận để AI nhận diện xu hướng rõ hơn.`;
+    meme="🛠️ Meme: đang loading form, xin đừng F5 giữa trận.";
+  }
+  const streak=winStreak?`${winStreak}T`:st.lossStreak?`${st.lossStreak}B`:"—";
+  return {p,st,goals,recent,winStreak,state,label,icon,analysis,meme,streak};
+}
+function setPlayerStatusFilter(filter){playerStatusFilter=filter;renderPlayerStatus();}
+function renderPlayerStatus(){
+  const summary=$("pstat-summary"),toolbar=$("pstat-toolbar"),list=$("pstat-list"); if(!summary||!toolbar||!list)return;
+  const all=getPlayers().map(playerStatusModel);
+  const top=all.filter(x=>x.goals.total>0).sort((a,b)=>b.goals.total-a.goals.total||b.goals.matches-a.goals.matches)[0];
+  const counts={hot:all.filter(x=>x.state==="hot").length,cold:all.filter(x=>x.state==="cold").length};
+  summary.innerHTML=`<div class="pstat-kpi"><div class="lab">Cầu thủ có dữ liệu</div><div class="val">${all.filter(x=>x.st.played).length}<span style="font-size:12px;font-weight:700;color:var(--muted)">/${all.length}</span></div></div>
+    <div class="pstat-kpi hot"><div class="lab">Đang bay</div><div class="val">${counts.hot}</div></div>
+    <div class="pstat-kpi cold"><div class="lab">Cần reset</div><div class="val">${counts.cold}</div></div>
+    <div class="pstat-kpi goal"><div class="lab">Vua phá lưới</div><div class="val" style="font-size:${top?"16":"21"}px">${top?`${esc(shortName(top.p.n))} · ${top.goals.total}`:"—"}</div></div>`;
+  const filters=[["all","Tất cả"],["hot","🔥 Đang bay"],["steady","😎 Ổn định"],["cold","🧊 Cần reset"],["goals","⚽ Có bàn"],["new","🧪 Chưa đủ data"]];
+  let rows=all.filter(x=>{
+    if(playerStatusFilter==="all")return true;
+    if(playerStatusFilter==="goals")return x.goals.total>0;
+    return x.state===playerStatusFilter;
+  });
+  const order={hot:0,steady:1,watch:2,cold:3,new:4};
+  rows.sort((a,b)=>order[a.state]-order[b.state]||b.st.played-a.st.played||b.goals.total-a.goals.total||b.st.winRate-a.st.winRate||a.p.n.localeCompare(b.p.n,"vi"));
+  toolbar.innerHTML=filters.map(([key,text])=>`<button class="pstat-filter${playerStatusFilter===key?" on":""}" onclick="setPlayerStatusFilter('${key}')">${text}</button>`).join("")+`<span class="pstat-count">${rows.length}/${all.length} cầu thủ</span>`;
+  if(!rows.length){list.innerHTML='<div class="pstat-empty">Không có cầu thủ phù hợp với bộ lọc này.</div>';return;}
+  list.innerHTML=rows.map(x=>{
+    const form=x.st.form.length?x.st.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join(""):'<span class="pstat-form-empty">Chưa có 5 trận đã chốt</span>';
+    const wdl=x.st.played?`${x.st.w}-${x.st.d}-${x.st.l}`:"—";
+    return `<article class="pstat-card" onclick="openProfileByName('${encodeURIComponent(x.p.n)}')" title="Mở hồ sơ ${esc(x.p.n)}">
+      <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
+      <div class="pstat-form"><span class="pstat-form-label">5 trận</span>${form}</div>
+      <div class="pstat-metrics"><div class="pstat-metric"><b>${x.st.played||"—"}</b><span>Trận</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B</span></div><div class="pstat-metric goal"><b>${x.st.played?x.goals.total:"—"}</b><span>Bàn thắng</span></div><div class="pstat-metric"><b>${x.streak}</b><span>Chuỗi</span></div></div>
+      <div class="pstat-ai"><b>🤖 AI Form:</b> ${esc(x.analysis)}</div><div class="pstat-meme">${esc(x.meme)}</div>
+    </article>`;
+  }).join("");
 }
 // ===== Biểu đồ ĐƯỜNG ĐI BÀN THẮNG qua các trận (hồ sơ cầu thủ) — lọc theo năm, cuộn ngang =====
 let pmGoalYear=null;   // năm đang chọn ở biểu đồ (nhớ giữa các lần render)
