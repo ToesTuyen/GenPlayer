@@ -971,7 +971,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TINH TRANG CAU THU ====== -->
 <div id="screen-player-status" class="screen">
   <div class="pstat-head">
-    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form tổng hợp 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi. Dữ liệu đi từ cũ → mới; không tự bịa kết quả.</div></div>
+    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form tổng hợp 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi. Điểm chỉ được đề xuất để admin rà soát, không tự thay đổi.</div></div>
     <div class="pstat-source">🤖 AI Form · lịch sử đã chốt</div>
   </div>
   <div id="pstat-summary" class="pstat-summary"></div>
@@ -2921,43 +2921,38 @@ function recentGoalStats(name,limit=5){
   }
   return {played,goals};
 }
-function playerNextFixture(name){
-  const fixtures=getHistory().filter(r=>!r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>(a.kickoff||a.id)-(b.kickoff||b.id));
-  for(const r of fixtures){
-    const idx=r.subset.findIndex(p=>p&&p.n===name),team=idx<0?null:teamOfIdx(r,idx);
-    if(team)return {team,label:fmtKick(r.kickoff)||r.label||"trận sắp tới"};
-  }
-  return null;
+function playerUpgradeAdvice(p,st,goals,recent,winStreak){
+  if(st.played<3)return "Chưa đủ từ 3 trận đã chốt để đề xuất thay đổi điểm. Cần tiếp tục quan sát trước khi điều chỉnh.";
+  const ideas=[];
+  // Chỉ dùng các tín hiệu thực sự đo được: bàn thắng và độ ổn định của kết quả.
+  if((recent.goals>=2||goals.total>=3)&&(+p.DD||0)<10)ideas.push(`Dứt điểm (đang ${clampInt(p.DD)}) vì có ${goals.total} bàn được ghi nhận`);
+  if((winStreak>=3||(st.played>=4&&st.winRate>=70))&&(+p.OD||0)<10)ideas.push(`Ổn định (đang ${clampInt(p.OD)}) vì kết quả cá nhân đang duy trì tích cực`);
+  if(!ideas.length)return "Chưa có tín hiệu định lượng đủ mạnh để nâng điểm. Kỹ thuật, chuyền và phòng ngự cần admin quan sát trực tiếp trước khi thay đổi.";
+  return `Có thể xem xét ${ideas.join("; ")}. Đây là gợi ý để admin rà soát, không tự động tăng điểm.`;
 }
 function playerStatusModel(p){
-  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W"),fixture=playerNextFixture(p.n);
+  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W");
   const recentW=st.form.filter(x=>x==="W").length,recentD=st.form.filter(x=>x==="D").length,recentL=st.form.filter(x=>x==="L").length;
   const recentRecord=st.form.length?`${recentW} thắng, ${recentD} hòa, ${recentL} thua trong ${st.form.length} lần ra sân mới nhất`:"chưa có lần ra sân nào được chốt";
   const scoring=goals.total?`Tổng cộng đã có ${goals.total} bàn ở ${goals.matches} trận có bàn; riêng ${recent.played} lần ra sân gần nhất ghi ${recent.goals} bàn.`:`Chưa có bàn thắng được ghi nhận trong lịch sử đã chốt.`;
-  const fixtureLead=fixture?`Đã có tên ở Team ${fixture.team} trận ${fixture.label}. `:"";
-  let state="watch",label="Tìm nhịp",icon="🛠️",review="",outlook="";
+  let state="watch",label="Tìm nhịp",icon="🛠️",review="";
   if(!st.played){
     state="new";label="Chưa đủ dữ liệu";icon="🧪";
     review="Chưa có trận đã chốt mà cầu thủ này ra sân, vì vậy AI chưa xếp phong độ vào nhóm tốt hoặc xấu. Chỉ số bàn thắng và chuỗi kết quả sẽ xuất hiện ngay sau khi có dữ liệu thật.";
-    outlook=`${fixtureLead}Trận sắp tới nên được xem là mốc tạo dữ liệu đầu tiên: ưu tiên đá đúng vai trò sở trường để có một nền phong độ đáng tin cậy.`;
   }else if(st.lossStreak>=2||((st.played>=4)&&st.winRate<30)){
     state="cold";label="Cần reset";icon="🧊";
     review=`${recentRecord}. ${st.lossStreak>=2?`Chuỗi ${st.lossStreak} trận thua liên tiếp là tín hiệu cần chú ý. `:"Tỉ lệ thắng tổng thể hiện còn thấp. "}${scoring}`;
-    outlook=`${fixtureLead}Trận sắp tới cần một màn trình diễn gọn gàng hơn là cố gắng làm mọi thứ: giữ vị trí, giảm sai số và tìm lại một kết quả tích cực để cắt nhịp thua.`;
   }else if(winStreak>=3||(st.played>=4&&st.winRate>=75)||(winStreak>=2&&recent.goals>=2)){
     state="hot";label="Đang bay";icon="🔥";
     review=`${recentRecord}. ${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy, cho thấy ảnh hưởng tích cực đến kết quả chung. `:"Tỉ lệ thắng đang ở mức rất cao. "}${scoring}`;
-    outlook=`${fixtureLead}Trận sắp tới có thể tiếp tục giao vai trò tạo khác biệt, nhưng nên giữ cách chơi đang hiệu quả thay vì đẩy nhịp quá sớm. Duy trì sự ổn định sẽ giá trị hơn một khoảnh khắc đơn lẻ.`;
   }else if(st.played>=3&&st.winRate>=50){
     state="steady";label="Ổn định";icon="😎";
     review=`${recentRecord}. Tính trên toàn bộ ${st.played} trận đã chốt, cầu thủ có ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Đây là phong độ đủ đều để đội hình có điểm tựa.`;
-    outlook=`${fixtureLead}Trận sắp tới nên tiếp tục phát huy sự chắc chắn trong vai trò sở trường, đồng thời chọn thời điểm rõ ràng để tham gia vào các pha quyết định.`;
   }else{
     review=`${recentRecord}. Trên tổng ${st.played} trận đã chốt là ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Mẫu kết quả vẫn chưa đủ ổn định để kết luận một xu hướng dài hạn.`;
-    outlook=`${fixtureLead}Trận sắp tới là cơ hội để định hình xu hướng: ưu tiên hoàn thành tốt nhiệm vụ vị trí, sau đó mới tìm thêm đóng góp ở các tình huống tấn công.`;
   }
   const streak=winStreak?`${winStreak}T`:st.lossStreak?`${st.lossStreak}B`:"—";
-  return {p,st,goals,recent,winStreak,state,label,icon,review,outlook,streak};
+  return {p,st,goals,recent,winStreak,state,label,icon,review,upgrade:playerUpgradeAdvice(p,st,goals,recent,winStreak),streak};
 }
 function setPlayerStatusFilter(filter){playerStatusFilter=filter;renderPlayerStatus();}
 function renderPlayerStatus(){
@@ -2986,7 +2981,7 @@ function renderPlayerStatus(){
       <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
       <div class="pstat-form"><span class="pstat-form-label">5 trận</span>${form}</div>
       <div class="pstat-metrics"><div class="pstat-metric"><b>${x.st.played||"—"}</b><span>Trận</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B</span></div><div class="pstat-metric goal"><b>${x.st.played?x.goals.total:"—"}</b><span>Bàn thắng</span></div><div class="pstat-metric"><b>${x.streak}</b><span>Chuỗi</span></div></div>
-      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Sắp tới</div><div class="pstat-ai-copy">${esc(x.outlook)}</div></div></div>
+      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất xem xét điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
     </article>`;
   }).join("");
 }
