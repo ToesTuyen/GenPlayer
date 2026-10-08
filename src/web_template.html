@@ -805,7 +805,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .pstat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pstat-card{background:linear-gradient(145deg,rgba(51,36,99,.78),rgba(18,29,66,.86));border:1px solid var(--line);border-radius:15px;padding:14px 15px;box-shadow:var(--sh-sm);cursor:pointer;transition:.14s}.pstat-card:hover{transform:translateY(-2px);border-color:rgba(126,154,255,.42)}.pstat-top{display:flex;align-items:center;gap:10px;min-width:0}.pstat-avatar{width:42px;height:42px;border-radius:13px;font-size:14px}.pstat-ident{min-width:0;flex:1}.pstat-name{font-size:15px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pstat-pos{font-size:11.5px;color:var(--muted);margin-top:2px}.pstat-state{font-size:10.5px;font-weight:900;border-radius:20px;padding:4px 8px;white-space:nowrap}.pstat-state.hot{background:rgba(51,217,126,.15);color:#51e69a}.pstat-state.steady{background:rgba(113,149,255,.15);color:#9ab7ff}.pstat-state.watch{background:var(--amber-soft);color:var(--gold)}.pstat-state.cold{background:rgba(100,168,255,.15);color:#8fbfff}.pstat-state.new{background:var(--surface3);color:var(--muted)}
 .pstat-form{display:flex;align-items:center;gap:5px;margin:12px 0 10px}.pstat-form-label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}.pstat-form .fc{width:21px;height:21px;font-size:10px}.pstat-form-empty{font-size:11.5px;color:var(--muted)}
 .pstat-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:9px 0}.pstat-metric{text-align:center;min-width:0}.pstat-metric b{display:block;color:var(--text);font-size:14px;line-height:1.1;font-variant-numeric:tabular-nums}.pstat-metric span{display:block;margin-top:2px;color:var(--faint);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pstat-metric.goal b{color:var(--gold)}
-.pstat-ai{font-size:12.5px;color:var(--text);line-height:1.52;margin-top:10px}.pstat-ai b{color:var(--blue)}.pstat-meme{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:7px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.045)}.pstat-empty{grid-column:1/-1;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);background:var(--surface)}
+.pstat-ai{font-size:12.5px;color:var(--text);line-height:1.55;margin-top:11px;padding:10px 11px;border-radius:11px;border:1px solid var(--line2);background:rgba(9,15,40,.22)}.pstat-ai-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.055em;color:var(--blue);margin-bottom:7px}.pstat-ai-row+.pstat-ai-row{border-top:1px solid var(--line2);margin-top:7px;padding-top:7px}.pstat-ai-label{font-size:11.5px;font-weight:900;color:var(--text)}.pstat-ai-copy{color:var(--muted);margin-top:2px}.pstat-empty{grid-column:1/-1;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);background:var(--surface)}
 @media(max-width:720px){.pstat-summary{grid-template-columns:repeat(2,1fr)}.pstat-grid{grid-template-columns:1fr}}@media(max-width:440px){.pstat-toolbar{gap:6px}.pstat-filter{padding:6px 8px;font-size:11px}.pstat-count{width:100%;margin:2px 0 0}.pstat-metrics{gap:3px}.pstat-card{padding:13px}.pstat-state{font-size:10px;padding:4px 6px}}
 
 /* ===== Theme sáng ===== */
@@ -845,7 +845,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme="light"] .vsub,:root[data-theme="light"] .subchip{color:var(--text)}
 :root[data-theme="light"] .pred{color:#3a9270;background:rgba(56,159,111,.10);border-color:rgba(56,159,111,.23)}
 :root[data-theme="light"] .ai-review .rv-pred,:root[data-theme="light"] .ai-review .rv-pred b{color:#3a9270}
-:root[data-theme="light"] .pstat-kpi,:root[data-theme="light"] .pstat-card{background:linear-gradient(145deg,#ffffff,#edf2ff);border-color:var(--line);box-shadow:0 8px 20px rgba(42,61,112,.09)}:root[data-theme="light"] .pstat-meme{background:#f3f6ff}:root[data-theme="light"] .pstat-card:hover{border-color:rgba(58,88,170,.38)}
+:root[data-theme="light"] .pstat-kpi,:root[data-theme="light"] .pstat-card{background:linear-gradient(145deg,#ffffff,#edf2ff);border-color:var(--line);box-shadow:0 8px 20px rgba(42,61,112,.09)}:root[data-theme="light"] .pstat-ai{background:#f6f8ff}:root[data-theme="light"] .pstat-card:hover{border-color:rgba(58,88,170,.38)}
 :root[data-theme="light"] .wk{color:#b27b25}
 :root[data-theme="light"] .pl-win{color:#3d9270}
 :root[data-theme="light"] .gl-in.has-goal{color:#a77424;border-color:rgba(190,139,46,.44);background:rgba(225,166,42,.14)}
@@ -2921,32 +2921,43 @@ function recentGoalStats(name,limit=5){
   }
   return {played,goals};
 }
+function playerNextFixture(name){
+  const fixtures=getHistory().filter(r=>!r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>(a.kickoff||a.id)-(b.kickoff||b.id));
+  for(const r of fixtures){
+    const idx=r.subset.findIndex(p=>p&&p.n===name),team=idx<0?null:teamOfIdx(r,idx);
+    if(team)return {team,label:fmtKick(r.kickoff)||r.label||"trận sắp tới"};
+  }
+  return null;
+}
 function playerStatusModel(p){
-  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W");
-  const goalText=goals.total?`${goals.total} bàn${goals.matches?`/${goals.matches} trận có bàn`:""}`:"chưa có bàn";
-  let state="watch",label="Tìm nhịp",icon="🛠️",analysis="",meme="";
+  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W"),fixture=playerNextFixture(p.n);
+  const recentW=st.form.filter(x=>x==="W").length,recentD=st.form.filter(x=>x==="D").length,recentL=st.form.filter(x=>x==="L").length;
+  const recentRecord=st.form.length?`${recentW} thắng, ${recentD} hòa, ${recentL} thua trong ${st.form.length} lần ra sân mới nhất`:"chưa có lần ra sân nào được chốt";
+  const scoring=goals.total?`Tổng cộng đã có ${goals.total} bàn ở ${goals.matches} trận có bàn; riêng ${recent.played} lần ra sân gần nhất ghi ${recent.goals} bàn.`:`Chưa có bàn thắng được ghi nhận trong lịch sử đã chốt.`;
+  const fixtureLead=fixture?`Đã có tên ở Team ${fixture.team} trận ${fixture.label}. `:"";
+  let state="watch",label="Tìm nhịp",icon="🛠️",review="",outlook="";
   if(!st.played){
     state="new";label="Chưa đủ dữ liệu";icon="🧪";
-    analysis="Chưa có trận nào đã chốt để AI đọc phong độ. Khi có kết quả, thẻ này sẽ tự cập nhật theo số liệu thật.";
-    meme="🧪 Meme: AI đang nhìn bảng dữ liệu như nhìn đề thi chưa phát.";
+    review="Chưa có trận đã chốt mà cầu thủ này ra sân, vì vậy AI chưa xếp phong độ vào nhóm tốt hoặc xấu. Chỉ số bàn thắng và chuỗi kết quả sẽ xuất hiện ngay sau khi có dữ liệu thật.";
+    outlook=`${fixtureLead}Trận sắp tới nên được xem là mốc tạo dữ liệu đầu tiên: ưu tiên đá đúng vai trò sở trường để có một nền phong độ đáng tin cậy.`;
   }else if(st.lossStreak>=2||((st.played>=4)&&st.winRate<30)){
     state="cold";label="Cần reset";icon="🧊";
-    analysis=`${st.lossStreak>=2?`Đang có ${st.lossStreak} trận thua liên tiếp. `:"Tỉ lệ thắng hiện còn thấp. "}${goalText[0].toUpperCase()+goalText.slice(1)}; ưu tiên một trận gọn gàng để lấy lại nhịp.`;
-    meme="🧊 Meme: máy đang khởi động lại — đừng vội gọi xe cứu thương.";
+    review=`${recentRecord}. ${st.lossStreak>=2?`Chuỗi ${st.lossStreak} trận thua liên tiếp là tín hiệu cần chú ý. `:"Tỉ lệ thắng tổng thể hiện còn thấp. "}${scoring}`;
+    outlook=`${fixtureLead}Trận sắp tới cần một màn trình diễn gọn gàng hơn là cố gắng làm mọi thứ: giữ vị trí, giảm sai số và tìm lại một kết quả tích cực để cắt nhịp thua.`;
   }else if(winStreak>=3||(st.played>=4&&st.winRate>=75)||(winStreak>=2&&recent.goals>=2)){
     state="hot";label="Đang bay";icon="🔥";
-    analysis=`${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy. `:"Tỉ lệ thắng đang rất cao. "}${goalText[0].toUpperCase()+goalText.slice(1)}; form hiện tại đủ nóng để tạo khác biệt.`;
-    meme="🔥 Meme: pin sạc 100% — vừa chạm bóng là hệ thống bật nhạc chiến thắng.";
+    review=`${recentRecord}. ${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy, cho thấy ảnh hưởng tích cực đến kết quả chung. `:"Tỉ lệ thắng đang ở mức rất cao. "}${scoring}`;
+    outlook=`${fixtureLead}Trận sắp tới có thể tiếp tục giao vai trò tạo khác biệt, nhưng nên giữ cách chơi đang hiệu quả thay vì đẩy nhịp quá sớm. Duy trì sự ổn định sẽ giá trị hơn một khoảnh khắc đơn lẻ.`;
   }else if(st.played>=3&&st.winRate>=50){
     state="steady";label="Ổn định";icon="😎";
-    analysis=`${st.w} thắng, ${st.d} hòa, ${st.l} thua sau ${st.played} trận. ${goalText[0].toUpperCase()+goalText.slice(1)}; phong độ đủ đều để làm điểm tựa cho đội.`;
-    meme="😎 Meme: không cần flash sale, form vẫn bán đều.";
+    review=`${recentRecord}. Tính trên toàn bộ ${st.played} trận đã chốt, cầu thủ có ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Đây là phong độ đủ đều để đội hình có điểm tựa.`;
+    outlook=`${fixtureLead}Trận sắp tới nên tiếp tục phát huy sự chắc chắn trong vai trò sở trường, đồng thời chọn thời điểm rõ ràng để tham gia vào các pha quyết định.`;
   }else{
-    analysis=`${st.w} thắng, ${st.d} hòa, ${st.l} thua sau ${st.played} trận. ${goalText[0].toUpperCase()+goalText.slice(1)}; cần thêm vài trận để AI nhận diện xu hướng rõ hơn.`;
-    meme="🛠️ Meme: đang loading form, xin đừng F5 giữa trận.";
+    review=`${recentRecord}. Trên tổng ${st.played} trận đã chốt là ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Mẫu kết quả vẫn chưa đủ ổn định để kết luận một xu hướng dài hạn.`;
+    outlook=`${fixtureLead}Trận sắp tới là cơ hội để định hình xu hướng: ưu tiên hoàn thành tốt nhiệm vụ vị trí, sau đó mới tìm thêm đóng góp ở các tình huống tấn công.`;
   }
   const streak=winStreak?`${winStreak}T`:st.lossStreak?`${st.lossStreak}B`:"—";
-  return {p,st,goals,recent,winStreak,state,label,icon,analysis,meme,streak};
+  return {p,st,goals,recent,winStreak,state,label,icon,review,outlook,streak};
 }
 function setPlayerStatusFilter(filter){playerStatusFilter=filter;renderPlayerStatus();}
 function renderPlayerStatus(){
@@ -2975,7 +2986,7 @@ function renderPlayerStatus(){
       <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
       <div class="pstat-form"><span class="pstat-form-label">5 trận</span>${form}</div>
       <div class="pstat-metrics"><div class="pstat-metric"><b>${x.st.played||"—"}</b><span>Trận</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B</span></div><div class="pstat-metric goal"><b>${x.st.played?x.goals.total:"—"}</b><span>Bàn thắng</span></div><div class="pstat-metric"><b>${x.streak}</b><span>Chuỗi</span></div></div>
-      <div class="pstat-ai"><b>🤖 AI Form:</b> ${esc(x.analysis)}</div><div class="pstat-meme">${esc(x.meme)}</div>
+      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Sắp tới</div><div class="pstat-ai-copy">${esc(x.outlook)}</div></div></div>
     </article>`;
   }).join("");
 }
