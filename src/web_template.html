@@ -2149,8 +2149,9 @@ function renderMatchList(h){
 function shortName(n){
   const s=String(n||"").trim();
   // Tên khách là một nhãn hoàn chỉnh. Không cắt hai từ cuối, nếu không
-  // "Khách (bạn Khắc Trọng)" sẽ bị hiển thị thành "Khắc Trọng)" trên sân.
-  if(/^Khách\s*\(bạn\b/i.test(s))return s;
+  // "Khách (Mạnh Tiến)" sẽ bị hiển thị thành "Mạnh Tiến)" trên sân.
+  // Áp dụng cho mọi biến thể khách: "Khách (bạn ...)", "Khách (Mạnh Khắc)"...
+  if(/^Khách\s*\(/i.test(s))return s;
   const w=s.split(/\s+/);return w.slice(-2).join(" ");
 }
 function vpitch(r){
