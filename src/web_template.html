@@ -971,7 +971,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TINH TRANG CAU THU ====== -->
 <div id="screen-player-status" class="screen">
   <div class="pstat-head">
-    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form tổng hợp 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi. Điểm chỉ được đề xuất để admin rà soát, không tự thay đổi.</div></div>
+    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form đọc tối đa 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi để đề xuất tăng, giữ hoặc đánh giá giảm điểm. Điểm không tự thay đổi.</div></div>
     <div class="pstat-source">🤖 AI Form · lịch sử đã chốt</div>
   </div>
   <div id="pstat-summary" class="pstat-summary"></div>
@@ -2921,14 +2921,17 @@ function recentGoalStats(name,limit=5){
   }
   return {played,goals};
 }
-function playerUpgradeAdvice(p,st,goals,recent,winStreak){
-  if(st.played<3)return "Chưa đủ từ 3 trận đã chốt để đề xuất thay đổi điểm. Cần tiếp tục quan sát trước khi điều chỉnh.";
-  const ideas=[];
-  // Chỉ dùng các tín hiệu thực sự đo được: bàn thắng và độ ổn định của kết quả.
-  if((recent.goals>=2||goals.total>=3)&&(+p.DD||0)<10)ideas.push(`Dứt điểm (đang ${clampInt(p.DD)}) vì có ${goals.total} bàn được ghi nhận`);
-  if((winStreak>=3||(st.played>=4&&st.winRate>=70))&&(+p.OD||0)<10)ideas.push(`Ổn định (đang ${clampInt(p.OD)}) vì kết quả cá nhân đang duy trì tích cực`);
-  if(!ideas.length)return "Chưa có tín hiệu định lượng đủ mạnh để nâng điểm. Kỹ thuật, chuyền và phòng ngự cần admin quan sát trực tiếp trước khi thay đổi.";
-  return `Có thể xem xét ${ideas.join("; ")}. Đây là gợi ý để admin rà soát, không tự động tăng điểm.`;
+function playerRatingAdvice(p,st,recent,winStreak){
+  const recentW=st.form.filter(x=>x==="W").length,recentL=st.form.filter(x=>x==="L").length;
+  if(recent.played<3)return "Giữ nguyên: chưa đủ 3 trận đã chốt gần nhất để đề xuất tăng hoặc giảm điểm. Cần thêm dữ liệu thực tế.";
+  const ideas=[],pos=posCodeOf(p),isAttacker=["TĐ","TV","TVtt"].includes(pos),dd=clampInt(p.DD),od=clampInt(p.OD);
+  // Bàn thắng chỉ phản ánh dứt điểm của các vai trò tấn công; kết quả gần đây phản ánh độ ổn định, không suy diễn sang kỹ thuật/phòng ngự.
+  if(isAttacker&&recent.goals>=2&&dd<10)ideas.push(`↑ Tăng nhẹ Dứt điểm (đang ${dd}): ghi ${recent.goals} bàn trong ${recent.played} lần ra sân gần nhất`);
+  else if(isAttacker&&recent.played>=4&&recent.goals===0&&recentL>=3&&dd>=7)ideas.push(`↓ Cân nhắc giảm Dứt điểm (đang ${dd}): 4+ trận gần đây chưa có bàn và kết quả đi xuống; cần admin đối chiếu thêm tình huống thực tế`);
+  if(recentW>=3&&recentL===0&&od<10)ideas.push(`↑ Tăng nhẹ Ổn định (đang ${od}): ${recentW} trận thắng trong chuỗi gần đây`);
+  else if((recentL>=3||st.lossStreak>=2)&&od>1)ideas.push(`↓ Cân nhắc giảm Ổn định (đang ${od}): ${recentL} trận thua trong 5 lần ra sân gần nhất${st.lossStreak>=2?`, gồm chuỗi ${st.lossStreak} trận thua`:""}`);
+  if(!ideas.length)return `→ Giữ nguyên điểm: phong độ ${recentW} thắng, ${st.form.filter(x=>x==="D").length} hòa, ${recentL} thua trong ${recent.played} lần ra sân gần nhất chưa tạo tín hiệu tăng/giảm đủ mạnh. Kỹ thuật, chuyền và phòng ngự cần admin quan sát trực tiếp.`;
+  return `${ideas.join(". ")}. Đây là đề xuất để admin rà soát, không tự động sửa điểm.`;
 }
 function playerStatusModel(p){
   const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W");
@@ -2952,7 +2955,7 @@ function playerStatusModel(p){
     review=`${recentRecord}. Trên tổng ${st.played} trận đã chốt là ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Mẫu kết quả vẫn chưa đủ ổn định để kết luận một xu hướng dài hạn.`;
   }
   const streak=winStreak?`${winStreak}T`:st.lossStreak?`${st.lossStreak}B`:"—";
-  return {p,st,goals,recent,winStreak,state,label,icon,review,upgrade:playerUpgradeAdvice(p,st,goals,recent,winStreak),streak};
+  return {p,st,goals,recent,winStreak,state,label,icon,review,upgrade:playerRatingAdvice(p,st,recent,winStreak),streak};
 }
 function setPlayerStatusFilter(filter){playerStatusFilter=filter;renderPlayerStatus();}
 function renderPlayerStatus(){
@@ -2981,7 +2984,7 @@ function renderPlayerStatus(){
       <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
       <div class="pstat-form"><span class="pstat-form-label">5 trận</span>${form}</div>
       <div class="pstat-metrics"><div class="pstat-metric"><b>${x.st.played||"—"}</b><span>Trận</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B</span></div><div class="pstat-metric goal"><b>${x.st.played?x.goals.total:"—"}</b><span>Bàn thắng</span></div><div class="pstat-metric"><b>${x.streak}</b><span>Chuỗi</span></div></div>
-      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất xem xét điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
+      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất điều chỉnh điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
     </article>`;
   }).join("");
 }
