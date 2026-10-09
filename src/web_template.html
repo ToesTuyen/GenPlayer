@@ -2633,41 +2633,41 @@ function heatHTML(name,form,cls){
 }
 function renderRank(boxId){
   const box=$(boxId||"rank-body"); if(!box)return;
-  rankRows=getPlayers().map(p=>({name:p.n,p,st:playerStats(p.n)})).filter(x=>x.st.played>0)
+  rankRows=getPlayers().map(p=>({name:p.n,p,st:playerStats(p.n),recent:recentTeamForm(p.n)})).filter(x=>x.st.played>0)
     .sort((a,b)=>b.st.winRate-a.st.winRate||b.st.played-a.st.played||ov(b.p)-ov(a.p));
   if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">🏆</span>Chưa có trận nào kết thúc để xếp hạng.<br>Nhập <b>⚽ Tỉ số</b> cho trận ở <b>Lịch sử thi đấu</b>.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+rankRows.map((x,i)=>{
-    const p=x.p,st=x.st;
+    const p=x.p,st=x.st,recent=x.recent;
     return `<div class="rank-row" onclick="openRankRow(${i})">
       <span class="rank-no${i<3?" top":""}">${i+1}</span>
       <span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span>
-      <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B</div></div>
+      <div class="rank-id"><div class="rank-name">${rankName(p.n)}</div><div class="rank-sub">${st.played} trận · ${st.w}T ${st.d}H ${st.l}B${recent.matches?` · gần đây đá ${recent.played}/${recent.matches}`:""}</div></div>
       ${heatHTML(p.n,st.form)}
       <span class="rank-wr">${st.winRate}%</span>
     </div>`;
   }).join("")+`</div>`;
 }
 // Chuỗi bại đang có: chỉ từ 2 trận thua liên tiếp mới tính là một chuỗi.
-// Sau chuỗi đang diễn ra, ưu tiên người thua nhiều hơn trong đúng 5 lần ra sân gần nhất.
-// Nhờ vậy người bất bại hoặc ít thua không bị chen vào giữa nhóm phong độ xấu.
+// Cửa sổ hiển thị là 5 trận ĐỘI gần nhất: trận nghỉ là N, không phải một trận thua.
+// Nghỉ sau một trận thua sẽ làm chuỗi cũ trở thành dữ liệu cũ, thay vì bị coi là đang diễn ra.
 function renderLossStreakRank(){
   const box=$("rank2-body"); if(!box)return;
   rankRows=getPlayers().map(p=>{
-    const st=playerStats(p.n), recentLosses=st.form.filter(x=>x==="L").length;
-    return {name:p.n,p,st,absent:playerAbsentStreak(p.n),chain:st.lossStreak>=2?st.lossStreak:0,recentLosses};
-  }).filter(x=>x.st.played>0)
-    .sort((a,b)=>b.chain-a.chain||b.recentLosses-a.recentLosses||b.st.form.length-a.st.form.length||a.absent-b.absent||ov(b.p)-ov(a.p));
+    const st=playerStats(p.n), recent=recentTeamForm(p.n),recentLosses=recent.l;
+    return {name:p.n,p,st,recent,chain:recent.lossStreak>=2?recent.lossStreak:0,recentLosses};
+  }).filter(x=>x.recent.matches>0)
+    .sort((a,b)=>b.chain-a.chain||b.recentLosses-a.recentLosses||b.recent.played-a.recent.played||a.recent.absent-b.recent.absent||ov(b.p)-ov(a.p));
   if(!rankRows.length){box.innerHTML=`<div class="empty"><span class="big">💨</span>Chưa có trận nào kết thúc để tính chuỗi bại.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+rankRows.map((x,i)=>{
-    const {p,st,absent,chain,recentLosses}=x;
-    const recent=`${recentLosses}B/${st.form.length} trận gần nhất`;
+    const {p,recent,chain,recentLosses}=x;
+    const recentText=`${recentLosses}B/${recent.played} trận đá · nghỉ ${recent.absent}/${recent.matches}`;
     const note=chain
-      ? `thua ${chain} trận liên tiếp · ${recent}${absent?` · vắng ${absent} trận gần đây`:""}`
-      : (st.lossStreak===1?`vừa thua trận gần nhất · ${recent}${absent?` · vắng ${absent} trận gần đây`:""}`:`${recent}${absent?` · vắng ${absent} trận gần đây`:""}`);
-    // Cầu thủ nào cũng xem được 5 trận gần nhất; đọc từ trái sang phải là cũ → mới,
+      ? `thua ${chain} trận liên tiếp · ${recentText}`
+      : (recent.lossStreak===1?`vừa thua trận gần nhất · ${recentText}`:`${recentText}`);
+    // Cầu thủ nào cũng xem được 5 trận đội gần nhất; đọc từ trái sang phải là cũ → mới,
     // nên ô ngoài cùng bên phải luôn là trận gần nhất.
-    const formUI=st.form.length
-      ? `<span class="rank-form" title="5 trận gần nhất · trận mới nhất ở bên phải">${st.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join("")}</span>`
+    const formUI=recent.matches
+      ? `<span class="rank-form" title="5 trận đội gần nhất · trận mới nhất ở bên phải">${recent.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}" title="${f==="N"?"Nghỉ":f==="W"?"Thắng":f==="D"?"Hòa":"Thua"}">${FCHIP[f][0]}</span>`).join("")}</span>`
       : `<span class="rank-loss-empty">—</span>`;
     return `<div class="rank-row" onclick="openRankRow(${i})">
       <span class="rank-no${i<3?" top":""}">${i+1}</span>
