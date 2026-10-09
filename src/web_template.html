@@ -624,7 +624,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .ps-row b{font-weight:800;color:var(--text)}
 .ps-form{display:inline-flex;gap:4px}
 .fc{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:900;color:#0a0e1a}
-.fc.w{background:#22e07a}.fc.d{background:var(--gold)}.fc.l{background:var(--red)}
+.fc.w{background:#22e07a}.fc.d{background:var(--gold)}.fc.l{background:var(--red)}.fc.n{background:var(--surface3);border:1px solid var(--line);color:var(--muted)}
 /* biểu đồ đường đi bàn thắng (hồ sơ cầu thủ) */
 .gc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
 .gc-tabs button{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;transition:.12s}
@@ -803,7 +803,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .pstat-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.pstat-kpi{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:linear-gradient(145deg,rgba(50,35,99,.78),rgba(19,31,71,.82));box-shadow:var(--sh-sm)}.pstat-kpi::after{content:'';position:absolute;width:72px;height:72px;right:-27px;top:-28px;border-radius:50%;background:rgba(255,255,255,.06)}.pstat-kpi .lab{position:relative;z-index:1;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em;color:var(--muted)}.pstat-kpi .val{position:relative;z-index:1;font-size:21px;font-weight:900;color:var(--text);margin-top:5px;line-height:1.12}.pstat-kpi.hot .val{color:#50e89a}.pstat-kpi.cold .val{color:#7fb4ff}.pstat-kpi.goal .val{color:var(--gold)}
 .pstat-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px}.pstat-filter{border:1px solid var(--line);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:800;border-radius:9px;padding:7px 10px;cursor:pointer}.pstat-filter.on{background:var(--brand-soft);border-color:var(--brand);color:var(--text)}.pstat-count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
 .pstat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pstat-card{background:linear-gradient(145deg,rgba(51,36,99,.78),rgba(18,29,66,.86));border:1px solid var(--line);border-radius:15px;padding:14px 15px;box-shadow:var(--sh-sm);cursor:pointer;transition:.14s}.pstat-card:hover{transform:translateY(-2px);border-color:rgba(126,154,255,.42)}.pstat-top{display:flex;align-items:center;gap:10px;min-width:0}.pstat-avatar{width:42px;height:42px;border-radius:13px;font-size:14px}.pstat-ident{min-width:0;flex:1}.pstat-name{font-size:15px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pstat-pos{font-size:11.5px;color:var(--muted);margin-top:2px}.pstat-state{font-size:10.5px;font-weight:900;border-radius:20px;padding:4px 8px;white-space:nowrap}.pstat-state.hot{background:rgba(51,217,126,.15);color:#51e69a}.pstat-state.steady{background:rgba(113,149,255,.15);color:#9ab7ff}.pstat-state.watch{background:var(--amber-soft);color:var(--gold)}.pstat-state.cold{background:rgba(100,168,255,.15);color:#8fbfff}.pstat-state.new{background:var(--surface3);color:var(--muted)}
-.pstat-form{display:flex;align-items:center;gap:5px;margin:12px 0 10px}.pstat-form-label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}.pstat-form .fc{width:21px;height:21px;font-size:10px}.pstat-form-empty{font-size:11.5px;color:var(--muted)}
+.pstat-form{display:flex;align-items:center;gap:5px;margin:12px 0 10px;flex-wrap:wrap}.pstat-form-label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}.pstat-form .fc{width:21px;height:21px;font-size:10px}.pstat-form-key,.pstat-form-empty{font-size:10.5px;color:var(--faint);font-weight:700}.pstat-form-key{margin-left:2px}
 .pstat-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:9px 0}.pstat-metric{text-align:center;min-width:0}.pstat-metric b{display:block;color:var(--text);font-size:14px;line-height:1.1;font-variant-numeric:tabular-nums}.pstat-metric span{display:block;margin-top:2px;color:var(--faint);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pstat-metric.goal b{color:var(--gold)}
 .pstat-ai{font-size:12.5px;color:var(--text);line-height:1.55;margin-top:11px;padding:10px 11px;border-radius:11px;border:1px solid var(--line2);background:rgba(9,15,40,.22)}.pstat-ai-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.055em;color:var(--blue);margin-bottom:7px}.pstat-ai-row+.pstat-ai-row{border-top:1px solid var(--line2);margin-top:7px;padding-top:7px}.pstat-ai-label{font-size:11.5px;font-weight:900;color:var(--text)}.pstat-ai-copy{color:var(--muted);margin-top:2px}.pstat-empty{grid-column:1/-1;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);background:var(--surface)}
 @media(max-width:720px){.pstat-summary{grid-template-columns:repeat(2,1fr)}.pstat-grid{grid-template-columns:1fr}}@media(max-width:440px){.pstat-toolbar{gap:6px}.pstat-filter{padding:6px 8px;font-size:11px}.pstat-count{width:100%;margin:2px 0 0}.pstat-metrics{gap:3px}.pstat-card{padding:13px}.pstat-state{font-size:10px;padding:4px 6px}}
@@ -2575,7 +2575,7 @@ function playerStats(name){
   for(const r of form){if(r!=="L")break;lossStreak++;}
   return {played,w,d,l,winRate:played?Math.round(100*w/played):0,form:form.slice(0,5),lossStreak};
 }
-const FCHIP={W:["T","w"],D:["H","d"],L:["B","l"]};
+const FCHIP={W:["T","w"],D:["H","d"],L:["B","l"],N:["N","n"]};
 function statsPanel(name){
   const st=playerStats(name), g=playerGoals(name);
   if(!st.played)return `<div class="pm-sec" style="margin-top:18px">Thống kê thi đấu</div><div class="ps-empty">Chưa có trận nào (cần nhập tỉ số ở Lịch sử thi đấu).</div>`;
@@ -2911,51 +2911,58 @@ function playerGoals(name){
 // ===== TÌNH TRẠNG CẦU THỦ · AI Form (chỉ đọc dữ liệu trận đã chốt) =====
 let playerStatusFilter="all";
 function statusStreak(form,result){let n=0;for(const x of form){if(x!==result)break;n++;}return n;}
-function recentGoalStats(name,limit=5){
-  const done=getHistory().filter(r=>r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>b.id-a.id);
-  let played=0,goals=0;
-  for(const r of done){
-    const idx=r.subset.findIndex(p=>p&&p.n===name); if(idx<0||!teamOfIdx(r,idx))continue;
-    played++; goals+=+(r.goals&&r.goals[name]||0);
-    if(played>=limit)break;
+function recentTeamForm(name,limit=5){
+  const matches=getHistory().filter(r=>r.score&&Array.isArray(r.subset)&&r.result).sort((a,b)=>b.id-a.id).slice(0,limit);
+  let played=0,absent=0,w=0,d=0,l=0,goals=0; const form=[];
+  for(const r of matches){
+    const idx=r.subset.findIndex(p=>p&&p.n===name),team=idx<0?null:teamOfIdx(r,idx);
+    if(!team){absent++;form.push("N");continue;}
+    const a=+r.score.a||0,b=+r.score.b||0;
+    const result=a===b?"D":((team==="A"&&a>b)||(team==="B"&&b>a)?"W":"L");
+    played++;goals+=+(r.goals&&r.goals[name]||0);form.push(result);
+    if(result==="W")w++;else if(result==="D")d++;else l++;
   }
-  return {played,goals};
+  return {matches:matches.length,played,absent,w,d,l,goals,form,winStreak:statusStreak(form,"W"),lossStreak:statusStreak(form,"L")};
 }
-function playerRatingAdvice(p,st,recent,winStreak){
-  const recentW=st.form.filter(x=>x==="W").length,recentL=st.form.filter(x=>x==="L").length;
-  if(recent.played<3)return "Giữ nguyên: chưa đủ 3 trận đã chốt gần nhất để đề xuất tăng hoặc giảm điểm. Cần thêm dữ liệu thực tế.";
+function playerRatingAdvice(p,recent){
+  if(recent.played<3)return `→ Giữ nguyên: chỉ đá ${recent.played}/${recent.matches||5} trận đội gần nhất, nghỉ ${recent.absent} trận. Chưa đủ mẫu để đề xuất tăng hoặc giảm điểm.`;
   const ideas=[],pos=posCodeOf(p),isAttacker=["TĐ","TV","TVtt"].includes(pos),dd=clampInt(p.DD),od=clampInt(p.OD);
   // Bàn thắng chỉ phản ánh dứt điểm của các vai trò tấn công; kết quả gần đây phản ánh độ ổn định, không suy diễn sang kỹ thuật/phòng ngự.
   if(isAttacker&&recent.goals>=2&&dd<10)ideas.push(`↑ Tăng nhẹ Dứt điểm (đang ${dd}): ghi ${recent.goals} bàn trong ${recent.played} lần ra sân gần nhất`);
-  else if(isAttacker&&recent.played>=4&&recent.goals===0&&recentL>=3&&dd>=7)ideas.push(`↓ Cân nhắc giảm Dứt điểm (đang ${dd}): 4+ trận gần đây chưa có bàn và kết quả đi xuống; cần admin đối chiếu thêm tình huống thực tế`);
-  if(recentW>=3&&recentL===0&&od<10)ideas.push(`↑ Tăng nhẹ Ổn định (đang ${od}): ${recentW} trận thắng trong chuỗi gần đây`);
-  else if((recentL>=3||st.lossStreak>=2)&&od>1)ideas.push(`↓ Cân nhắc giảm Ổn định (đang ${od}): ${recentL} trận thua trong 5 lần ra sân gần nhất${st.lossStreak>=2?`, gồm chuỗi ${st.lossStreak} trận thua`:""}`);
-  if(!ideas.length)return `→ Giữ nguyên điểm: phong độ ${recentW} thắng, ${st.form.filter(x=>x==="D").length} hòa, ${recentL} thua trong ${recent.played} lần ra sân gần nhất chưa tạo tín hiệu tăng/giảm đủ mạnh. Kỹ thuật, chuyền và phòng ngự cần admin quan sát trực tiếp.`;
+  else if(isAttacker&&recent.played>=4&&recent.goals===0&&recent.l>=3&&dd>=7)ideas.push(`↓ Cân nhắc giảm Dứt điểm (đang ${dd}): 4+ trận gần đây chưa có bàn và kết quả đi xuống; cần admin đối chiếu thêm tình huống thực tế`);
+  if(recent.w>=3&&recent.l===0&&od<10)ideas.push(`↑ Tăng nhẹ Ổn định (đang ${od}): ${recent.w} trận thắng trong chuỗi gần đây`);
+  else if((recent.l>=3||recent.lossStreak>=2)&&od>1)ideas.push(`↓ Cân nhắc giảm Ổn định (đang ${od}): ${recent.l} trận thua trong 5 trận đội gần nhất${recent.lossStreak>=2?`, gồm chuỗi ${recent.lossStreak} trận thua`:""}`);
+  if(!ideas.length)return `→ Giữ nguyên điểm: phong độ ${recent.w} thắng, ${recent.d} hòa, ${recent.l} thua trong ${recent.played}/${recent.matches} trận đội gần nhất chưa tạo tín hiệu tăng/giảm đủ mạnh. Kỹ thuật, chuyền và phòng ngự cần admin quan sát trực tiếp.`;
   return `${ideas.join(". ")}. Đây là đề xuất để admin rà soát, không tự động sửa điểm.`;
 }
 function playerStatusModel(p){
-  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentGoalStats(p.n), winStreak=statusStreak(st.form,"W");
-  const recentW=st.form.filter(x=>x==="W").length,recentD=st.form.filter(x=>x==="D").length,recentL=st.form.filter(x=>x==="L").length;
-  const recentRecord=st.form.length?`${recentW} thắng, ${recentD} hòa, ${recentL} thua trong ${st.form.length} lần ra sân mới nhất`:"chưa có lần ra sân nào được chốt";
+  const st=playerStats(p.n), goals=playerGoals(p.n), recent=recentTeamForm(p.n), winStreak=recent.winStreak;
+  const recentRecord=recent.matches?`${recent.w} thắng, ${recent.d} hòa, ${recent.l} thua khi có mặt ở ${recent.played}/${recent.matches} trận đội gần nhất; nghỉ ${recent.absent} trận`:"chưa có trận đội nào được chốt";
   const scoring=goals.total?`Tổng cộng đã có ${goals.total} bàn ở ${goals.matches} trận có bàn; riêng ${recent.played} lần ra sân gần nhất ghi ${recent.goals} bàn.`:`Chưa có bàn thắng được ghi nhận trong lịch sử đã chốt.`;
   let state="watch",label="Tìm nhịp",icon="🛠️",review="";
-  if(!st.played){
+  if(!recent.matches){
     state="new";label="Chưa đủ dữ liệu";icon="🧪";
-    review="Chưa có trận đã chốt mà cầu thủ này ra sân, vì vậy AI chưa xếp phong độ vào nhóm tốt hoặc xấu. Chỉ số bàn thắng và chuỗi kết quả sẽ xuất hiện ngay sau khi có dữ liệu thật.";
-  }else if(st.lossStreak>=2||((st.played>=4)&&st.winRate<30)){
+    review="Chưa có trận đội nào được chốt để AI đọc phong độ. Chỉ số bàn thắng và chuỗi kết quả sẽ xuất hiện ngay sau khi có dữ liệu thật.";
+  }else if(!recent.played){
+    state="new";label=`Vắng ${recent.matches} trận`;icon="⏳";
+    review=`Cầu thủ nghỉ cả ${recent.matches} trận đội gần nhất. Không dùng dữ liệu cũ để đánh giá tăng/giảm điểm ở thời điểm này.`;
+  }else if(recent.played<3){
+    state="watch";label="Ít ra sân";icon="⏳";
+    review=`${recentRecord}. Số trận ra sân quá ít để kết luận phong độ hoặc dùng một kết quả đơn lẻ làm căn cứ điều chỉnh điểm. ${scoring}`;
+  }else if(recent.lossStreak>=2||recent.l>=3){
     state="cold";label="Cần reset";icon="🧊";
-    review=`${recentRecord}. ${st.lossStreak>=2?`Chuỗi ${st.lossStreak} trận thua liên tiếp là tín hiệu cần chú ý. `:"Tỉ lệ thắng tổng thể hiện còn thấp. "}${scoring}`;
-  }else if(winStreak>=3||(st.played>=4&&st.winRate>=75)||(winStreak>=2&&recent.goals>=2)){
+    review=`${recentRecord}. ${recent.lossStreak>=2?`Chuỗi ${recent.lossStreak} trận thua liên tiếp là tín hiệu cần chú ý. `:"Kết quả ở cửa sổ 5 trận gần nhất đang nghiêng về phía thua. "}${scoring}`;
+  }else if(winStreak>=3||(recent.played>=3&&recent.w/recent.played>=.75)||(winStreak>=2&&recent.goals>=2)){
     state="hot";label="Đang bay";icon="🔥";
-    review=`${recentRecord}. ${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy, cho thấy ảnh hưởng tích cực đến kết quả chung. `:"Tỉ lệ thắng đang ở mức rất cao. "}${scoring}`;
-  }else if(st.played>=3&&st.winRate>=50){
+    review=`${recentRecord}. ${winStreak?`Chuỗi ${winStreak} trận thắng đang chạy, cho thấy ảnh hưởng tích cực đến kết quả chung. `:"Tỉ lệ thắng trong các lần ra sân gần đây đang ở mức rất cao. "}${scoring}`;
+  }else if(recent.played>=3&&recent.w>=recent.l){
     state="steady";label="Ổn định";icon="😎";
     review=`${recentRecord}. Tính trên toàn bộ ${st.played} trận đã chốt, cầu thủ có ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Đây là phong độ đủ đều để đội hình có điểm tựa.`;
   }else{
     review=`${recentRecord}. Trên tổng ${st.played} trận đã chốt là ${st.w} thắng, ${st.d} hòa và ${st.l} thua. ${scoring} Mẫu kết quả vẫn chưa đủ ổn định để kết luận một xu hướng dài hạn.`;
   }
-  const streak=winStreak?`${winStreak}T`:st.lossStreak?`${st.lossStreak}B`:"—";
-  return {p,st,goals,recent,winStreak,state,label,icon,review,upgrade:playerRatingAdvice(p,st,recent,winStreak),streak};
+  const streak=winStreak?`${winStreak}T`:recent.lossStreak?`${recent.lossStreak}B`:"—";
+  return {p,st,goals,recent,winStreak,state,label,icon,review,upgrade:playerRatingAdvice(p,recent),streak};
 }
 function setPlayerStatusFilter(filter){playerStatusFilter=filter;renderPlayerStatus();}
 function renderPlayerStatus(){
@@ -2978,12 +2985,12 @@ function renderPlayerStatus(){
   toolbar.innerHTML=filters.map(([key,text])=>`<button class="pstat-filter${playerStatusFilter===key?" on":""}" onclick="setPlayerStatusFilter('${key}')">${text}</button>`).join("")+`<span class="pstat-count">${rows.length}/${all.length} cầu thủ</span>`;
   if(!rows.length){list.innerHTML='<div class="pstat-empty">Không có cầu thủ phù hợp với bộ lọc này.</div>';return;}
   list.innerHTML=rows.map(x=>{
-    const form=x.st.form.length?x.st.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join(""):'<span class="pstat-form-empty">Chưa có 5 trận đã chốt</span>';
-    const wdl=x.st.played?`${x.st.w}-${x.st.d}-${x.st.l}`:"—";
+    const form=x.recent.matches?x.recent.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}" title="${f==="N"?"Nghỉ":f==="W"?"Thắng":f==="D"?"Hòa":"Thua"}">${FCHIP[f][0]}</span>`).join(""):'<span class="pstat-form-empty">Chưa có trận đội đã chốt</span>';
+    const wdl=x.recent.played?`${x.recent.w}-${x.recent.d}-${x.recent.l}`:"—";
     return `<article class="pstat-card" onclick="openProfileByName('${encodeURIComponent(x.p.n)}')" title="Mở hồ sơ ${esc(x.p.n)}">
       <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
-      <div class="pstat-form"><span class="pstat-form-label">5 trận</span>${form}</div>
-      <div class="pstat-metrics"><div class="pstat-metric"><b>${x.st.played||"—"}</b><span>Trận</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B</span></div><div class="pstat-metric goal"><b>${x.st.played?x.goals.total:"—"}</b><span>Bàn thắng</span></div><div class="pstat-metric"><b>${x.streak}</b><span>Chuỗi</span></div></div>
+      <div class="pstat-form"><span class="pstat-form-label">5 trận đội</span>${form}<span class="pstat-form-key">N = nghỉ</span></div>
+      <div class="pstat-metrics"><div class="pstat-metric"><b>${x.recent.played}/${x.recent.matches||"—"}</b><span>Tham gia</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B gần đây</span></div><div class="pstat-metric goal"><b>${x.recent.played?x.recent.goals:"—"}</b><span>Bàn gần đây</span></div><div class="pstat-metric"><b>${x.recent.matches?x.recent.absent:"—"}</b><span>Nghỉ</span></div></div>
       <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất điều chỉnh điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
     </article>`;
   }).join("");
