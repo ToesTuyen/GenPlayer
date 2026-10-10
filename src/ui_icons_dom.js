@@ -40,7 +40,7 @@
     ".rank-goals", ".mc-scorers"
   ].join(",");
   const exclude = [
-    "svg", "script", "style", "input", "textarea", "select", "option", "pre", "code",
+    "svg", "img", "script", "style", "input", "textarea", "select", "option", "pre", "code",
     ".heat", ".hf-wrap", ".hf-star", ".hf-ball", ".pc-star", ".fb-stars",
     ".fb-rate", ".avatar", ".pstat-name", ".rank-name", ".gl-nm", ".fb-txt",
     ".hf-desc", ".ai-review", ".name", ".pc-name", ".mc-scorer", ".fin-name",

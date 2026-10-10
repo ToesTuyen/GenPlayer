@@ -1,4 +1,4 @@
-/* GenPlayer UI icons: local SVG, no network requests and no automatic DOM changes. */
+/* GenPlayer UI icons: local color illustrations + SVG controls, no third-party library. */
 (function (global) {
   'use strict';
   const shapes = Object.freeze({
@@ -85,6 +85,22 @@
     '❄️': 'snowflake', '🛠️': 'tool', '🧪': 'flask', '🏠': 'home', '📍': 'map-pin'
   });
 
+  // AI-created color illustrations for primary navigation and section identity.
+  // Compact interaction controls keep simple SVGs so their small shapes stay clear.
+  const images = Object.freeze({
+    shuffle: 'assets/ui/team-3d-v1.webp',
+    users: 'assets/ui/players-3d-v1.webp',
+    trophy: 'assets/ui/ranking-3d-v1.webp',
+    award: 'assets/ui/ranking-3d-v1.webp',
+    calendar: 'assets/ui/history-3d-v1.webp',
+    history: 'assets/ui/history-3d-v1.webp',
+    clipboard: 'assets/ui/history-3d-v1.webp',
+    activity: 'assets/ui/form-3d-v1.webp',
+    chart: 'assets/ui/form-3d-v1.webp',
+    wallet: 'assets/ui/finance-3d-v1.webp',
+    coins: 'assets/ui/finance-3d-v1.webp'
+  });
+
   function escapeAttribute(value) {
     return String(value).replace(/[&<>"']/g, char => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -94,6 +110,11 @@
   function render(name, extraClass = '') {
     const key = Object.prototype.hasOwnProperty.call(shapes, name) ? name : 'info';
     const classes = 'ui-icon' + (extraClass ? ' ' + String(extraClass) : '');
+    if (images[key]) {
+      return '<img class="' + escapeAttribute(classes) + ' ui-icon-image" data-icon="' +
+        escapeAttribute(key) + '" src="' + images[key] +
+        '" width="24" height="24" alt="" aria-hidden="true" decoding="async">';
+    }
     return '<svg xmlns="http://www.w3.org/2000/svg" class="' + escapeAttribute(classes) +
       '" data-icon="' + escapeAttribute(key) +
       '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"' +
@@ -101,5 +122,5 @@
       ' aria-hidden="true" focusable="false">' + shapes[key] + '</svg>';
   }
 
-  global.GPIcons = Object.freeze({ render, names: Object.freeze(Object.keys(shapes)), emojiMap });
+  global.GPIcons = Object.freeze({ render, names: Object.freeze(Object.keys(shapes)), emojiMap, images });
 })(window);

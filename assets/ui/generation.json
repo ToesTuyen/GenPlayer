@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "tool": "OpenAI built-in imagegen",
+  "mode": "generate",
+  "transparent_background": true,
+  "web_export": {
+    "format": "webp",
+    "width": 192,
+    "height": 192,
+    "alpha_preserved": true,
+    "command": "cwebp -resize 192 192 -q 90 -alpha_q 100 -m 6 INPUT.png -o OUTPUT.webp",
+    "note": "Web exports retain the same generated artwork; original PNGs remain alongside them."
+  },
+  "prompt_prefix": "Use case: stylized-concept. Asset type: a single premium colorful illustrated navigation icon for an amateur football club website. Style: polished playful 3D clay and soft glossy enamel, tangible rounded forms, saturated but tasteful colors, crisp silhouette readable when shown at 52 pixels, matching a violet/blue website and red/yellow football kits. Centered single object group occupying 82% of a square canvas, front three-quarter view, restrained material detail, soft studio highlights, gentle tight contact shadow. Actual transparent background with alpha, no floor or background rectangle, no app tile, no checkerboard, no lettering, no watermark, no outline drawing.",
+  "assets": [
+    {
+      "path": "team-3d-v1.png",
+      "prompt_subject": "Subject: Two chunky football jerseys side by side, one rich tomato red with white collar, one golden yellow with navy sleeves, and a small white/navy football between them. This icon means creating two football teams."
+    },
+    {
+      "path": "players-3d-v1.png",
+      "prompt_subject": "Subject: A friendly football-player bust wearing a blue-violet jersey in front, two smaller red and yellow jersey silhouettes behind, a compact squad symbol. Warm simple face, no identifiable real person. This icon means the football squad/player list."
+    },
+    {
+      "path": "ranking-3d-v1.png",
+      "prompt_subject": "Subject: A gleaming golden football trophy cup with broad rounded handles, a tiny football motif at its bowl, short violet base. Icon for rankings and achievements."
+    },
+    {
+      "path": "history-3d-v1.png",
+      "prompt_subject": "Subject: A thick sky-blue and lavender desktop calendar page with coral binding rings and a small colorful football badge in its lower corner. Calendar has simple embossed colored squares, absolutely no text or numerals. This icon means match history."
+    },
+    {
+      "path": "form-3d-v1.png",
+      "prompt_subject": "Subject: A chunky violet-and-blue sports performance chart with three rounded rising bars, a curved mint upward arrow in front, and a small golden star. This icon means football player form and fitness evaluation."
+    },
+    {
+      "path": "finance-3d-v1.png",
+      "prompt_subject": "Subject: A chunky lavender-purple leather wallet with blue flap and round golden snap, two shiny gold coins peeking out. This icon means the football club's shared income/expenses."
+    }
+  ]
+}
