@@ -909,10 +909,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div id="screen-rank" class="screen">
   <div class="rk-wrap">
     <div class="req-tabs" id="rankTabs">
-      <button class="on" data-rt="win" onclick="setRankTab('win')">🏆 Tỉ lệ thắng</button>
-      <button data-rt="goals" onclick="setRankTab('goals')">🥇 Vua phá lưới</button>
-      <button data-rt="loss" onclick="setRankTab('loss')">💨 Chuỗi bại</button>
-      <button data-rt="players" onclick="setRankTab('players')">📊 Cầu thủ</button>
+      <button class="on" data-rt="win" onclick="setRankTab('win')"><span data-ui-icon="ranking"></span>Tỉ lệ thắng</button>
+      <button data-rt="goals" onclick="setRankTab('goals')"><span data-ui-icon="goal-record"></span>Vua phá lưới</button>
+      <button data-rt="loss" onclick="setRankTab('loss')"><span data-ui-icon="trend-down"></span>Chuỗi bại</button>
+      <button data-rt="players" onclick="setRankTab('players')"><span data-ui-icon="squad"></span>Cầu thủ</button>
     </div>
     <div id="rank2-body"></div>
   </div>
@@ -921,10 +921,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TAO DOI ====== -->
 <div id="screen-create" class="screen">
   <div class="card-box">
-    <div class="section-title">Người có mặt hôm nay</div>
+    <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
     <div class="grid" id="roster"></div>
     <div class="bar">
-      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác">⚽ Tạo đội (Thuật Toán)</button>
+      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác"><span data-ui-icon="lineup"></span>Tạo đội (Thuật Toán)</button>
       <button class="btn alt sm" id="all">Chọn tất cả</button>
       <button class="btn alt sm" id="none">Bỏ chọn</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
@@ -942,9 +942,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="pc-bar">
     <div class="pc-bar-title">Cầu thủ <span id="pcCount"></span></div>
     <div class="pc-bar-actions">
-      <button class="btn alt sm" id="reqBtn" onclick="openReq()" style="display:none">📥 Yêu cầu <span class="req-badge" id="reqBadge" style="display:none">0</span></button>
-      <button class="btn alt sm" id="plogBtn" onclick="openPlog()">🔄 Lịch sử cập nhật</button>
-      <button class="btn alt sm" id="editToggle" onclick="toggleEdit()">✏️ Sửa điểm</button>
+      <button class="btn alt sm" id="reqBtn" onclick="openReq()" style="display:none"><span data-ui-icon="player-rating"></span>Yêu cầu <span class="req-badge" id="reqBadge" style="display:none">0</span></button>
+      <button class="btn alt sm" id="plogBtn" onclick="openPlog()"><span data-ui-icon="activity-log"></span>Lịch sử cập nhật</button>
+      <button class="btn alt sm" id="editToggle" onclick="toggleEdit()"><span data-ui-icon="player-rating"></span>Sửa điểm</button>
     </div>
   </div>
   <div id="players-cards" class="pc-groups"></div>
@@ -984,13 +984,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div id="screen-finance" class="screen">
   <div class="fin-head">
     <div><div class="fin-title"><span data-ui-icon="finance"></span> Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
-    <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')">＋ Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')">－ Ghi chi</button></div>
+    <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')"><span data-ui-icon="income"></span>Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')"><span data-ui-icon="expense"></span>Ghi chi</button></div>
   </div>
   <div class="fin-summary" id="finance-summary"></div>
   <div class="fin-toolbar">
     <input class="fin-month" type="month" id="finance-month" onchange="setFinanceMonth(this.value)" aria-label="Lọc theo tháng">
     <button class="btn alt sm" onclick="showAllFinance()">Tất cả</button><span class="sp"></span>
-    <button class="btn alt sm" onclick="exportFinanceCSV()">⇩ Xuất CSV</button>
+    <button class="btn alt sm" onclick="exportFinanceCSV()"><span data-ui-icon="download"></span>Xuất CSV</button>
   </div>
   <div class="fin-list" id="finance-list"></div>
 </div>
@@ -1002,8 +1002,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <div id="screen-history" class="screen">
   <div class="pc-bar-actions" style="margin-bottom:14px">
-    <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none">⚽ Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
-    <button class="btn alt sm" id="mlogBtn" onclick="openMatchLog()" style="display:none">🕓 Nhật ký thao tác</button>
+    <button class="btn alt sm" id="goalReqBtn" onclick="openGoalReq()" style="display:none"><span data-ui-icon="goal-record"></span>Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:none">0</span></button>
+    <button class="btn alt sm" id="mlogBtn" onclick="openMatchLog()" style="display:none"><span data-ui-icon="activity-log"></span>Nhật ký thao tác</button>
   </div>
   <div id="history-list"></div>
   <div id="history-detail" style="margin-top:18px"></div>
@@ -1012,7 +1012,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== MODAL ====== -->
 <div class="modal" id="quickModal">
   <div class="modal-box">
-    <h3>⚡ Nhập nhanh điểm</h3>
+    <h3><span data-ui-icon="player-rating"></span> Nhập nhanh điểm</h3>
     <div class="mrow"><span class="lbl">Trình độ</span>
       <select id="q-tier"><option value="NS">Ngôi sao</option><option value="K">Khá</option><option value="TB" selected>Trung bình</option><option value="Y">Yếu</option></select></div>
     <div class="mrow"><span class="lbl">Vị trí đá được (chọn nhiều)</span>
@@ -1028,7 +1028,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== THONG TIN TRAN ====== -->
 <div class="modal" id="matchModal">
   <div class="modal-box">
-    <h3 id="mm-title">📋 Lưu trận mới</h3>
+    <h3 id="mm-title"><span data-ui-icon="lineup"></span> Lưu trận mới</h3>
     <div class="mrow"><span class="lbl">Ngày đá</span><input type="date" id="mm-date"></div>
     <div class="mrow"><span class="lbl">Giờ đá</span><input type="time" id="mm-time"></div>
     <div class="mrow"><span class="lbl">Sân</span><input type="text" id="mm-venue" placeholder="VD: Sân Mỹ Đình" maxlength="60"></div>
@@ -1039,7 +1039,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== CAP NHAT TI SO ====== -->
 <div class="modal" id="scoreModal" onclick="if(event.target===this)closeScoreModal()">
   <div class="modal-box score-modal-box">
-    <h3>⚽ Cập nhật tỉ số</h3>
+    <h3><span data-ui-icon="match-score"></span> Cập nhật tỉ số</h3>
     <div class="score-match-info" id="score-match-info"></div>
     <div class="score-entry">
       <div class="score-team-name">TEAM A</div>
@@ -1055,7 +1055,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== GIAO DICH THU CHI ====== -->
 <div class="modal" id="financeModal" onclick="if(event.target===this)closeFinanceEntry()">
   <div class="modal-box">
-    <h3 id="finance-modal-title">💰 Ghi thu</h3>
+    <h3 id="finance-modal-title"><span data-ui-icon="finance-ledger"></span> Ghi thu</h3>
     <div class="mrow"><span class="lbl">Loại giao dịch</span>
       <select id="fin-type" onchange="syncFinanceCategories()"><option value="income">➕ Khoản thu</option><option value="expense">➖ Khoản chi</option></select></div>
     <div class="mrow"><span class="lbl">Số tiền (VNĐ)</span><input id="fin-amount" type="number" min="1" max="1000000000" step="1000" inputmode="numeric" placeholder="VD: 300000"></div>
@@ -1132,8 +1132,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="pm-panel">
     <div class="pm-bar">
       <button class="pm-close" onclick="closePlayer()">✕</button>
-      <button class="btn alt sm" id="histBtn" onclick="openHist()">🕓 Lịch sử sửa</button>
-      <button class="btn alt sm" id="pmEdit" onclick="editPlayer()">✏️ Cập nhật</button>
+      <button class="btn alt sm" id="histBtn" onclick="openHist()"><span data-ui-icon="activity-log"></span>Lịch sử sửa</button>
+      <button class="btn alt sm" id="pmEdit" onclick="editPlayer()"><span data-ui-icon="player-rating"></span>Cập nhật</button>
     </div>
     <div id="pmBody"></div>
   </div>
@@ -1143,7 +1143,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="histModal" onclick="if(event.target===this)closeHist()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">🕓 Lịch sử sửa chỉ số (theo user)</div>
+      <div class="plog-title"><span data-ui-icon="activity-log"></span> Lịch sử sửa chỉ số (theo user)</div>
       <button class="pm-close" onclick="closeHist()">✕</button>
     </div>
     <div id="hist-body" class="plog-wrap"></div>
@@ -1154,7 +1154,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="plogModal" onclick="if(event.target===this)closePlog()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">🔄 Lịch sử cập nhật cầu thủ</div>
+      <div class="plog-title"><span data-ui-icon="activity-log"></span> Lịch sử cập nhật cầu thủ</div>
       <button class="pm-close" onclick="closePlog()">✕</button>
     </div>
     <div id="plog-body" class="plog-wrap"></div>
@@ -1165,7 +1165,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="reqModal" onclick="if(event.target===this)closeReq()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">📥 Danh sách yêu cầu chỉnh sửa</div>
+      <div class="plog-title"><span data-ui-icon="player-rating"></span> Danh sách yêu cầu chỉnh sửa</div>
       <button class="pm-close" onclick="closeReq()">✕</button>
     </div>
     <div id="req-body" class="plog-wrap"></div>
@@ -1176,7 +1176,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="rankModal" onclick="if(event.target===this)closeRank()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">🏆 Bảng xếp hạng · theo tỉ lệ thắng</div>
+      <div class="plog-title"><span data-ui-icon="ranking"></span> Bảng xếp hạng · theo tỉ lệ thắng</div>
       <button class="pm-close" onclick="closeRank()">✕</button>
     </div>
     <div id="rank-body" class="plog-wrap"></div>
@@ -1187,7 +1187,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="goalModal" onclick="if(event.target===this)closeGoalModal()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">⚽ Bàn thắng của trận</div>
+      <div class="plog-title"><span data-ui-icon="goal-record"></span> Bàn thắng của trận</div>
       <button class="pm-close" onclick="closeGoalModal()">✕</button>
     </div>
     <div id="goal-body" class="plog-wrap"></div>
@@ -1198,7 +1198,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="goalReqModal" onclick="if(event.target===this)closeGoalReq()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">⚽ Rà soát &amp; chốt bàn thắng</div>
+      <div class="plog-title"><span data-ui-icon="goal-record"></span> Rà soát &amp; chốt bàn thắng</div>
       <button class="pm-close" onclick="closeGoalReq()">✕</button>
     </div>
     <div id="goalreq-body" class="plog-wrap"></div>
@@ -1209,7 +1209,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="mlogModal" onclick="if(event.target===this)closeMatchLog()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">🕓 Nhật ký thao tác trận</div>
+      <div class="plog-title"><span data-ui-icon="activity-log"></span> Nhật ký thao tác trận</div>
       <button class="pm-close" onclick="closeMatchLog()">✕</button>
     </div>
     <div id="mlog-body" class="plog-wrap"></div>
@@ -1220,7 +1220,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="scorerModal" onclick="if(event.target===this)closeScorer()">
   <div class="pm-panel">
     <div class="pm-bar">
-      <div class="plog-title">🥇 Vua phá lưới · bàn thắng nhiều nhất</div>
+      <div class="plog-title"><span data-ui-icon="goal-record"></span> Vua phá lưới · bàn thắng nhiều nhất</div>
       <button class="pm-close" onclick="closeScorer()">✕</button>
     </div>
     <div id="scorer-body" class="plog-wrap"></div>
@@ -1242,7 +1242,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div class="pm-overlay" id="guestModal" onclick="if(event.target===this)closeGuest()">
   <div class="pm-panel" style="max-width:430px">
     <div class="pm-bar">
-      <div class="plog-title">➕ Thêm người ngoài (khách)</div>
+      <div class="plog-title"><span data-ui-icon="squad"></span> Thêm người ngoài (khách)</div>
       <button class="pm-close" onclick="closeGuest()">✕</button>
     </div>
     <div class="gst-body">
@@ -1679,15 +1679,15 @@ function renderFinance(){
   if(acts)acts.style.display=isAdmin?"flex":"none";
   const all=finTotals(getFinance()), rows=finSorted(financeRows()), period=finTotals(rows);
   const periodLabel=financeMonth?`trong ${finDate(financeMonth+"-01").slice(3)}`:"toàn thời gian";
-  sum.innerHTML=`<div class="fin-kpi balance"><div class="fin-kpi-lab">Số dư quỹ</div><div class="fin-kpi-val">${finMoney(all.income-all.expense)}</div><div class="fin-kpi-note">Thu ${finMoney(all.income)} · chi ${finMoney(all.expense)}</div></div>
-    <div class="fin-kpi in"><div class="fin-kpi-lab">Tổng thu</div><div class="fin-kpi-val">+${finMoney(period.income)}</div><div class="fin-kpi-note">${periodLabel}</div></div>
-    <div class="fin-kpi out"><div class="fin-kpi-lab">Tổng chi</div><div class="fin-kpi-val">−${finMoney(period.expense)}</div><div class="fin-kpi-note">${periodLabel}</div></div>`;
-  if(!rows.length){list.innerHTML=`<div class="fin-empty"><span class="big">💳</span>${financeMonth?"Chưa có giao dịch trong tháng này.":"Quỹ chưa có giao dịch nào."}${isAdmin?"<br>Chọn <b>Ghi thu</b> hoặc <b>Ghi chi</b> để bắt đầu.":""}</div>`;return;}
+  sum.innerHTML=`<div class="fin-kpi balance"><div class="fin-kpi-lab">${GPIcons.render("finance-ledger")} Số dư quỹ</div><div class="fin-kpi-val">${finMoney(all.income-all.expense)}</div><div class="fin-kpi-note">Thu ${finMoney(all.income)} · chi ${finMoney(all.expense)}</div></div>
+    <div class="fin-kpi in"><div class="fin-kpi-lab">${GPIcons.render("income")} Tổng thu</div><div class="fin-kpi-val">+${finMoney(period.income)}</div><div class="fin-kpi-note">${periodLabel}</div></div>
+    <div class="fin-kpi out"><div class="fin-kpi-lab">${GPIcons.render("expense")} Tổng chi</div><div class="fin-kpi-val">−${finMoney(period.expense)}</div><div class="fin-kpi-note">${periodLabel}</div></div>`;
+  if(!rows.length){list.innerHTML=`<div class="fin-empty"><span class="big">${GPIcons.render("finance-ledger")}</span>${financeMonth?"Chưa có giao dịch trong tháng này.":"Quỹ chưa có giao dịch nào."}${isAdmin?"<br>Chọn <b>Ghi thu</b> hoặc <b>Ghi chi</b> để bắt đầu.":""}</div>`;return;}
   list.innerHTML=rows.map(x=>{
     const income=finType(x.type)==="income", cat=esc(x.category||"Khác"), note=esc(x.note||""), person=esc(x.person||"");
     const title=note||cat, meta=[finDate(x.date),cat,person].filter(Boolean).join(" · ");
     const edit=isAdmin?`<div class="fin-edit"><button class="fin-icon-btn" title="Sửa giao dịch" onclick="openFinanceEntry('', '${encodeURIComponent(String(x.id))}')">✏️</button><button class="fin-icon-btn" title="Xoá giao dịch" onclick="deleteFinanceEntry('${encodeURIComponent(String(x.id))}')">🗑️</button></div>`:"";
-    return `<div class="fin-row"><div class="fin-type ${income?"in":"out"}">${income?"↙":"↗"}</div><div class="fin-main"><div class="fin-name">${title}</div><div class="fin-meta">${meta}</div></div><div class="fin-amt ${income?"in":"out"}">${income?"+":"−"}${finMoney(x.amount)}</div>${edit}</div>`;
+    return `<div class="fin-row"><div class="fin-type ${income?"in":"out"}">${GPIcons.render(income?"income":"expense")}</div><div class="fin-main"><div class="fin-name">${title}</div><div class="fin-meta">${meta}</div></div><div class="fin-amt ${income?"in":"out"}">${income?"+":"−"}${finMoney(x.amount)}</div>${edit}</div>`;
   }).join("");
 }
 function syncFinanceCategories(selected){
@@ -1701,7 +1701,7 @@ function openFinanceEntry(type,id){
   financeEditId=id?decodeURIComponent(id):null;
   const old=financeEditId?getFinance().find(x=>String(x.id)===String(financeEditId)):null;
   if(financeEditId&&!old){toast("Giao dịch này không còn tồn tại.","warn");return;}
-  $("finance-modal-title").textContent=old?"✏️ Sửa giao dịch":(finType(type)==="income"?"💰 Ghi khoản thu":"💸 Ghi khoản chi");
+  $("finance-modal-title").innerHTML=GPIcons.render("finance-ledger")+" "+(old?"Sửa giao dịch":(finType(type)==="income"?"Ghi khoản thu":"Ghi khoản chi"));
   $("fin-type").value=old?finType(old.type):finType(type);
   $("fin-amount").value=old?Math.round(+old.amount||0):"";
   $("fin-date").value=old?(old.date||finToday()):finToday();
@@ -1862,14 +1862,14 @@ function closePlog(){$("plogModal").classList.remove("on");}
 // Ghi từng dòng bằng Firestore arrayUnion → CHỐNG ĐUA GHI (không mất log khi web + app cùng lưu).
 // KHÔNG dính vào persist()/set() (persist đã đổi sang merge:true nên set toàn bộ cũng không xoá matchLog).
 const MLOG_ACT={
-  create:  {ic:"➕", lb:"Tạo trận",           cls:"ml-add"},
-  archive: {ic:"📦", lb:"Chuyển vào backup",  cls:"ml-arch"},
-  delete:  {ic:"🗑️", lb:"Xoá trận",           cls:"ml-del"},
-  edittime:{ic:"🕒", lb:"Sửa giờ/sân",        cls:"ml-edit"},
-  score:   {ic:"⚽", lb:"Nhập tỉ số",         cls:"ml-score"},
-  goal_save:{ic:"🥅", lb:"Lưu bàn thắng",     cls:"ml-goal"},
-  goal_approve:{ic:"✅", lb:"Duyệt bàn thắng", cls:"ml-goal"},
-  goal_reject:{ic:"🚫", lb:"Từ chối bàn thắng",cls:"ml-del"},
+  create:  {ic:GPIcons.render("lineup"), lb:"Tạo trận",           cls:"ml-add"},
+  archive: {ic:GPIcons.render("backup"), lb:"Chuyển vào backup",  cls:"ml-arch"},
+  delete:  {ic:GPIcons.render("trash"), lb:"Xoá trận",            cls:"ml-del"},
+  edittime:{ic:GPIcons.render("clock"), lb:"Sửa giờ/sân",         cls:"ml-edit"},
+  score:   {ic:GPIcons.render("match-score"), lb:"Nhập tỉ số",    cls:"ml-score"},
+  goal_save:{ic:GPIcons.render("goal-record"), lb:"Lưu bàn thắng",cls:"ml-goal"},
+  goal_approve:{ic:GPIcons.render("check-circle"), lb:"Duyệt bàn thắng",cls:"ml-goal"},
+  goal_reject:{ic:GPIcons.render("close"), lb:"Từ chối bàn thắng",cls:"ml-del"},
 };
 function logMatchAct(act,mid,mlabel,detail){
   const entry={ id:Date.now()+"_"+Math.round(Math.random()*1e4), act:String(act),
@@ -1908,10 +1908,10 @@ function renderMatchLog(){
   const total=getMatchLog().length;
   const tabs=`<div class="req-tabs mlog-tabs">
       <button class="${mlogFilter==="all"?"on":""}" onclick="setMlogFilter('all')">Tất cả (${total})</button>
-      <button class="${mlogFilter==="score"?"on":""}" onclick="setMlogFilter('score')">⚽ Tỉ số/Bàn</button>
+      <button class="${mlogFilter==="score"?"on":""}" onclick="setMlogFilter('score')">${GPIcons.render("match-score")} Tỉ số/Bàn</button>
       <button class="${mlogFilter==="time"?"on":""}" onclick="setMlogFilter('time')">🕒 Tạo/Giờ</button>
       <button class="${mlogFilter==="del"?"on":""}" onclick="setMlogFilter('del')">🗑️ Xoá/Từ chối</button></div>`;
-  if(!log.length){box.innerHTML=tabs+`<div class="empty"><span class="big">🕓</span>${total?"Không có mục nào trong bộ lọc này.":"Chưa có thao tác trận nào được ghi.<br>Tạo/sửa/xoá/nhập tỉ số hay duyệt bàn thắng để bắt đầu ghi nhật ký."}</div>`;return;}
+  if(!log.length){box.innerHTML=tabs+`<div class="empty"><span class="big">${GPIcons.render("activity-log")}</span>${total?"Không có mục nào trong bộ lọc này.":"Chưa có thao tác trận nào được ghi.<br>Tạo/sửa/xoá/nhập tỉ số hay duyệt bàn thắng để bắt đầu ghi nhật ký."}</div>`;return;}
   box.innerHTML=tabs+`<div class="ulog-grid">`+log.map(mlogCard).join("")+`</div>`;
 }
 
@@ -2026,14 +2026,14 @@ function logPanel(e){
     return ch.length?`<div class="ulog-chips">${ch.map(logChip).join("")}</div>`:`<div class="ulog-act">✏️ Cập nhật</div>`;
   }
   return `<div class="pm-cols">
-    <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
-    <div><div class="pm-sec">Thể chất &amp; tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
+    <div><div class="pm-sec">${GPIcons.render("boot")} Kỹ thuật</div>${ATTRS_TECH.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
+    <div><div class="pm-sec">${GPIcons.render("heart")} Thể chất &amp; tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRowLog(k,l,e.snap,chMap)).join("")}</div>
   </div>`;
 }
 function renderUpdateLog(){
   const box=$("plog-body"); if(!box)return;
   const log=getPlog();
-  if(!log.length){box.innerHTML=`<div class="empty"><span class="big">🔄</span>Chưa có cập nhật nào.<br>Sửa điểm cầu thủ để bắt đầu ghi lịch sử.</div>`;return;}
+  if(!log.length){box.innerHTML=`<div class="empty"><span class="big">${GPIcons.render("activity-log")}</span>Chưa có cập nhật nào.<br>Sửa điểm cầu thủ để bắt đầu ghi lịch sử.</div>`;return;}
   box.innerHTML=`<div class="ulog-grid">`+log.map(e=>`<div class="ulog-card">
       <div class="ulog-top"><span class="avatar" style="background:${avColor(e.n)}">${initials(e.n)}</span>
         <div class="ulog-id"><div class="ulog-name">${e.n}</div><div class="ulog-by">👤 ${e.by||"?"} · ${e.ts||""}</div></div>
@@ -2215,7 +2215,7 @@ function renderSpotlight(h){
       .map(i=>`<span class="vsub">${jersey(kit)}<span>${esc(shortName(sel[i].n))}</span></span>`).join("");
     return items?`<div class="vp-sub ${side}">${items}</div>`:"";
   };
-  const scoreAct=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">⚽ Tỉ số</button></div>`:"";
+  const scoreAct=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="event.stopPropagation();setScore(${r.id})">${GPIcons.render("match-score")} Tỉ số</button></div>`:"";
   box.innerHTML=`${scoreAct}<div class="spot-lineup" onclick="openHistory(${r.id})">
     <div class="lu-head">
       <span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span>
@@ -2294,7 +2294,7 @@ function sokeTable(A,B,sel){
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
   add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,"overall đội chính",0.05,2);add(bcA-bcB,"ghế dự bị",0.4,1);
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
-  return `<h2>🆚 So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
+  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
 function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
@@ -2321,7 +2321,7 @@ function render(res,sel,target,review,showHeat,matchId){
     return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
   }).join("");
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
-  const _statTable=`<h2>📊 Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
+  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
@@ -2329,7 +2329,7 @@ function render(res,sel,target,review,showHeat,matchId){
    <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div>
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
   </div></div>
-  <div class="report"><h2>${hasRev?"⚖️ Đánh giá trận":"⚖️ Ưu – nhược điểm"}</h2>${narrative}
+  <div class="report"><h2>${GPIcons.render("match-analysis")} ${hasRev?"Đánh giá trận":"Ưu – nhược điểm"}</h2>${narrative}
   ${sokeTable(A,B,sel)}
   ${_statTable}</div>`;
   fitMatch();
@@ -2472,7 +2472,7 @@ function renderPlayersCards(){           // NHÓM theo vị trí chính, mỗi n
 function showPlayers(){
   const ed=$("players-editor"); if(ed)ed.style.display="none";
   const cards=$("players-cards"); if(cards)cards.style.display="";
-  const t=$("editToggle"); if(t)t.textContent="✏️ Sửa điểm";
+  const t=$("editToggle"); if(t)t.innerHTML=GPIcons.render("player-rating")+" Sửa điểm";
   renderPlayersCards();
 }
 // ======== TÀI KHOẢN: GUEST / USER / ADMIN ========
@@ -2539,8 +2539,8 @@ function deleteRating(pEnc,rEnc){
 function toggleEdit(force){
   const ed=$("players-editor"), cards=$("players-cards"), t=$("editToggle");
   const goEdit = force===true ? true : (ed.style.display==="none");
-  if(goEdit){ if(!requireAdmin())return; ensureName(()=>{ tableEditor=sessionName; buildEditor(); ed.style.display=""; cards.style.display="none"; if(t)t.textContent="🗂️ Xem thẻ"; window.scrollTo(0,0); }); }
-  else { commitEditorEdits(); ed.style.display="none"; cards.style.display=""; if(t)t.textContent="✏️ Sửa điểm"; renderPlayersCards(); }
+  if(goEdit){ if(!requireAdmin())return; ensureName(()=>{ tableEditor=sessionName; buildEditor(); ed.style.display=""; cards.style.display="none"; if(t)t.innerHTML=GPIcons.render("squad")+" Xem thẻ"; window.scrollTo(0,0); }); }
+  else { commitEditorEdits(); ed.style.display="none"; cards.style.display=""; if(t)t.innerHTML=GPIcons.render("player-rating")+" Sửa điểm"; renderPlayersCards(); }
 }
 // ---- chi tiet cau thu (FM-style) ----
 let pcards=[], pmName=null;
@@ -2590,8 +2590,8 @@ function playerStats(name){
 const FCHIP={W:["T","w"],D:["H","d"],L:["B","l"],N:["N","n"]};
 function statsPanel(name){
   const st=playerStats(name), g=playerGoals(name);
-  if(!st.played)return `<div class="pm-sec" style="margin-top:18px">Thống kê thi đấu</div><div class="ps-empty">Chưa có trận nào (cần nhập tỉ số ở Lịch sử thi đấu).</div>`;
-  return `<div class="pm-sec" style="margin-top:18px">Thống kê thi đấu</div>
+  if(!st.played)return `<div class="pm-sec" style="margin-top:18px">${GPIcons.render("player-form")} Thống kê thi đấu</div><div class="ps-empty">Chưa có trận nào (cần nhập tỉ số ở Lịch sử thi đấu).</div>`;
+  return `<div class="pm-sec" style="margin-top:18px">${GPIcons.render("player-form")} Thống kê thi đấu</div>
     <div class="ps-wrap">
       <div class="ps-top"><div class="ps-big"><div class="ps-num">${st.played}</div><div class="ps-k">trận</div></div>
         <div class="ps-wld"><span class="w">${st.w} T</span><span class="d">${st.d} H</span><span class="l">${st.l} B</span></div></div>
@@ -2982,11 +2982,11 @@ function renderPlayerStatus(){
   const all=getPlayers().map(playerStatusModel);
   const top=all.filter(x=>x.goals.total>0).sort((a,b)=>b.goals.total-a.goals.total||b.goals.matches-a.goals.matches)[0];
   const counts={hot:all.filter(x=>x.state==="hot").length,cold:all.filter(x=>x.state==="cold").length};
-  summary.innerHTML=`<div class="pstat-kpi"><div class="lab">Cầu thủ có dữ liệu</div><div class="val">${all.filter(x=>x.st.played).length}<span style="font-size:12px;font-weight:700;color:var(--muted)">/${all.length}</span></div></div>
-    <div class="pstat-kpi hot"><div class="lab">Đang bay</div><div class="val">${counts.hot}</div></div>
-    <div class="pstat-kpi cold"><div class="lab">Cần reset</div><div class="val">${counts.cold}</div></div>
-    <div class="pstat-kpi goal"><div class="lab">Vua phá lưới</div><div class="val" style="font-size:${top?"16":"21"}px">${top?`${esc(shortName(top.p.n))} · ${top.goals.total}`:"—"}</div></div>`;
-  const filters=[["all","Tất cả"],["hot","🔥 Đang bay"],["steady","😎 Ổn định"],["cold","🧊 Cần reset"],["goals","⚽ Có bàn"],["new","🧪 Chưa đủ data"]];
+  summary.innerHTML=`<div class="pstat-kpi"><div class="lab">${GPIcons.render("squad")} Cầu thủ có dữ liệu</div><div class="val">${all.filter(x=>x.st.played).length}<span style="font-size:12px;font-weight:700;color:var(--muted)">/${all.length}</span></div></div>
+    <div class="pstat-kpi hot"><div class="lab">${GPIcons.render("flame")} Đang bay</div><div class="val">${counts.hot}</div></div>
+    <div class="pstat-kpi cold"><div class="lab">${GPIcons.render("snowflake")} Cần reset</div><div class="val">${counts.cold}</div></div>
+    <div class="pstat-kpi goal"><div class="lab">${GPIcons.render("goal-record")} Vua phá lưới</div><div class="val" style="font-size:${top?"16":"21"}px">${top?`${esc(shortName(top.p.n))} · ${top.goals.total}`:"—"}</div></div>`;
+  const filters=[["all","Tất cả","users"],["hot","Đang bay","flame"],["steady","Ổn định","check-circle"],["cold","Cần reset","snowflake"],["goals","Có bàn","goal-record"],["new","Chưa đủ data","flask"]];
   let rows=all.filter(x=>{
     if(playerStatusFilter==="all")return true;
     if(playerStatusFilter==="goals")return x.goals.total>0;
@@ -2994,7 +2994,7 @@ function renderPlayerStatus(){
   });
   const order={hot:0,steady:1,watch:2,cold:3,new:4};
   rows.sort((a,b)=>order[a.state]-order[b.state]||b.st.played-a.st.played||b.goals.total-a.goals.total||b.st.winRate-a.st.winRate||a.p.n.localeCompare(b.p.n,"vi"));
-  toolbar.innerHTML=filters.map(([key,text])=>`<button class="pstat-filter${playerStatusFilter===key?" on":""}" onclick="setPlayerStatusFilter('${key}')">${text}</button>`).join("")+`<span class="pstat-count">${rows.length}/${all.length} cầu thủ</span>`;
+  toolbar.innerHTML=filters.map(([key,text,icon])=>`<button class="pstat-filter${playerStatusFilter===key?" on":""}" onclick="setPlayerStatusFilter('${key}')">${GPIcons.render(icon)} ${text}</button>`).join("")+`<span class="pstat-count">${rows.length}/${all.length} cầu thủ</span>`;
   if(!rows.length){list.innerHTML='<div class="pstat-empty">Không có cầu thủ phù hợp với bộ lọc này.</div>';return;}
   list.innerHTML=rows.map(x=>{
     const form=x.recent.matches?x.recent.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}" title="${f==="N"?"Nghỉ":f==="W"?"Thắng":f==="D"?"Hòa":"Thua"}">${FCHIP[f][0]}</span>`).join(""):'<span class="pstat-form-empty">Chưa có trận đội đã chốt</span>';
@@ -3003,7 +3003,7 @@ function renderPlayerStatus(){
       <div class="pstat-top"><span class="avatar pstat-avatar" style="${avaStyle(x.p.n)}">${avaInner(x.p.n)}</span><div class="pstat-ident"><div class="pstat-name">${esc(x.p.n)}</div><div class="pstat-pos">${POS_LABEL[posCodeOf(x.p)]||"Cầu thủ"} · ${ov(x.p).toFixed(1)}</div></div><span class="pstat-state ${x.state}">${x.icon} ${x.label}</span></div>
       <div class="pstat-form"><span class="pstat-form-label">5 trận đội</span>${form}</div>
       <div class="pstat-metrics"><div class="pstat-metric"><b>${x.recent.played}/${x.recent.matches||"—"}</b><span>Tham gia</span></div><div class="pstat-metric"><b>${wdl}</b><span>T-H-B gần đây</span></div><div class="pstat-metric goal"><b>${x.recent.played?x.recent.goals:"—"}</b><span>Bàn gần đây</span></div><div class="pstat-metric"><b>${x.recent.matches?x.recent.absent:"—"}</b><span>Nghỉ</span></div></div>
-      <div class="pstat-ai"><div class="pstat-ai-title">🤖 AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất điều chỉnh điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
+      <div class="pstat-ai"><div class="pstat-ai-title">${GPIcons.render("player-rating")} AI Form</div><div class="pstat-ai-row"><div class="pstat-ai-label">Đánh giá gần đây</div><div class="pstat-ai-copy">${esc(x.review)}</div></div><div class="pstat-ai-row"><div class="pstat-ai-label">Đề xuất điều chỉnh điểm</div><div class="pstat-ai-copy">${esc(x.upgrade)}</div></div></div>
     </article>`;
   }).join("");
 }
@@ -3027,7 +3027,7 @@ function playerGoalTimeline(name){
 function setPmGoalYear(y){pmGoalYear=String(y);const el=$("pmGoalSection"),p=pmFind();if(el&&p)el.innerHTML=goalsChartPanel(p.n);}
 function goalsChartPanel(name){
   const tl=playerGoalTimeline(name);
-  if(!tl.length)return `<div class="pm-sec">🏹 Đường đi bàn thắng</div><div class="ps-empty">⚽ Chưa có dữ liệu bàn thắng qua các trận.</div>`;
+  if(!tl.length)return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng</div><div class="ps-empty">⚽ Chưa có dữ liệu bàn thắng qua các trận.</div>`;
   const byYear={};
   tl.forEach(d=>{const y=String(new Date(d.t).getFullYear());(byYear[y]||(byYear[y]=[])).push(d);});
   const years=Object.keys(byYear).sort();                       // năm tăng dần
@@ -3038,7 +3038,7 @@ function goalsChartPanel(name){
       const gy=byYear[y].reduce((s,d)=>s+d.g,0);
       return `<button class="${y===sel?'on':''}" onclick="setPmGoalYear('${y}')">${y} · ${gy}⚽</button>`;
     }).join("")+`</div>`;
-  return `<div class="pm-sec">🏹 Đường đi bàn thắng qua các trận</div>
+  return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng qua các trận</div>
     ${tabs}
     <div class="gc-meta">Năm ${sel}: <b>${totG}</b> bàn · ${pts.length} trận</div>
     <div class="gc-scroll">${goalChartSVG(pts)}</div>`;
@@ -3179,11 +3179,11 @@ function evalAptsHTML(p){
 function evalArch(p){const {title,desc}=evalData(p),code=posCodeOf(p),icon=code==="GK"?"glove":["Thòng","HV"].includes(code)?"shield":code==="TĐ"?"goal":"boot";return `<div class="pm-arch"><div class="pm-arch-name">${GPIcons.render(icon)} ${title}</div><div class="pm-arch-desc">${desc}</div></div>`;}
 // khối "Đánh giá chỉ số" chỉ gồm các thanh (KHÔNG kèm danh hiệu).
 // Ở hồ sơ: nằm gọn trong cột phải, dưới Kỹ thuật + Thể chất & tinh thần.
-function evalBarsHTML(p,compact){return `<div class="pm-eval${compact?' pm-eval-compact':''}"><div class="pm-sec">Đánh giá chỉ số</div>${evalAptsHTML(p)}</div>`;}
+function evalBarsHTML(p,compact){return `<div class="pm-eval${compact?' pm-eval-compact':''}"><div class="pm-sec">${GPIcons.render("player-rating")} Đánh giá chỉ số</div>${evalAptsHTML(p)}</div>`;}
 // bản đầy đủ (danh hiệu + thanh) — dùng cho PREVIEW khi sửa điểm
 function evalBlock(p){const {title,desc}=evalData(p);
   return `<div class="pm-eval">
-    <div class="pm-sec">Đánh giá chỉ số</div>
+    <div class="pm-sec">${GPIcons.render("player-rating")} Đánh giá chỉ số</div>
     <div class="ev-arch"><div class="ev-arch-name">${title}</div><div class="ev-arch-desc">${desc}</div></div>
     ${evalAptsHTML(p)}
   </div>`;
@@ -3211,13 +3211,13 @@ function renderPlayerProfile(){
     </div>
     <div class="pm-grid">
       <div class="pm-left">
-        <div class="pm-sec">Vị trí</div>
+        <div class="pm-sec">${GPIcons.render("lineup")} Vị trí</div>
         <div class="mini-pitch"><div class="mid"></div><div class="circ"></div>${dots}</div>
         <div class="pm-pos-scores">${posAllOf(p).map((c,i)=>`<div class="pm-pos-row"><span class="pp-tag${i===0?' main':''}">${i===0?'Chính':'Phụ'}</span><span class="pp-name">${POS_LABEL[c]}</span><b class="pp-sc">${ovAt(p,c).toFixed(1)}</b></div>`).join("")}</div>
       </div>
       <div class="pm-right"><div class="pm-cols">
-        <div><div class="pm-sec">Kỹ thuật</div>${ATTRS_TECH.filter(([k])=>showAttr(k)).map(([k,l])=>attrRow(l,p[k])).join("")}</div>
-        <div><div class="pm-sec">Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+        <div><div class="pm-sec">${GPIcons.render("boot")} Kỹ thuật</div>${ATTRS_TECH.filter(([k])=>showAttr(k)).map(([k,l])=>attrRow(l,p[k])).join("")}</div>
+        <div><div class="pm-sec">${GPIcons.render("heart")} Thể chất & tinh thần</div>${ATTRS_PHYS.map(([k,l])=>attrRow(l,p[k])).join("")}</div>
       </div>${evalBarsHTML(p,true)}</div>
     </div>
     <div class="pm-stats-wrap">${statsPanel(p.n)}</div>
@@ -3243,7 +3243,7 @@ function renderHist(){
   }).join("")||'<div class="ev-none">Chưa có lượt chấm nào.</div>';
   box.innerHTML=`
     <div class="rmod-h">${p.n}</div>
-    <div class="pm-sec">Điểm theo từng người · ${keys.length}</div>
+    <div class="pm-sec">${GPIcons.render("users")} Điểm theo từng người · ${keys.length}</div>
     ${rows}
     <div class="rmod-note">Bấm 🗑️ để xoá lượt sửa của một người — điểm tổng tự tính lại & áp dụng ngay.</div>`;
 }
@@ -3409,7 +3409,7 @@ function peWizPosStep(){
   const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${pePos===k?"checked":""}><span>${l}</span></label>`;
   const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${pePos2.includes(k)?"checked":""}><span>${l}</span></label>`;
   return `
-    <div class="pe-q-title">Vị trí thi đấu</div>
+    <div class="pe-q-title">${GPIcons.render("lineup")} Vị trí thi đấu</div>
     <div class="pe-q-sub">Chọn vị trí <b>chính</b> (1 ô) và các vị trí <b>phụ</b> cậu ấy đá được (chọn nhiều ô). Nếu có chọn <b>Thủ môn</b>, cuối phần hỏi sẽ có thêm câu về bắt gôn.</div>
     <div class="pe-pos">
       <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
@@ -3425,7 +3425,7 @@ function peWizQStep(q){
   const sel=peTouched[q.id]?peAns[q.id]:-1;
   const opt=(o,i)=>`<button class="pe-opt${sel===i?' on':''}" onclick="peWizPick('${q.id}',${i})"><span class="od">${o.d}</span>${o.score!=null?`<span class="opt-sc">${o.score}đ</span>`:''}</button>`;
   return `
-    <div class="pe-q-title">${q.title}</div>
+    <div class="pe-q-title">${GPIcons.render(q.key==="TM"?"glove":["SC","TC","MOOD"].includes(q.key)?"heart":q.key==="PN"?"shield":q.key==="TD"?"eye":"boot")} ${q.title}</div>
     <div class="pe-q-sub">${q.sub}</div>
     <div class="pe-opts">${q.opts.map(opt).join("")}</div>
     <div class="pe-wiz-nav">
@@ -3442,7 +3442,7 @@ function peWizReview(p){
   const priChip=([k,l])=>`<label class="pos-chip"><input type="radio" name="pe-pos" value="${k}" ${pePos===k?"checked":""}><span>${l}</span></label>`;
   const secChip=([k,l])=>`<label class="pos-chip sec"><input type="checkbox" value="${k}" ${pePos2.includes(k)?"checked":""}><span>${l}</span></label>`;
   return `
-    <div class="pe-q-title">Xem lại & lưu</div>
+    <div class="pe-q-title">${GPIcons.render("player-rating")} Xem lại & lưu</div>
     <div class="pe-q-sub">Điểm dưới đây suy ra từ câu trả lời của bạn — chỉnh tay nếu cần rồi bấm Lưu.<br><span class="pe-note">${note} · thang 0–10</span></div>
     <div class="pe-pos">
       <div class="pe-pos-group"><span class="pe-lab">Vị trí chính</span><div class="pos-chips">${POS_LIST.map(priChip).join("")}</div></div>
@@ -3539,7 +3539,7 @@ function showWeek(){
   if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big" data-ui-icon="lineup"></span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
-  $("week-actions").innerHTML=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ Tỉ số</button></div>`:"";
+  $("week-actions").innerHTML=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">${GPIcons.render("match-score")} Tỉ số</button></div>`:"";
   render(r.result,r.subset,"week-result",r.review,!r.score,r.id); setTimeout(fitMatch,0);
 }
 
@@ -3558,7 +3558,7 @@ function openMatchModal(mode,id){
     date=todayStr();
     mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length};
   }
-  $("mm-title").textContent=mode==="edit"?"📋 Sửa thông tin trận":"📋 Lưu trận mới";
+  $("mm-title").innerHTML=GPIcons.render("lineup")+" "+(mode==="edit"?"Sửa thông tin trận":"Lưu trận mới");
   $("mm-date").value=date; $("mm-time").value=time; $("mm-venue").value=venue;
   $("matchModal").classList.add("on");
 }
@@ -3623,12 +3623,12 @@ function mountHistoryActions(list){
     if(!r||!main||main.querySelector(".mc-item-actions"))return;
     const bar=document.createElement("div"); bar.className="mc-item-actions";
     if(isAdmin){
-      const score=document.createElement("button"); score.className="btn sm score-action"; score.textContent="⚽ Tỉ số";
+      const score=document.createElement("button"); score.className="btn sm score-action"; score.innerHTML=GPIcons.render("match-score")+" Tỉ số";
       score.onclick=e=>{e.stopPropagation();setScore(r.id);};
       bar.append(score);
     }
     const locked=isGoalsLocked(r);
-    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.textContent=locked?"🔒 Bàn thắng đã chốt":"⚽ Bàn thắng"; goals.title=locked?(isAdmin?"Bàn thắng đã chốt — admin có thể mở lại khi cần.":"Bàn thắng đã được admin chốt."):(isAdmin?"Rà soát hoặc chốt bàn thắng":"Nhập bàn thắng chung; admin sẽ rà soát và chốt.");
+    const goals=document.createElement("button"); goals.className="btn alt sm"; goals.innerHTML=GPIcons.render(locked?"lock":"goal-record")+" "+(locked?"Bàn thắng đã chốt":"Bàn thắng"); goals.title=locked?(isAdmin?"Bàn thắng đã chốt — admin có thể mở lại khi cần.":"Bàn thắng đã được admin chốt."):(isAdmin?"Rà soát hoặc chốt bàn thắng":"Nhập bàn thắng chung; admin sẽ rà soát và chốt.");
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(goals);
     if(canEdit){
@@ -3703,7 +3703,7 @@ function renderOverdue(){
   box.innerHTML=`<div class="od-note">Có <b>${od.length}</b> trận đã qua giờ đá nhưng <b>chưa có kết quả</b>. Hãy nhập tỉ số để xác nhận trận đã diễn ra.</div>`+
     od.map(r=>`<div class="od-row">
         <div class="od-info"><div class="od-when">⏰ ${esc(fmtKick(r.kickoff)||"")}</div>${r.venue?`<div class="od-venue">📍 ${esc(r.venue)}</div>`:""}</div>
-        <button class="btn sm" onclick="overdueScore(${r.id})">📝 Nhập kết quả</button>
+        <button class="btn sm" onclick="overdueScore(${r.id})">${GPIcons.render("match-score")} Nhập kết quả</button>
       </div>`).join("")+
     `<div class="od-foot"><button class="btn alt sm" onclick="closeOverdue()">Để sau</button></div>`;
 }

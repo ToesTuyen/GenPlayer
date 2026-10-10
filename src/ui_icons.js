@@ -16,6 +16,8 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     'arrow-left': '<path d="m11 5-7 7 7 7M4 12h16"/>',
     'arrow-right': '<path d="m13 5 7 7-7 7M4 12h16"/>',
+    income: '<rect x="3" y="13" width="18" height="8" rx="2"/><path d="M12 3v13m-4-4 4 4 4-4"/>',
+    expense: '<rect x="3" y="13" width="18" height="8" rx="2"/><path d="M12 16V3m-4 4 4-4 4 4"/>',
     'chevron-down': '<path d="m6 9 6 6 6-6"/>',
     'chevron-left': '<path d="m15 6-6 6 6 6"/>',
     'chevron-right': '<path d="m9 6 6 6-6 6"/>',
@@ -102,7 +104,9 @@
   // must not turn a clipboard/backup/history action into a match schedule.
   const aliases = Object.freeze({
     squad: 'users', ranking: 'trophy', 'match-history': 'calendar',
-    'player-form': 'activity', finance: 'wallet', scorer: 'football', goal: 'football'
+    'player-form': 'activity', finance: 'wallet', scorer: 'football', goal: 'football',
+    'match-score': 'clipboard', 'goal-record': 'football', 'player-rating': 'clipboard',
+    'match-analysis': 'scales', 'finance-ledger': 'wallet', 'activity-log': 'history'
   });
   const images = Object.freeze({
     lineup: 'assets/ui/lineup-3d-v2.webp',
@@ -111,7 +115,35 @@
     'match-history': 'assets/ui/history-3d-v1.webp',
     'player-form': 'assets/ui/player-form-3d-v2.webp',
     finance: 'assets/ui/finance-3d-v1.webp',
-    backup: 'assets/ui/backup-3d-v2.webp'
+    backup: 'assets/ui/backup-3d-v2.webp',
+    'match-score': 'assets/ui/match-score-3d-v1.webp',
+    'goal-record': 'assets/ui/goal-record-3d-v1.webp',
+    'player-rating': 'assets/ui/player-rating-3d-v1.webp',
+    'match-analysis': 'assets/ui/match-analysis-3d-v1.webp',
+    'finance-ledger': 'assets/ui/finance-ledger-3d-v1.webp',
+    'activity-log': 'assets/ui/activity-log-3d-v1.webp'
+  });
+
+  // Small controls stay crisp SVGs. A translucent solid layer makes them
+  // recognisable at 16px without reusing the large illustrations out of context.
+  const washes = Object.freeze({
+    football: '<circle cx="12" cy="12" r="9"/>',
+    user: '<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2Z"/>',
+    users: '<circle cx="9.5" cy="7" r="4"/><path d="M3 21v-2a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v2Z"/>',
+    trophy: '<path d="M8 3h8v5a4 4 0 0 1-8 0Z"/>',
+    wallet: '<rect x="3" y="8" width="17" height="12" rx="3"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/>',
+    clock: '<circle cx="12" cy="12" r="9"/>',
+    history: '<circle cx="12" cy="12" r="9"/>',
+    clipboard: '<rect x="4" y="5" width="16" height="16" rx="2"/>',
+    shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/>',
+    boot: '<path d="M4 4h7v6l4 3 5 2c1.5.5 2 1.4 2 3v2H3v-7Z"/>',
+    heart: '<path d="M20.6 4.7a5.2 5.2 0 0 0-7.4 0L12 6l-1.2-1.3a5.2 5.2 0 0 0-7.4 7.4L12 21l8.6-8.9a5.2 5.2 0 0 0 0-7.4Z"/>',
+    flame: '<path d="M12 3c1 5-3 6-3 10a3 3 0 0 0 6 0c0-1-.4-2-1-3 3 1 5 4 5 7a7 7 0 0 1-14 0c0-5 5-8 7-14Z"/>',
+    message: '<path d="M21 14a3 3 0 0 1-3 3H8l-5 4V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3Z"/>',
+    'check-circle': '<circle cx="12" cy="12" r="9"/>',
+    income: '<rect x="3" y="13" width="18" height="8" rx="2"/>',
+    expense: '<rect x="3" y="13" width="18" height="8" rx="2"/>'
   });
 
   function escapeAttribute(value) {
@@ -133,7 +165,9 @@
       '" data-icon="' + escapeAttribute(key) +
       '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"' +
       ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"' +
-      ' aria-hidden="true" focusable="false">' + shapes[aliases[key] || key] + '</svg>';
+      ' aria-hidden="true" focusable="false">' +
+      (washes[aliases[key] || key] ? '<g fill="currentColor" fill-opacity=".16" stroke="none">' + washes[aliases[key] || key] + '</g>' : '') +
+      shapes[aliases[key] || key] + '</svg>';
   }
 
   global.GPIcons = Object.freeze({ render, names: Object.freeze([...Object.keys(shapes), ...Object.keys(aliases)]), emojiMap, images });

@@ -20,7 +20,7 @@ GenPlayer/
 ├── src/                  # NGUỒN (sửa ở đây rồi build lại)
 │   ├── web_template.html #   giao diện + bộ vẽ sơ đồ
 │   ├── optimizer.js      #   thuật toán chia đội (duyệt toàn bộ + Hungarian)
-│   ├── ui_icons.js       #   icon ảnh màu AI cho menu + SVG cho thao tác nhỏ
+│   ├── ui_icons.js       #   icon ảnh màu AI cho menu/màn con + SVG hai sắc cho thao tác nhỏ
 │   ├── ui_icons_dom.js   #   gắn icon cho nhãn UI, kể cả sau khi vẽ lại màn hình
 │   └── ui_icons.css      #   kích thước, màu và khung icon
 └── assets/
@@ -31,6 +31,7 @@ GenPlayer/
 - Sửa giao diện/thuật toán → sửa trong **`src/`** rồi chạy lại `build_web.py`.
 - Bộ ánh xạ icon được nhúng vào HTML lúc build, không tải thư viện ngoài. Ảnh icon menu nằm trong `assets/ui/`: PNG gốc từ AI, WebP 192px để tải nhẹ, prompt trong `generation.json`. Dùng tên đúng chức năng: `lineup`, `squad`, `ranking`, `match-history`, `player-form`, `finance`, `backup`. Ví dụ `GPIcons.render('ranking')` hoặc `data-ui-icon="ranking"`; tên chung như `users` (người chấm), `history` (nhật ký), `chart` (biểu đồ), `goal` (bàn thắng) không dùng chung ảnh menu. `data-ui-no-icons` bảo vệ nội dung người dùng khỏi thay thế biểu tượng.
 - Kiểm tra ngữ cảnh icon và asset (chỉ đọc, không gọi cloud): `node tests/ui_icons.test.cjs`.
+- Màn con/popup có tên riêng: `match-score` (tỉ số), `goal-record` (ghi bàn/rà soát bàn), `player-rating` (chấm điểm/AI Form), `match-analysis` (so kè/nhận định), `finance-ledger` (sổ quỹ), `activity-log` (nhật ký sửa). Gắn ảnh bằng tên rõ nghĩa, không đổi hàng loạt icon chung; tiêu đề vẽ lại bằng JS phải dùng `GPIcons.render(...)` để không mất ảnh sau khi mở popup. `income`/`expense` là SVG hai sắc với chiều mũi tên khác nhau; logo, avatar và ngọn lửa sân bóng giữ nguyên.
 
 ## Chạy
 Điểm cầu thủ **sống trong Firestore DB** (sửa ngay trên web ở mục "Cầu thủ" → tự lưu cloud). `build_web.py` đọc điểm mới nhất **từ DB** để sinh lại trang — không còn file Excel nào.

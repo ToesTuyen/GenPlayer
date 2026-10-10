@@ -1,7 +1,15 @@
 /* Colorful illustrated navigation; compact SVGs remain for operational controls. */
 :root{--ui-icon-color:#b6bff1;--ui-icon-soft:rgba(194,203,255,.10)}
 :root[data-theme="light"]{--ui-icon-color:#7b8fae;--ui-icon-soft:rgba(108,132,177,.10)}
+:root{--ui-icon-violet:#c2a7f4;--ui-icon-blue:#8fb5f1;--ui-icon-green:#78cfa7;--ui-icon-red:#ed92a0;--ui-icon-gold:#e3bd73;--ui-icon-orange:#f2ab77}
+:root[data-theme="light"]{--ui-icon-violet:#9576b9;--ui-icon-blue:#7097c5;--ui-icon-green:#65a589;--ui-icon-red:#c77b8b;--ui-icon-gold:#b29355;--ui-icon-orange:#c78c61}
 .ui-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.2em;color:inherit;pointer-events:none}
+.ui-icon:is([data-icon="user"],[data-icon="users"],[data-icon="edit"],[data-icon="clipboard"],[data-icon="message"]){color:var(--ui-icon-violet)}
+.ui-icon:is([data-icon="calendar"],[data-icon="history"],[data-icon="clock"],[data-icon="shield"],[data-icon="snowflake"]){color:var(--ui-icon-blue)}
+.ui-icon:is([data-icon="check-circle"],[data-icon="income"]){color:var(--ui-icon-green)}
+.ui-icon:is([data-icon="trend-down"],[data-icon="expense"],[data-icon="heart"],[data-icon="trash"]){color:var(--ui-icon-red)}
+.ui-icon:is([data-icon="trophy"],[data-icon="wallet"],[data-icon="coins"],[data-icon="boot"]){color:var(--ui-icon-gold)}
+.ui-icon[data-icon="flame"]{color:var(--ui-icon-orange)}
 .ui-icon-image{width:22px;height:22px;object-fit:contain;overflow:visible;filter:drop-shadow(0 2px 3px rgba(12,18,46,.14));vertical-align:-.25em}
 .btn,.ab-admin,.req-tabs button,.pstat-filter{display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .btn .ui-icon,.ab-admin .ui-icon,.req-tabs .ui-icon,.pstat-filter .ui-icon{width:17px;height:17px}
@@ -10,9 +18,25 @@
 .ab-title .ui-icon{width:21px;height:21px;color:var(--ui-icon-color);margin-right:5px}
 .ab-title .ui-icon-image{width:26px;height:26px;vertical-align:-6px}
 .plog-title .ui-icon,h2>.ui-icon,h3>.ui-icon,.pop-head>.ui-icon,.pm-sec>.ui-icon,
-.fin-title>.ui-icon,.pstat-title>.ui-icon{color:var(--ui-icon-color);margin-right:3px}
+.fin-title>.ui-icon,.pstat-title>.ui-icon{margin-right:3px}
 .plog-title>.ui-icon-image,h2>.ui-icon-image,h3>.ui-icon-image,.pop-head .ui-icon-image,.pm-sec>.ui-icon-image,
 .fin-title .ui-icon-image,.pstat-title .ui-icon-image{width:26px;height:26px;vertical-align:-6px}
+.plog-title [data-ui-icon] .ui-icon-image,h3 [data-ui-icon] .ui-icon-image,.section-title .ui-icon-image{width:30px;height:30px;vertical-align:-7px;margin-right:3px}
+.section-title [data-ui-icon]{display:inline-block}
+.pm-sec{display:flex;align-items:center;gap:6px;min-height:22px}
+.pm-sec>.ui-icon{width:18px;height:18px;margin-right:0}
+.pm-sec>.ui-icon-image{width:24px;height:24px}
+.pe-q-title{display:flex;align-items:center;gap:7px}
+.pe-q-title .ui-icon{width:21px;height:21px}
+.pe-q-title .ui-icon-image{width:30px;height:30px}
+.ulog-name>.ui-icon{width:18px;height:18px;vertical-align:-3px;margin-right:3px}
+.ulog-name>.ui-icon-image{width:24px;height:24px;vertical-align:-5px}
+.ml-del .ulog-name>.ui-icon{color:var(--ui-icon-red)}
+.req-tabs [data-ui-icon]{display:inline-flex;align-items:center;flex:0 0 auto}
+.req-tabs .ui-icon-image{width:25px;height:25px}
+.pstat-kpi .lab,.fin-kpi-lab{display:flex;align-items:center;gap:6px;min-height:26px}
+.pstat-kpi .lab .ui-icon,.fin-kpi-lab .ui-icon{width:18px;height:18px;flex:0 0 18px}
+.pstat-kpi .lab .ui-icon-image,.fin-kpi-lab .ui-icon-image{width:26px;height:26px;flex-basis:26px}
 .pop-head>.ui-icon[data-icon="award"]{color:var(--gold)}
 .pop-head{justify-content:flex-start;gap:7px}.pop-head>a{margin-left:auto}
 .rank-goals .ui-icon{width:20px;height:20px;vertical-align:-3px}
@@ -43,12 +67,13 @@
 .pstat-state .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
 .pstat-ai-title .ui-icon{width:15px;height:15px}
 .pstat-ai-title .ui-icon-image{width:20px;height:20px;vertical-align:-4px}
+.pstat-ai-title{display:flex;align-items:center;gap:5px;min-height:22px}
 .fin-type .ui-icon{width:19px;height:19px}
 .fin-type .ui-icon-image{width:24px;height:24px}
 .hf-nav .ui-icon{width:30px;height:30px}
 .gl-bt .ui-icon{width:15px;height:15px}
 :root[data-theme="light"] .fb-fab{background:linear-gradient(135deg,#b39bec,#91a9e9);box-shadow:0 8px 20px rgba(114,126,180,.22)}
 :root[data-theme="light"] .ui-icon-image{filter:drop-shadow(0 2px 3px rgba(78,89,132,.12))}
-@media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}}
+@media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}#rankTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#rankTabs button{min-width:0}.pstat-kpi .lab{gap:5px;font-size:10px}#screen-create .grid{grid-template-columns:minmax(0,1fr)}#screen-create .pl-name{min-width:0;overflow:hidden;text-overflow:ellipsis}}
 @media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:46px;height:46px;border-radius:13px}.ap-btn .ap-icon .ui-icon{width:21px;height:21px}.ap-btn .ap-icon .ui-icon-image{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.ap-icon{transition:none}.ap-btn:hover .ap-icon{transform:none}}
