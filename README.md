@@ -29,7 +29,8 @@ GenPlayer/
 
 - **`index.html`** = trang web có nút "Tạo 2 đội" — chọn người có mặt → chia đội ngay trong trình duyệt (không cần server/AI). Là **output**, sinh bởi `build_web.py`.
 - Sửa giao diện/thuật toán → sửa trong **`src/`** rồi chạy lại `build_web.py`.
-- Bộ ánh xạ icon được nhúng vào HTML lúc build, không tải thư viện ngoài. Ảnh icon menu nằm trong `assets/ui/`: PNG gốc từ AI, WebP 192px để tải nhẹ, prompt trong `generation.json`. Dùng `GPIcons.render('trophy')` hoặc `data-ui-icon="trophy"` cho nhãn mới; `data-ui-no-icons` bảo vệ nội dung người dùng khỏi thay thế biểu tượng.
+- Bộ ánh xạ icon được nhúng vào HTML lúc build, không tải thư viện ngoài. Ảnh icon menu nằm trong `assets/ui/`: PNG gốc từ AI, WebP 192px để tải nhẹ, prompt trong `generation.json`. Dùng tên đúng chức năng: `lineup`, `squad`, `ranking`, `match-history`, `player-form`, `finance`, `backup`. Ví dụ `GPIcons.render('ranking')` hoặc `data-ui-icon="ranking"`; tên chung như `users` (người chấm), `history` (nhật ký), `chart` (biểu đồ), `goal` (bàn thắng) không dùng chung ảnh menu. `data-ui-no-icons` bảo vệ nội dung người dùng khỏi thay thế biểu tượng.
+- Kiểm tra ngữ cảnh icon và asset (chỉ đọc, không gọi cloud): `node tests/ui_icons.test.cjs`.
 
 ## Chạy
 Điểm cầu thủ **sống trong Firestore DB** (sửa ngay trên web ở mục "Cầu thủ" → tự lưu cloud). `build_web.py` đọc điểm mới nhất **từ DB** để sinh lại trang — không còn file Excel nào.

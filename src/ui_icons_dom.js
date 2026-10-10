@@ -4,21 +4,21 @@
   "use strict";
   const api = global.GPIcons;
   const tokens = {
-    "⚽":"football", "🥇":"award", "🥈":"award", "🥉":"award",
+    "⚽":"football", "🥇":"medal-gold", "🥈":"medal-silver", "🥉":"medal-bronze",
     "🏆":"trophy", "📊":"chart", "📈":"trend-up", "📉":"trend-down",
     "💰":"wallet", "💸":"coins", "💳":"wallet", "🧠":"activity", "🤖":"sparkles",
-    "💬":"message", "📋":"clipboard", "🗂":"history", "📁":"history",
-    "📂":"history", "🕓":"history", "🕒":"clock", "📅":"calendar",
+    "💬":"message", "📋":"clipboard", "🗂":"backup", "📁":"backup",
+    "📂":"backup", "🕓":"history", "🕒":"clock", "📅":"calendar",
     "⏰":"clock", "⏳":"timer", "🔄":"refresh", "🔀":"shuffle",
     "💾":"save", "✏":"edit", "📝":"edit", "🗑":"trash",
     "🔒":"lock", "🔓":"unlock", "🔑":"login", "👤":"user",
-    "👥":"users", "👑":"award", "📥":"download", "📤":"upload",
+    "👥":"users", "👑":"crown", "📥":"download", "📤":"upload",
     "➕":"plus", "➖":"minus", "＋":"plus", "－":"minus", "−":"minus", "⇩":"download",
     "✅":"check-circle", "❌":"close", "⚠":"alert", "ℹ":"info",
     "💡":"info", "🔎":"search", "🔍":"search", "🎯":"target",
-    "⚡":"bolt", "⚙":"settings", "⚖":"shield", "🛡":"shield",
-    "📍":"map-pin", "🧤":"shield", "👟":"bolt", "🏹":"trend-up",
-    "🤝":"users", "🛠":"tool", "🧪":"flask", "🧊":"snowflake", "🏅":"award", "📨":"mail",
+    "⚡":"bolt", "⚙":"settings", "⚖":"scales", "🛡":"shield",
+    "📍":"map-pin", "🧤":"glove", "👟":"boot", "🏹":"chart",
+    "🤝":"handshake", "🛠":"tool", "🧪":"flask", "🧊":"snowflake", "🏅":"award", "📨":"mail",
     "😎":"check-circle", "🔥":"flame", "💨":"trend-down", "🙈":"eye-off",
     "☀":"sun", "☾":"moon", "←":"arrow-left", "→":"arrow-right",
     "‹":"chevron-left", "›":"chevron-right", "✕":"close", "✓":"check"

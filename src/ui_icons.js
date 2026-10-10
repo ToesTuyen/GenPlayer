@@ -65,7 +65,17 @@
     more: '<circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/>',
     minus: '<path d="M5 12h14"/>',
     map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
-    'map-pin': '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>'
+    'map-pin': '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+    lineup: '<rect x="3" y="2" width="18" height="20" rx="3"/><path d="M3 12h18M8 2v4h8V2M8 22v-4h8v4"/><circle cx="12" cy="12" r="3"/>',
+    backup: '<path d="M3 8V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm5 7a4 4 0 1 0 1-3m-2-2v4h4"/>',
+    scales: '<path d="M12 3v18M5 21h14M4 7h16M5 7l-3 7h6L5 7Zm14 0-3 7h6l-3-7Z"/><circle cx="12" cy="5" r="2"/>',
+    glove: '<path d="M7 21v-3l-3-5a2 2 0 0 1 3-2l1 1V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-6a1.5 1.5 0 0 1 3 0v6-4a1.5 1.5 0 0 1 3 0v8c0 3-2 4-2 6v1H7Z"/>',
+    boot: '<path d="M4 4h7v6l4 3 5 2c1.5.5 2 1.4 2 3v2H3v-7l1-9Zm1 16v2m5-2v2m5-2v2m5-2v2M11 10l-3 2m6 0-3 2m6 0-3 2"/>',
+    crown: '<path d="m3 5 5 4 4-6 4 6 5-4-2 14H5L3 5Zm2 10h14"/>',
+    handshake: '<path d="m2 7 4-3 5 2m11 1-4-3-6 2-4 4 2 2 4-3 6 6-5 5-9-8M2 7l4 5m16-5-2 8m-8 3 2 2m-5-5 2 2"/>',
+    'medal-gold': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#b9a4ff" stroke="#8770d2"/><circle cx="12" cy="15" r="6" fill="#f6c650" stroke="#bf8c25"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#fff0a6" stroke="none"/>',
+    'medal-silver': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#9ebbf0" stroke="#7696c7"/><circle cx="12" cy="15" r="6" fill="#d9e2ef" stroke="#97a8bd"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#f8fbff" stroke="none"/>',
+    'medal-bronze': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#b9a4ff" stroke="#8770d2"/><circle cx="12" cy="15" r="6" fill="#d99b65" stroke="#a36a43"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#ffdab9" stroke="none"/>'
   });
 
   // Exact tokens only. The host chooses which UI labels to replace; player text stays untouched.
@@ -81,24 +91,27 @@
     '📤': 'upload', '📥': 'download', '🔄': 'refresh', '💬': 'message', '🚩': 'flag',
     '🛡️': 'shield', '🎯': 'target', '⚡': 'bolt', '❤️': 'heart', 'ℹ️': 'info',
     '❓': 'help', '⚠️': 'alert', '🌙': 'moon', '☀️': 'sun', '⭐': 'star',
-    '🏅': 'award', '🥇': 'award', '📋': 'clipboard', '🔥': 'flame', '🧊': 'snowflake',
-    '❄️': 'snowflake', '🛠️': 'tool', '🧪': 'flask', '🏠': 'home', '📍': 'map-pin'
+    '🏅': 'award', '🥇': 'medal-gold', '🥈': 'medal-silver', '🥉': 'medal-bronze', '📋': 'clipboard', '🔥': 'flame', '🧊': 'snowflake',
+    '❄️': 'snowflake', '🛠️': 'tool', '🧪': 'flask', '🏠': 'home', '📍': 'map-pin',
+    '🗂️': 'backup', '📁': 'backup', '📂': 'backup', '⚖️': 'scales',
+    '🧤': 'glove', '👟': 'boot', '🤝': 'handshake', '👑': 'crown', '🏹': 'chart'
   });
 
-  // AI-created color illustrations for primary navigation and section identity.
-  // Compact interaction controls keep simple SVGs so their small shapes stay clear.
+  // Illustration identity is explicit, not inferred from a generic emoji.
+  // A squad illustration must never replace the people rating a player; a calendar
+  // must not turn a clipboard/backup/history action into a match schedule.
+  const aliases = Object.freeze({
+    squad: 'users', ranking: 'trophy', 'match-history': 'calendar',
+    'player-form': 'activity', finance: 'wallet', scorer: 'football', goal: 'football'
+  });
   const images = Object.freeze({
-    shuffle: 'assets/ui/team-3d-v1.webp',
-    users: 'assets/ui/players-3d-v1.webp',
-    trophy: 'assets/ui/ranking-3d-v1.webp',
-    award: 'assets/ui/ranking-3d-v1.webp',
-    calendar: 'assets/ui/history-3d-v1.webp',
-    history: 'assets/ui/history-3d-v1.webp',
-    clipboard: 'assets/ui/history-3d-v1.webp',
-    activity: 'assets/ui/form-3d-v1.webp',
-    chart: 'assets/ui/form-3d-v1.webp',
-    wallet: 'assets/ui/finance-3d-v1.webp',
-    coins: 'assets/ui/finance-3d-v1.webp'
+    lineup: 'assets/ui/lineup-3d-v2.webp',
+    squad: 'assets/ui/players-3d-v1.webp',
+    ranking: 'assets/ui/ranking-3d-v1.webp',
+    'match-history': 'assets/ui/history-3d-v1.webp',
+    'player-form': 'assets/ui/player-form-3d-v2.webp',
+    finance: 'assets/ui/finance-3d-v1.webp',
+    backup: 'assets/ui/backup-3d-v2.webp'
   });
 
   function escapeAttribute(value) {
@@ -108,7 +121,8 @@
   }
 
   function render(name, extraClass = '') {
-    const key = Object.prototype.hasOwnProperty.call(shapes, name) ? name : 'info';
+    const key = Object.prototype.hasOwnProperty.call(shapes, name) ||
+      Object.prototype.hasOwnProperty.call(aliases, name) ? name : 'info';
     const classes = 'ui-icon' + (extraClass ? ' ' + String(extraClass) : '');
     if (images[key]) {
       return '<img class="' + escapeAttribute(classes) + ' ui-icon-image" data-icon="' +
@@ -119,8 +133,8 @@
       '" data-icon="' + escapeAttribute(key) +
       '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"' +
       ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"' +
-      ' aria-hidden="true" focusable="false">' + shapes[key] + '</svg>';
+      ' aria-hidden="true" focusable="false">' + shapes[aliases[key] || key] + '</svg>';
   }
 
-  global.GPIcons = Object.freeze({ render, names: Object.freeze(Object.keys(shapes)), emojiMap, images });
+  global.GPIcons = Object.freeze({ render, names: Object.freeze([...Object.keys(shapes), ...Object.keys(aliases)]), emojiMap, images });
 })(window);

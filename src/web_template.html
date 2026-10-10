@@ -881,13 +881,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="ap-title">Tạo đội</div>
       <div class="ap-sub">Chia 2 đội cân bằng & quản lý cầu thủ</div>
       <div class="ap-grid">
-        <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="shuffle"></span><span>Tạo đội</span></button>
-        <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="users"></span><span>Cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="trophy"></span><span>Xếp hạng</span></button>
-        <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="calendar"></span><span>Lịch sử</span></button>
-        <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="activity"></span><span>Tình trạng cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="wallet"></span><span>Thu chi</span></button>
-        <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="history"></span><span>Backup</span></button>
+        <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="lineup"></span><span>Tạo đội</span></button>
+        <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="squad"></span><span>Cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="ranking"></span><span>Xếp hạng</span></button>
+        <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="match-history"></span><span>Lịch sử</span></button>
+        <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
+        <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="backup"></span><span>Backup</span></button>
       </div>
     </section>
   </div>
@@ -895,11 +895,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <aside class="dash-left">
       <div class="pop-head">Trận sắp tới <a onclick="show('screen-week')">Xem thêm</a></div>
       <div id="spotlight"></div>
-      <div class="pop-head" style="margin-top:18px">🥇 Vua phá lưới <a onclick="openScorer()">Xem tất cả</a></div>
+      <div class="pop-head" style="margin-top:18px"><span data-ui-icon="scorer"></span> Vua phá lưới <a onclick="openScorer()">Xem tất cả</a></div>
       <div id="homeScorers"></div>
     </aside>
     <div class="dash-right">
-      <div class="league-head"><span class="lg-ic">⚽</span>Lịch sử thi đấu</div>
+      <div class="league-head"><span class="lg-ic" data-ui-icon="match-history"></span>Lịch sử thi đấu</div>
       <div id="matchList"></div>
     </div>
   </div>
@@ -972,7 +972,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TINH TRANG CAU THU ====== -->
 <div id="screen-player-status" class="screen">
   <div class="pstat-head">
-    <div><div class="pstat-title">🧠 Tình trạng cầu thủ</div><div class="pstat-sub">AI Form đọc tối đa 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi để đề xuất tăng, giữ hoặc đánh giá giảm điểm. Điểm không tự thay đổi.</div></div>
+    <div><div class="pstat-title"><span data-ui-icon="player-form"></span> Tình trạng cầu thủ</div><div class="pstat-sub">AI Form đọc tối đa 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi để đề xuất tăng, giữ hoặc đánh giá giảm điểm. Điểm không tự thay đổi.</div></div>
     <div class="pstat-source">🤖 AI Form · lịch sử đã chốt</div>
   </div>
   <div id="pstat-summary" class="pstat-summary"></div>
@@ -983,7 +983,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== QUAN LY THU CHI ====== -->
 <div id="screen-finance" class="screen">
   <div class="fin-head">
-    <div><div class="fin-title">💰 Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
+    <div><div class="fin-title"><span data-ui-icon="finance"></span> Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
     <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')">＋ Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')">－ Ghi chi</button></div>
   </div>
   <div class="fin-summary" id="finance-summary"></div>
@@ -1265,7 +1265,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
-const TITLES={home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',"screen-create":"⚽ Tạo đội","screen-players":"✏️ Cập nhật cầu thủ","screen-rank":"📊 Xếp hạng","screen-week":"📋 Trận sắp tới","screen-player-status":"🧠 Tình trạng cầu thủ","screen-finance":"💰 Quản lý thu chi","screen-history":"⚽ Lịch sử thi đấu","screen-backup":"🗂️ Backup đội hình"};
+const TITLES={
+  home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',
+  "screen-create":GPIcons.render("lineup")+" Tạo đội",
+  "screen-players":GPIcons.render("squad")+" Cập nhật cầu thủ",
+  "screen-rank":GPIcons.render("ranking")+" Xếp hạng",
+  "screen-week":GPIcons.render("lineup")+" Trận sắp tới",
+  "screen-player-status":GPIcons.render("player-form")+" Tình trạng cầu thủ",
+  "screen-finance":GPIcons.render("finance")+" Quản lý thu chi",
+  "screen-history":GPIcons.render("match-history")+" Lịch sử thi đấu",
+  "screen-backup":GPIcons.render("backup")+" Backup đội hình"
+};
 const POSNAME={GK:"Thủ môn","Thòng":"Trung vệ",HV:"Hậu vệ",TVtt:"Tiền vệ giữa",TV:"Tiền vệ cánh","TĐ":"Tiền đạo"};
 const KIT_A={body:"#bd2004",sleeve:"#911503",trim:"#ffffff"}, KIT_B={body:"#fcba03",sleeve:"#11224f",trim:"#11224f"};
 const CAtxt="#bd2004", CBtxt="#fcba03";
@@ -1838,10 +1848,10 @@ function renderHomeScorers(){
   if(!top.length){box.innerHTML=`<div class="hs-empty">⚽ Chưa có bàn thắng nào. Nhập ở <a onclick="show('screen-history')">Lịch sử thi đấu</a> → trận có tỉ số → ⚽ Bàn thắng.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+top.map((x,i)=>`
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(x.name)}')">
-        <span class="rank-no${i<3?' top':''}">${i+1}</span>
+        <span class="rank-no${i<3?' top':''}" title="Hạng ${i+1}" aria-label="Hạng ${i+1}">${i<3?GPIcons.render(["medal-gold","medal-silver","medal-bronze"][i]):i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${rankName(x.name)}</div><div class="rank-sub">${x.played} trận đá</div></div>
-        <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
+        <span class="rank-goals">${GPIcons.render("goal")} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 function logChip(c){return `<span class="lg-chip">${c.k} <b class="old">${c.from}</b><span class="ar">→</span><b class="new">${c.to}</b></span>`;}
@@ -2196,7 +2206,7 @@ function vpitch(r){
 function renderSpotlight(h){
   const box=$("spotlight"); if(!box)return;
   const r=featuredMatch(h||[]);
-  if(!r){box.innerHTML=`<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
+  if(!r){box.innerHTML=`<div class="empty"><span class="big" data-ui-icon="lineup"></span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong → <b>Lưu trận</b>.</div>`;return;}
   const sel=r.subset, eA=r.result&&r.result.evA, eB=r.result&&r.result.evB;
   if(!sel||!eA||!eB){box.innerHTML=matchCard(r,false);return;}   // trận cũ không có đội hình -> thẻ gọn
   const when=r.kickoff?fmtKick(r.kickoff):(r.label||"⏳ Chưa đá");
@@ -3090,10 +3100,10 @@ function renderScorer(boxId){
   if(!scorerRows.length){box.innerHTML=`<div class="empty"><span class="big">🥇</span>Chưa có bàn thắng nào được ghi nhận.<br>Vào <b>Lịch sử thi đấu</b> → trận đã có tỉ số → <b>⚽ Bàn thắng</b>.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+scorerRows.map((x,i)=>`
       <div class="rank-row" onclick="openScorerRow(${i})">
-        <span class="rank-no${i<3?" top":""}">${i+1}</span>
+        <span class="rank-no${i<3?" top":""}" title="Hạng ${i+1}" aria-label="Hạng ${i+1}">${i<3?GPIcons.render(["medal-gold","medal-silver","medal-bronze"][i]):i+1}</span>
         <span class="avatar" style="${avaStyle(x.name)}">${avaInner(x.name)}</span>
         <div class="rank-id"><div class="rank-name">${rankName(x.name)}</div><div class="rank-sub">${x.played} trận đá${x.p?" · "+evalTitle(x.p):""}</div></div>
-        <span class="rank-goals"><span style="font-size:1.4em;vertical-align:-0.12em">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'⚽'}</span> ${x.goals}</span>
+        <span class="rank-goals">${GPIcons.render("goal")} ${x.goals}</span>
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
@@ -3166,7 +3176,7 @@ function evalAptsHTML(p){
   return `<div class="ev-apts">${apt.slice().sort((a,b)=>b.v-a.v).map(aptRow).join("")}</div>`;
 }
 // danh hiệu (vd "Mũi nhọn săn bàn") + mô tả — hiện ở NỬA PHẢI header hồ sơ
-function evalArch(p){const {title,desc}=evalData(p);return `<div class="pm-arch"><div class="pm-arch-name">🏅 ${title}</div><div class="pm-arch-desc">${desc}</div></div>`;}
+function evalArch(p){const {title,desc}=evalData(p),code=posCodeOf(p),icon=code==="GK"?"glove":["Thòng","HV"].includes(code)?"shield":code==="TĐ"?"goal":"boot";return `<div class="pm-arch"><div class="pm-arch-name">${GPIcons.render(icon)} ${title}</div><div class="pm-arch-desc">${desc}</div></div>`;}
 // khối "Đánh giá chỉ số" chỉ gồm các thanh (KHÔNG kèm danh hiệu).
 // Ở hồ sơ: nằm gọn trong cột phải, dưới Kỹ thuật + Thể chất & tinh thần.
 function evalBarsHTML(p,compact){return `<div class="pm-eval${compact?' pm-eval-compact':''}"><div class="pm-sec">Đánh giá chỉ số</div>${evalAptsHTML(p)}</div>`;}
@@ -3526,7 +3536,7 @@ function applyQuick(){
 // ============ DOI TUAN NAY ============
 function showWeek(){
   const h=getHistory(), r=featuredMatch(h);
-  if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big">📋</span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
+  if(!r){$("week-info").innerHTML="";$("week-actions").innerHTML="";$("week-result").innerHTML='<div class="empty"><span class="big" data-ui-icon="lineup"></span>Chưa có trận sắp tới.<br>Vào <b>Tạo đội</b> → chia xong bấm <b>Lưu trận</b>.</div>';return;}
   const when=r.kickoff?fmtKick(r.kickoff):("Lưu lúc "+r.label);
   $("week-info").innerHTML=`${r.score?"✅":"⏳"} <b>${when}</b>${r.format?` · <b>${esc(r.format)}</b>`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""} · ${r.n} người${r.score?` · Tỉ số <b>${r.score.a}–${r.score.b}</b>`:""}`;
   $("week-actions").innerHTML=isAdmin?`<div class="week-actions"><button class="btn sm score-action" onclick="setScore(${r.id})">⚽ Tỉ số</button></div>`:"";

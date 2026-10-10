@@ -11,12 +11,15 @@
 .ab-title .ui-icon-image{width:26px;height:26px;vertical-align:-6px}
 .plog-title .ui-icon,h2>.ui-icon,h3>.ui-icon,.pop-head>.ui-icon,.pm-sec>.ui-icon,
 .fin-title>.ui-icon,.pstat-title>.ui-icon{color:var(--ui-icon-color);margin-right:3px}
-.plog-title>.ui-icon-image,h2>.ui-icon-image,h3>.ui-icon-image,.pop-head>.ui-icon-image,.pm-sec>.ui-icon-image,
-.fin-title>.ui-icon-image,.pstat-title>.ui-icon-image{width:26px;height:26px;vertical-align:-6px}
+.plog-title>.ui-icon-image,h2>.ui-icon-image,h3>.ui-icon-image,.pop-head .ui-icon-image,.pm-sec>.ui-icon-image,
+.fin-title .ui-icon-image,.pstat-title .ui-icon-image{width:26px;height:26px;vertical-align:-6px}
 .pop-head>.ui-icon[data-icon="award"]{color:var(--gold)}
 .pop-head{justify-content:flex-start;gap:7px}.pop-head>a{margin-left:auto}
 .rank-goals .ui-icon{width:20px;height:20px;vertical-align:-3px}
 .rank-goals .ui-icon-image{width:24px;height:24px;vertical-align:-5px}
+.rank-no .ui-icon{width:23px;height:23px;vertical-align:0}
+.pm-arch-name .ui-icon{width:18px;height:18px;margin-right:3px;vertical-align:-3px}
+.pop-head [data-ui-icon="scorer"] .ui-icon{color:var(--gold)}
 .mc-scorers>.ui-icon{width:14px;height:14px;color:var(--ui-icon-color)}
 .pm-h-upd .ui-icon,.pm-h-raters .ui-icon,.pstat-source .ui-icon{width:13px;height:13px}
 .pm-h-upd .ui-icon-image,.pm-h-raters .ui-icon-image,.pstat-source .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
