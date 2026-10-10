@@ -859,17 +859,18 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme="light"] .fin-kpi.out .fin-kpi-val,:root[data-theme="light"] .fin-amt.out,:root[data-theme="light"] .fin-type.out,:root[data-theme="light"] .fin-error{color:#c56173}
 :root[data-theme="light"] .pm-pos-row .pp-tag.main{color:#fff}
 :root[data-theme="light"] .seg:hover,:root[data-theme="light"] .seg.on,:root[data-theme="light"] .rank-row:hover,:root[data-theme="light"] .mc:hover,:root[data-theme="light"] .pl-item:hover{border-color:rgba(39,59,113,.28)}
+/*__UI_ICON_CSS__*/
 </style></head><body>
 
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
   <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
   <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện sáng" aria-label="Chuyển sang giao diện sáng">☀︎</button>
-  <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()">🔒 Admin</button>
+  <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
 
 <!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
-<button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
+<button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức" aria-label="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
@@ -880,13 +881,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="ap-title">Tạo đội</div>
       <div class="ap-sub">Chia 2 đội cân bằng & quản lý cầu thủ</div>
       <div class="ap-grid">
-        <button class="ap-btn" onclick="show('screen-create')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tạo đội</span></button>
-        <button class="ap-btn" onclick="show('screen-players')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Xếp hạng</span></button>
-        <button class="ap-btn" onclick="show('screen-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Lịch sử</span></button>
-        <button class="ap-btn" onclick="show('screen-player-status')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 17l5-5 4 3 7-8"/><path d="M17 7h3v3"/><circle cx="9" cy="12" r="1"/></svg><span>Tình trạng cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/><path d="M7 3h10"/></svg><span>Thu chi</span></button>
-        <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span>Backup</span></button>
+        <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="shuffle"></span><span>Tạo đội</span></button>
+        <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="users"></span><span>Cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="trophy"></span><span>Xếp hạng</span></button>
+        <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="calendar"></span><span>Lịch sử</span></button>
+        <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="activity"></span><span>Tình trạng cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="wallet"></span><span>Thu chi</span></button>
+        <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="history"></span><span>Backup</span></button>
       </div>
     </section>
   </div>
@@ -1258,6 +1259,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- Firebase (chỉ dùng khi đồng bộ; lỗi mạng/không có config thì tự về chế độ cục bộ) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>/*__UI_ICONS__*/</script>
 <script>/*__OPTIMIZER__*/</script>
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
@@ -2483,7 +2485,7 @@ function applyRoleUI(){                     // ẩn/hiện nút theo vai trò
   set("goalReqBtn",isAdmin); set("mlogBtn",isAdmin);
   updateReqBadge(); updateGoalReqBadge(); updateFbBadge();
   const b=$("adminBtn");
-  if(b)b.textContent = role==="admin" ? ("🔓 "+(sessionName||"Admin")) : role==="user" ? ("👤 "+(sessionName||"User")) : "🔑 Đăng nhập";
+  if(b)b.innerHTML=GPIcons.render(role==="admin"?"unlock":role==="user"?"user":"login")+" "+esc(role==="admin"?(sessionName||"Admin"):role==="user"?(sessionName||"User"):"Đăng nhập");
   maybeWarnOverdue();   // admin vừa vào -> cảnh báo trận quá giờ chưa có kết quả
   refreshScreen();      // đăng nhập/đăng xuất khi đang xem trận → vẽ lại đúng các nút theo quyền
 }
@@ -3719,6 +3721,7 @@ function delHistory(id){
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); show("home");
+GPUIIcons.mount(document.body);
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"}));   // ép tải service worker mới khi giao diện được cập nhật
 </script>
 </body></html>

@@ -1,0 +1,36 @@
+/* Shared rounded SVG icons: the same geometry on Safari, desktop and mobile. */
+:root{--ui-icon-color:#b6bff1;--ui-icon-soft:rgba(194,203,255,.10)}
+:root[data-theme="light"]{--ui-icon-color:#7b8fae;--ui-icon-soft:rgba(108,132,177,.10)}
+.ui-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.2em;color:inherit;pointer-events:none}
+.btn,.ab-admin,.req-tabs button,.pstat-filter{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn .ui-icon,.ab-admin .ui-icon,.req-tabs .ui-icon,.pstat-filter .ui-icon{width:17px;height:17px}
+.ab-back .ui-icon,.ab-theme .ui-icon{width:19px;height:19px}
+.ab-title .ui-icon{width:21px;height:21px;color:var(--ui-icon-color);margin-right:5px}
+.plog-title .ui-icon,h2>.ui-icon,h3>.ui-icon,.pop-head>.ui-icon,.pm-sec>.ui-icon,
+.fin-title>.ui-icon,.pstat-title>.ui-icon{color:var(--ui-icon-color);margin-right:3px}
+.pop-head>.ui-icon[data-icon="award"]{color:var(--gold)}
+.pop-head{justify-content:flex-start;gap:7px}.pop-head>a{margin-left:auto}
+.rank-goals .ui-icon{width:20px;height:20px;vertical-align:-3px}
+.mc-scorers>.ui-icon{width:14px;height:14px;color:var(--ui-icon-color)}
+.pm-h-upd .ui-icon,.pm-h-raters .ui-icon,.pstat-source .ui-icon{width:13px;height:13px}
+.iconbtn,.fin-icon-btn,.rmod-del,.pm-close{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);min-width:32px;min-height:32px}
+.iconbtn .ui-icon,.fin-icon-btn .ui-icon,.rmod-del .ui-icon,.pm-close .ui-icon{width:17px;height:17px}
+.iconbtn:hover,.fin-icon-btn:hover,.rmod-del:hover{color:var(--text)}
+.iconbtn:has([data-icon="trash"]):hover,.fin-icon-btn:has([data-icon="trash"]):hover,.rmod-del:hover{color:var(--red);background:rgba(255,81,104,.10)}
+.fb-fab{background:linear-gradient(135deg,#bd9bfb,#7f9df6);color:#fff;box-shadow:0 8px 22px rgba(95,80,165,.28);border:1px solid rgba(255,255,255,.24)}
+.fb-fab>.ui-icon{width:24px;height:24px}
+.lg-ic .ui-icon{width:17px;height:17px;color:var(--ui-icon-color)}
+.ap-btn{gap:12px;padding:12px;border-color:rgba(255,255,255,.17);background:rgba(255,255,255,.08)}
+.ap-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);transition:background .16s,transform .16s}
+.ap-btn .ap-icon .ui-icon{width:21px;height:21px;stroke-width:1.8}
+.ap-btn:hover .ap-icon{background:rgba(255,255,255,.20);transform:translateY(-1px)}
+.ap-btn>span:last-child{min-width:0;line-height:1.35}
+.empty>.big .ui-icon,.fin-empty>.big .ui-icon{width:38px;height:38px;color:var(--ui-icon-color);margin:0 auto 5px}
+.pstat-state .ui-icon{width:14px;height:14px;margin-right:3px}
+.pstat-ai-title .ui-icon{width:15px;height:15px}
+.fin-type .ui-icon{width:19px;height:19px}
+.hf-nav .ui-icon{width:30px;height:30px}
+.gl-bt .ui-icon{width:15px;height:15px}
+:root[data-theme="light"] .fb-fab{background:linear-gradient(135deg,#b39bec,#91a9e9);box-shadow:0 8px 20px rgba(114,126,180,.22)}
+@media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:33px;height:33px;border-radius:10px}.ap-btn .ap-icon .ui-icon{width:19px;height:19px}}
+@media(prefers-reduced-motion:reduce){.ap-icon{transition:none}.ap-btn:hover .ap-icon{transform:none}}
