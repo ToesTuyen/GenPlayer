@@ -953,7 +953,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <button class="btn sm" onclick="savePlayersFromEditor()">💾 Lưu</button>
     <button class="btn alt sm" onclick="addPlayerRow()">➕ Thêm</button>
   </div>
-  <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
+  <div class="hint"><span data-ui-icon="bolt"></span> = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
   <div class="editor-wrap">
     <table class="edit"><thead><tr>
       <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Nhãn quan</th><th>Ổn định</th><th>Thủ môn</th><th></th><th></th>
@@ -1845,7 +1845,7 @@ const GOLD_BALL='<svg viewBox="0 0 32 32" width="15" height="15" style="vertical
 function renderHomeScorers(){
   const box=$("homeScorers"); if(!box)return;
   const top=scorerBoard().slice(0,5);
-  if(!top.length){box.innerHTML=`<div class="hs-empty">⚽ Chưa có bàn thắng nào. Nhập ở <a onclick="show('screen-history')">Lịch sử thi đấu</a> → trận có tỉ số → ⚽ Bàn thắng.</div>`;return;}
+  if(!top.length){box.innerHTML=`<div class="hs-empty">${GPIcons.render("football")} Chưa có bàn thắng nào. Nhập ở <a onclick="show('screen-history')">Lịch sử thi đấu</a> → trận có tỉ số → ⚽ Bàn thắng.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+top.map((x,i)=>`
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(x.name)}')">
         <span class="rank-no${i<3?' top':''}" title="Hạng ${i+1}" aria-label="Hạng ${i+1}">${i<3?GPIcons.render(["medal-gold","medal-silver","medal-bronze"][i]):i+1}</span>
@@ -2041,7 +2041,7 @@ function renderUpdateLog(){
       ${logPanel(e)}</div>`).join("")+`</div>`;
 }
 // BANNER LỚN = SLIDESHOW Cầu thủ nổi bật (lần lượt qua các cầu thủ, xếp theo điểm cao→thấp)
-const HERO_FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
+const HERO_FX='<div class="hf-fx"><span class="hf-ball">'+GPIcons.render("football")+'</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
 const HERO_BG=/*__HEROBG__*/;   // tự quét assets/bg-*.jpg lúc build (thả thêm file là tự dùng)
 let heroSlides=[], heroIdx=0, heroTimer=null;
 // Tổng hợp một tháng gần nhất để banner nhận định theo giai đoạn, không phản ứng theo một trận lẻ.
@@ -2254,21 +2254,22 @@ function card(m,o,ctxt,label,ev,sel){
   const oWeak=Array.from({length:SL.length-1},(_,i)=>i+1).map(c=>o.starters[c]).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
   const oWeakSlot=SL[o.starters.indexOf(oWeak)];
   const b=[];
-  b.push(`🎯 <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
+  b.push(`${GPIcons.render("target")} <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
   const gkTxt=gkEdge>=0.5?`khung gỗ là một lợi thế — ${sel[idx(0)].n} (${m.gkFit.toFixed(0)}/10) nhỉnh hơn người gác đền đối phương`:gkEdge<=-0.5?`${sel[idx(0)].n} bắt gôn chưa phải sở trường (${m.gkFit.toFixed(0)}/10), cần hàng thủ bọc lót kín phía trước`:`${sel[idx(0)].n} trấn giữ khung thành ở mức ổn định`;
-  b.push(`🛡️ <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
-  b.push(paceEdge>0.3?`⚡ <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`🧠 <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`⚙️ <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
-  b.push(tb!==undefined?`🔁 <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`🔁 <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
+  b.push(`${GPIcons.render("shield")} <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
+  b.push(paceEdge>0.3?`${GPIcons.render("bolt")} <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`${GPIcons.render("activity")} <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`${GPIcons.render("settings")} <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
+  b.push(tb!==undefined?`${GPIcons.render("refresh")} <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`${GPIcons.render("refresh")} <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
   const edges=[{v:gkEdge,t:`dựa vào sự chắc chắn nơi khung thành, chơi chắc lớp và kiên nhẫn chờ đối thủ phạm sai lầm`},{v:paceEdge,t:`tăng nhịp chuyển trạng thái, dùng tốc độ xộc thẳng hai biên để kết liễu`},{v:m.atk-o.atk,t:`chủ động dồn ép tấn công, gây sức ép liên tục buộc đối thủ mắc lỗi`},{v:m.defPN-o.defPN,t:`phòng ngự kỷ luật rồi tổ chức phản công sắc từ tuyến dưới`}];
   const plan=`${edges.sort((x,y)=>y.v-x.v)[0].t}; nhắm vào ${oWeakSlot} bên phía đối thủ và đưa bóng cho ${sel[topAtk].n} ở thời điểm quyết định`;
-  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
+  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">${GPIcons.render("trophy")} <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
 // 🆚 Bảng SO KÈ theo vị trí (từng ô Đỏ vs Vàng theo ovAt) + cộng theo tuyến + tóm gọn 2 chiều
 function sokeTable(A,B,sel){
   if(!sel||!A||!B||!A.starters||!B.starters)return "";
   const six=lineupSlots(A).length===6;
   const SL=lineupSlots(A);
-  const LBL=six?["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","⚡ Tiền vệ cánh","👟 Tiền đạo"]:["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"];
+  const roleLabel=(icon,text)=>GPIcons.render(icon)+" "+text;
+  const LBL=six?[roleLabel("glove","Thủ môn"),roleLabel("shield","Trung vệ"),roleLabel("shield","Hậu vệ"),roleLabel("shield","Hậu vệ"),roleLabel("bolt","Tiền vệ cánh"),roleLabel("boot","Tiền đạo")]:[roleLabel("glove","Thủ môn"),roleLabel("shield","Trung vệ"),roleLabel("shield","Hậu vệ"),roleLabel("shield","Hậu vệ"),roleLabel("target","Tiền vệ giữa"),roleLabel("bolt","Tiền vệ cánh"),roleLabel("boot","Tiền đạo")];
   const raw=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
   const so=(a,b)=>Math.abs(a-b)<0.4?`<span style="opacity:.55">cân</span>`:(a>b?`<b>🔴 +${(a-b).toFixed(1)}</b>`:`<b>🟡 +${(b-a).toFixed(1)}</b>`);
   let rows="",upA=0,upB=0,dnA=0,dnB=0;
@@ -2294,7 +2295,7 @@ function sokeTable(A,B,sel){
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
   add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,"overall đội chính",0.05,2);add(bcA-bcB,"ghế dự bị",0.4,1);
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
-  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
+  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">${GPIcons.render("clipboard")} <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
 function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
@@ -2321,7 +2322,7 @@ function render(res,sel,target,review,showHeat,matchId){
     return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
   }).join("");
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
-  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
+  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
@@ -2829,7 +2830,7 @@ function goalReviewMatches(){
 }
 function updateGoalReqBadge(){
   const n=goalReviewMatches().length, btn=$("goalReqBtn");
-  if(btn)btn.innerHTML=`⚽ Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:${isAdmin&&n>0?"":"none"}">${n}</span>`;
+  if(btn)btn.innerHTML=`${GPIcons.render("goal-record")} Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:${isAdmin&&n>0?"":"none"}">${n}</span>`;
   const badge=$("goalReqBadge"); if(!badge)return; badge.textContent=n; badge.style.display=(isAdmin&&n>0)?"":"none";
 }
 let goalReqTab="pending";
@@ -2853,7 +2854,7 @@ function goalReqCard(q){
         <button class="btn alt sm req-rej" onclick="rejectGoalReq('${q.id}')">✕ Từ chối</button></div>`;
   return `<div class="ulog-card">
       <div class="ulog-top"><span class="avatar" style="background:${avColor(q.by)}">${initials(q.by)}</span>
-        <div class="ulog-id"><div class="ulog-name">⚽ Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">👤 ${esc(q.by||"?")} · ${q.ts||""}${sc?` · Tỉ số ${sc.a}:${sc.b}`:""}</div>${acted}</div>${st}</div>
+        <div class="ulog-id"><div class="ulog-name">${GPIcons.render("football")} Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">${GPIcons.render("user")} ${esc(q.by||"?")} · ${q.ts||""}${sc?` · Tỉ số ${sc.a}:${sc.b}`:""}</div>${acted}</div>${st}</div>
       <div class="gl-chips">${items}</div>${warn}${acts}</div>`;
 }
 function renderGoalReq(){
@@ -2862,10 +2863,10 @@ function renderGoalReq(){
   if(!list.length){box.innerHTML=`<div class="empty"><span class="big">✅</span>Không còn trận nào cần rà soát.<br>Bàn thắng của các trận đã được admin chốt.</div>`;return;}
   const card=r=>{
     const goals=r.goals||{}, items=Object.entries(goals).filter(([,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1])
-      .map(([n,g])=>`<span class="gl-chip">⚽ ${esc(n)} <b>${g}</b></span>`).join("")||`<span class="gl-chip muted">Chưa có bàn thắng nào được nhập</span>`;
+      .map(([n,g])=>`<span class="gl-chip">${GPIcons.render("goal")} ${esc(n)} <b>${g}</b></span>`).join("")||`<span class="gl-chip muted">Chưa có bàn thắng nào được nhập</span>`;
     const t=goalsByTeam(r,goals), sc=r.score, warn=sc&&(t.A!==+sc.a||t.B!==+sc.b)
       ? `<div class="gl-warn">⚠️ Đang ghi ${t.A}:${t.B}, khác tỉ số ${sc.a}:${sc.b}.</div>`:"";
-    return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">⚽ ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
+    return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">${GPIcons.render("football")} ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
   };
   box.innerHTML=`<div class="gl-hint">Các trận dưới vẫn đang mở cho người dùng nhập. Kiểm tra lại rồi bấm <b>Phê duyệt &amp; chốt</b> trong từng trận.</div><div class="ulog-grid">${list.map(card).join("")}</div>`;
 }
@@ -3027,7 +3028,7 @@ function playerGoalTimeline(name){
 function setPmGoalYear(y){pmGoalYear=String(y);const el=$("pmGoalSection"),p=pmFind();if(el&&p)el.innerHTML=goalsChartPanel(p.n);}
 function goalsChartPanel(name){
   const tl=playerGoalTimeline(name);
-  if(!tl.length)return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng</div><div class="ps-empty">⚽ Chưa có dữ liệu bàn thắng qua các trận.</div>`;
+  if(!tl.length)return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng</div><div class="ps-empty">${GPIcons.render("football")} Chưa có dữ liệu bàn thắng qua các trận.</div>`;
   const byYear={};
   tl.forEach(d=>{const y=String(new Date(d.t).getFullYear());(byYear[y]||(byYear[y]=[])).push(d);});
   const years=Object.keys(byYear).sort();                       // năm tăng dần
@@ -3245,7 +3246,7 @@ function renderHist(){
     <div class="rmod-h">${p.n}</div>
     <div class="pm-sec">${GPIcons.render("users")} Điểm theo từng người · ${keys.length}</div>
     ${rows}
-    <div class="rmod-note">Bấm 🗑️ để xoá lượt sửa của một người — điểm tổng tự tính lại & áp dụng ngay.</div>`;
+    <div class="rmod-note">Bấm ${GPIcons.render("trash")} để xoá lượt sửa của một người — điểm tổng tự tính lại & áp dụng ngay.</div>`;
 }
 function peTier(v){return v===0?"Không có":v<=2?"Yếu":v<=4?"Tạm":v<=6?"Ổn":v<=8?"Tốt":"Xuất sắc";}
 function peOpts(cur){return Array.from({length:11},(_,v)=>`<option value="${v}"${v===cur?" selected":""}>${v} · ${peTier(v)}</option>`).join("");}

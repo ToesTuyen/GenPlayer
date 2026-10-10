@@ -57,7 +57,8 @@ herobg=json.dumps(["assets/"+f for f in bgfiles],ensure_ascii=False)
 
 # 4) nhet vao src/web_template.html
 tpl=open(SRC+"web_template.html",encoding="utf-8").read()
-icons=open(SRC+"ui_icons.js",encoding="utf-8").read()
+icons=(open(SRC+"ui_icons_solid.js",encoding="utf-8").read()+"\n"+
+       open(SRC+"ui_icons.js",encoding="utf-8").read())
 icon_dom=open(SRC+"ui_icons_dom.js",encoding="utf-8").read()
 icon_css=open(SRC+"ui_icons.css",encoding="utf-8").read()
 html=(tpl.replace("/*__OPTIMIZER__*/",opt)

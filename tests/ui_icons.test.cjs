@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const context = {window: {}};
+vm.runInNewContext(fs.readFileSync(path.join(root, 'src/ui_icons_solid.js'), 'utf8'), context);
 vm.runInNewContext(fs.readFileSync(path.join(root, 'src/ui_icons.js'), 'utf8'), context);
 const icons = context.window.GPIcons;
 
@@ -16,7 +17,7 @@ for (const [name, asset] of Object.entries(icons.images)) {
 }
 // These small icons describe statistics or people/actions, not navigation pages.
 for (const name of ['users', 'award', 'history', 'clipboard', 'chart', 'activity',
-  'goal', 'scorer', 'scales', 'glove', 'boot', 'coins', 'wallet', 'shuffle']) {
+  'scales', 'glove', 'boot', 'coins', 'wallet', 'shuffle']) {
   assert.ok(icons.render(name).startsWith('<svg'), name + ' must not reuse a menu image');
 }
 const medals = ['medal-gold', 'medal-silver', 'medal-bronze'].map(name => icons.render(name));
@@ -24,7 +25,18 @@ assert.equal(new Set(medals).size, 3, 'medal ranks remain distinct');
 assert.ok(icons.render('missing-icon').includes('data-icon="info"'));
 assert.ok(icons.render('goal', 'test" onclick="bad').includes('&quot;'));
 assert.notEqual(icons.render('income'), icons.render('expense'), 'income and expense arrows are distinct');
-assert.ok(icons.render('boot').includes('fill-opacity=".16"'), 'small icons have a duotone solid layer');
+assert.ok(icons.render('boot').includes('ui-icon-solid'), 'small icons are filled mini-illustrations');
+for (const name of icons.names) {
+  const markup=icons.render(name);
+  if(!icons.images[name]) {
+    assert.ok(markup.includes('ui-icon-solid')&&!markup.includes('undefined'), 'filled mini-icon: '+name);
+    assert.ok(!markup.includes('stroke="currentColor"')&&!markup.includes('fill-opacity=".16"'), 'not an old outline with a colour wash: '+name);
+    assert.ok(new Set([...markup.matchAll(/(?:fill|stroke)="(#[a-f\d]{6})"/gi)].map(x=>x[1])).size>=2, 'multiple explicit colours: '+name);
+  }
+}
+assert.equal(icons.images.goal, icons.images.football, 'goal counters use a standalone football, not a goal-net/menu illustration');
+assert.equal(icons.images.scorer, icons.images.football);
+assert.equal(icons.images.trophy, icons.images.ranking, 'achievement cups match the illustrated ranking cup');
 
 const template = fs.readFileSync(path.join(root, 'src/web_template.html'), 'utf8');
 const menuIcons = Array.from(template.matchAll(/class="ap-icon" data-ui-icon="([^"]+)"/g), x => x[1]);

@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "date": "2026-10-10",
   "tool": "OpenAI built-in imagegen",
   "mode": "generate",
@@ -12,7 +12,9 @@
     "player-form": "Neutral assessment from recent match outcomes, not guaranteed improvement",
     "finance": "Shared club wallet",
     "backup": "Archive and restore football lineups",
-    "goal": "Football beside goal totals",
+    "goal": "Standalone 3D football beside goal totals, not a goal-net illustration",
+    "football": "Standalone ball for football labels, scorers and small goal counters",
+    "trophy": "Reuse the golden ranking cup for achievement/winning labels",
     "medals": "Gold, silver and bronze identify distinct ranks",
     "match-score": "Editing a football match score; not recording individual goals",
     "goal-record": "Scorers, individual goal entry and goal review",
@@ -20,6 +22,12 @@
     "match-analysis": "Neutral comparison and analysis of both football teams",
     "finance-ledger": "Club ledger, balance and recording income or expenses",
     "activity-log": "Edit history and administrative action logs, not match schedules"
+  },
+  "small_controls": {
+    "source": "src/ui_icons_solid.js",
+    "style": "Filled multicolour miniature illustrations with solid bodies and contrasting details",
+    "generated_with_ai": false,
+    "note": "Code-native controls remain crisp at 14–24px; the cup and standalone football use bitmap artwork."
   },
   "web_export": {
     "format": "webp",
@@ -101,6 +109,10 @@
       "path": "activity-log-3d-v1.png",
       "prompt_set": "v3",
       "prompt_subject": "Subject: A rounded midnight-blue and violet clipboard with three short colored horizontal entry bars and a small round blue clock overlay. Convey a history of edits or administrative actions. No football, no calendar grid, no archive box."
+    },
+    {
+      "path": "football-3d-v1.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: tiny football/goal-count UI icon for GenPlayer.\nPrimary request: one premium 3D white and midnight-blue soccer ball, no other objects.\nStyle/medium: softly glossy rounded clay/enamel with visible navy pentagon panels and white hexagons, matching colorful golden trophy and violet/red/yellow sports UI icons.\nComposition/framing: single perfectly round ball centered in a square canvas, fills 86% of the canvas, front three-quarter lighting, clear simple silhouette readable at 16–24px.\nLighting/mood: soft upper-left studio highlight, gentle shading within the ball, no cast floor shadow.\nConstraints: genuine transparent alpha background; no goal net, no trophy, no arrows, no text, no logo, no watermark, no background rectangle, no outline-only drawing."
     }
   ]
 }

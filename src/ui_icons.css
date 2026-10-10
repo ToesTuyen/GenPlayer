@@ -4,6 +4,8 @@
 :root{--ui-icon-violet:#c2a7f4;--ui-icon-blue:#8fb5f1;--ui-icon-green:#78cfa7;--ui-icon-red:#ed92a0;--ui-icon-gold:#e3bd73;--ui-icon-orange:#f2ab77}
 :root[data-theme="light"]{--ui-icon-violet:#9576b9;--ui-icon-blue:#7097c5;--ui-icon-green:#65a589;--ui-icon-red:#c77b8b;--ui-icon-gold:#b29355;--ui-icon-orange:#c78c61}
 .ui-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.2em;color:inherit;pointer-events:none}
+.ui-icon-solid{filter:drop-shadow(0 1px 1px rgba(17,29,64,.12))}
+.hf-ball .ui-icon-image{width:36px;height:36px;vertical-align:0}
 .ui-icon:is([data-icon="user"],[data-icon="users"],[data-icon="edit"],[data-icon="clipboard"],[data-icon="message"]){color:var(--ui-icon-violet)}
 .ui-icon:is([data-icon="calendar"],[data-icon="history"],[data-icon="clock"],[data-icon="shield"],[data-icon="snowflake"]){color:var(--ui-icon-blue)}
 .ui-icon:is([data-icon="check-circle"],[data-icon="income"]){color:var(--ui-icon-green)}
@@ -45,6 +47,9 @@
 .pm-arch-name .ui-icon{width:18px;height:18px;margin-right:3px;vertical-align:-3px}
 .pop-head [data-ui-icon="scorer"] .ui-icon{color:var(--gold)}
 .mc-scorers>.ui-icon{width:14px;height:14px;color:var(--ui-icon-color)}
+.mc-scorers>.ui-icon-image{width:17px;height:17px;vertical-align:-4px}
+.ps-row .ui-icon-image,.gc-tabs .ui-icon-image,.gl-chip .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
+.stat td:first-child .ui-icon-solid,.pl-win .ui-icon-image{width:20px;height:20px;vertical-align:-4px}
 .pm-h-upd .ui-icon,.pm-h-raters .ui-icon,.pstat-source .ui-icon{width:13px;height:13px}
 .pm-h-upd .ui-icon-image,.pm-h-raters .ui-icon-image,.pstat-source .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
 .iconbtn,.fin-icon-btn,.rmod-del,.pm-close{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);min-width:32px;min-height:32px}

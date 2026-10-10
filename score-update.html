@@ -865,6 +865,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root{--ui-icon-violet:#c2a7f4;--ui-icon-blue:#8fb5f1;--ui-icon-green:#78cfa7;--ui-icon-red:#ed92a0;--ui-icon-gold:#e3bd73;--ui-icon-orange:#f2ab77}
 :root[data-theme="light"]{--ui-icon-violet:#9576b9;--ui-icon-blue:#7097c5;--ui-icon-green:#65a589;--ui-icon-red:#c77b8b;--ui-icon-gold:#b29355;--ui-icon-orange:#c78c61}
 .ui-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.2em;color:inherit;pointer-events:none}
+.ui-icon-solid{filter:drop-shadow(0 1px 1px rgba(17,29,64,.12))}
+.hf-ball .ui-icon-image{width:36px;height:36px;vertical-align:0}
 .ui-icon:is([data-icon="user"],[data-icon="users"],[data-icon="edit"],[data-icon="clipboard"],[data-icon="message"]){color:var(--ui-icon-violet)}
 .ui-icon:is([data-icon="calendar"],[data-icon="history"],[data-icon="clock"],[data-icon="shield"],[data-icon="snowflake"]){color:var(--ui-icon-blue)}
 .ui-icon:is([data-icon="check-circle"],[data-icon="income"]){color:var(--ui-icon-green)}
@@ -906,6 +908,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .pm-arch-name .ui-icon{width:18px;height:18px;margin-right:3px;vertical-align:-3px}
 .pop-head [data-ui-icon="scorer"] .ui-icon{color:var(--gold)}
 .mc-scorers>.ui-icon{width:14px;height:14px;color:var(--ui-icon-color)}
+.mc-scorers>.ui-icon-image{width:17px;height:17px;vertical-align:-4px}
+.ps-row .ui-icon-image,.gc-tabs .ui-icon-image,.gl-chip .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
+.stat td:first-child .ui-icon-solid,.pl-win .ui-icon-image{width:20px;height:20px;vertical-align:-4px}
 .pm-h-upd .ui-icon,.pm-h-raters .ui-icon,.pstat-source .ui-icon{width:13px;height:13px}
 .pm-h-upd .ui-icon-image,.pm-h-raters .ui-icon-image,.pstat-source .ui-icon-image{width:18px;height:18px;vertical-align:-4px}
 .iconbtn,.fin-icon-btn,.rmod-del,.pm-close{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);min-width:32px;min-height:32px}
@@ -1032,7 +1037,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <button class="btn sm" onclick="savePlayersFromEditor()">💾 Lưu</button>
     <button class="btn alt sm" onclick="addPlayerRow()">➕ Thêm</button>
   </div>
-  <div class="hint">⚡ = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
+  <div class="hint"><span data-ui-icon="bolt"></span> = nhập nhanh (trình độ/vị trí/nhanh-chậm) tự ra điểm · nhớ bấm <b>Lưu</b> sau khi sửa</div>
   <div class="editor-wrap">
     <table class="edit"><thead><tr>
       <th style="text-align:left;padding-left:10px">Tên</th><th>Kỹ thuật</th><th>Chuyền</th><th>Dứt điểm</th><th>Phòng ngự</th><th>Tốc độ</th><th>Thể lực</th><th>Năng nổ</th><th>Nhãn quan</th><th>Ổn định</th><th>Thủ môn</th><th></th><th></th>
@@ -1338,87 +1343,105 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- Firebase (chỉ dùng khi đồng bộ; lỗi mạng/không có config thì tự về chế độ cục bộ) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>/* GenPlayer UI icons: local color illustrations + SVG controls, no third-party library. */
+<script>/* Filled miniature illustrations for controls and small statistics. */
 (function (global) {
   'use strict';
-  const shapes = Object.freeze({
-    football: '<circle cx="12" cy="12" r="9"/><path d="m12 7 4.8 3.5-1.8 5.6H9l-1.8-5.6L12 7Zm0-4v4m-8.5 2.3 3.7 1.2m9.6 0 3.7-1.2M6.7 19.3 9 16.1m6 0 2.3 3.2"/>',
-    users: '<path d="M3 21v-2a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v2m2-7a5 5 0 0 1 3 4.6V21M16 3.2a4 4 0 0 1 0 7.6"/><circle cx="9.5" cy="7" r="4"/>',
-    user: '<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/>',
-    trophy: '<path d="M8 3h8v5a4 4 0 0 1-8 0V3Zm0 2H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 1v5m-4 4h8m-8 0v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
-    chart: '<path d="M4 3v17a1 1 0 0 0 1 1h16M8 16v-4m5 4V7m5 9V4"/>',
-    wallet: '<path d="M20 8V6a2 2 0 0 0-2-2H6a3 3 0 0 0 0 6h14v10H6a3 3 0 0 1-3-3V7m17 6h-4a2 2 0 0 0 0 4h4"/><circle cx="16" cy="15" r=".5" fill="currentColor" stroke="none"/>',
-    activity: '<path d="M2 12h4l3-8 6 16 3-8h4"/>',
-    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-14 4h3m4 0h3m-10 3h3"/>',
-    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    sparkles: '<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3ZM4 3v4M2 5h4m14 12v4m-2-2h4"/>',
-    shuffle: '<path d="M3 6h2c5 0 9 12 14 12h2m-4-4 4 4-4 4M3 18h2c2 0 4-2.4 6-5.2M14 8.8c1.7-1.8 3.3-2.8 5-2.8h2m-4-4 4 4-4 4"/>',
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    'arrow-left': '<path d="m11 5-7 7 7 7M4 12h16"/>',
-    'arrow-right': '<path d="m13 5 7 7-7 7M4 12h16"/>',
-    income: '<rect x="3" y="13" width="18" height="8" rx="2"/><path d="M12 3v13m-4-4 4 4 4-4"/>',
-    expense: '<rect x="3" y="13" width="18" height="8" rx="2"/><path d="M12 16V3m-4 4 4-4 4 4"/>',
-    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
-    'chevron-left': '<path d="m15 6-6 6 6 6"/>',
-    'chevron-right': '<path d="m9 6 6 6-6 6"/>',
-    close: '<path d="m6 6 12 12M6 18 18 6"/>',
-    check: '<path d="m5 12 4 4L19 6"/>',
-    'check-circle': '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
-    edit: '<path d="m14.5 5.5 4 4M4 20l4.5-1L20 7.5a2.8 2.8 0 0 0-4-4L4.5 15 4 20Z"/>',
-    trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-14M10 10v7m4-7v7"/>',
-    save: '<path d="M5 3h12l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 0v6h9V3M7 21v-7h10v7"/>',
-    history: '<path d="M3 10a9 9 0 1 1 .9 6M3 4v6h6m3-3v5l3 2"/>',
-    login: '<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5M3 12h12m-4-4 4 4-4 4"/>',
-    logout: '<path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5m-1-9h12m-4-4 4 4-4 4"/>',
-    lock: '<rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/>',
-    unlock: '<rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14v3"/>',
-    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
-    'eye-off': '<path d="m3 3 18 18M10.6 5.1C11.1 5 11.5 5 12 5c6.5 0 10 7 10 7a19 19 0 0 1-3 3.8M6.1 6.2A19 19 0 0 0 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
-    mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>',
-    settings: '<path d="m10 3-.6 2.6-2.3 1.3-2.5-.8-2 3.5L4.5 12l-1.9 2.4 2 3.5 2.5-.8 2.3 1.3L10 21h4l.6-2.6 2.3-1.3 2.5.8 2-3.5-1.9-2.4 1.9-2.4-2-3.5-2.5.8-2.3-1.3L14 3H10Z"/><circle cx="12" cy="12" r="3"/>',
-    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
-    filter: '<path d="M3 4h18l-7 8v7l-4 2v-9L3 4Z"/>',
-    upload: '<path d="M12 16V3m-5 5 5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
-    download: '<path d="M12 3v13m-5-5 5 5 5-5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
-    refresh: '<path d="M20 8a8.5 8.5 0 0 0-14.7-2L3 9m0-5v5h5m-4 7a8.5 8.5 0 0 0 14.7 2l2.3-3m0 5v-5h-5"/>',
-    message: '<path d="M21 14a3 3 0 0 1-3 3H8l-5 4V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8ZM7 8h10M7 12h6"/>',
-    flag: '<path d="M4 21V3m0 0c6-3 10 3 16 0v11c-6 3-10-3-16 0"/>',
-    shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/>',
-    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
-    bolt: '<path d="m13 2-9 12h7l-1 8 10-12h-7l1-8Z"/>',
-    heart: '<path d="M20.6 4.7a5.2 5.2 0 0 0-7.4 0L12 6l-1.2-1.3a5.2 5.2 0 0 0-7.4 7.4L12 21l8.6-8.9a5.2 5.2 0 0 0 0-7.4Z"/>',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".7" fill="currentColor" stroke="none"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5"/><circle cx="12" cy="17" r=".7" fill="currentColor" stroke="none"/>',
-    alert: '<path d="m10.3 4-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4"/><circle cx="12" cy="17" r=".7" fill="currentColor" stroke="none"/>',
-    moon: '<path d="M20.5 13.2A9 9 0 0 1 10.8 3.5a9 9 0 1 0 9.7 9.7Z"/>',
-    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    star: '<path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2L3.9 9.6l6.3-.9L12 3Z"/>',
-    award: '<circle cx="12" cy="8" r="5"/><path d="m8 11-2 10 6-3 6 3-2-10"/>',
-    clipboard: '<rect x="8" y="3" width="8" height="4" rx="1.5"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M8 12h8m-8 4h5"/>',
-    coins: '<ellipse cx="9" cy="6" rx="6" ry="3"/><path d="M3 6v4c0 1.7 2.7 3 6 3s6-1.3 6-3V6M3 10v4c0 1.7 2.7 3 6 3m6-8c3.3 0 6 1.3 6 3s-2.7 3-6 3c-1.5 0-2.9-.3-4-.7M9 14v4c0 1.7 2.7 3 6 3s6-1.3 6-3v-6"/>',
-    'trend-up': '<path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/>',
-    'trend-down': '<path d="m3 7 6 6 4-4 8 10m-6 0h6v-6"/>',
-    flame: '<path d="M12 3c1 5-3 6-3 10a3 3 0 0 0 6 0c0-1-.4-2-1-3 3 1 5 4 5 7a7 7 0 0 1-14 0c0-5 5-8 7-14Z"/>',
-    snowflake: '<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7M9 4l3 3 3-3m-6 16 3-3 3 3M3.5 10.5l4.1-1.1-1.1-4.1m11 13.4-1.1-4.1 4.1-1.1M6.5 18.7l1.1-4.1-4.1-1.1m17-3-4.1-1.1 1.1-4.1"/>',
-    timer: '<circle cx="12" cy="14" r="7"/><path d="M9 3h6m-3 0v4m0 4v3l2 2m4-9 2-2"/>',
-    tool: '<path d="M14.5 6.5 18 3a6 6 0 0 0-7.5 7.5L3.8 17.2a2.1 2.1 0 0 0 3 3l6.7-6.7A6 6 0 0 0 21 6l-3.5 3.5-3-3Z"/>',
-    flask: '<path d="M9 3h6m-5 0v7L4.5 19a1.3 1.3 0 0 0 1.1 2h12.8a1.3 1.3 0 0 0 1.1-2L14 10V3M7 15h10"/>',
-    home: '<path d="m3 10 9-7 9 7M5 8.5V21h5v-7h4v7h5V8.5"/>',
-    more: '<circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/>',
-    minus: '<path d="M5 12h14"/>',
-    map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
-    'map-pin': '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-    lineup: '<rect x="3" y="2" width="18" height="20" rx="3"/><path d="M3 12h18M8 2v4h8V2M8 22v-4h8v4"/><circle cx="12" cy="12" r="3"/>',
-    backup: '<path d="M3 8V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm5 7a4 4 0 1 0 1-3m-2-2v4h4"/>',
-    scales: '<path d="M12 3v18M5 21h14M4 7h16M5 7l-3 7h6L5 7Zm14 0-3 7h6l-3-7Z"/><circle cx="12" cy="5" r="2"/>',
-    glove: '<path d="M7 21v-3l-3-5a2 2 0 0 1 3-2l1 1V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-6a1.5 1.5 0 0 1 3 0v6-4a1.5 1.5 0 0 1 3 0v8c0 3-2 4-2 6v1H7Z"/>',
-    boot: '<path d="M4 4h7v6l4 3 5 2c1.5.5 2 1.4 2 3v2H3v-7l1-9Zm1 16v2m5-2v2m5-2v2m5-2v2M11 10l-3 2m6 0-3 2m6 0-3 2"/>',
-    crown: '<path d="m3 5 5 4 4-6 4 6 5-4-2 14H5L3 5Zm2 10h14"/>',
-    handshake: '<path d="m2 7 4-3 5 2m11 1-4-3-6 2-4 4 2 2 4-3 6 6-5 5-9-8M2 7l4 5m16-5-2 8m-8 3 2 2m-5-5 2 2"/>',
-    'medal-gold': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#b9a4ff" stroke="#8770d2"/><circle cx="12" cy="15" r="6" fill="#f6c650" stroke="#bf8c25"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#fff0a6" stroke="none"/>',
-    'medal-silver': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#9ebbf0" stroke="#7696c7"/><circle cx="12" cy="15" r="6" fill="#d9e2ef" stroke="#97a8bd"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#f8fbff" stroke="none"/>',
-    'medal-bronze': '<path d="m5 2 4 8h6l4-8h-5l-2 5-2-5H5Z" fill="#b9a4ff" stroke="#8770d2"/><circle cx="12" cy="15" r="6" fill="#d99b65" stroke="#a36a43"/><path d="m12 11 1.2 2.5 2.8.4-2 2 .5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-2 2.8-.4L12 11Z" fill="#ffdab9" stroke="none"/>'
+  const p = Object.freeze({violet:'#aa8cda',purple:'#7d6cb6',blue:'#709fd8',navy:'#405479',sky:'#c3dbf5',paper:'#f8faff',mint:'#78c8ac',green:'#4a9c80',pink:'#e69aa6',red:'#c97587',gold:'#edbe62',ochre:'#ba8b3f',teal:'#76babc',slate:'#93a6bd'});
+  const fill = (d,color) => '<path d="'+d+'" fill="'+color+'"/>';
+  const line = (d,color=p.paper,width=1.7) => '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+width+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  const dot = (x,y,r,color) => '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+color+'"/>';
+  const rect = (x,y,w,h,color,r=2) => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+color+'"/>';
+  const clock = dot(12,12,10,p.blue)+dot(12,12,7.7,p.paper)+line('M12 6v6l4 3',p.navy,2)+dot(12,12,1.2,p.gold);
+  const eye = fill('M1 12C7 1 17 1 23 12 17 23 7 23 1 12Z',p.sky)+dot(12,12,5,p.blue)+dot(12,12,2.5,p.navy)+dot(10.8,10.5,1.2,p.paper);
+  const heart = 'M12 22 2 12C-4 5 6-3 12 5 18-3 28 5 22 12Z';
+  const tray = color => rect(2,15,20,8,color)+line('M5 19h3l2 2h4l2-2h3',p.paper,1.4);
+  const arrowIn = 'M9 1h6v8h5l-8 9-8-9h5Z', arrowOut = 'm12 1 8 9h-5v8H9v-8H4Z';
+  const ribbon = color => fill('m5 1 4 9h6l4-9h-5l-2 5-2-5Z',color);
+  const medal = (ribbonColor,edge,face) => ribbon(ribbonColor)+dot(12,16,7,edge)+dot(12,15,6,face)+fill('m12 11 1.3 2.5 2.7.5-2 2 .5 3-2.5-1.4-2.5 1.4.5-3-2-2 2.7-.5Z',p.paper);
+  global.GPFilledIcons = Object.freeze({
+    football: dot(12,12,10,p.paper)+fill('m12 6 5 4-2 6H9l-2-6Zm-8-1 4-2 1 4-4 3Zm16 0-4-2-1 4 4 3ZM5 18l4-2 2 5-4-1Zm14 0-4-2-2 5 4-1Z',p.navy),
+    trophy: fill('M7 4H2v5c0 4 4 6 7 5V6Zm10 0h5v5c0 4-4 6-7 5V6Z',p.ochre)+fill('M7 2h10v8a5 5 0 0 1-10 0Z',p.gold)+rect(11,14,2,5,p.ochre,0)+rect(6,19,12,4,p.purple,1)+line('M10 5v5'),
+    users: dot(6,8,3,p.gold)+dot(18,8,3,p.mint)+fill('M1 21v-4c0-5 10-5 10 0v4Zm12 0v-4c0-5 10-5 10 0v4Z',p.blue)+dot(12,6,4,p.sky)+fill('M5 22v-5c0-7 14-7 14 0v5Z',p.violet)+line('M9 17h6'),
+    user: dot(12,7,4,p.gold)+fill('M4 22v-4a8 8 0 0 1 16 0v4Z',p.violet)+rect(4,19,16,3,p.purple,0)+line('M9 17h6'),
+    chart: rect(3,12,5,9,p.blue)+rect(10,7,5,14,p.violet)+rect(17,3,5,18,p.mint)+line('M2 22h21',p.navy,2),
+    wallet: fill('M3 5c0-2 2-3 4-3h13v6H3Z',p.purple)+rect(2,6,20,16,p.violet,4)+fill('M15 11h7v7h-7a3.5 3.5 0 0 1 0-7Z',p.blue)+dot(17,14.5,1.2,p.gold)+line('M6 9h7',p.sky),
+    activity: rect(2,4,20,16,p.blue,4)+line('M4 12h4l2-5 4 10 2-5h4',p.paper,2.1),
+    calendar: rect(2,4,20,18,p.sky,3)+fill('M2 7a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v3H2Z',p.violet)+line('M7 2v5m10-5v5',p.purple,2.4)+rect(6,13,4,3,p.blue,1)+rect(14,13,4,3,p.pink,1)+line('M7 19h3m4 0h3',p.blue,1.4),
+    clock,
+    sparkles: fill('m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z',p.violet)+fill('m12 6 1.8 4.2L18 12l-4.2 1.8L12 18l-1.8-4.2L6 12l4.2-1.8Z',p.sky)+dot(3,3,1.5,p.gold)+dot(21,21,1.5,p.mint),
+    shuffle: line('M3 6h2c5 0 9 12 14 12h2',p.blue,3)+line('M3 18h2c2 0 4-2.4 6-5.2M14 8.8c1.7-1.8 3.3-2.8 5-2.8h2',p.violet,3)+fill('m17 2 6 4-6 4Zm0 12 6 4-6 4Z',p.violet),
+    plus: fill('M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z',p.mint)+line('M11 5v6H5',p.paper,1.4),
+    minus: rect(2,9,20,6,p.pink)+line('M5 11h14',p.paper,1.2),
+    'arrow-left': fill('m11 3-10 9 10 9v-6h12V9H11Z',p.blue)+line('M5 11l5-4m2 4h8',p.sky,1.4),
+    'arrow-right': fill('m13 3 10 9-10 9v-6H1V9h12Z',p.blue)+line('M4 11h10l3-3',p.sky,1.4),
+    income: tray(p.green)+fill(arrowIn,p.mint),
+    expense: tray(p.red)+fill(arrowOut,p.pink),
+    'chevron-down': fill('m2 7 3-3 7 7 7-7 3 3-10 11Z',p.blue)+line('M6 7l6 6 6-6',p.sky,1.2),
+    'chevron-left': fill('m17 2 3 3-7 7 7 7-3 3L7 12Z',p.blue)+line('M17 6l-6 6 6 6',p.sky,1.2),
+    'chevron-right': fill('m7 2-3 3 7 7-7 7 3 3 10-10Z',p.blue)+line('M7 6l6 6-6 6',p.sky,1.2),
+    close: fill('m5 2 7 7 7-7 3 3-7 7 7 7-3 3-7-7-7 7-3-3 7-7-7-7Z',p.pink)+line('M6 5l6 6 6-6',p.paper,1.2),
+    check: fill('m1 12 4-4 5 5L20 2l4 4-14 16Z',p.mint)+line('M5 11l5 5L20 5',p.paper,1.3),
+    'check-circle': dot(12,12,11,p.mint)+dot(12,12,8.6,p.green)+line('M6 12l4 4 8-9',p.paper,2.6),
+    edit: fill('m4 16 12-12 5 5L9 21H3Z',p.gold)+fill('m16 4 2-2c1-1 2-1 3 0l2 2c1 1 1 2 0 3l-2 2Z',p.pink)+fill('m4 16 5 5-6 1Z',p.sky)+fill('m3 20 2 2-3 1Z',p.navy)+line('M7 16l10-10',p.paper,1.1),
+    trash: fill('M5 7h14l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z',p.pink)+rect(2,4,20,4,p.red,1.5)+rect(8,1,8,3,p.red,1)+line('M9 11v8m6-8v8',p.paper,1.6),
+    save: fill('M3 2h15l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3Z',p.blue)+rect(7,2,10,7,p.navy,0)+rect(13,3,3,5,p.gold,0)+rect(6,13,12,9,p.paper,1)+line('M9 16h6m-6 3h6',p.sky,1.4),
+    history: dot(12,12,9,p.sky)+line('M3 10a9 9 0 1 1 1 6',p.blue,2.8)+fill('M1 3v9h9Z',p.violet)+line('M12 7v5l3 2',p.navy,2),
+    login: rect(12,2,10,20,p.blue)+fill('m16 4 6-2v20l-6-2Z',p.navy)+dot(19,12,1,p.gold)+fill('M1 9h7V5l8 7-8 7v-4H1Z',p.mint),
+    logout: rect(2,2,10,20,p.blue)+fill('m6 4-4-2v20l4-2Z',p.navy)+dot(9,12,1,p.gold)+fill('M8 9h7V5l8 7-8 7v-4H8Z',p.pink),
+    lock: line('M7 11V7a5 5 0 0 1 10 0v4',p.ochre,3)+rect(3,9,18,14,p.gold,3)+dot(12,15,2,p.navy)+rect(11,15,2,5,p.navy,0)+line('M6 12h4',p.paper,1.3),
+    unlock: line('M7 11V7a5 5 0 0 1 9-3',p.ochre,3)+rect(3,9,18,14,p.gold,3)+dot(12,15,2,p.navy)+rect(11,15,2,5,p.navy,0)+line('M6 12h4',p.paper,1.3),
+    eye,
+    'eye-off': eye+line('M3 3l18 18',p.pink,3),
+    mail: rect(2,4,20,16,p.blue,3)+fill('m3 5 9 8 9-8Z',p.sky)+line('M3 19l6-6m12 6-6-6',p.paper,1.4),
+    settings: fill('m10 2-.7 3-2.6 1.5-2.9-.9-2.2 3.9L3.8 12l-2.2 2.5 2.2 3.9 2.9-.9L9.3 19l.7 3h4l.7-3 2.6-1.5 2.9.9 2.2-3.9-2.2-2.5 2.2-2.5-2.2-3.9-2.9.9L14.7 5 14 2Z',p.violet)+dot(12,12,5,p.purple)+dot(12,12,2.8,p.paper),
+    search: line('M16 16l6 6',p.violet,4)+dot(10,10,8,p.blue)+dot(10,10,5.4,p.sky)+line('M7 7l-1 2',p.paper,1.8),
+    filter: fill('M1 3h22L15 13v7l-6 3V13Z',p.blue)+fill('M1 3h22l-3 4H4Z',p.sky)+fill('M9 13h6v7l-6 3Z',p.violet),
+    upload: tray(p.violet)+fill(arrowOut,p.blue),
+    download: tray(p.violet)+fill(arrowIn,p.blue),
+    refresh: line('M20 8a8.5 8.5 0 0 0-14-3M4 16a8.5 8.5 0 0 0 14 3',p.teal,3.4)+fill('M3 1v9h9ZM21 23v-9h-9Z',p.blue),
+    message: fill('M2 3h20v14H10l-7 6v-6H2Z',p.violet)+rect(2,3,20,3,p.purple,0)+line('M6 9h12m-12 4h8',p.paper,2),
+    flag: fill('M5 3c6-4 10 4 17 0v12c-7 4-11-4-17 0Z',p.pink)+line('M4 2v21',p.navy,2.4)+line('M8 6c4-1 6 2 10 1',p.paper,1.3),
+    shield: fill('m12 1 10 4v7c0 6-10 11-10 11S2 18 2 12V5Z',p.blue)+fill('m12 4 7 3v5c0 4-7 8-7 8Z',p.sky)+line('M6 7v5c0 2 1 3 2 4',p.paper,1.3),
+    target: dot(12,12,11,p.pink)+dot(12,12,7.5,p.paper)+dot(12,12,4.5,p.red)+dot(12,12,1.8,p.paper),
+    bolt: fill('M14 1 2 14h8l-1 9L23 9h-8l1-8Z',p.gold)+fill('M14 1 2 14h5l8-12Z',p.sky),
+    heart: fill(heart,p.pink)+line('M5 7c0-2 2-3 4-2',p.paper,1.8)+fill('M12 22v-5l8-8 2 3Z',p.red),
+    info: dot(12,12,11,p.blue)+dot(12,6.5,1.4,p.paper)+rect(10.5,10,3,8,p.paper,1.3),
+    help: dot(12,12,11,p.violet)+line('M8 8a4 4 0 1 1 8 0c0 3-4 3-4 6',p.paper,2.5)+dot(12,18,1.3,p.paper),
+    alert: fill('M10 2c1-2 3-2 4 0l9 18c1 2 0 3-2 3H3c-2 0-3-1-2-3Z',p.gold)+rect(10.5,7,3,8,p.navy,1.5)+dot(12,18,1.5,p.navy),
+    moon: fill('M19 2c-8 4-7 15 3 17A11 11 0 1 1 19 2Z',p.violet)+line('M5 7a9 9 0 0 0 4 13',p.sky,2)+dot(20,5,1.4,p.gold),
+    sun: line('M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2',p.ochre,2.5)+dot(12,12,7,p.gold)+dot(10,10,2.5,p.paper),
+    star: fill('m12 1 3.3 7 7.7 1.2-5.5 5.4 1.3 7.6-6.8-3.6-6.8 3.6 1.3-7.6L1 9.2 8.7 8Z',p.gold)+fill('m12 1 1 9-7.6 11.2 1.3-7.6L1 9.2 8.7 8Z',p.sky),
+    award: fill('m7 11-3 12 8-4 8 4-3-12Z',p.violet)+dot(12,8,7,p.gold)+dot(12,8,4.6,p.ochre)+dot(12,8,2.4,p.paper),
+    clipboard: rect(3,3,18,20,p.violet,3)+rect(6,6,12,15,p.paper,1)+rect(8,1,8,6,p.blue)+line('M9 11h6m-6 4h6m-6 4h3',p.sky,1.8),
+    coins: rect(1,7,13,12,p.ochre,3)+'<ellipse cx="7.5" cy="7" rx="6.5" ry="3.5" fill="'+p.gold+'"/>'+line('M3 12c3 2 6 2 9 0m-9 4c3 2 6 2 9 0',p.gold,1.4)+rect(10,15,13,6,p.ochre,3)+'<ellipse cx="16.5" cy="15" rx="6.5" ry="3.5" fill="'+p.gold+'"/>'+line('M14 14h4',p.paper,1.3),
+    'trend-up': line('M2 18l6-6 5 3 8-10',p.green,3.7)+fill('M14 2h9v10Z',p.mint)+dot(3,18,2,p.mint),
+    'trend-down': line('M2 6l6 6 5-3 8 10',p.red,3.7)+fill('M14 22h9v-10Z',p.pink)+dot(3,6,2,p.pink),
+    flame: fill('M12 3c1 5-3 6-3 10a3 3 0 0 0 6 0c0-1-.4-2-1-3 3 1 5 4 5 7a7 7 0 0 1-14 0c0-5 5-8 7-14Z',p.pink)+fill('M12 12c2 3 4 5 2 8s-6 1-5-2Z',p.gold),
+    snowflake: line('M12 1v22M2 6l20 12M2 18 22 6',p.blue,2.5)+line('M8 3l4 4 4-4m-8 18 4-4 4 4M2 10l5-1-1-5m12 16-1-5 5-1M6 20l1-5-5-1m20-4-5-1 1-5',p.sky,1.7)+dot(12,12,2,p.paper),
+    timer: rect(8,1,8,3,p.violet,1.3)+rect(11,3,2,3,p.navy,0)+dot(12,14,9,p.blue)+dot(12,14,6.5,p.paper)+line('M12 9v5l3 2',p.navy,2),
+    tool: fill('m4 20 10-10-3-3L1 17c-2 3 1 6 3 3Z',p.violet)+fill('M14 1a7 7 0 0 0-4 10l3 3a7 7 0 0 0 10-8l-5 5-5-5 5-5Z',p.blue)+dot(3.5,18.5,1,p.paper),
+    flask: fill('M9 3h6v7l7 10c1 2 0 3-2 3H4c-2 0-3-1-2-3l7-10Z',p.sky)+fill('M7 14h10l5 6c1 2 0 3-2 3H4c-2 0-3-1-2-3Z',p.mint)+rect(8,1,8,3,p.blue,1)+dot(10,18,1.4,p.paper)+dot(15,20,1,p.paper),
+    home: rect(4,9,16,14,p.sky,0)+fill('m1 10 11-9 11 9-2 3-9-7-9 7Z',p.violet)+rect(9,15,6,8,p.blue,0)+rect(17,5,3,5,p.purple,0),
+    more: dot(4,12,3,p.blue)+dot(12,12,3,p.violet)+dot(20,12,3,p.pink),
+    map: fill('m1 5 7-3 8 3 7-3v17l-7 3-8-3-7 3Z',p.mint)+fill('m8 2 8 3v17l-8-3Z',p.sky)+line('M8 2v17m8-14v17',p.paper,1.3),
+    'map-pin': fill('M12 24S2 15 2 10a10 10 0 0 1 20 0c0 5-10 14-10 14Z',p.pink)+dot(12,9,5,p.paper)+dot(12,9,2.4,p.red),
+    lineup: rect(2,1,20,22,p.green,3)+line('M3 12h18M8 2v4h8V2M8 22v-4h8v4',p.paper,1)+dot(12,12,3,p.mint)+dot(7,9,2,p.pink)+dot(17,16,2,p.gold),
+    backup: fill('M1 6V3h9l3 3h10v15H1Z',p.blue)+rect(1,9,22,13,p.sky,0)+line('M16 12a5 5 0 1 1-6-1',p.ochre,2.4)+fill('M6 8v7h7Z',p.gold),
+    scales: rect(10.5,1,3,21,p.ochre,1)+rect(4,20,16,3,p.purple,1)+line('M3 6h18M5 6l-4 8m4-8 4 8m10-8-4 8m4-8 4 8',p.gold,1.5)+fill('M1 14h8c0 5-8 5-8 0Zm14 0h8c0 5-8 5-8 0Z',p.blue)+dot(12,5,2,p.gold),
+    glove: fill('M6 23v-5l-4-6c-2-3 1-5 3-2l2 2V5c0-3 3-3 3 0V3c0-3 3-3 3 0v2c0-3 3-3 3 0v2c0-3 3-3 3 0v8c0 4-2 5-2 8Z',p.gold)+rect(6,19,11,4,p.violet,1)+line('M9 13h6m-6 3h6',p.paper,1.5),
+    boot: fill('M3 2h8v8l4 3 6 2c2 1 3 2 2 5H2V12Z',p.gold)+rect(2,18,21,3,p.navy,0)+fill('M4 21h3v3H4Zm6 0h3v3h-3Zm7 0h3v3h-3Z',p.blue)+line('M10 10l-3 2m6 0-3 2m6 0-3 2',p.paper,1.7),
+    crown: fill('m1 5 6 4 5-8 5 8 6-4-3 17H4Z',p.gold)+rect(4,18,16,4,p.ochre,0)+dot(7,12,1.3,p.blue)+dot(12,11,1.5,p.pink)+dot(17,12,1.3,p.violet),
+    handshake: fill('m1 8 5-4 6 3-7 11-4-2Z',p.blue)+fill('m23 8-5-4-6 3 7 11 4-2Z',p.violet)+fill('m5 12 5-5 4 1 6 7-6 6-9-7Z',p.gold)+fill('m10 7 3-1 5 3-5 4-3-2-2 2-2-2Z',p.sky)+line('M10 16l3 3m0-6 4 4',p.ochre,1.3),
+    'medal-gold': medal(p.violet,p.ochre,p.gold),
+    'medal-silver': medal(p.blue,p.slate,p.sky),
+    'medal-bronze': medal(p.violet,'#a57652','#d5a378')
   });
+})(window);
+
+/* GenPlayer UI icons: local 3D objects + filled multicolour miniature controls. */
+(function (global) {
+  'use strict';
+  const shapes = global.GPFilledIcons;
 
   // Exact tokens only. The host chooses which UI labels to replace; player text stays untouched.
   const emojiMap = Object.freeze({
@@ -1449,6 +1472,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     'match-analysis': 'scales', 'finance-ledger': 'wallet', 'activity-log': 'history'
   });
   const images = Object.freeze({
+    football: 'assets/ui/football-3d-v1.webp',
+    goal: 'assets/ui/football-3d-v1.webp',
+    scorer: 'assets/ui/football-3d-v1.webp',
+    trophy: 'assets/ui/ranking-3d-v1.webp',
     lineup: 'assets/ui/lineup-3d-v2.webp',
     squad: 'assets/ui/players-3d-v1.webp',
     ranking: 'assets/ui/ranking-3d-v1.webp',
@@ -1462,28 +1489,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     'match-analysis': 'assets/ui/match-analysis-3d-v1.webp',
     'finance-ledger': 'assets/ui/finance-ledger-3d-v1.webp',
     'activity-log': 'assets/ui/activity-log-3d-v1.webp'
-  });
-
-  // Small controls stay crisp SVGs. A translucent solid layer makes them
-  // recognisable at 16px without reusing the large illustrations out of context.
-  const washes = Object.freeze({
-    football: '<circle cx="12" cy="12" r="9"/>',
-    user: '<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2Z"/>',
-    users: '<circle cx="9.5" cy="7" r="4"/><path d="M3 21v-2a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v2Z"/>',
-    trophy: '<path d="M8 3h8v5a4 4 0 0 1-8 0Z"/>',
-    wallet: '<rect x="3" y="8" width="17" height="12" rx="3"/>',
-    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/>',
-    clock: '<circle cx="12" cy="12" r="9"/>',
-    history: '<circle cx="12" cy="12" r="9"/>',
-    clipboard: '<rect x="4" y="5" width="16" height="16" rx="2"/>',
-    shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/>',
-    boot: '<path d="M4 4h7v6l4 3 5 2c1.5.5 2 1.4 2 3v2H3v-7Z"/>',
-    heart: '<path d="M20.6 4.7a5.2 5.2 0 0 0-7.4 0L12 6l-1.2-1.3a5.2 5.2 0 0 0-7.4 7.4L12 21l8.6-8.9a5.2 5.2 0 0 0 0-7.4Z"/>',
-    flame: '<path d="M12 3c1 5-3 6-3 10a3 3 0 0 0 6 0c0-1-.4-2-1-3 3 1 5 4 5 7a7 7 0 0 1-14 0c0-5 5-8 7-14Z"/>',
-    message: '<path d="M21 14a3 3 0 0 1-3 3H8l-5 4V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3Z"/>',
-    'check-circle': '<circle cx="12" cy="12" r="9"/>',
-    income: '<rect x="3" y="13" width="18" height="8" rx="2"/>',
-    expense: '<rect x="3" y="13" width="18" height="8" rx="2"/>'
   });
 
   function escapeAttribute(value) {
@@ -1502,11 +1507,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         '" width="24" height="24" alt="" aria-hidden="true" decoding="async">';
     }
     return '<svg xmlns="http://www.w3.org/2000/svg" class="' + escapeAttribute(classes) +
-      '" data-icon="' + escapeAttribute(key) +
-      '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"' +
+      ' ui-icon-solid" data-icon="' + escapeAttribute(key) +
+      '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="none"' +
       ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"' +
       ' aria-hidden="true" focusable="false">' +
-      (washes[aliases[key] || key] ? '<g fill="currentColor" fill-opacity=".16" stroke="none">' + washes[aliases[key] || key] + '</g>' : '') +
       shapes[aliases[key] || key] + '</svg>';
   }
 
@@ -1848,7 +1852,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
 <script>
-const DEFAULT_PLAYERS = [{"KT": 6, "pos": "TĐ", "DD": 7, "TM": 0, "TC": 6, "pos2": [], "n": "Doan Ha", "OD": 6, "DN": 5, "PN": 5, "TL": 5, "desc": "Tiền đạo nhãn quan tốt, dứt điểm khá, biết chọn vị trí. Kỹ thuật và phối hợp ổn để lùi làm tường. Thể lực, độ máu lửa tầm trung.\n⚽ Kiểu Benzema 'lười mà sang' — chọn vị trí ngon, dứt điểm gọn; thiếu mỗi Quả bóng vàng thôi.", "lp": false, "CH": 6, "ratings": {"(khởi tạo)": {"DN": 0, "DD": 0, "TM": 0, "PN": 0, "KT": 0, "OD": 0, "CH": 0, "TD": 0, "ts": null, "TL": 0, "TC": 0}, "Admin": {"TL": 5, "ts": "14/6/2026 10:08", "byAdmin": true, "CH": 6, "TD": 7, "OD": 6, "at": 1781406492376, "DN": 5, "PN": 5, "TC": 6, "KT": 6, "TM": 0, "DD": 7}}, "TD": 7}, {"lp": true, "TL": 6, "CH": 5, "TD": 5, "OD": 6, "ratings": {"Admin": {"TD": 5, "byAdmin": true, "CH": 5, "ts": "24/7/2026 21:17", "TL": 6, "PN": 6, "DN": 6, "at": 1784902658512, "OD": 6, "TC": 6, "DD": 7, "TM": 0, "KT": 6}, "(khởi tạo)": {"TL": 0, "ts": null, "TC": 0, "CH": 0, "TD": 0, "KT": 0, "OD": 0, "DN": 0, "DD": 0, "PN": 0, "TM": 0}}, "DN": 6, "PN": 6, "pos2": ["HV"], "TC": 6, "KT": 6, "pos": "TV", "n": "Duy Hùng", "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "DD": 7, "TM": 0}, {"TC": 8, "pos2": ["TV"], "KT": 6, "DD": 5, "TM": 0, "desc": "Hậu vệ biên cực giàu thể lực — tốc độ, sức bền, máu lửa hàng đầu đội. Lên công về thủ không biết mệt, phòng ngự chắc. Hợp lối chơi tốc độ, áp sát liên tục.\n⚽ Sức chạy thì Roberto Carlos gọi bằng anh — thiếu mỗi cú sút 100km/h là thành quái vật cánh thật sự.", "TL": 8, "pos": "HV", "lp": false, "CH": 5, "TD": 5, "ratings": {"Admin": {"KT": 6, "TM": 0, "DD": 5, "TC": 8, "byAdmin": true, "OD": 6, "PN": 7, "DN": 8, "at": 1781403342027, "TL": 8, "ts": "14/6/2026 09:15", "TD": 5, "CH": 5}, "(khởi tạo)": {"TD": 0, "CH": 0, "ts": null, "TC": 0, "TL": 0, "DD": 0, "PN": 0, "TM": 0, "DN": 0, "OD": 0, "KT": 0}}, "OD": 6, "DN": 8, "n": "Hoàng Duy", "PN": 7}, {"CH": 6, "TD": 7, "lp": false, "TL": 6, "DN": 6, "PN": 7, "OD": 7, "pos2": ["GK"], "n": "Hoàng Thiên", "ratings": {"(khởi tạo)": {"TL": 0, "ts": null, "TC": 0, "CH": 0, "TD": 0, "OD": 0, "KT": 0, "DN": 0, "TM": 0, "DD": 0, "PN": 0}, "Admin": {"OD": 7, "at": 1781406662405, "PN": 7, "DN": 6, "TL": 6, "ts": "14/6/2026 10:11", "TD": 7, "CH": 6, "KT": 7, "DD": 8, "TM": 9, "TC": 7, "byAdmin": true}}, "TC": 7, "pos": "TĐ", "TM": 9, "DD": 8, "desc": "Tiền đạo toàn diện: dứt điểm sắc, kỹ thuật khéo, đọc trận tốt. Đặc biệt phản xạ bắt gôn xuất sắc — trấn giữ khung thành cực chắc khi cần. Quân bài đáng giá cả hai đầu sân.\n⚽ Tịt ngòi cái là nhảy vào gôn bắt như Neuer — tiền đạo kiêm thủ môn, phiên bản lỗi của FIFA.", "KT": 7}, {"DN": 6, "PN": 7, "OD": 6, "CH": 8, "TD": 7, "pos2": [], "TL": 6, "pos": "Thòng", "lp": false, "TM": 0, "DD": 4, "KT": 7, "ratings": {"(khởi tạo)": {"DN": 0, "PN": 0, "TM": 0, "DD": 0, "KT": 0, "OD": 0, "CH": 0, "TD": 0, "ts": null, "TC": 0, "TL": 0}, "Admin": {"TD": 7, "CH": 8, "ts": "14/6/2026 08:57", "TL": 6, "at": 1781402272379, "PN": 7, "DN": 6, "byAdmin": true, "OD": 6, "TC": 5, "TM": 0, "DD": 4, "KT": 7}}, "n": "Hưng", "TC": 5, "desc": "Trung vệ thòng điềm tĩnh, giữ và phát động bóng tốt. Càn quét, bọc lót chắc, đọc tình huống hợp lý. Tốc độ vừa phải, mạnh ở cầm nhịp tuyến dưới.\n⚽ Phát động bóng kiểu Pirlo lùi về làm trung vệ — thiếu mỗi bộ râu nghệ sĩ với cú phạt 'nhết hồn'."}, {"pos": "TVtt", "pos2": ["TV"], "TD": 7, "CH": 8, "lp": false, "TL": 8, "PN": 7, "DN": 8, "OD": 7, "n": "Huy Hoàng", "desc": "Nhạc trưởng tuyến giữa hàng đầu: kỹ thuật thượng thừa, chuyền và dứt điểm đều sắc. Đủ tốc độ và thể lực để xộc vào vòng cấm, dạt cánh càng lợi hại. Gánh cả sáng tạo lẫn ghi bàn.\n⚽ Gần De Bruyne nhất đội — chuyền, sút, chạy đủ cả; thiếu mỗi cái mác Ngoại hạng Anh thôi.", "TC": 8, "TM": 0, "DD": 8, "ratings": {"Admin": {"OD": 7, "PN": 7, "DN": 8, "at": 1781406800217, "byAdmin": true, "TL": 8, "ts": "14/6/2026 10:13", "TD": 7, "CH": 8, "KT": 9, "TM": 0, "DD": 8, "TC": 8}, "(khởi tạo)": {"CH": 0, "TD": 0, "ts": null, "TC": 0, "TL": 0, "DN": 0, "TM": 0, "DD": 0, "PN": 0, "KT": 0, "OD": 0}}, "KT": 9}, {"KT": 7, "TM": 0, "DD": 7, "TC": 7, "desc": "Tiền vệ cánh kỹ thuật, bám biên tốt: kỹ thuật, chuyền, dứt điểm, tốc độ đều khá. Lên biên hỗ trợ mượt, xử lý bóng gọn. Thể lực, máu lửa tầm trung, hợp lối phối hợp.\n⚽ Mahrez làng — rê dắt bám biên điệu nghệ, thiếu mỗi thể lực đua 90 phút (và lương Man City).", "OD": 5, "PN": 5, "DN": 5, "lp": false, "n": "Mạnh Khắc", "ratings": {"Admin": {"CH": 7, "TD": 6, "TL": 5, "ts": "14/6/2026 09:20", "DN": 5, "PN": 5, "at": 1781403641326, "OD": 5, "TC": 7, "TM": 0, "DD": 7, "KT": 7, "byAdmin": true}, "(khởi tạo)": {"OD": 0, "KT": 0, "PN": 0, "TM": 0, "DD": 0, "DN": 0, "TC": 0, "TL": 0, "ts": null, "TD": 0, "CH": 0}}, "TL": 5, "pos2": ["HV"], "pos": "TV", "TD": 6, "CH": 7}, {"OD": 4, "ratings": {"(khởi tạo)": {"ts": null, "TL": 0, "TC": 0, "CH": 0, "TD": 0, "OD": 0, "KT": 0, "DN": 0, "DD": 0, "PN": 0, "TM": 0}, "Admin": {"PN": 7, "DN": 6, "at": 1781401672845, "OD": 4, "byAdmin": true, "TD": 4, "CH": 5, "ts": "14/6/2026 08:47", "TL": 6, "TM": 6, "DD": 3, "KT": 4, "TC": 6}}, "DN": 6, "PN": 7, "desc": "Thủ môn chắc chắn, chọn vị trí và phòng ngự hợp lý. Tốc độ, thể lực ổn nên trám hậu vệ biên được. Chơi chân còn hạn chế, mạnh ở vai trấn giữ khung gỗ.\n⚽ Thủ môn 'chắc cú' kiểu số 2 đội tuyển — không lung linh nhưng thiếu là vỡ trận; chơi chân thêm tí là lên Ederson làng.", "lp": true, "TL": 6, "pos": "GK", "CH": 5, "TD": 4, "KT": 4, "pos2": ["HV"], "TM": 6, "DD": 3, "TC": 6, "n": "Mạnh Tiến"}, {"CH": 7, "n": "Nam Khắc", "TD": 8, "desc": "Trung vệ đọc trận nhạy và tốc độ hiếm có ở tuyến dưới. Chuyền phát động và phòng ngự đều tốt, càn quét chắc. Cơ động, sẵn sàng dạt biên dâng cao.\n⚽ Trung vệ nhanh + đọc bài như Van Dijk thu nhỏ — thiếu mỗi 1m93 với cái giá 75 triệu bảng.", "ratings": {"Admin": {"DD": 4, "TM": 0, "KT": 6, "byAdmin": true, "TC": 8, "PN": 7, "DN": 6, "at": 1781402583973, "OD": 6, "TD": 8, "CH": 7, "ts": "14/6/2026 09:03", "TL": 6}, "(khởi tạo)": {"TD": 0, "CH": 0, "TC": 0, "ts": null, "TL": 0, "TM": 0, "DD": 0, "PN": 0, "DN": 0, "OD": 0, "KT": 0}}, "lp": false, "TL": 6, "DN": 6, "pos": "Thòng", "PN": 7, "OD": 6, "pos2": ["HV"], "TC": 8, "TM": 0, "DD": 4, "KT": 6}, {"OD": 6, "DN": 5, "PN": 6, "ratings": {"Admin": {"TC": 7, "DD": 4, "TM": 0, "KT": 7, "CH": 7, "TD": 7, "ts": "14/6/2026 09:26", "TL": 5, "at": 1781403997226, "DN": 5, "PN": 6, "byAdmin": true, "OD": 6}, "(khởi tạo)": {"TD": 0, "CH": 0, "ts": null, "TL": 0, "TC": 0, "TM": 0, "PN": 0, "DD": 0, "DN": 0, "KT": 0, "OD": 0}}, "TL": 5, "lp": false, "CH": 7, "pos2": ["TV"], "TD": 7, "n": "Nguyễn Danh Tuyên", "pos": "HV", "KT": 7, "DD": 4, "TM": 0, "TC": 7, "desc": "Hậu vệ biên giàu tốc độ và kỹ thuật, đọc trận nhạy, chuyền chính xác. Phòng ngự ổn, lên hỗ trợ tấn công hiệu quả. Khả năng dứt điểm còn hạn chế.\n⚽ Gần giống Dani Alves đoạn lên công — kỹ thuật, chuyền, tốc độ đủ cả; thiếu mỗi cú dứt điểm với 42 cái cúp."}, {"DN": 4, "PN": 7, "n": "Nguyễn Khắc Trọng", "OD": 6, "desc": "Thủ môn số một: phản xạ tốt, bắt bóng chắc tay, chơi chân khéo. Phòng ngự chắc nên lùi đá trung vệ được. Hạn chế ở tốc độ, thể lực, chơi thiên về chọn vị trí.\n⚽ Thủ môn chơi chân kiểu Ederson — thiếu mỗi tốc độ; lùi đá trung vệ thì ok, đua tốc thì gọi taxi.", "CH": 7, "TD": 5, "TL": 4, "lp": false, "TM": 8, "DD": 3, "KT": 7, "pos2": ["Thòng"], "ratings": {"Admin": {"TL": 4, "ts": "14/6/2026 08:53", "byAdmin": true, "CH": 7, "TD": 5, "OD": 6, "at": 1781402009077, "DN": 4, "PN": 7, "TC": 5, "KT": 7, "DD": 3, "TM": 8}, "(khởi tạo)": {"TC": 0, "ts": null, "TL": 0, "CH": 0, "TD": 0, "KT": 0, "OD": 0, "DN": 0, "TM": 0, "PN": 0, "DD": 0}}, "TC": 5, "pos": "GK"}, {"PN": 6, "pos2": [], "DN": 7, "pos": "TVtt", "OD": 7, "TD": 8, "CH": 8, "lp": false, "TL": 7, "TM": 0, "DD": 7, "n": "Nguyen Quy Bong", "desc": "Nhạc trưởng đúng nghĩa: kỹ thuật bậc nhất, chuyền và nhãn quan xuất sắc, điều tiết thế trận. Dứt điểm sắc, thể lực và năng nổ tốt. Mẫu tiền vệ trung tâm hoàn thiện.\n⚽ Iniesta của giải phủi — nhả nhịp làm cả đội sang hẳn ra; thiếu mỗi bàn ở chung kết World Cup thôi.", "KT": 9, "TC": 7, "ratings": {"(khởi tạo)": {"ts": null, "TC": 0, "TL": 0, "CH": 0, "TD": 0, "KT": 0, "OD": 0, "DN": 0, "PN": 0, "TM": 0, "DD": 0}, "Admin": {"TC": 7, "byAdmin": true, "KT": 9, "TM": 0, "DD": 7, "ts": "14/6/2026 10:04", "TL": 7, "TD": 8, "CH": 8, "OD": 7, "PN": 6, "DN": 7, "at": 1781406256326}}}, {"TL": 5, "lp": false, "pos": "HV", "TD": 6, "CH": 5, "desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "OD": 6, "PN": 6, "DN": 5, "TC": 5, "ratings": {"Admin": {"TC": 5, "DD": 6, "TM": 0, "KT": 6, "CH": 5, "TD": 6, "byAdmin": true, "TL": 5, "ts": "14/6/2026 09:53", "DN": 5, "PN": 6, "at": 1781405605437, "OD": 6}, "(khởi tạo)": {"OD": 0, "KT": 0, "DD": 0, "PN": 0, "TM": 0, "DN": 0, "TC": 0, "ts": null, "TL": 0, "TD": 0, "CH": 0}}, "KT": 6, "pos2": ["TĐ"], "n": "Nguyễn Văn Quyền", "TM": 0, "DD": 6}, {"OD": 6, "pos2": ["GK", "HV"], "ratings": {"Admin": {"TL": 7, "ts": "14/6/2026 10:24", "CH": 5, "TD": 6, "OD": 6, "DN": 7, "PN": 6, "at": 1781407443297, "byAdmin": true, "TC": 7, "KT": 5, "DD": 6, "TM": 6}, "(khởi tạo)": {"TD": 0, "CH": 0, "TC": 0, "TL": 0, "ts": null, "PN": 0, "TM": 0, "DD": 0, "DN": 0, "KT": 0, "OD": 0}}, "DN": 7, "PN": 6, "TL": 7, "lp": true, "CH": 5, "TD": 6, "n": "Quang Minh", "KT": 5, "desc": "Tiền vệ cánh giàu năng lượng: tốc độ, thể lực, máu lửa đều tốt, bám biên không ngơi nghỉ. Dứt điểm và phòng ngự khá, lại có phản xạ bắt gôn. Quân đa năng.\n⚽ Sức chạy cỡ Mané, bí quá nhảy vào gôn bắt luôn — bản 'all-in-one', thiếu mỗi sự chuyên một vị trí.", "TM": 6, "DD": 6, "TC": 7, "pos": "TV"}, {"TM": 0, "DD": 3, "KT": 5, "pos": "HV", "pos2": ["TĐ"], "TC": 4, "DN": 4, "PN": 4, "OD": 4, "n": "Quý Tàu", "CH": 4, "TD": 4, "desc": "Hậu vệ biên đang hoàn thiện, kỹ thuật nhỉnh hơn cả, các mặt còn lại cơ bản. Chịu khó lên công về thủ, cần cải thiện dứt điểm và tranh chấp. Hợp vai trò đơn giản, chắc sân nhà.\n⚽ Chưa kịp giống ai — 'tân binh học việc', cày vài mùa biết đâu thành ai đó; tinh thần thì 10 điểm!", "TL": 4, "ratings": {"Admin": {"ts": "14/6/2026 09:57", "TL": 4, "CH": 4, "TD": 4, "OD": 4, "DN": 4, "PN": 4, "byAdmin": true, "at": 1781405825971, "TC": 4, "KT": 5, "TM": 0, "DD": 3}, "(khởi tạo)": {"TL": 0, "ts": null, "TC": 0, "CH": 0, "TD": 0, "KT": 0, "OD": 0, "DN": 0, "TM": 0, "PN": 0, "DD": 0}}, "lp": true}, {"TC": 7, "ratings": {"Admin": {"TC": 7, "TM": 0, "DD": 7, "byAdmin": true, "KT": 6, "CH": 7, "TD": 6, "TL": 5, "ts": "14/6/2026 09:59", "DN": 5, "PN": 7, "at": 1781405992915, "OD": 6}, "(khởi tạo)": {"DN": 0, "TM": 0, "PN": 0, "DD": 0, "KT": 0, "OD": 0, "CH": 0, "TD": 0, "ts": null, "TC": 0, "TL": 0}}, "KT": 6, "pos": "HV", "n": "Quyết Nguyễn", "TM": 0, "DD": 7, "pos2": ["TĐ"], "TL": 5, "lp": false, "TD": 6, "CH": 7, "OD": 6, "desc": "Hậu vệ biên toàn diện: chuyền, dứt điểm, phòng ngự, tốc độ đều tốt. Càn quét chắc, đủ sắc bén để dâng cao đá tiền đạo. Thể lực, năng nổ tầm trung.\n⚽ Cafu làng — lên công ghi bàn, về thủ chặn bóng, chạy cả trận; thiếu mỗi 2 cái World Cup thôi.", "PN": 7, "DN": 5}, {"n": "Trịnh Mạnh", "TM": 0, "DD": 6, "KT": 6, "ratings": {"(khởi tạo)": {"TL": 0, "TC": 0, "ts": null, "CH": 0, "TD": 0, "OD": 0, "KT": 0, "DN": 0, "TM": 0, "PN": 0, "DD": 0}, "Admin": {"CH": 7, "TD": 7, "byAdmin": true, "ts": "14/6/2026 10:19", "TL": 6, "DN": 6, "PN": 7, "at": 1781407191794, "OD": 6, "TC": 6, "DD": 6, "TM": 0, "KT": 6}}, "TC": 6, "desc": "Trung vệ chững chạc, phòng ngự chắc và đọc trận tốt. Chuyền phát động khá, triển khai bóng mượt. Dạt ra đá hậu vệ biên được; mạnh ở chỉ huy tuyến dưới.\n⚽ Chiellini phiên bản hiền — chỉ huy hàng thủ, đọc bài chắc; thiếu mỗi pha 'ôm người' tinh quái với cái mặt gắt.", "PN": 7, "DN": 6, "OD": 6, "TD": 7, "CH": 7, "pos": "Thòng", "pos2": ["Thòng", "HV"], "lp": true, "TL": 6}, {"pos": "TVtt", "n": "Văn Thanh", "TD": 7, "pos2": ["TV"], "CH": 7, "lp": false, "TL": 6, "PN": 7, "DN": 6, "OD": 6, "desc": "Tiền vệ giữa cân bằng: kỹ thuật, chuyền, dứt điểm, phòng ngự đều tốt. Vừa cầm nhịp sáng tạo vừa lùi về càn quét. Đa năng, đẩy ra cánh được; tốc độ, thể lực mức ổn.\n⚽ Box-to-box kiểu Gerrard — công thủ gánh hết tuyến giữa; thiếu mỗi cú volley 30m với cái duyên trượt chân phút cuối.", "ratings": {"(khởi tạo)": {"CH": 0, "TD": 0, "TL": 0, "ts": null, "TC": 0, "DN": 0, "TM": 0, "PN": 0, "DD": 0, "KT": 0, "OD": 0}, "Admin": {"ts": "14/6/2026 10:17", "TL": 6, "TD": 7, "CH": 7, "OD": 6, "at": 1781407022050, "PN": 7, "DN": 6, "TC": 6, "KT": 7, "DD": 7, "TM": 0, "byAdmin": true}}, "TC": 6, "DD": 7, "TM": 0, "KT": 7}, {"PN": 6, "DN": 6, "OD": 6, "pos2": ["TĐ"], "ratings": {"Admin": {"OD": 6, "at": 1784902810135, "DN": 6, "PN": 6, "ts": "24/7/2026 21:20", "TL": 6, "CH": 6, "TD": 6, "KT": 6, "DD": 7, "TM": 0, "TC": 6, "byAdmin": true}, "(khởi tạo)": {"OD": 0, "KT": 0, "PN": 0, "TM": 0, "DD": 0, "DN": 0, "TC": 0, "TL": 0, "ts": null, "TD": 0, "CH": 0}}, "TD": 6, "CH": 6, "lp": false, "TL": 6, "DD": 7, "TM": 0, "n": "Nguyễn Việt Dũng", "pos": "TV", "KT": 6, "desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "TC": 6}, {"pos": "TV", "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "TC": 6, "ratings": {"(khởi tạo)": {"DD": 0, "PN": 0, "TM": 0, "DN": 0, "OD": 0, "KT": 0, "TD": 0, "CH": 0, "TC": 0, "TL": 0, "ts": null}, "Admin": {"OD": 6, "at": 1784902658512, "PN": 6, "DN": 6, "TL": 6, "ts": "24/7/2026 21:17", "TD": 5, "CH": 5, "KT": 6, "TM": 0, "DD": 7, "byAdmin": true, "TC": 6}}, "DD": 7, "TM": 0, "KT": 6, "pos2": ["HV"], "CH": 5, "n": "Nguyen Quoc An", "TD": 5, "lp": true, "TL": 6, "DN": 6, "PN": 6, "OD": 6}];
+const DEFAULT_PLAYERS = [{"TM": 0, "TD": 7, "TC": 6, "n": "Doan Ha", "OD": 6, "KT": 6, "lp": false, "ratings": {"(khởi tạo)": {"TL": 0, "DD": 0, "CH": 0, "KT": 0, "OD": 0, "ts": null, "TC": 0, "DN": 0, "TD": 0, "PN": 0, "TM": 0}, "Admin": {"KT": 6, "at": 1781406492376, "TC": 6, "OD": 6, "TM": 0, "TD": 7, "TL": 5, "CH": 6, "DD": 7, "ts": "14/6/2026 10:08", "DN": 5, "byAdmin": true, "PN": 5}}, "pos": "TĐ", "desc": "Tiền đạo nhãn quan tốt, dứt điểm khá, biết chọn vị trí. Kỹ thuật và phối hợp ổn để lùi làm tường. Thể lực, độ máu lửa tầm trung.\n⚽ Kiểu Benzema 'lười mà sang' — chọn vị trí ngon, dứt điểm gọn; thiếu mỗi Quả bóng vàng thôi.", "PN": 5, "DN": 5, "TL": 5, "CH": 6, "DD": 7, "pos2": []}, {"DD": 7, "CH": 5, "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "ratings": {"(khởi tạo)": {"TD": 0, "PN": 0, "TM": 0, "DN": 0, "OD": 0, "TC": 0, "ts": null, "CH": 0, "DD": 0, "KT": 0, "TL": 0}, "Admin": {"OD": 6, "TC": 6, "at": 1784902658512, "KT": 6, "byAdmin": true, "TD": 5, "TM": 0, "TL": 6, "ts": "24/7/2026 21:17", "CH": 5, "DD": 7, "PN": 6, "DN": 6}}, "pos": "TV", "TL": 6, "DN": 6, "PN": 6, "pos2": ["HV"], "lp": true, "KT": 6, "OD": 6, "n": "Duy Hùng", "TC": 6, "TD": 5, "TM": 0}, {"lp": false, "PN": 7, "desc": "Hậu vệ biên cực giàu thể lực — tốc độ, sức bền, máu lửa hàng đầu đội. Lên công về thủ không biết mệt, phòng ngự chắc. Hợp lối chơi tốc độ, áp sát liên tục.\n⚽ Sức chạy thì Roberto Carlos gọi bằng anh — thiếu mỗi cú sút 100km/h là thành quái vật cánh thật sự.", "DN": 8, "ratings": {"Admin": {"KT": 6, "OD": 6, "TC": 8, "at": 1781403342027, "TD": 5, "TM": 0, "byAdmin": true, "TL": 8, "DD": 5, "CH": 5, "ts": "14/6/2026 09:15", "DN": 8, "PN": 7}, "(khởi tạo)": {"DN": 0, "PN": 0, "TM": 0, "TD": 0, "TL": 0, "DD": 0, "KT": 0, "CH": 0, "ts": null, "TC": 0, "OD": 0}}, "TL": 8, "pos2": ["TV"], "CH": 5, "DD": 5, "TM": 0, "TD": 5, "pos": "HV", "TC": 8, "OD": 6, "n": "Hoàng Duy", "KT": 6}, {"lp": false, "desc": "Tiền đạo toàn diện: dứt điểm sắc, kỹ thuật khéo, đọc trận tốt. Đặc biệt phản xạ bắt gôn xuất sắc — trấn giữ khung thành cực chắc khi cần. Quân bài đáng giá cả hai đầu sân.\n⚽ Tịt ngòi cái là nhảy vào gôn bắt như Neuer — tiền đạo kiêm thủ môn, phiên bản lỗi của FIFA.", "PN": 7, "DN": 6, "TL": 6, "pos2": ["GK"], "CH": 6, "DD": 8, "pos": "TĐ", "TD": 7, "TM": 9, "ratings": {"Admin": {"TC": 7, "at": 1781406662405, "OD": 7, "KT": 7, "TM": 9, "TD": 7, "TL": 6, "ts": "14/6/2026 10:11", "byAdmin": true, "CH": 6, "DD": 8, "PN": 7, "DN": 6}, "(khởi tạo)": {"TD": 0, "TM": 0, "PN": 0, "DN": 0, "OD": 0, "TC": 0, "ts": null, "DD": 0, "KT": 0, "CH": 0, "TL": 0}}, "OD": 7, "TC": 7, "KT": 7, "n": "Hoàng Thiên"}, {"DD": 4, "CH": 8, "TL": 6, "DN": 6, "PN": 7, "lp": false, "KT": 7, "n": "Hưng", "OD": 6, "TC": 5, "pos2": [], "ratings": {"(khởi tạo)": {"TD": 0, "PN": 0, "TM": 0, "DN": 0, "OD": 0, "ts": null, "TC": 0, "DD": 0, "KT": 0, "CH": 0, "TL": 0}, "Admin": {"TD": 7, "TM": 0, "OD": 6, "at": 1781402272379, "TC": 5, "KT": 7, "byAdmin": true, "PN": 7, "DN": 6, "ts": "14/6/2026 08:57", "DD": 4, "CH": 8, "TL": 6}}, "pos": "Thòng", "TD": 7, "desc": "Trung vệ thòng điềm tĩnh, giữ và phát động bóng tốt. Càn quét, bọc lót chắc, đọc tình huống hợp lý. Tốc độ vừa phải, mạnh ở cầm nhịp tuyến dưới.\n⚽ Phát động bóng kiểu Pirlo lùi về làm trung vệ — thiếu mỗi bộ râu nghệ sĩ với cú phạt 'nhết hồn'.", "TM": 0}, {"TL": 8, "pos": "TVtt", "CH": 8, "DD": 8, "lp": false, "DN": 8, "PN": 7, "desc": "Nhạc trưởng tuyến giữa hàng đầu: kỹ thuật thượng thừa, chuyền và dứt điểm đều sắc. Đủ tốc độ và thể lực để xộc vào vòng cấm, dạt cánh càng lợi hại. Gánh cả sáng tạo lẫn ghi bàn.\n⚽ Gần De Bruyne nhất đội — chuyền, sút, chạy đủ cả; thiếu mỗi cái mác Ngoại hạng Anh thôi.", "KT": 9, "OD": 7, "TC": 8, "ratings": {"(khởi tạo)": {"DN": 0, "TD": 0, "PN": 0, "TM": 0, "TL": 0, "KT": 0, "DD": 0, "CH": 0, "OD": 0, "TC": 0, "ts": null}, "Admin": {"DN": 8, "PN": 7, "CH": 8, "DD": 8, "ts": "14/6/2026 10:13", "TL": 8, "byAdmin": true, "TM": 0, "TD": 7, "KT": 9, "at": 1781406800217, "TC": 8, "OD": 7}}, "n": "Huy Hoàng", "pos2": ["TV"], "TD": 7, "TM": 0}, {"pos2": ["HV"], "KT": 7, "OD": 5, "TC": 7, "n": "Mạnh Khắc", "TD": 6, "TM": 0, "desc": "Tiền vệ cánh kỹ thuật, bám biên tốt: kỹ thuật, chuyền, dứt điểm, tốc độ đều khá. Lên biên hỗ trợ mượt, xử lý bóng gọn. Thể lực, máu lửa tầm trung, hợp lối phối hợp.\n⚽ Mahrez làng — rê dắt bám biên điệu nghệ, thiếu mỗi thể lực đua 90 phút (và lương Man City).", "DD": 7, "CH": 7, "TL": 5, "ratings": {"Admin": {"TL": 5, "DD": 7, "CH": 7, "byAdmin": true, "ts": "14/6/2026 09:20", "DN": 5, "PN": 5, "KT": 7, "TC": 7, "at": 1781403641326, "OD": 5, "TM": 0, "TD": 6}, "(khởi tạo)": {"DD": 0, "CH": 0, "KT": 0, "OD": 0, "ts": null, "TC": 0, "TL": 0, "DN": 0, "TD": 0, "TM": 0, "PN": 0}}, "DN": 5, "PN": 5, "pos": "TV", "lp": false}, {"TL": 6, "ratings": {"Admin": {"at": 1781401672845, "TC": 6, "OD": 4, "KT": 4, "byAdmin": true, "TM": 6, "TD": 4, "TL": 6, "ts": "14/6/2026 08:47", "DD": 3, "CH": 5, "PN": 7, "DN": 6}, "(khởi tạo)": {"TL": 0, "KT": 0, "DD": 0, "CH": 0, "OD": 0, "TC": 0, "ts": null, "DN": 0, "TD": 0, "TM": 0, "PN": 0}}, "DD": 3, "CH": 5, "lp": true, "n": "Mạnh Tiến", "DN": 6, "PN": 7, "pos": "GK", "KT": 4, "pos2": ["HV"], "OD": 4, "TC": 6, "desc": "Thủ môn chắc chắn, chọn vị trí và phòng ngự hợp lý. Tốc độ, thể lực ổn nên trám hậu vệ biên được. Chơi chân còn hạn chế, mạnh ở vai trấn giữ khung gỗ.\n⚽ Thủ môn 'chắc cú' kiểu số 2 đội tuyển — không lung linh nhưng thiếu là vỡ trận; chơi chân thêm tí là lên Ederson làng.", "TD": 4, "TM": 6}, {"pos": "Thòng", "TM": 0, "TD": 8, "pos2": ["HV"], "desc": "Trung vệ đọc trận nhạy và tốc độ hiếm có ở tuyến dưới. Chuyền phát động và phòng ngự đều tốt, càn quét chắc. Cơ động, sẵn sàng dạt biên dâng cao.\n⚽ Trung vệ nhanh + đọc bài như Van Dijk thu nhỏ — thiếu mỗi 1m93 với cái giá 75 triệu bảng.", "TC": 8, "OD": 6, "KT": 6, "ratings": {"Admin": {"ts": "14/6/2026 09:03", "CH": 7, "DD": 4, "TL": 6, "PN": 7, "DN": 6, "byAdmin": true, "at": 1781402583973, "TC": 8, "OD": 6, "KT": 6, "TM": 0, "TD": 8}, "(khởi tạo)": {"OD": 0, "ts": null, "TC": 0, "DD": 0, "KT": 0, "CH": 0, "TL": 0, "TD": 0, "TM": 0, "PN": 0, "DN": 0}}, "lp": false, "PN": 7, "DN": 6, "TL": 6, "n": "Nam Khắc", "CH": 7, "DD": 4}, {"lp": false, "PN": 6, "DN": 5, "TL": 5, "ratings": {"(khởi tạo)": {"TD": 0, "TM": 0, "PN": 0, "DN": 0, "OD": 0, "TC": 0, "ts": null, "KT": 0, "DD": 0, "CH": 0, "TL": 0}, "Admin": {"DN": 5, "PN": 6, "TL": 5, "CH": 7, "DD": 4, "ts": "14/6/2026 09:26", "byAdmin": true, "TM": 0, "TD": 7, "KT": 7, "TC": 7, "at": 1781403997226, "OD": 6}}, "n": "Nguyễn Danh Tuyên", "CH": 7, "DD": 4, "desc": "Hậu vệ biên giàu tốc độ và kỹ thuật, đọc trận nhạy, chuyền chính xác. Phòng ngự ổn, lên hỗ trợ tấn công hiệu quả. Khả năng dứt điểm còn hạn chế.\n⚽ Gần giống Dani Alves đoạn lên công — kỹ thuật, chuyền, tốc độ đủ cả; thiếu mỗi cú dứt điểm với 42 cái cúp.", "pos": "HV", "TD": 7, "TM": 0, "OD": 6, "TC": 7, "pos2": ["TV"], "KT": 7}, {"KT": 7, "pos": "GK", "ratings": {"Admin": {"DN": 4, "PN": 7, "DD": 3, "CH": 7, "ts": "14/6/2026 08:53", "TL": 4, "TM": 8, "TD": 5, "KT": 7, "at": 1781402009077, "TC": 5, "OD": 6, "byAdmin": true}, "(khởi tạo)": {"TD": 0, "TM": 0, "PN": 0, "DN": 0, "OD": 0, "ts": null, "TC": 0, "DD": 0, "CH": 0, "KT": 0, "TL": 0}}, "TC": 5, "OD": 6, "TM": 8, "TD": 5, "TL": 4, "desc": "Thủ môn số một: phản xạ tốt, bắt bóng chắc tay, chơi chân khéo. Phòng ngự chắc nên lùi đá trung vệ được. Hạn chế ở tốc độ, thể lực, chơi thiên về chọn vị trí.\n⚽ Thủ môn chơi chân kiểu Ederson — thiếu mỗi tốc độ; lùi đá trung vệ thì ok, đua tốc thì gọi taxi.", "CH": 7, "DD": 3, "n": "Nguyễn Khắc Trọng", "lp": false, "DN": 4, "pos2": ["Thòng"], "PN": 7}, {"desc": "Nhạc trưởng đúng nghĩa: kỹ thuật bậc nhất, chuyền và nhãn quan xuất sắc, điều tiết thế trận. Dứt điểm sắc, thể lực và năng nổ tốt. Mẫu tiền vệ trung tâm hoàn thiện.\n⚽ Iniesta của giải phủi — nhả nhịp làm cả đội sang hẳn ra; thiếu mỗi bàn ở chung kết World Cup thôi.", "DN": 7, "n": "Nguyen Quy Bong", "pos": "TVtt", "PN": 6, "lp": false, "CH": 8, "DD": 7, "pos2": [], "TL": 7, "ratings": {"Admin": {"TL": 7, "ts": "14/6/2026 10:04", "DD": 7, "CH": 8, "byAdmin": true, "PN": 6, "DN": 7, "TC": 7, "at": 1781406256326, "OD": 7, "KT": 9, "TM": 0, "TD": 8}, "(khởi tạo)": {"OD": 0, "ts": null, "TC": 0, "KT": 0, "CH": 0, "DD": 0, "TL": 0, "TD": 0, "TM": 0, "PN": 0, "DN": 0}}, "TD": 8, "TM": 0, "KT": 9, "OD": 7, "TC": 7}, {"TL": 5, "DD": 6, "CH": 5, "desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "pos2": ["TĐ"], "lp": false, "ratings": {"Admin": {"TL": 5, "ts": "14/6/2026 09:53", "DD": 6, "CH": 5, "PN": 6, "DN": 5, "at": 1781405605437, "TC": 5, "OD": 6, "KT": 6, "TM": 0, "byAdmin": true, "TD": 6}, "(khởi tạo)": {"PN": 0, "TM": 0, "TD": 0, "DN": 0, "ts": null, "TC": 0, "OD": 0, "CH": 0, "DD": 0, "KT": 0, "TL": 0}}, "DN": 5, "pos": "HV", "PN": 6, "KT": 6, "TC": 5, "OD": 6, "n": "Nguyễn Văn Quyền", "TM": 0, "TD": 6}, {"pos2": ["GK", "HV"], "OD": 6, "TC": 7, "KT": 5, "ratings": {"(khởi tạo)": {"PN": 0, "TM": 0, "TD": 0, "DN": 0, "TL": 0, "TC": 0, "ts": null, "OD": 0, "KT": 0, "CH": 0, "DD": 0}, "Admin": {"PN": 6, "DN": 7, "ts": "14/6/2026 10:24", "byAdmin": true, "CH": 5, "DD": 6, "TL": 7, "TM": 6, "TD": 6, "TC": 7, "at": 1781407443297, "OD": 6, "KT": 5}}, "TD": 6, "TM": 6, "pos": "TV", "desc": "Tiền vệ cánh giàu năng lượng: tốc độ, thể lực, máu lửa đều tốt, bám biên không ngơi nghỉ. Dứt điểm và phòng ngự khá, lại có phản xạ bắt gôn. Quân đa năng.\n⚽ Sức chạy cỡ Mané, bí quá nhảy vào gôn bắt luôn — bản 'all-in-one', thiếu mỗi sự chuyên một vị trí.", "TL": 7, "CH": 5, "DD": 6, "lp": true, "PN": 6, "n": "Quang Minh", "DN": 7}, {"DN": 4, "n": "Quý Tàu", "PN": 4, "lp": true, "CH": 4, "DD": 3, "TL": 4, "TM": 0, "pos2": ["TĐ"], "TD": 4, "ratings": {"(khởi tạo)": {"TM": 0, "PN": 0, "TD": 0, "DN": 0, "TL": 0, "ts": null, "TC": 0, "OD": 0, "DD": 0, "KT": 0, "CH": 0}, "Admin": {"PN": 4, "DN": 4, "byAdmin": true, "ts": "14/6/2026 09:57", "DD": 3, "CH": 4, "TL": 4, "TD": 4, "TM": 0, "OD": 4, "at": 1781405825971, "TC": 4, "KT": 5}}, "KT": 5, "TC": 4, "pos": "HV", "OD": 4, "desc": "Hậu vệ biên đang hoàn thiện, kỹ thuật nhỉnh hơn cả, các mặt còn lại cơ bản. Chịu khó lên công về thủ, cần cải thiện dứt điểm và tranh chấp. Hợp vai trò đơn giản, chắc sân nhà.\n⚽ Chưa kịp giống ai — 'tân binh học việc', cày vài mùa biết đâu thành ai đó; tinh thần thì 10 điểm!"}, {"DN": 5, "n": "Quyết Nguyễn", "PN": 7, "lp": false, "CH": 7, "DD": 7, "ratings": {"Admin": {"TL": 5, "ts": "14/6/2026 09:59", "CH": 7, "DD": 7, "byAdmin": true, "PN": 7, "DN": 5, "OD": 6, "at": 1781405992915, "TC": 7, "KT": 6, "TD": 6, "TM": 0}, "(khởi tạo)": {"TD": 0, "PN": 0, "TM": 0, "DN": 0, "OD": 0, "ts": null, "TC": 0, "DD": 0, "CH": 0, "KT": 0, "TL": 0}}, "TL": 5, "TD": 6, "pos": "HV", "TM": 0, "pos2": ["TĐ"], "desc": "Hậu vệ biên toàn diện: chuyền, dứt điểm, phòng ngự, tốc độ đều tốt. Càn quét chắc, đủ sắc bén để dâng cao đá tiền đạo. Thể lực, năng nổ tầm trung.\n⚽ Cafu làng — lên công ghi bàn, về thủ chặn bóng, chạy cả trận; thiếu mỗi 2 cái World Cup thôi.", "KT": 6, "OD": 6, "TC": 7}, {"TL": 6, "pos2": ["Thòng", "HV"], "CH": 7, "DD": 6, "lp": true, "PN": 7, "pos": "Thòng", "DN": 6, "desc": "Trung vệ chững chạc, phòng ngự chắc và đọc trận tốt. Chuyền phát động khá, triển khai bóng mượt. Dạt ra đá hậu vệ biên được; mạnh ở chỉ huy tuyến dưới.\n⚽ Chiellini phiên bản hiền — chỉ huy hàng thủ, đọc bài chắc; thiếu mỗi pha 'ôm người' tinh quái với cái mặt gắt.", "ratings": {"(khởi tạo)": {"TL": 0, "CH": 0, "KT": 0, "DD": 0, "OD": 0, "ts": null, "TC": 0, "DN": 0, "TD": 0, "PN": 0, "TM": 0}, "Admin": {"KT": 6, "OD": 6, "at": 1781407191794, "TC": 6, "TD": 7, "TM": 0, "TL": 6, "CH": 7, "DD": 6, "ts": "14/6/2026 10:19", "DN": 6, "byAdmin": true, "PN": 7}}, "TC": 6, "OD": 6, "KT": 6, "n": "Trịnh Mạnh", "TM": 0, "TD": 7}, {"DD": 7, "CH": 7, "n": "Văn Thanh", "ratings": {"Admin": {"TM": 0, "TD": 7, "byAdmin": true, "KT": 7, "at": 1781407022050, "TC": 6, "OD": 6, "DN": 6, "PN": 7, "TL": 6, "DD": 7, "CH": 7, "ts": "14/6/2026 10:17"}, "(khởi tạo)": {"TL": 0, "ts": null, "TC": 0, "OD": 0, "DD": 0, "KT": 0, "CH": 0, "PN": 0, "TM": 0, "TD": 0, "DN": 0}}, "TL": 6, "desc": "Tiền vệ giữa cân bằng: kỹ thuật, chuyền, dứt điểm, phòng ngự đều tốt. Vừa cầm nhịp sáng tạo vừa lùi về càn quét. Đa năng, đẩy ra cánh được; tốc độ, thể lực mức ổn.\n⚽ Box-to-box kiểu Gerrard — công thủ gánh hết tuyến giữa; thiếu mỗi cú volley 30m với cái duyên trượt chân phút cuối.", "pos2": ["TV"], "DN": 6, "PN": 7, "lp": false, "pos": "TVtt", "KT": 7, "TC": 6, "OD": 6, "TM": 0, "TD": 7}, {"desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "TD": 6, "TM": 0, "pos": "TV", "n": "Nguyễn Việt Dũng", "pos2": ["TĐ"], "KT": 6, "OD": 6, "TC": 6, "ratings": {"Admin": {"TC": 6, "at": 1784902810135, "OD": 6, "KT": 6, "TM": 0, "TD": 6, "ts": "24/7/2026 21:20", "CH": 6, "DD": 7, "TL": 6, "PN": 6, "DN": 6, "byAdmin": true}, "(khởi tạo)": {"DN": 0, "TM": 0, "PN": 0, "TD": 0, "TL": 0, "DD": 0, "KT": 0, "CH": 0, "ts": null, "TC": 0, "OD": 0}}, "lp": false, "DN": 6, "PN": 6, "TL": 6, "DD": 7, "CH": 6}, {"pos2": ["HV"], "KT": 6, "OD": 6, "TC": 6, "ratings": {"Admin": {"TL": 6, "ts": "24/7/2026 21:17", "CH": 5, "DD": 7, "PN": 6, "DN": 6, "OD": 6, "at": 1784902658512, "TC": 6, "KT": 6, "byAdmin": true, "TD": 5, "TM": 0}, "(khởi tạo)": {"TD": 0, "TM": 0, "PN": 0, "DN": 0, "TL": 0, "OD": 0, "ts": null, "TC": 0, "DD": 0, "KT": 0, "CH": 0}}, "TD": 5, "TM": 0, "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "DD": 7, "CH": 5, "n": "Nguyen Quoc An", "TL": 6, "DN": 6, "PN": 6, "pos": "TV", "lp": true}];
 const FIREBASE_CONFIG = {
   "apiKey": "AIzaSyDQ5h2sSNPOmtc23fXaZdzxgjxiF_Mudho",
   "authDomain": "ai-gen-aa66f.firebaseapp.com",
@@ -2438,7 +2442,7 @@ const GOLD_BALL='<svg viewBox="0 0 32 32" width="15" height="15" style="vertical
 function renderHomeScorers(){
   const box=$("homeScorers"); if(!box)return;
   const top=scorerBoard().slice(0,5);
-  if(!top.length){box.innerHTML=`<div class="hs-empty">⚽ Chưa có bàn thắng nào. Nhập ở <a onclick="show('screen-history')">Lịch sử thi đấu</a> → trận có tỉ số → ⚽ Bàn thắng.</div>`;return;}
+  if(!top.length){box.innerHTML=`<div class="hs-empty">${GPIcons.render("football")} Chưa có bàn thắng nào. Nhập ở <a onclick="show('screen-history')">Lịch sử thi đấu</a> → trận có tỉ số → ⚽ Bàn thắng.</div>`;return;}
   box.innerHTML=`<div class="rank-list">`+top.map((x,i)=>`
       <div class="rank-row" onclick="openProfileByName('${encodeURIComponent(x.name)}')">
         <span class="rank-no${i<3?' top':''}" title="Hạng ${i+1}" aria-label="Hạng ${i+1}">${i<3?GPIcons.render(["medal-gold","medal-silver","medal-bronze"][i]):i+1}</span>
@@ -2634,7 +2638,7 @@ function renderUpdateLog(){
       ${logPanel(e)}</div>`).join("")+`</div>`;
 }
 // BANNER LỚN = SLIDESHOW Cầu thủ nổi bật (lần lượt qua các cầu thủ, xếp theo điểm cao→thấp)
-const HERO_FX='<div class="hf-fx"><span class="hf-ball">⚽</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
+const HERO_FX='<div class="hf-fx"><span class="hf-ball">'+GPIcons.render("football")+'</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span><span class="spark s6"></span></div>';
 const HERO_BG=["assets/bg-1.jpg", "assets/bg-2.jpg", "assets/bg-3.jpg", "assets/bg-4.jpg", "assets/bg-5.jpg", "assets/bg-6.jpg", "assets/bg-7.jpg", "assets/bg-8.jpg", "assets/bg-9.jpg", "assets/bg-10.jpg"];   // tự quét assets/bg-*.jpg lúc build (thả thêm file là tự dùng)
 let heroSlides=[], heroIdx=0, heroTimer=null;
 // Tổng hợp một tháng gần nhất để banner nhận định theo giai đoạn, không phản ứng theo một trận lẻ.
@@ -2847,21 +2851,22 @@ function card(m,o,ctxt,label,ev,sel){
   const oWeak=Array.from({length:SL.length-1},(_,i)=>i+1).map(c=>o.starters[c]).sort((a,b)=>ov(sel[a])-ov(sel[b]))[0];
   const oWeakSlot=SL[o.starters.indexOf(oWeak)];
   const b=[];
-  b.push(`🎯 <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
+  b.push(`${GPIcons.render("target")} <b>Tấn công:</b> mũi nhọn ${sel[topAtk].n} (dứt điểm ${sel[topAtk].DD}/10) là đầu ra chủ lực; hàng công đạt trung bình ${m.atk.toFixed(1)}/10.`);
   const gkTxt=gkEdge>=0.5?`khung gỗ là một lợi thế — ${sel[idx(0)].n} (${m.gkFit.toFixed(0)}/10) nhỉnh hơn người gác đền đối phương`:gkEdge<=-0.5?`${sel[idx(0)].n} bắt gôn chưa phải sở trường (${m.gkFit.toFixed(0)}/10), cần hàng thủ bọc lót kín phía trước`:`${sel[idx(0)].n} trấn giữ khung thành ở mức ổn định`;
-  b.push(`🛡️ <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
-  b.push(paceEdge>0.3?`⚡ <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`🧠 <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`⚙️ <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
-  b.push(tb!==undefined?`🔁 <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`🔁 <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
+  b.push(`${GPIcons.render("shield")} <b>Phòng ngự:</b> ${sel[anchor].n} là điểm tựa tuyến dưới (trung bình ${m.defPN.toFixed(1)}/10); ${gkTxt}.`);
+  b.push(paceEdge>0.3?`${GPIcons.render("bolt")} <b>Lối chơi:</b> nhỉnh hơn về tốc độ (${m.pace.toFixed(1)}/10) — mạnh ở chuyển trạng thái nhanh và các pha phản công.`:paceEdge<-0.3?`${GPIcons.render("activity")} <b>Lối chơi:</b> không thắng ở tốc độ nên cần kiểm soát bóng, triển khai có tổ chức thay vì đua sức.`:`${GPIcons.render("settings")} <b>Lối chơi:</b> cân bằng công–thủ, đủ sức áp đặt nếu giữ được nhịp độ.`);
+  b.push(tb!==undefined?`${GPIcons.render("refresh")} <b>Chiều sâu:</b> ${sel[tb].n} trên băng ghế để xoay tua, duy trì cường độ về cuối trận.`:`${GPIcons.render("refresh")} <b>Chiều sâu:</b> không có dự bị — cần phân phối thể lực hợp lý, tránh hụt hơi cuối trận.`);
   const edges=[{v:gkEdge,t:`dựa vào sự chắc chắn nơi khung thành, chơi chắc lớp và kiên nhẫn chờ đối thủ phạm sai lầm`},{v:paceEdge,t:`tăng nhịp chuyển trạng thái, dùng tốc độ xộc thẳng hai biên để kết liễu`},{v:m.atk-o.atk,t:`chủ động dồn ép tấn công, gây sức ép liên tục buộc đối thủ mắc lỗi`},{v:m.defPN-o.defPN,t:`phòng ngự kỷ luật rồi tổ chức phản công sắc từ tuyến dưới`}];
   const plan=`${edges.sort((x,y)=>y.v-x.v)[0].t}; nhắm vào ${oWeakSlot} bên phía đối thủ và đưa bóng cho ${sel[topAtk].n} ở thời điểm quyết định`;
-  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">🏆 <b>Cách thắng:</b> ${plan}.</div></div>`;
+  return `<div class="card"><h3 style="color:${ctxt}">${label}</h3><ul class="ul">${b.map(x=>`<li>${x}</li>`).join("")}</ul><div class="pl-win">${GPIcons.render("trophy")} <b>Cách thắng:</b> ${plan}.</div></div>`;
 }
 // 🆚 Bảng SO KÈ theo vị trí (từng ô Đỏ vs Vàng theo ovAt) + cộng theo tuyến + tóm gọn 2 chiều
 function sokeTable(A,B,sel){
   if(!sel||!A||!B||!A.starters||!B.starters)return "";
   const six=lineupSlots(A).length===6;
   const SL=lineupSlots(A);
-  const LBL=six?["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","⚡ Tiền vệ cánh","👟 Tiền đạo"]:["🧤 Thủ môn","🛡️ Trung vệ","🛡️ Hậu vệ","🛡️ Hậu vệ","🎯 Tiền vệ giữa","⚡ Tiền vệ cánh","👟 Tiền đạo"];
+  const roleLabel=(icon,text)=>GPIcons.render(icon)+" "+text;
+  const LBL=six?[roleLabel("glove","Thủ môn"),roleLabel("shield","Trung vệ"),roleLabel("shield","Hậu vệ"),roleLabel("shield","Hậu vệ"),roleLabel("bolt","Tiền vệ cánh"),roleLabel("boot","Tiền đạo")]:[roleLabel("glove","Thủ môn"),roleLabel("shield","Trung vệ"),roleLabel("shield","Hậu vệ"),roleLabel("shield","Hậu vệ"),roleLabel("target","Tiền vệ giữa"),roleLabel("bolt","Tiền vệ cánh"),roleLabel("boot","Tiền đạo")];
   const raw=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;
   const so=(a,b)=>Math.abs(a-b)<0.4?`<span style="opacity:.55">cân</span>`:(a>b?`<b>🔴 +${(a-b).toFixed(1)}</b>`:`<b>🟡 +${(b-a).toFixed(1)}</b>`);
   let rows="",upA=0,upB=0,dnA=0,dnB=0;
@@ -2887,7 +2892,7 @@ function sokeTable(A,B,sel){
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
   add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,"overall đội chính",0.05,2);add(bcA-bcB,"ghế dự bị",0.4,1);
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
-  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">📌 <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
+  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">${GPIcons.render("clipboard")} <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
 function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
@@ -2914,7 +2919,7 @@ function render(res,sel,target,review,showHeat,matchId){
     return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
   }).join("");
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
-  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">⚔️ <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
+  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• Đội hình ra sân (chính): ${_vv(A.startFit-B.startFit)}<br>• Tổng lực cả đội (chính + dự bị): ${_vv(A.total-B.total)}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
@@ -3422,7 +3427,7 @@ function goalReviewMatches(){
 }
 function updateGoalReqBadge(){
   const n=goalReviewMatches().length, btn=$("goalReqBtn");
-  if(btn)btn.innerHTML=`⚽ Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:${isAdmin&&n>0?"":"none"}">${n}</span>`;
+  if(btn)btn.innerHTML=`${GPIcons.render("goal-record")} Rà soát bàn thắng <span class="req-badge" id="goalReqBadge" style="display:${isAdmin&&n>0?"":"none"}">${n}</span>`;
   const badge=$("goalReqBadge"); if(!badge)return; badge.textContent=n; badge.style.display=(isAdmin&&n>0)?"":"none";
 }
 let goalReqTab="pending";
@@ -3446,7 +3451,7 @@ function goalReqCard(q){
         <button class="btn alt sm req-rej" onclick="rejectGoalReq('${q.id}')">✕ Từ chối</button></div>`;
   return `<div class="ulog-card">
       <div class="ulog-top"><span class="avatar" style="background:${avColor(q.by)}">${initials(q.by)}</span>
-        <div class="ulog-id"><div class="ulog-name">⚽ Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">👤 ${esc(q.by||"?")} · ${q.ts||""}${sc?` · Tỉ số ${sc.a}:${sc.b}`:""}</div>${acted}</div>${st}</div>
+        <div class="ulog-id"><div class="ulog-name">${GPIcons.render("football")} Trận ${esc(q.mlabel||"")}</div><div class="ulog-by">${GPIcons.render("user")} ${esc(q.by||"?")} · ${q.ts||""}${sc?` · Tỉ số ${sc.a}:${sc.b}`:""}</div>${acted}</div>${st}</div>
       <div class="gl-chips">${items}</div>${warn}${acts}</div>`;
 }
 function renderGoalReq(){
@@ -3455,10 +3460,10 @@ function renderGoalReq(){
   if(!list.length){box.innerHTML=`<div class="empty"><span class="big">✅</span>Không còn trận nào cần rà soát.<br>Bàn thắng của các trận đã được admin chốt.</div>`;return;}
   const card=r=>{
     const goals=r.goals||{}, items=Object.entries(goals).filter(([,g])=>(+g||0)>0).sort((a,b)=>b[1]-a[1])
-      .map(([n,g])=>`<span class="gl-chip">⚽ ${esc(n)} <b>${g}</b></span>`).join("")||`<span class="gl-chip muted">Chưa có bàn thắng nào được nhập</span>`;
+      .map(([n,g])=>`<span class="gl-chip">${GPIcons.render("goal")} ${esc(n)} <b>${g}</b></span>`).join("")||`<span class="gl-chip muted">Chưa có bàn thắng nào được nhập</span>`;
     const t=goalsByTeam(r,goals), sc=r.score, warn=sc&&(t.A!==+sc.a||t.B!==+sc.b)
       ? `<div class="gl-warn">⚠️ Đang ghi ${t.A}:${t.B}, khác tỉ số ${sc.a}:${sc.b}.</div>`:"";
-    return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">⚽ ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
+    return `<div class="ulog-card"><div class="ulog-top"><div class="ulog-id"><div class="ulog-name">${GPIcons.render("football")} ${esc(fmtKick(r.kickoff)||r.label||"Trận đấu")}</div><div class="ulog-by">${sc?`Tỉ số ${sc.a}:${sc.b}`:"Chưa có tỉ số"} · đang mở nhập</div></div><span class="req-st">Chờ chốt</span></div><div class="gl-chips">${items}</div>${warn}<div class="req-acts"><button class="btn sm" onclick="openGoalModal(${r.id});closeGoalReq()">🔎 Rà soát &amp; chốt</button></div></div>`;
   };
   box.innerHTML=`<div class="gl-hint">Các trận dưới vẫn đang mở cho người dùng nhập. Kiểm tra lại rồi bấm <b>Phê duyệt &amp; chốt</b> trong từng trận.</div><div class="ulog-grid">${list.map(card).join("")}</div>`;
 }
@@ -3620,7 +3625,7 @@ function playerGoalTimeline(name){
 function setPmGoalYear(y){pmGoalYear=String(y);const el=$("pmGoalSection"),p=pmFind();if(el&&p)el.innerHTML=goalsChartPanel(p.n);}
 function goalsChartPanel(name){
   const tl=playerGoalTimeline(name);
-  if(!tl.length)return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng</div><div class="ps-empty">⚽ Chưa có dữ liệu bàn thắng qua các trận.</div>`;
+  if(!tl.length)return `<div class="pm-sec">${GPIcons.render("goal-record")} Đường đi bàn thắng</div><div class="ps-empty">${GPIcons.render("football")} Chưa có dữ liệu bàn thắng qua các trận.</div>`;
   const byYear={};
   tl.forEach(d=>{const y=String(new Date(d.t).getFullYear());(byYear[y]||(byYear[y]=[])).push(d);});
   const years=Object.keys(byYear).sort();                       // năm tăng dần
@@ -3838,7 +3843,7 @@ function renderHist(){
     <div class="rmod-h">${p.n}</div>
     <div class="pm-sec">${GPIcons.render("users")} Điểm theo từng người · ${keys.length}</div>
     ${rows}
-    <div class="rmod-note">Bấm 🗑️ để xoá lượt sửa của một người — điểm tổng tự tính lại & áp dụng ngay.</div>`;
+    <div class="rmod-note">Bấm ${GPIcons.render("trash")} để xoá lượt sửa của một người — điểm tổng tự tính lại & áp dụng ngay.</div>`;
 }
 function peTier(v){return v===0?"Không có":v<=2?"Yếu":v<=4?"Tạm":v<=6?"Ổn":v<=8?"Tốt":"Xuất sắc";}
 function peOpts(cur){return Array.from({length:11},(_,v)=>`<option value="${v}"${v===cur?" selected":""}>${v} · ${peTier(v)}</option>`).join("");}
