@@ -2272,12 +2272,13 @@ function card(m,o,ctxt,label,ev,sel){
 // In that case compare the same outfield positions and paired substitutes only.
 function matchComparisonBasis(A,B,sel){
   const incompleteGk=A.gkRated===false||B.gkRated===false;
-  if(!incompleteGk)return {incompleteGk:false,startA:A.startFit,startB:B.startFit,totalA:A.total,totalB:B.total};
+  const pairedBench=incompleteGk||A.pairedBenchComparison===true||B.pairedBenchComparison===true;
+  if(!pairedBench)return {incompleteGk:false,pairedBench:false,startA:A.startFit,startB:B.startFit,totalA:A.total,totalB:B.total};
   const bench=ev=>(ev.bench||[]).slice().sort((a,b)=>ov(sel[b])-ov(sel[a]));
   const ba=bench(A),bb=bench(B),benchCount=Math.min(ba.length,bb.length);
   const benchA=ba.slice(0,benchCount).reduce((s,i)=>s+ov(sel[i]),0),benchB=bb.slice(0,benchCount).reduce((s,i)=>s+ov(sel[i]),0);
-  const startA=A.startFit-A.gkFit,startB=B.startFit-B.gkFit;
-  return {incompleteGk:true,startA,startB,totalA:startA+benchA,totalB:startB+benchB,benchA,benchB,benchCount,outfieldCount:A.starters.length-1};
+  const startA=A.startFit-(incompleteGk?A.gkFit:0),startB=B.startFit-(incompleteGk?B.gkFit:0);
+  return {incompleteGk,pairedBench:true,startA,startB,totalA:startA+benchA,totalB:startB+benchB,benchA,benchB,benchCount,outfieldCount:A.starters.length-1};
 }
 function sokeTable(A,B,sel){
   if(!sel||!A||!B||!A.starters||!B.starters)return "";
@@ -2306,12 +2307,12 @@ function sokeTable(A,B,sel){
   }
   const qualityA=basis.incompleteGk?A.starters.slice(1):A.starters,qualityB=basis.incompleteGk?B.starters.slice(1):B.starters;
   const ovA=qualityA.reduce((s,i)=>s+raw(sel[i]),0)/qualityA.length, ovB=qualityB.reduce((s,i)=>s+raw(sel[i]),0)/qualityB.length;
-  const bcA=basis.incompleteGk?basis.benchA:(A.bench||[]).reduce((s,i)=>s+ov(sel[i]),0), bcB=basis.incompleteGk?basis.benchB:(B.bench||[]).reduce((s,i)=>s+ov(sel[i]),0);
+  const bcA=basis.pairedBench?basis.benchA:(A.bench||[]).reduce((s,i)=>s+ov(sel[i]),0), bcB=basis.pairedBench?basis.benchB:(B.bench||[]).reduce((s,i)=>s+ov(sel[i]),0);
   const lr=(lbl,a,b,dec)=>{const d=a-b,w=Math.abs(d)<0.05?"cân":(d>0?`🔴 Đỏ +${d.toFixed(dec)}`:`🟡 Vàng +${(-d).toFixed(dec)}`);return `<tr><td>${lbl}</td><td>${a.toFixed(dec)}</td><td>${b.toFixed(dec)}</td><td>${w}</td></tr>`;};
-  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr(`Tuyến trên (${six?2:3} mũi)`,upA,upB,1)}${lr(`Tuyến dưới (3 thủ)`,dnA,dnB,1)}${lr(basis.incompleteGk?"Overall ngoài sân":"Overall đội chính",ovA,ovB,2)}${lr(basis.incompleteGk?`Dự bị đối chiếu (${basis.benchCount} mỗi bên)`:"Ghế dự bị",bcA,bcB,1)}</table>`;
+  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr(`Tuyến trên (${six?2:3} mũi)`,upA,upB,1)}${lr(`Tuyến dưới (3 thủ)`,dnA,dnB,1)}${lr(basis.incompleteGk?"Overall ngoài sân":"Overall đội chính",ovA,ovB,2)}${lr(basis.pairedBench?`Dự bị đối chiếu (${basis.benchCount} mỗi bên)`:"Ghế dự bị",bcA,bcB,1)}</table>`;
   const gkA=matchKeeperRating(A,ovAt(sel[A.starters[0]],"GK")),gkB=matchKeeperRating(B,ovAt(sel[B.starters[0]],"GK")),aP=[],bP=[];
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
-  if(!basis.incompleteGk)add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,basis.incompleteGk?"overall ngoài sân":"overall đội chính",0.05,2);add(bcA-bcB,basis.incompleteGk?"dự bị đối chiếu":"ghế dự bị",0.4,1);
+  if(!basis.incompleteGk)add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,basis.incompleteGk?"overall ngoài sân":"overall đội chính",0.05,2);add(bcA-bcB,basis.pairedBench?"dự bị đối chiếu":"ghế dự bị",0.4,1);
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
   return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">${GPIcons.render("clipboard")} <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
@@ -2321,6 +2322,9 @@ function render(res,sel,target,review,showHeat,matchId){
   const hasRev=review&&String(review).trim();   // review = đánh giá do người viết (Claude) lưu sẵn → ưu tiên hơn đoạn tự sinh
   const A=res.evA,B=res.evB;
   const basis=matchComparisonBasis(A,B,sel);
+  const totalLabel=basis.incompleteGk?`Ngoài sân + ${basis.benchCount} dự bị đối chiếu`:basis.pairedBench?`Đội chính + ${basis.benchCount} dự bị đối chiếu`:"Tổng cả đội (chính + dự bị)";
+  const totalSummary=basis.incompleteGk?"Ngoài sân + dự bị đối chiếu":basis.pairedBench?"Đội chính + dự bị đối chiếu":"Tổng lực cả đội (chính + dự bị)";
+  const comparisonNote=basis.incompleteGk?"Chưa đủ điểm gôn để kết luận toàn đội; dự bị dư vẫn hiển thị nhưng không cộng vào đối chiếu.":basis.pairedBench?`Đối chiếu cùng ${basis.benchCount} dự bị mỗi bên; dự bị dư vẫn hiển thị nhưng không cộng thành lợi thế.`:"";
   const pct=100*Math.abs(basis.startA-basis.startB)/((basis.startA+basis.startB)/2);
   const pdiff=A.pace-B.pace, gkGap=basis.incompleteGk?0:A.gkFit-B.gkFit;
   const gkAdvNm=Math.abs(gkGap)>=0.5?(gkGap>0?"Team A":"Team B"):null;
@@ -2328,7 +2332,7 @@ function render(res,sel,target,review,showHeat,matchId){
   const gkLine=basis.incompleteGk?` Chưa đủ điểm thủ môn để so kè hai khung thành.`:gkAdvNm?` Điểm tạo khác biệt đáng chú ý là khung gỗ: <b>${gkAdvNm}</b> có người gác đền chắc tay hơn.`:` Hai khung thành ở mức tương đương.`;
   const pred=`Kèo cân (đội hình chính chênh ~${pct.toFixed(1)}%). Dự đoán tỉ số sít sao, cách biệt tối đa một bàn; ${gkAdvNm?`lợi thế khung gỗ có thể nghiêng nhẹ cán cân về phía <b>${gkAdvNm}</b>`:`đội nào kiểm soát nhịp độ và tận dụng cơ hội tốt hơn sẽ giành phần thắng`}.`;
   const intro=`Chênh lệch đội hình chính chỉ <b>~${pct.toFixed(1)}%</b> — một cặp đấu cân bằng, kết quả sẽ do <b>cách vận hành</b> quyết định chứ không phải đẳng cấp. ${styleLine}${gkLine} Một trận đấu hứa hẹn ngang ngửa và cởi mở.`;
-  const rows=[[basis.incompleteGk?`Sức mạnh ngoài sân (${basis.outfieldCount} người)`:"Sức mạnh đội hình chính",basis.startA.toFixed(1),basis.startB.toFixed(1)],[basis.incompleteGk?`Ngoài sân + ${basis.benchCount} dự bị đối chiếu`:"Tổng cả đội (chính + dự bị)",basis.totalA.toFixed(1),basis.totalB.toFixed(1)],["Ngôi sao (điểm tổng ≥ "+STAR_MIN+")",A.stars,B.stars],["Thủ môn",A.gkRated===false?"Chưa chấm":A.gkFit.toFixed(1),B.gkRated===false?"Chưa chấm":B.gkFit.toFixed(1)],["Phòng ngự tuyến dưới",A.defPN.toFixed(1),B.defPN.toFixed(1)],["Dứt điểm tuyến trên",A.atk.toFixed(1),B.atk.toFixed(1)],["Tốc độ trung bình",A.pace.toFixed(1),B.pace.toFixed(1)],["Năng nổ (chịu chạy)",A.heat.toFixed(1),B.heat.toFixed(1)]];
+  const rows=[[basis.incompleteGk?`Sức mạnh ngoài sân (${basis.outfieldCount} người)`:"Sức mạnh đội hình chính",basis.startA.toFixed(1),basis.startB.toFixed(1)],[totalLabel,basis.totalA.toFixed(1),basis.totalB.toFixed(1)],["Ngôi sao (điểm tổng ≥ "+STAR_MIN+")",A.stars,B.stars],["Thủ môn",A.gkRated===false?"Chưa chấm":A.gkFit.toFixed(1),B.gkRated===false?"Chưa chấm":B.gkFit.toFixed(1)],["Phòng ngự tuyến dưới",A.defPN.toFixed(1),B.defPN.toFixed(1)],["Dứt điểm tuyến trên",A.atk.toFixed(1),B.atk.toFixed(1)],["Tốc độ trung bình",A.pace.toFixed(1),B.pace.toFixed(1)],["Năng nổ (chịu chạy)",A.heat.toFixed(1),B.heat.toFixed(1)]];
   const predBlock=hasRev?"":`<div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>`;
   const narrative=hasRev
     ? `<div class="ai-review">${review}</div>`
@@ -2341,7 +2345,7 @@ function render(res,sel,target,review,showHeat,matchId){
     return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${!comparable?"—":aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
   }).join("");
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
-  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• ${basis.incompleteGk?"Đội hình ngoài sân":"Đội hình ra sân (chính)"}: ${_vv(basis.startA-basis.startB)}<br>• ${basis.incompleteGk?"Ngoài sân + dự bị đối chiếu":"Tổng lực cả đội (chính + dự bị)"}: ${_vv(basis.totalA-basis.totalB)}${basis.incompleteGk?"<br><span class=\"muted\">Chưa đủ điểm gôn để kết luận toàn đội; dự bị dư vẫn hiển thị nhưng không cộng vào đối chiếu.</span>":""}</div>`;
+  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• ${basis.incompleteGk?"Đội hình ngoài sân":"Đội hình ra sân (chính)"}: ${_vv(basis.startA-basis.startB)}<br>• ${totalSummary}: ${_vv(basis.totalA-basis.totalB)}${comparisonNote?`<br><span class="muted">${comparisonNote}</span>`:""}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
