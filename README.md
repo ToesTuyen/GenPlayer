@@ -34,6 +34,7 @@ GenPlayer/
 - Kiểm tra ngữ cảnh icon và asset (chỉ đọc, không gọi cloud): `node tests/ui_icons.test.cjs`.
 - Trận xếp gôn thủ công khi chưa có điểm riêng: đặt `result.evA.gkRated=false` (hoặc `evB`). Bảng hiển thị "Chưa chấm", không xem đó là điểm 0; sức mạnh được đối chiếu cùng số người ngoài sân và dự bị, không cộng cầu thủ dự bị dư vào lợi thế. Các trận không có cờ này giữ cách tính cũ. Kiểm tra: `node tests/match_comparison.test.cjs`.
 - Khi đã chấm gôn riêng cho trận (`gkRated=true`), sơ đồ và bảng so kè cùng dùng `gkFit`; điểm này không thay đổi hồ sơ cầu thủ hoặc các trận cũ.
+- Trận có `result.evA.ratingsByRole=true` (và `evB`) hiển thị điểm đúng vị trí thi đấu trên sơ đồ, thống nhất với bảng so kè. Không có cờ này vẫn hiển thị như cũ; chỉ số trong hồ sơ không thay đổi.
 - Màn con/popup có tên riêng: `match-score` (tỉ số), `goal-record` (ghi bàn/rà soát bàn), `player-rating` (chấm điểm/AI Form), `match-analysis` (so kè/nhận định), `finance-ledger` (sổ quỹ), `activity-log` (nhật ký sửa). Gắn ảnh bằng tên rõ nghĩa, không đổi hàng loạt icon chung; tiêu đề vẽ lại bằng JS phải dùng `GPIcons.render(...)` để không mất ảnh sau khi mở popup. `football`/`goal`/`scorer` dùng ảnh bóng 3D riêng; `trophy` dùng cúp vàng. Các icon nhỏ được vẽ thành hình khối SVG nhiều màu để rõ ở 14–24px, `income`/`expense` có chiều mũi tên khác nhau; logo, avatar và ngọn lửa sân bóng giữ nguyên. Build nhúng `ui_icons_solid.js` trước `ui_icons.js`.
 
 ## Chạy
