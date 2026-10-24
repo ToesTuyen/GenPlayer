@@ -926,16 +926,18 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div id="screen-create" class="screen">
   <div class="card-box">
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
-    <div class="grid" id="roster"></div>
-    <div class="bar">
-      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác"><span data-ui-icon="lineup"></span>Tạo đội (Thuật Toán)</button>
-      <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tạo đội bằng AI</button>
-      <button class="btn alt sm" id="all">Chọn tất cả</button>
-      <button class="btn alt sm" id="none">Bỏ chọn</button>
+    <div class="bar create-toolbar">
+      <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
+      <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
+      <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
+    </div>
+    <div class="roster-selection">
+      <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
       <span class="count" id="count"></span>
     </div>
+    <div class="grid" id="roster"></div>
   </div>
   <!-- AI uses the selected roster and stays inside the Create workflow. -->
   <section id="createAI" class="create-ai" aria-label="AI trong Tạo đội" hidden>
@@ -957,7 +959,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </div>
     <div id="aiRosterInfo" class="ai-status"></div>
     <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
-    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled>Tạo bằng AI</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Ghi chú tự do chỉ được gửi khi dùng AI.</p>
     <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
     <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   </div>
@@ -968,9 +971,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   </section>
   <div class="status" id="status"></div>
-  <div style="text-align:center;margin:12px 0"><button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button></div>
   <div id="result"></div>
 </div>
+<dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
+  <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
+  <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
+  <progress id="createProcessProgress" max="10" value="0" aria-label="Tiến trình kiểm tra"></progress>
+  <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
+  <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
+  <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
+  <div class="process-actions"><button class="btn" id="createProcessClose" disabled>Đang xử lý…</button></div>
+</dialog>
 
 <!-- ====== CAP NHAT CAU THU ====== -->
 <div id="screen-players" class="screen">
@@ -1296,6 +1307,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>/*__UI_ICONS__*/</script>
 <script>/*__OPTIMIZER__*/</script>
+<!-- Run the same offline solver in a worker so the progress view stays responsive. -->
+<script id="solverWorkerSource" type="text/plain">
+/*__OPTIMIZER__*/
+self.onmessage=function(event){
+  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true})});}
+  catch(e){self.postMessage({error:e.message||'Không chạy được thuật toán.'});}
+};
+</script>
 <script>/*__AI_CONTEXT__*/</script>
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
@@ -2450,26 +2469,14 @@ function addGuest(){
 }
 function removeGuest(enc){const n=decodeURIComponent(enc);guestPlayers=guestPlayers.filter(g=>g.n!==n);buildRoster();}
 function selectedIdx(){return [...$("roster").querySelectorAll("input:checked")].map(c=>+c.dataset.i);}
-function updateCount(){const n=selectedIdx().length;$("count").innerHTML=`Đã chọn <b>${n}</b>`+(n<14?` <span style="color:#dc2626">(cần ≥14)</span>`:(n%2?` <span style="color:#d97706">(lẻ)</span>`:""));if(!$("createAI").hidden)aiTaskChanged();}
-$("all").onclick=()=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=true;c.closest(".pl-item").classList.add("on");c.closest(".pl-item").classList.remove("off");});updateCount();};
-$("none").onclick=()=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=false;c.closest(".pl-item").classList.remove("on");c.closest(".pl-item").classList.add("off");});updateCount();};
-$("go").onclick=()=>{
-  const sel=selectedIdx();
-  if(sel.length<14){$("status").innerHTML='<span style="color:#dc2626">Cần chọn ít nhất 14 người (7 vs 7).</span>';$("result").innerHTML="";$("saveWeek").style.display="none";return;}
-  $("status").textContent="⏳ Đang chia đội…"; $("go").disabled=true;
-  setTimeout(()=>{
-    const key=sel.join(","); let fresh=false;
-    if(key!==cstate.key){const subset=sel.map(i=>curPlayers[i]);const res=TeamSolver.solve(subset);if(res.error){$("status").innerHTML='<span style="color:#dc2626">'+res.error+'</span>';$("go").disabled=false;return;}cstate={key,results:res,idx:0,subset};fresh=true;}
-    else cstate.idx=(cstate.idx+1)%cstate.results.length;
-    render(cstate.results[cstate.idx],cstate.subset,"result",null,true);
-    $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo đội (Thuật Toán)</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
-    $("saveWeek").style.display="inline-block";
-    $("go").disabled=false;
-    $("roster").style.display="none";                                 // gen xong -> ẩn danh sách chọn
-    const tg=$("toggleRoster"); if(tg){tg.style.display="";tg.textContent="👥 Hiện danh sách";}
-    $("result").scrollIntoView({behavior:"smooth",block:"start"});    // nhảy xuống focus đội hình đã gen
-  },30);
-};
+function updateCount(){
+  const n=selectedIdx().length,all=$("selectAll");
+  all.checked=curPlayers.length>0&&n===curPlayers.length;all.indeterminate=n>0&&n<curPlayers.length;all.disabled=!curPlayers.length;
+  $("count").innerHTML=`Đã chọn <b>${n}/${curPlayers.length}</b>`+(n<14?` <span style="color:var(--red)">(cần ≥14)</span>`:(n%2?` <span style="color:var(--amber)">(lẻ)</span>`:""));
+  if(!$("createAI").hidden)aiTaskChanged();
+}
+$("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
+$("go").onclick=()=>createTeams();
 $("saveWeek").onclick=()=>{
   if(!cstate.results.length)return;
   if(!canEdit){ alert("🔒 Tính năng \"Lưu làm đội tuần này\" cần đăng nhập trước."); openAdminModal(); return; }
@@ -3796,6 +3803,7 @@ function delHistory(id){
 }
 
 /*__AI_CLIENT__*/
+/*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
 if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.backend) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // backend sessions/API must never be cached

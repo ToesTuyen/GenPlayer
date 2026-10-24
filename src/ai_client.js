@@ -47,6 +47,7 @@ function aiPopulateSources(){
 function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
 function aiTaskChanged(){
   const task=$('aiTask').value;
+  $('aiRun').hidden=task==='lineup';$('aiLineupHint').hidden=task!=='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
   const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
   $('aiRosterInfo').hidden=task!=='lineup';
@@ -63,13 +64,13 @@ function aiShowRoster(){
   $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
   $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function aiContextSnapshot(){
+function aiContextSnapshot(task=$('aiTask').value){
   const all=getPlayers().concat(guestPlayers),names=new Set();
   const players=all.map(p=>{names.add(p.n);return GPAIContext.player(p);});
   const matchRecord=getHistory().find(r=>String(r.id)===$('aiMatch').value);
   for(const p of matchRecord?.subset||[])if(p){
     if(!names.has(p.n)){players.push(GPAIContext.player(p));names.add(p.n);}
-    else if($('aiTask').value==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
+    else if(task==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
   }
   const history=getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy);
   return {players,history,rosterNames:selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean),match:matchRecord?GPAIContext.compactLegacy(matchRecord):null,playerName:$('aiPlayer').value,instruction:$('aiInstruction').value.trim()};
@@ -79,7 +80,8 @@ function aiMatchFingerprint(match,players){
   return JSON.stringify({match,profiles:players.filter(p=>names.has(p.n)).map(GPAIContext.player).sort((a,b)=>a.n.localeCompare(b.n,'vi'))});
 }
 async function aiRun(){
-  if(AI_STATE.busy)return;
+  if(AI_STATE.busy||CREATE_STATE.busy)return;
+  if($('aiTask').value==='lineup')return createTeams();
   let context;const task=$('aiTask').value;
   try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Chọn ít nhất 14 người có mặt trước khi tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
   if(!confirm('Gửi tên, chỉ số cầu thủ và lịch sử bóng đá liên quan tới OpenRouter/model để tạo nội dung? Mỗi lượt có thể tính phí. Không gửi tài khoản, thu chi hay API key.'))return;
@@ -88,11 +90,11 @@ async function aiRun(){
     const response=await aiFetch('run',{task,context});
     AI_STATE.output=response.output;AI_STATE.request={task,context,matchId:context.match?.id,matchSnapshot:aiMatchFingerprint(context.match,context.players)};
     aiRenderOutput();aiMessage('Đã có bản nháp AI. Kiểm tra nội dung/bảng so kè trước khi sử dụng.');
-  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;$('aiRun').textContent='Tạo bằng AI';await aiRefresh();}
+  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;$('aiRun').textContent='Phân tích';await aiRefresh();}
 }
 function aiPlainOutput(){const o=AI_STATE.output;if(!o)return '';return o.title+'\n\n'+o.sections.map(s=>s.heading+'\n'+s.body).join('\n\n');}
 function aiReviewHTML(o){return '<p class="rv-lead"><b>'+esc(o.title)+'</b></p>'+o.sections.map(s=>'<p><b>'+esc(s.heading)+'</b><br>'+esc(s.body).replace(/\n/g,'<br>')+'</p>').join('');}
-function aiRenderOutput(){
+function aiRenderOutput(showLineupPreview=true){
   const o=AI_STATE.output,task=AI_STATE.request.task;
   $('aiOutput').hidden=false;$('aiOutputText').innerHTML='<h2>'+esc(o.title)+'</h2>'+o.sections.map(s=>'<section><h3>'+esc(s.heading)+'</h3><p>'+esc(s.body)+'</p></section>').join('');
   if(task==='player-form'){
@@ -100,10 +102,10 @@ function aiRenderOutput(){
     $('aiOutputText').innerHTML+='<div class="ai-label">'+labels[o.verdict]+' · chỉ đề xuất, không tự sửa điểm</div>'+o.suggestions.map(s=>'<p>'+esc(s.attribute+' · '+({increase:'tăng',decrease:'giảm',keep:'giữ'}[s.direction])+': '+s.reason)+'</p>').join('');
   }
   $('aiOutputMeta').textContent=`${o.model} · ${new Date(o.createdAt).toLocaleString('vi-VN')} · ${o.usage?o.usage.promptTokens+' token vào / '+o.usage.completionTokens+' token ra':'chưa có số token'} · bản nháp, cần kiểm tra dữ kiện.`;
-  $('aiUseLineup').hidden=task!=='lineup';$('aiSaveReview').hidden=task!=='match-review';
+  $('aiUseLineup').hidden=task!=='lineup'||!showLineupPreview;$('aiSaveReview').hidden=task!=='match-review';
   $('aiLineupPreview').innerHTML='';$('aiWarnings').textContent=(o.warnings||[]).join('\n');
-  if(task==='lineup')render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
-  $('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
+  if(task==='lineup'&&showLineupPreview)render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
+  if(showLineupPreview)$('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiCopy(){try{await navigator.clipboard.writeText(aiPlainOutput());aiMessage('Đã sao chép nội dung AI.');}catch{aiMessage('Trình duyệt không cho sao chép. Bạn có thể chọn nội dung bên dưới để copy.',true);}}
 function aiUseLineup(){

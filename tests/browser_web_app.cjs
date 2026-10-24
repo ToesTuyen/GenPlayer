@@ -11,10 +11,12 @@ const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12
 const result=C.lineup(players,teams).result;
 const history=Array.from({length:5},(_,i)=>({id:100+i,kickoff:Date.now()-(i+1)*86400000,n:16,subset:players,result,score:{a:3,b:2},goals:{'Huy Hoàng':2},goalsLocked:true}));
 const reports=fs.mkdtempSync(path.join(os.tmpdir(),'genplayer-web-app-qa-'));
-let providerCalls=0;
+let providerCalls=0,lineupGate=null,providerFailure=false;
 const fakeProvider=async(url,init)=>{
   providerCalls++;assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');
   const req=JSON.parse(init.body),task=req.response_format.json_schema.name.replaceAll('_','-'),data=JSON.parse(req.messages[1].content);
+  if(task==='lineup'&&lineupGate)await lineupGate;
+  if(task==='lineup'&&providerFailure)return new Response('{"error":{"message":"private provider detail"}}',{status:401});
   const output={title:'Bản phân tích kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phân tích '+(i+1),body:i===0?'<img src=x onerror="window.AI_XSS=true"> — văn bản AI phải được escape.':'Đội hình được đối chiếu chỉ số và kết quả gần đây; đây là dữ liệu kiểm thử, không phải nhận định thật.'}))};
   if(task==='lineup'){
     const member=data.players.filter(p=>!p.guest).map(p=>p.index),guests=data.players.filter(p=>p.guest).map(p=>p.index),rest=[...member.slice(14),...guests];
@@ -44,37 +46,78 @@ async function main(){
       await page.goto(config.origin);
       assert.equal(await page.getByRole('button',{name:'Trợ lý AI',exact:true}).count(),0,'No separate AI navigation');
       await page.getByRole('button',{name:'Tạo đội',exact:true}).click();
-      await page.locator('#none').click();await page.locator('#aiCreateToggle').click();
+      await page.locator('#selectAll').uncheck();
+      assert.equal(await page.locator('#all,#none').count(),0);
+      assert.ok(await page.locator('#go').evaluate(el=>Boolean(el.compareDocumentPosition(document.querySelector('#roster'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+      assert.equal(await page.locator('#screen-create button').filter({hasText:/^Tạo đội$/}).count(),1,'Only one lineup create action');
+      await page.locator('#go').click();await page.locator('#createProcessClose').waitFor({state:'visible'});
+      await page.waitForFunction(()=>!CREATE_STATE.busy);
+      assert.match(await page.locator('#createProcessSummary').innerText(),/14 đến 24/);
+      assert.equal(await page.locator('[data-step="roster"]').getAttribute('data-state'),'error');
+      assert.equal(await page.locator('#createProcessSteps [data-state="done"]').count(),0);
+      await page.locator('#createProcessClose').click();
+      await page.locator('#aiCreateToggle').click();
       assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
       await page.locator('#aiLoginForm').waitFor({state:'visible'});
       await page.locator('#aiPassword').fill(password);await page.locator('#aiLoginBtn').click();
       await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
       assert.equal(await page.locator('#aiMatchField').isVisible(),false);
+      assert.equal(await page.locator('#aiRun').isVisible(),false,'No duplicate create button for AI');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
-      await page.locator('#aiRun').click();assert.match(await page.locator('#aiMessage').innerText(),/chọn ít nhất 14/i);
       await page.getByRole('button',{name:'Chọn người có mặt',exact:true}).click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),0,'Returning to roster must not reset selections');
-      await page.locator('#all').click();await page.locator('#roster .pl-item.guest input').last().uncheck();
+      await page.locator('#selectAll').check();await page.locator('#roster .pl-item.guest input').last().uncheck();
+      assert.equal(await page.locator('#selectAll').evaluate(el=>el.indeterminate),true,'Partial selection reflected on master checkbox');
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);
-      await page.getByRole('button',{name:'Tạo đội bằng AI',exact:true}).click();
+      await page.locator('#aiCreateToggle').click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
       assert.match(await page.locator('#aiRosterInfo').innerText(),/15 người/);
       await page.locator('#aiInstruction').fill('Tách hai tiền vệ giữa, cân riêng công và thủ.');
       await page.getByRole('button',{name:'Đóng AI',exact:true}).click();await page.locator('#aiCreateToggle').click();
       assert.equal(await page.locator('#aiInstruction').inputValue(),'Tách hai tiền vệ giữa, cân riêng công và thủ.');
-      await page.locator('#aiRun').click();await page.locator('#aiOutput').waitFor({state:'visible'});
-      assert.equal(await page.locator('#aiLineupPreview .field .player').count(),14);
+      let release;lineupGate=new Promise(r=>release=r);const beforeProvider=providerCalls;
+      await page.locator('#go').click();
+      await page.waitForFunction(()=>document.querySelector('[data-step="search"]').dataset.state==='active');
+      assert.equal(await page.locator('#createProcess').isVisible(),true);
+      assert.equal(await page.locator('[data-step="balance"]').getAttribute('data-state'),'pending','No fabricated checks before the model returns');
+      assert.equal(await page.locator('#go').isDisabled(),true);
+      // A second call while busy cannot send an extra request.
+      await page.evaluate(()=>createTeams());
+      await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-process.png'),animations:'disabled'});
+      release();lineupGate=null;
+      await page.waitForFunction(()=>!CREATE_STATE.busy);
+      assert.equal(providerCalls,beforeProvider+1);
+      assert.equal(await page.locator('#result .field .player').count(),14);
+      assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
+      assert.equal(await page.locator('[data-step="rotation"]').getAttribute('data-state'),'warn','Repeated positions must not receive a green check');
       assert.equal(await page.evaluate(()=>window.AI_XSS),undefined);assert.equal(await page.locator('#aiOutputText img').count(),0);
       assert.equal(await page.evaluate(()=>getHistory().length),5,'AI generation must not create a match');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-lineup.png'),fullPage:true});
-      const changed=page.locator('#roster .pl-item:not(.guest) input:checked').first();
-      await changed.uncheck();acceptDialogs=false;await page.locator('#aiUseLineup').click();
-      assert.equal(await page.evaluate(()=>selectedIdx().length),14,'Declining stale draft must preserve the newer selection');
-      assert.equal(await page.evaluate(()=>cstate.results.length),0,'Declining stale draft must not apply it');
-      await page.locator('#roster .pl-item:not(.guest) input:not(:checked)').first().check();acceptDialogs=true;
-      await page.locator('#aiUseLineup').click();assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.evaluate(()=>getHistory().length),5);
-      assert.equal(await page.locator('#screen-create').isVisible(),true);assert.equal(await page.locator('#createAI').isVisible(),false);
+      await page.locator('#createProcessClose').click();
+      assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.evaluate(()=>getHistory().length),5);
+      assert.equal(await page.locator('#screen-create').isVisible(),true);
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);assert.equal(await page.evaluate(()=>cstate.subset.length),15);
+      // Invalid provider key: exactly one paid attempt, then a responsive worker fallback.
+      providerFailure=true;const beforeFailure=providerCalls;
+      await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{},{timeout:30000});providerFailure=false;
+      assert.equal(providerCalls,beforeFailure+1,'No retry of an invalid key');
+      assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
+      assert.equal(await page.locator('[data-step="engine"]').getAttribute('data-state'),'warn');
+      assert.equal(await page.locator('#result .field .player').count(),14);
+      await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
+      await page.locator('#createProcessClose').click();
+      // Missing configuration must not attempt a paid request at all.
+      await page.route('**/api/ai/status',r=>r.fulfill({json:{configured:false,authenticated:false,model:'fake/qa',remainingRequests:20,missing:['OPENROUTER_API_KEY'],dataMode:'preview'}}));
+      const beforeMissing=providerCalls;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
+      assert.equal(providerCalls,beforeMissing);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
+      assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
+      await page.locator('#createProcessClose').click();await page.unroute('**/api/ai/status');
+      const beforeCancel=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeCancel=providerCalls;
+      acceptDialogs=false;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);acceptDialogs=true;
+      assert.match(await page.locator('#createProcessSummary').innerText(),/Đã huỷ/);
+      assert.equal(providerCalls,callsBeforeCancel,'Declining data sharing cannot call the provider');
+      assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),beforeCancel,'Cancellation preserves the previous draft');
+      await page.locator('#createProcessClose').click();
       await page.evaluate(()=>openAITask('match-review',100));
       await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='match-review'&&!AI_STATE.busy);
       assert.equal(await page.locator('#aiOutputText section').count(),6);await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/không ghi nhận định lên cloud/);
@@ -89,7 +132,7 @@ async function main(){
         window.firebase={firestore:Object.assign(()=>({}),{FieldValue:{arrayUnion:x=>x}})};
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
-      await page.locator('#aiConnection summary').click();await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      await page.locator('#aiConnection').evaluate(el=>el.open=true);await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
       assert.ok(requests.every(r=>!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
       await ctx.close();
     }
@@ -114,7 +157,7 @@ async function main(){
     });assert.equal(saved.same,true);assert.equal(saved.safeHTML,true);assert.equal(saved.matches,5);
     await page.evaluate(()=>{window.QA_DOC.history.find(m=>m.id===100).score={a:9,b:9};});await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/đã thay đổi/);assert.equal(await page.evaluate(()=>window.QA_UPDATES),1);
     await ctx.close();
-    console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'inline AI inside Create, roster/note preserved, desktop/mobile, dark/light, login/logout, all 4 tasks, preview/apply draft, no XSS, no Firebase writes, no secret/finance payloads'}));
+    console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'single Create button, tri-state select-all, top toolbar, real progress, bad/missing key algorithm fallback, no duplicate requests, AI tasks, desktop/mobile, dark/light, no XSS or Firebase writes'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

@@ -129,10 +129,11 @@
   };
 
   // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
-  function solve(players, Wover){
+  function solve(players, Wover, options={}){
     const W=Object.assign({}, DEFW, Wover||{});
     const N=players.length;
     if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
+    const members=players.filter(p=>!p.guest).length;
     const overall=players.map(overallOf);
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
@@ -171,6 +172,7 @@
       const A=baseA.concat(pick);
       const inA=new Array(N).fill(false); A.forEach(i=>inA[i]=true);
       const B=all.filter(i=>!inA[i]);
+      if(options.strictGuests&&Math.abs(A.filter(i=>players[i].guest).length-B.filter(i=>players[i].guest).length)>1)return;
       // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
       const okGK=i=>lockGK?isGK[i]:TM[i]>0;
       let okA=false,okB=false;
@@ -178,6 +180,7 @@
       for(const i of B) if(okGK(i)){okB=true;break;}
       if(!okA||!okB) return;
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
+      if(options.strictGuests&&members>=14&&(eA.guestStart||eB.guestStart))return;
       const d=k=>Math.abs(eA[k]-eB[k]);
       const J = W.stars*d('stars')
               + W.startFit*d('startFit')

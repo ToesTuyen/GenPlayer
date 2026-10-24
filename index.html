@@ -947,6 +947,38 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 @media(prefers-reduced-motion:reduce){.ap-icon{transition:none}.ap-btn:hover .ap-icon{transform:none}}
 
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
+.create-toolbar{margin:0 0 8px;gap:6px}
+.roster-selection{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:8px}
+.roster-select-all{display:inline-flex;align-items:center;gap:8px;min-height:36px;font-size:13px;font-weight:600;cursor:pointer}
+.roster-select-all input{width:18px;height:18px;margin:0;accent-color:var(--action);cursor:pointer}
+.roster-selection .count{margin:0;font-size:12px}
+.create-process{width:calc(100% - 24px);max-width:620px;max-height:calc(100dvh - 32px);margin:auto;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:var(--sh);overflow:auto;overscroll-behavior:contain}
+.create-process[open]{display:flex;flex-direction:column}
+.create-process>:not(.process-steps){flex-shrink:0}
+.create-process::backdrop{background:rgba(12,25,20,.5)}
+.process-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.process-head h2{font-size:18px;margin:0}
+.process-engine{font-size:11px;color:var(--brand);background:var(--brand-soft);border-radius:20px;padding:4px 9px;white-space:nowrap}
+#createProcessNote{color:var(--muted);font-size:12px;line-height:1.6;margin:8px 0}
+.create-process progress{display:block;width:100%;height:6px;margin:12px 0 6px;border:0;border-radius:8px;accent-color:var(--action);overflow:hidden;background:var(--surface3)}
+.create-process progress::-webkit-progress-bar{background:var(--surface3)}
+.create-process progress::-webkit-progress-value{background:var(--action)}
+.process-count{font-size:11px;color:var(--muted);margin-bottom:8px}
+.process-steps{list-style:none;padding:0;margin:0;min-height:0;overflow:auto;overscroll-behavior:contain}
+.process-steps li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
+.process-step-icon{flex:0 0 20px;width:20px;height:20px;border:1px solid var(--line);border-radius:50%;margin-top:1px;display:grid;place-items:center;color:var(--muted);font-size:13px;font-weight:700;box-sizing:border-box}
+.process-step-title{display:block;font-size:13px;font-weight:600;line-height:1.6}
+.process-step-detail{display:block;font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere}
+.process-steps [data-state="done"] .process-step-icon{background:var(--brand-soft);color:var(--success);border-color:var(--success)}
+.process-steps [data-state="warn"] .process-step-icon{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.process-steps [data-state="error"] .process-step-icon{background:var(--loss-soft);color:var(--red);border-color:var(--red)}
+.process-steps [data-state="active"] .process-step-icon{border:2px solid var(--line);border-top-color:var(--brand);animation:process-spin 1s linear infinite}
+.process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
+.process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.process-actions{display:flex;justify-content:flex-end;margin-top:12px}
+@keyframes process-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
+@media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
 #createAI[hidden],#createAI [hidden]{display:none!important}
 .create-ai{margin-top:12px}
 .ai-inline-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -1200,16 +1232,18 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <div id="screen-create" class="screen">
   <div class="card-box">
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
-    <div class="grid" id="roster"></div>
-    <div class="bar">
-      <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác"><span data-ui-icon="lineup"></span>Tạo đội (Thuật Toán)</button>
-      <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tạo đội bằng AI</button>
-      <button class="btn alt sm" id="all">Chọn tất cả</button>
-      <button class="btn alt sm" id="none">Bỏ chọn</button>
+    <div class="bar create-toolbar">
+      <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
+      <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
+      <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
+    </div>
+    <div class="roster-selection">
+      <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
       <span class="count" id="count"></span>
     </div>
+    <div class="grid" id="roster"></div>
   </div>
   <!-- AI uses the selected roster and stays inside the Create workflow. -->
   <section id="createAI" class="create-ai" aria-label="AI trong Tạo đội" hidden>
@@ -1231,7 +1265,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </div>
     <div id="aiRosterInfo" class="ai-status"></div>
     <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
-    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled>Tạo bằng AI</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Ghi chú tự do chỉ được gửi khi dùng AI.</p>
     <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
     <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   </div>
@@ -1242,9 +1277,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   </section>
   <div class="status" id="status"></div>
-  <div style="text-align:center;margin:12px 0"><button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button></div>
   <div id="result"></div>
 </div>
+<dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
+  <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
+  <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
+  <progress id="createProcessProgress" max="10" value="0" aria-label="Tiến trình kiểm tra"></progress>
+  <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
+  <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
+  <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
+  <div class="process-actions"><button class="btn" id="createProcessClose" disabled>Đang xử lý…</button></div>
+</dialog>
 
 <!-- ====== CAP NHAT CAU THU ====== -->
 <div id="screen-players" class="screen">
@@ -2001,10 +2044,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   };
 
   // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
-  function solve(players, Wover){
+  function solve(players, Wover, options={}){
     const W=Object.assign({}, DEFW, Wover||{});
     const N=players.length;
     if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
+    const members=players.filter(p=>!p.guest).length;
     const overall=players.map(overallOf);
     const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
@@ -2043,6 +2087,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const A=baseA.concat(pick);
       const inA=new Array(N).fill(false); A.forEach(i=>inA[i]=true);
       const B=all.filter(i=>!inA[i]);
+      if(options.strictGuests&&Math.abs(A.filter(i=>players[i].guest).length-B.filter(i=>players[i].guest).length)>1)return;
       // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
       const okGK=i=>lockGK?isGK[i]:TM[i]>0;
       let okA=false,okB=false;
@@ -2050,6 +2095,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       for(const i of B) if(okGK(i)){okB=true;break;}
       if(!okA||!okB) return;
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
+      if(options.strictGuests&&members>=14&&(eA.guestStart||eB.guestStart))return;
       const d=k=>Math.abs(eA[k]-eB[k]);
       const J = W.stars*d('stars')
               + W.startFit*d('startFit')
@@ -2076,6 +2122,222 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   if(typeof module!=="undefined"&&module.exports) module.exports=api;
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
+<!-- Run the same offline solver in a worker so the progress view stays responsive. -->
+<script id="solverWorkerSource" type="text/plain">
+// Thuat toan chia 2 doi can bang (chay trong trinh duyet hoac node) - khong can server
+// Port tu team_builder.py
+(function(global){
+  const SLOTS = ["GK","Thòng","HV","HV","TVtt","TV","TĐ"];      // sơ đồ hiển thị 1-3-1-2 (GK · 3 thủ · TVtt · TV+TĐ)
+  const STAR_MIN = 8;   // ⭐ Ngôi sao = overall >= ngưỡng này (PHẢI khớp STAR_MIN trong web_template.html)
+
+  // Độ hợp vị trí = KỸ NĂNG thuần ở vị trí đó (không trộn Ổn định vào đây — OD cân riêng qua odMean ở hàm J).
+  function fit(s, p){
+    const KT=s.KT,CH=s.CH,DD=s.DD,PN=s.PN,TC=s.TC,TL=s.TL,DN=s.DN,TD=s.TD,TM=s.TM;
+    if(p==="GK")    return TM;
+    if(p==="Thòng") return 0.40*PN+0.25*TD+0.20*TL+0.15*CH-0.20*Math.max(0,DD-6);
+    if(p==="HV")    return 0.30*PN+0.25*TC+0.20*TL+0.15*DN+0.10*TD;
+    if(p==="TVtt")  return 0.30*CH+0.30*TD+0.20*KT+0.10*DN+0.10*PN;
+    if(p==="TV")    return 0.30*KT+0.20*TC+0.20*CH+0.15*DN+0.15*DD;
+    if(p==="TĐ")    return 0.45*DD+0.20*KT+0.15*TL+0.10*TD+0.10*TC;
+    return 0;
+  }
+
+  // Hungarian (min-cost perfect assignment), square n x n. Returns ans[row]=col.
+  function hungarian(cost){
+    const n=cost.length, INF=1e9;
+    const u=new Array(n+1).fill(0), v=new Array(n+1).fill(0);
+    const p=new Array(n+1).fill(0), way=new Array(n+1).fill(0);
+    for(let i=1;i<=n;i++){
+      p[0]=i; let j0=0;
+      const minv=new Array(n+1).fill(INF), used=new Array(n+1).fill(false);
+      do{
+        used[j0]=true; const i0=p[j0]; let delta=INF, j1=-1;
+        for(let j=1;j<=n;j++) if(!used[j]){
+          const cur=cost[i0-1][j-1]-u[i0]-v[j];
+          if(cur<minv[j]){minv[j]=cur; way[j]=j0;}
+          if(minv[j]<delta){delta=minv[j]; j1=j;}
+        }
+        for(let j=0;j<=n;j++){
+          if(used[j]){u[p[j]]+=delta; v[j]-=delta;} else minv[j]-=delta;
+        }
+        j0=j1;
+      }while(p[j0]!==0);
+      do{ const j1=way[j0]; p[j0]=p[j1]; j0=j1; }while(j0);
+    }
+    const ans=new Array(n);
+    for(let j=1;j<=n;j++) ans[p[j]-1]=j-1;
+    return ans;
+  }
+
+  // gia tri tong quat = 8 chi so san. OD (On dinh) TAM KHONG tinh vao diem (chi hien thi).
+  function overallOf(s){ return (s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8; }
+
+  // danh gia 1 doi (mang index global). Tra ve starters[slot]=idx, bench[], cac chi so.
+  function evalTeam(team, ctx){
+    const k=team.length;
+    // cost k x k: cot 0..6 = slot (dung fitPen de gan), 7..k-1 = bench (0)
+    const cost=[];
+    for(let r=0;r<k;r++){
+      const pi=team[r], row=new Array(k).fill(0);
+      for(let c=0;c<7;c++) row[c]=-ctx.fitPen[pi][c];
+      cost.push(row);
+    }
+    const ans=hungarian(cost);
+    const starters=new Array(7).fill(-1); const bench=[];
+    let startFit=0, benchOv=0, gkFit=0, frontFit=0, backFit=0;
+    for(let r=0;r<k;r++){
+      const pi=team[r], c=ans[r];
+      if(c<7){ starters[c]=pi; const fc=ctx.fitT[pi][c]; startFit+=fc; if(c===0) gkFit=fc;
+        if(c>=4&&c<=6) frontFit+=fc; if(c>=1&&c<=3) backFit+=fc; }  // tuyến trên / tuyến dưới (theo fit)
+      else { bench.push(pi); benchOv+=ctx.overall[pi]; }
+    }
+    const S=ctx.players;
+    // ĐÚNG VỊ TRÍ: đếm starter bị xếp NGOÀI vị trí đăng ký (chính+phụ). Cầu thủ chưa chọn vị trí (pos rỗng) -> bỏ qua.
+    let offPos=0, guestStart=0;
+    for(let c=0;c<7;c++){ const pi=starters[c]; if(pi<0)continue;
+      if(S[pi].guest)guestStart++;                          // KHACH da chinh -> phat o J de uu tien du bi
+      const pr=S[pi].pos; if(!pr)continue;
+      const p2=S[pi].pos2; if(pr!==SLOTS[c] && !(Array.isArray(p2)&&p2.includes(SLOTS[c]))) offPos++; }
+    const backs=[starters[1],starters[2],starters[3]];
+    const fronts=[starters[4],starters[5],starters[6]];
+    const mean=(a,f)=>a.reduce((s,i)=>s+f(S[i]),0)/a.length;
+    const bmean=f=>bench.length?bench.reduce((s,i)=>s+f(S[i]),0)/bench.length:0;
+    const flat=s=>(s.KT+s.CH+s.DD+s.PN+s.TC+s.TL+s.DN+s.TD)/8;   // chất lượng tổng quát (8 chỉ số sân; OD tạm KHÔNG tính)
+    return {
+      starters, bench, startFit, benchOv, gkFit, frontFit, backFit,
+      defPN: mean(backs,s=>s.PN),     // THỦ tuyến dưới (3 hậu vệ) — giữ cân hình
+      atk:   mean(fronts,s=>s.DD),    // CÔNG tuyến trên (3 mũi) — giữ cân hình
+      def7:  mean(starters,s=>s.PN),  // THỦ toàn đội hình chính (cả tuyến giữa)
+      atk7:  mean(starters,s=>s.DD),  // CÔNG toàn đội hình chính (cả tuyến giữa)
+      defOv: mean(backs,flat),        // CHẤT LƯỢNG tuyến dưới (overall 3 hậu vệ, không chỉ PN)
+      atkOv: mean(fronts,flat),       // CHẤT LƯỢNG tuyến trên (overall 3 mũi)
+      benchDef: bmean(s=>s.PN),       // THỦ của ghế dự bị
+      benchAtk: bmean(s=>s.DD),       // CÔNG của ghế dự bị
+      pace:  mean(starters,s=>s.TC),
+      heat:  mean(starters,s=>s.DN),
+      run:   mean(starters,s=>s.TC+s.TL+s.DN),  // SỨC CHẠY tổng (tốc độ+thể lực+năng nổ) — để 2 đội chạy đều
+      stars: team.filter(i=>ctx.overall[i]>=STAR_MIN).length,
+      total: startFit+benchOv,
+      odMean: team.reduce((a,i)=>a+(+S[i].OD||0),0)/team.length,  // ỔN ĐỊNH trung bình cả đội — để cân phong độ
+      startOv: mean(starters,flat),   // OVERALL trung bình ĐỘI HÌNH CHÍNH — cân để ko dồn người mạnh 1 đội
+      offPos,                         // số starter ĐÁ SAI vị trí đăng ký — phạt nặng để ưu tiên xếp đúng vị trí
+      guestStart,                     // số KHÁCH (người ngoài) phải đá chính — phạt để ưu tiên dự bị
+      gkWaste: (starters[0]>=0 && S[starters[0]].pos!=="GK") ? ctx.bestOut[starters[0]] : 0,  // bắt gôn nhưng KO phải thủ môn chính -> phí giá trị ngoài sân (phạt: đừng nhét tiền đạo/HV giỏi vào gôn)
+    };
+  }
+
+  function combinations(pool, k, cb){
+    const n=pool.length, idx=new Array(k);
+    (function rec(start, depth){
+      if(depth===k){ cb(idx.slice()); return; }
+      for(let i=start;i<=n-(k-depth);i++){ idx[depth]=pool[i]; rec(i+1, depth+1); }
+    })(0,0);
+  }
+
+  // Trong so ham muc tieu J (cang nho cang can). CONG = THU de "khong cai nhau".
+  const DEFW={
+    stars:2.5,        // chenh so ngoi sao
+    startFit:1.0,     // suc manh doi hinh chinh (Hungarian fit)
+    total:1.0,        // tong ca doi (chinh + du bi) — can tong luc 2 doi
+    cong:1.0, thu:1.0,        // CONG/THU toan doi hinh chinh (ca tuyen giua) — NGANG NHAU
+    congLine:0.5, thuLine:0.5, // giu can hinh tuyen tren/duoi
+    frontBal:1.5, backBal:1.5, // CAN TUYEN TREN/DUOI theo DIEM-VI-TRI (fit) — nhu cach chia AI thu cong
+    defq:1.0, atkq:0.7,       // CHAT LUONG tuyen duoi / tuyen tren (overall, khong chi PN/DD) — tranh don ngoi sao 1 tuyen
+    benchOv:0.5,              // du bi: suc manh
+    benchCong:0.5, benchThu:0.5, // du bi: can ca cong lan thu (khong lech thanh phan)
+    pace:0.3, heat:0.3, run:0.7, // SUC CHAY can deu (run gom ca the luc) — tach 2 may chay ra 2 doi
+    gk:0.2,           // thu mon CHI la phu — khong de ganh can can
+    stab:0,           // ON DINH (OD) — TAM TAT khoi chia doi (OD chi hien thi); doi >0 de bat lai sau
+    startq:4.0,       // CHAT LUONG doi hinh chinh (overall TB) — chia deu nguoi MANH/YEU, ko don sao 1 doi (lon nhat: 2 doi manh ngang nhau)
+    posbad:6.0,       // PHAT TUYET DOI moi starter da SAI vi tri dang ky — uu tien xep DUNG vi tri (loai phuong an sai khoi "Tao lai")
+    guestbad:5.0,     // PHAT moi KHACH phai da chinh -> uu tien chia khach ve doi con ghe du bi
+    gkwaste:2.0,      // PHAT khi nguoi NGOAI SAN gioi phai bat gon -> chia thu mon sao cho tien dao/HV gioi dung vi tri
+  };
+
+  // players: mang object {n,KT,...,TM}. Tra ve top-K {A,B,evA,evB,J} (mang) hoac {error}.
+  function solve(players, Wover, options={}){
+    const W=Object.assign({}, DEFW, Wover||{});
+    const N=players.length;
+    if(N<14) return {error:"Cần ít nhất 14 người (7 vs 7)."};
+    const members=players.filter(p=>!p.guest).length;
+    const overall=players.map(overallOf);
+    const fitT=players.map(p=>SLOTS.map(sl=>fit(p,sl)));
+    // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
+    const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
+    const isGK=players.map(p=>p.pos==="GK" && !p.guest);   // KHACH ko tinh la thu mon CO DINH -> uu tien du bi, nhuong gon cho GK that
+    const lockGK=isGK.filter(Boolean).length>=2;            // co >=2 thu mon co dinh -> khoa khung gon cho ho, khong xet nguoi khac (du TM cao)
+    const bestOut=fitT.map(row=>Math.max(row[1],row[2],row[3],row[4],row[5],row[6]));  // fit cao nhat o vi tri NGOAI SAN (do "gia tri ngoai san")
+    const fitPen=fitT.map((row,i)=>{
+      const pr=players[i].pos, sec=Array.isArray(players[i].pos2)?players[i].pos2:[];
+      const gp=players[i].guest?GUEST_PEN:0;                 // KHACH -> tru deu o moi vi tri => uu tien du bi
+      return row.map((v,c)=>{ const sl=SLOTS[c];
+        if(sl==="GK"){
+          if(lockGK) return v + (isGK[i]?GKLOCK:-GKLOCK) - gp;     // >=2 thu mon co dinh -> khoa gon cho ho
+          if(pr==="GK") return v + PRI - gp;                      // thu mon CHINH
+          if(players[i].TM>0) return -bestOut[i] - gp;            // biet bat nhung KO phai TM chinh -> uu tien nguoi NGOAI SAN KEM nhat bat gon (giu tien dao/HV gioi dung vi tri)
+          return -1e6;                                            // ko biet bat -> khong bao gio vao gon
+        }
+        if(!pr) return v - gp;                              // chua chon vi tri -> trung tinh
+        return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)) - gp; });
+    });
+    const TM=players.map(p=>p.TM);
+    const ctx={players,overall,fitT,fitPen,bestOut};
+    const sizeA=Math.ceil(N/2), even=(N%2===0);
+
+    const K=12, top=[];   // giu top-K cach chia can nhat (de nut "Tao lai" doi doi)
+    function consider(c){
+      if(top.length<K){top.push(c);top.sort((a,b)=>a.J-b.J);}
+      else if(c.J<top[K-1].J){top[K-1]=c;top.sort((a,b)=>a.J-b.J);}
+    }
+    const all=Array.from({length:N},(_,i)=>i);
+    const pool = even ? all.slice(1) : all;          // even: co dinh player0 o A (khu trung lap)
+    const need = even ? sizeA-1 : sizeA;
+    const baseA = even ? [0] : [];
+
+    combinations(pool, need, (pick)=>{
+      const A=baseA.concat(pick);
+      const inA=new Array(N).fill(false); A.forEach(i=>inA[i]=true);
+      const B=all.filter(i=>!inA[i]);
+      if(options.strictGuests&&Math.abs(A.filter(i=>players[i].guest).length-B.filter(i=>players[i].guest).length)>1)return;
+      // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
+      const okGK=i=>lockGK?isGK[i]:TM[i]>0;
+      let okA=false,okB=false;
+      for(const i of A) if(okGK(i)){okA=true;break;}
+      for(const i of B) if(okGK(i)){okB=true;break;}
+      if(!okA||!okB) return;
+      const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
+      if(options.strictGuests&&members>=14&&(eA.guestStart||eB.guestStart))return;
+      const d=k=>Math.abs(eA[k]-eB[k]);
+      const J = W.stars*d('stars')
+              + W.startFit*d('startFit')
+              + W.total*d('total')
+              + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
+              + W.congLine*d('atk') + W.thuLine*d('defPN') // giữ cân hình tuyến trên/dưới
+              + W.frontBal*d('frontFit') + W.backBal*d('backFit') // CÂN TUYẾN TRÊN/DƯỚI theo điểm-vị-trí (fit) — như chia AI
+              + W.defq*d('defOv') + W.atkq*d('atkOv')      // cân CHẤT LƯỢNG tuyến dưới/trên (overall)
+              + W.benchOv*d('benchOv')
+              + W.benchCong*d('benchAtk') + W.benchThu*d('benchDef') // dự bị cân công-thủ
+              + W.pace*d('pace') + W.heat*d('heat') + W.run*d('run')
+              + W.gk*d('gkFit')
+              + W.stab*d('odMean')                          // cân ỔN ĐỊNH (OD) giữa 2 đội
+              + W.startq*d('startOv')                       // cân OVERALL đội hình chính — người mạnh/yếu chia đều
+              + W.posbad*(eA.offPos+eB.offPos)              // PHẠT tuyệt đối starter đá sai vị trí (ko phải chênh lệch)
+              + W.guestbad*(eA.guestStart+eB.guestStart)    // PHẠT khách đá chính -> ưu tiên dự bị
+              + W.gkwaste*(eA.gkWaste+eB.gkWaste);          // PHẠT phí người ngoài sân giỏi vào gôn -> giữ tiền đạo/HV đúng vị trí
+      consider({J,A,B,evA:eA,evB:eB});
+    });
+    return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
+  }
+
+  const api={solve,fit,SLOTS,overallOf};
+  if(typeof module!=="undefined"&&module.exports) module.exports=api;
+  global.TeamSolver=api;
+})(typeof window!=="undefined"?window:globalThis);
+self.onmessage=function(event){
+  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true})});}
+  catch(e){self.postMessage({error:e.message||'Không chạy được thuật toán.'});}
+};
+</script>
 <script>/* Shared, pure football context. No credentials, finance, Firebase or DOM. */
 (function(root){
   'use strict';
@@ -3330,26 +3592,14 @@ function addGuest(){
 }
 function removeGuest(enc){const n=decodeURIComponent(enc);guestPlayers=guestPlayers.filter(g=>g.n!==n);buildRoster();}
 function selectedIdx(){return [...$("roster").querySelectorAll("input:checked")].map(c=>+c.dataset.i);}
-function updateCount(){const n=selectedIdx().length;$("count").innerHTML=`Đã chọn <b>${n}</b>`+(n<14?` <span style="color:#dc2626">(cần ≥14)</span>`:(n%2?` <span style="color:#d97706">(lẻ)</span>`:""));if(!$("createAI").hidden)aiTaskChanged();}
-$("all").onclick=()=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=true;c.closest(".pl-item").classList.add("on");c.closest(".pl-item").classList.remove("off");});updateCount();};
-$("none").onclick=()=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=false;c.closest(".pl-item").classList.remove("on");c.closest(".pl-item").classList.add("off");});updateCount();};
-$("go").onclick=()=>{
-  const sel=selectedIdx();
-  if(sel.length<14){$("status").innerHTML='<span style="color:#dc2626">Cần chọn ít nhất 14 người (7 vs 7).</span>';$("result").innerHTML="";$("saveWeek").style.display="none";return;}
-  $("status").textContent="⏳ Đang chia đội…"; $("go").disabled=true;
-  setTimeout(()=>{
-    const key=sel.join(","); let fresh=false;
-    if(key!==cstate.key){const subset=sel.map(i=>curPlayers[i]);const res=TeamSolver.solve(subset);if(res.error){$("status").innerHTML='<span style="color:#dc2626">'+res.error+'</span>';$("go").disabled=false;return;}cstate={key,results:res,idx:0,subset};fresh=true;}
-    else cstate.idx=(cstate.idx+1)%cstate.results.length;
-    render(cstate.results[cstate.idx],cstate.subset,"result",null,true);
-    $("status").innerHTML=fresh?`Cách chia cân nhất · bấm <b>Tạo đội (Thuật Toán)</b> lần nữa để đổi`:`Phương án cân thứ <b>${cstate.idx+1}/${cstate.results.length}</b> · bấm tiếp để đổi`;
-    $("saveWeek").style.display="inline-block";
-    $("go").disabled=false;
-    $("roster").style.display="none";                                 // gen xong -> ẩn danh sách chọn
-    const tg=$("toggleRoster"); if(tg){tg.style.display="";tg.textContent="👥 Hiện danh sách";}
-    $("result").scrollIntoView({behavior:"smooth",block:"start"});    // nhảy xuống focus đội hình đã gen
-  },30);
-};
+function updateCount(){
+  const n=selectedIdx().length,all=$("selectAll");
+  all.checked=curPlayers.length>0&&n===curPlayers.length;all.indeterminate=n>0&&n<curPlayers.length;all.disabled=!curPlayers.length;
+  $("count").innerHTML=`Đã chọn <b>${n}/${curPlayers.length}</b>`+(n<14?` <span style="color:var(--red)">(cần ≥14)</span>`:(n%2?` <span style="color:var(--amber)">(lẻ)</span>`:""));
+  if(!$("createAI").hidden)aiTaskChanged();
+}
+$("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
+$("go").onclick=()=>createTeams();
 $("saveWeek").onclick=()=>{
   if(!cstate.results.length)return;
   if(!canEdit){ alert("🔒 Tính năng \"Lưu làm đội tuần này\" cần đăng nhập trước."); openAdminModal(); return; }
@@ -4724,6 +4974,7 @@ function aiPopulateSources(){
 function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
 function aiTaskChanged(){
   const task=$('aiTask').value;
+  $('aiRun').hidden=task==='lineup';$('aiLineupHint').hidden=task!=='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
   const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
   $('aiRosterInfo').hidden=task!=='lineup';
@@ -4740,13 +4991,13 @@ function aiShowRoster(){
   $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
   $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function aiContextSnapshot(){
+function aiContextSnapshot(task=$('aiTask').value){
   const all=getPlayers().concat(guestPlayers),names=new Set();
   const players=all.map(p=>{names.add(p.n);return GPAIContext.player(p);});
   const matchRecord=getHistory().find(r=>String(r.id)===$('aiMatch').value);
   for(const p of matchRecord?.subset||[])if(p){
     if(!names.has(p.n)){players.push(GPAIContext.player(p));names.add(p.n);}
-    else if($('aiTask').value==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
+    else if(task==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
   }
   const history=getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy);
   return {players,history,rosterNames:selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean),match:matchRecord?GPAIContext.compactLegacy(matchRecord):null,playerName:$('aiPlayer').value,instruction:$('aiInstruction').value.trim()};
@@ -4756,7 +5007,8 @@ function aiMatchFingerprint(match,players){
   return JSON.stringify({match,profiles:players.filter(p=>names.has(p.n)).map(GPAIContext.player).sort((a,b)=>a.n.localeCompare(b.n,'vi'))});
 }
 async function aiRun(){
-  if(AI_STATE.busy)return;
+  if(AI_STATE.busy||CREATE_STATE.busy)return;
+  if($('aiTask').value==='lineup')return createTeams();
   let context;const task=$('aiTask').value;
   try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Chọn ít nhất 14 người có mặt trước khi tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
   if(!confirm('Gửi tên, chỉ số cầu thủ và lịch sử bóng đá liên quan tới OpenRouter/model để tạo nội dung? Mỗi lượt có thể tính phí. Không gửi tài khoản, thu chi hay API key.'))return;
@@ -4765,11 +5017,11 @@ async function aiRun(){
     const response=await aiFetch('run',{task,context});
     AI_STATE.output=response.output;AI_STATE.request={task,context,matchId:context.match?.id,matchSnapshot:aiMatchFingerprint(context.match,context.players)};
     aiRenderOutput();aiMessage('Đã có bản nháp AI. Kiểm tra nội dung/bảng so kè trước khi sử dụng.');
-  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;$('aiRun').textContent='Tạo bằng AI';await aiRefresh();}
+  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;$('aiRun').textContent='Phân tích';await aiRefresh();}
 }
 function aiPlainOutput(){const o=AI_STATE.output;if(!o)return '';return o.title+'\n\n'+o.sections.map(s=>s.heading+'\n'+s.body).join('\n\n');}
 function aiReviewHTML(o){return '<p class="rv-lead"><b>'+esc(o.title)+'</b></p>'+o.sections.map(s=>'<p><b>'+esc(s.heading)+'</b><br>'+esc(s.body).replace(/\n/g,'<br>')+'</p>').join('');}
-function aiRenderOutput(){
+function aiRenderOutput(showLineupPreview=true){
   const o=AI_STATE.output,task=AI_STATE.request.task;
   $('aiOutput').hidden=false;$('aiOutputText').innerHTML='<h2>'+esc(o.title)+'</h2>'+o.sections.map(s=>'<section><h3>'+esc(s.heading)+'</h3><p>'+esc(s.body)+'</p></section>').join('');
   if(task==='player-form'){
@@ -4777,10 +5029,10 @@ function aiRenderOutput(){
     $('aiOutputText').innerHTML+='<div class="ai-label">'+labels[o.verdict]+' · chỉ đề xuất, không tự sửa điểm</div>'+o.suggestions.map(s=>'<p>'+esc(s.attribute+' · '+({increase:'tăng',decrease:'giảm',keep:'giữ'}[s.direction])+': '+s.reason)+'</p>').join('');
   }
   $('aiOutputMeta').textContent=`${o.model} · ${new Date(o.createdAt).toLocaleString('vi-VN')} · ${o.usage?o.usage.promptTokens+' token vào / '+o.usage.completionTokens+' token ra':'chưa có số token'} · bản nháp, cần kiểm tra dữ kiện.`;
-  $('aiUseLineup').hidden=task!=='lineup';$('aiSaveReview').hidden=task!=='match-review';
+  $('aiUseLineup').hidden=task!=='lineup'||!showLineupPreview;$('aiSaveReview').hidden=task!=='match-review';
   $('aiLineupPreview').innerHTML='';$('aiWarnings').textContent=(o.warnings||[]).join('\n');
-  if(task==='lineup')render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
-  $('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
+  if(task==='lineup'&&showLineupPreview)render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
+  if(showLineupPreview)$('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiCopy(){try{await navigator.clipboard.writeText(aiPlainOutput());aiMessage('Đã sao chép nội dung AI.');}catch{aiMessage('Trình duyệt không cho sao chép. Bạn có thể chọn nội dung bên dưới để copy.',true);}}
 function aiUseLineup(){
@@ -4809,6 +5061,186 @@ async function aiSaveReview(){
       r.review=aiReviewHTML(output);r.aiReview={model:output.model,createdAt:output.createdAt};tx.update(STATE.docRef,{history});
     });aiMessage('Đã lưu nhận định vào đúng trận. Không thay đổi đội hình, tỉ số hay bàn thắng.');
   }catch(e){aiMessage(e.message,true);}
+}
+
+// One Create action. Stages report real work/checks, never simulated model reasoning.
+const CREATE_STEPS=[
+  ['roster','Danh sách & thể thức 7 vs 7'],
+  ['ratings','Chỉ số & vị trí đăng ký'],
+  ['history','Dữ liệu phong độ, thắng thua & bàn thắng'],
+  ['engine','Kết nối bộ xử lý'],
+  ['search','Tìm phương án chia đội'],
+  ['partition','Đủ người, dự bị & chia khách'],
+  ['balance','Cân riêng hàng công & hàng thủ'],
+  ['positions','Đúng vị trí & ưu tiên người mạnh'],
+  ['rotation','Đối chiếu đội hình gần nhất'],
+  ['draft','Hiển thị đội hình & bảng so kè']
+];
+const CREATE_STATE={busy:false,steps:new Map(),success:false};
+const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+function createStep(id,state,detail=''){
+  CREATE_STATE.steps.set(id,state);
+  const row=$('createProcessSteps').querySelector('[data-step="'+id+'"]');
+  row.dataset.state=state;row.querySelector('.process-step-detail').textContent=detail;
+  const labels={pending:'Chờ xử lý',active:'Đang xử lý',done:'Đã kiểm tra',warn:'Cần lưu ý',error:'Không hoàn tất',skip:'Chưa kiểm tra'};
+  row.querySelector('.process-step-icon').textContent=({done:'✓',warn:'!',error:'×',skip:'–'})[state]||'';
+  row.querySelector('.process-step-icon').setAttribute('aria-label',labels[state]);
+  if(state==='active')row.scrollIntoView({block:'nearest'});
+  const finished=[...CREATE_STATE.steps.values()].filter(s=>['done','warn'].includes(s)).length;
+  $('createProcessProgress').value=finished;$('createProcessCount').textContent=finished+'/'+CREATE_STEPS.length+' bước đã xử lý';
+}
+function createBegin(){
+  CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.steps.clear();
+  $('aiTask').value='lineup';aiTaskChanged();
+  $('go').disabled=true;$('selectAll').disabled=true;
+  $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
+  $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';
+  $('createProcessSummary').hidden=true;$('createProcessClose').disabled=true;$('createProcessClose').textContent='Đang xử lý…';
+  $('createProcessSteps').innerHTML=CREATE_STEPS.map(([id,title])=>'<li data-step="'+id+'" data-state="pending"><span class="process-step-icon" role="img" aria-label="Chờ xử lý"></span><div><span class="process-step-title">'+title+'</span><span class="process-step-detail"></span></div></li>').join('');
+  CREATE_STEPS.forEach(([id])=>CREATE_STATE.steps.set(id,'pending'));
+  $('createProcessProgress').value=0;$('createProcessCount').textContent='0/'+CREATE_STEPS.length+' bước đã xử lý';
+  $('createProcess').showModal();
+}
+function createFinish(success,message){
+  CREATE_STATE.busy=false;CREATE_STATE.success=success;$('go').disabled=false;
+  $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
+  $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
+  $('createProcessSummary').textContent=message;$('createProcessSummary').hidden=false;
+  $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
+  $('createProcessClose').focus();
+}
+$('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
+$('createProcessClose').onclick=()=>{
+  if(CREATE_STATE.busy)return;
+  $('createProcess').close();
+  if(CREATE_STATE.success){$('result').scrollIntoView({behavior:'smooth',block:'start'});fitMatch();}
+  else $('go').focus();
+};
+function createSolveInWorker(players){
+  return new Promise((resolve,reject)=>{
+    let worker,url,timer;
+    const finish=(error,data)=>{clearTimeout(timer);if(worker)worker.terminate();if(url)URL.revokeObjectURL(url);error?reject(error):resolve(data);};
+    try{
+      url=URL.createObjectURL(new Blob([$('solverWorkerSource').textContent],{type:'application/javascript'}));
+      worker=new Worker(url);
+      worker.onmessage=event=>event.data.error?finish(new Error(event.data.error)):finish(null,event.data.results);
+      worker.onerror=event=>{event.preventDefault();finish(new Error('Không chạy được thuật toán trong trình duyệt này. Hãy tải lại trang và thử lại.'));};
+      timer=setTimeout(()=>finish(new Error('Thuật toán vượt quá 90 giây. Hãy giảm danh sách rồi thử lại. Chưa thay đổi trận.')),90000);
+      worker.postMessage({players});
+    }catch{finish(new Error('Trình duyệt không mở được bộ xử lý thuật toán. Hãy cho phép Web Worker rồi thử lại.'));}
+  });
+}
+function createRotation(result,subset,history){
+  const recent=history.filter(m=>m.kickoff<=Date.now()).slice(0,3),last=recent[0];
+  if(!last)return {state:'warn',detail:'Chưa có trận trước để đối chiếu; không khẳng định đội hình đã được xoay tua.'};
+  const previous=new Map();
+  for(const side of ['A','B'])for(const p of last.teams[side])if(!p.bench)previous.set(p.n,{side,slot:p.slot});
+  let samePositions=0,maxTogether=0;
+  for(const side of ['A','B']){
+    const counts={A:0,B:0};
+    result['ev'+side].starters.forEach((i,k)=>{const old=previous.get(subset[i].n);if(old){counts[old.side]++;if(old.slot===GPAIContext.SLOTS[k])samePositions++;}});
+    maxTogether=Math.max(maxTogether,counts.A,counts.B);
+  }
+  const warn=samePositions>0||maxTogether>=4;
+  return {state:warn?'warn':'done',detail:`So với trận gần nhất: ${samePositions} người giữ vị trí, tối đa ${maxTogether} đồng đội cũ cùng bên. `+(warn?'Cần xem lại mức xoay tua.':'Không phát hiện lặp vị trí hoặc nhóm từ 4 người.')};
+}
+async function createTeams(){
+  if(CREATE_STATE.busy||AI_STATE.busy)return;
+  createBegin();let engine='Thuật toán',fallback='',context,subset,results,idx=0,key,output;
+  try{
+    createStep('roster','active','Đọc danh sách đang chọn…');await createYield();
+    const selected=selectedIdx();
+    if(selected.length<14||selected.length>24)throw new Error('Cần chọn từ 14 đến 24 người (7 vs 7).');
+    createStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
+    createStep('ratings','active','Kiểm tra điểm và vị trí trước khi chia…');await createYield();
+    context=GPAIContext.normalize(aiContextSnapshot('lineup'));
+    subset=context.rosterNames.map(n=>context.players.find(p=>p.n===n));
+    // Lineup creation never needs an unrelated match/player selected for another AI task.
+    context.match=null;context.playerName='';
+    const noPosition=subset.filter(p=>!p.pos).length;
+    createStep('ratings',noPosition?'warn':'done',noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.');
+    createStep('history','active','Tổng hợp lịch sử bóng đá hiện có…');await createYield();
+    const forms=subset.map(p=>GPAIContext.form(p.n,context.history)),done=context.history.filter(m=>m.score&&m.kickoff<=Date.now());
+    const withData=forms.filter(f=>f.played>0).length;
+    createStep('history',done.length?'done':'warn',`${done.length} trận có tỉ số · ${withData}/${subset.length} người có dữ liệu kết quả. Đã tổng hợp chuỗi thắng/thua và bàn được ghi nhận; không tự đổi điểm.`);
+    createStep('engine','active','Kiểm tra khả năng dùng AI…');await createYield();
+    if(!window.GP_APP_CONFIG?.backend)fallback='Bản static không có backend AI.';
+    else try{
+      AI_STATE.status=await aiFetch('status');AI_STATE.csrf=AI_STATE.status.csrf;aiRenderStatus();
+      const s=AI_STATE.status;
+      if(!s.configured)fallback='AI chưa được cấu hình key/kết nối.';
+      else if(!s.authenticated)fallback='Chưa mở quyền AI hoặc phiên AI đã hết hạn.';
+      else if(s.remainingRequests<=0)fallback='Đã hết lượt AI trong giờ.';
+      else engine='AI';
+    }catch(e){fallback=e.message;}
+    if(engine==='AI'){
+      if(!confirm('Gửi tên, chỉ số và lịch sử bóng đá tới OpenRouter/model để tạo đội? Có thể tính phí. Không gửi tài khoản, thu chi hay API key.')){
+        createStep('engine','skip','Bạn đã huỷ gửi dữ liệu; không gọi AI hoặc tạo đội thay thế.');
+        for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
+        createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
+      }
+      createStep('engine','done','Đã kết nối và mở quyền AI.');
+    }else createStep('engine','warn',fallback+' Tự chuyển sang thuật toán, không gọi AI trả phí.');
+    $('createProcessEngine').textContent=engine;
+    createStep('search','active',engine==='AI'?'AI đang phân tích và chia đội. Chưa có kết quả để kiểm tra tiêu chí.':'Thuật toán đang duyệt cách chia và gán vị trí trong bộ xử lý riêng…');await createYield();
+    if(engine==='AI')try{
+      const response=await aiFetch('run',{task:'lineup',context});output=response.output;
+      if(!output||!Array.isArray(output.subset)||output.subset.length!==subset.length||new Set(output.subset.map(p=>p.n)).size!==subset.length||output.subset.some(p=>!context.rosterNames.includes(p.n)))throw new Error('Kết quả AI không khớp danh sách đã chọn.');
+      // Recalculate from our snapshot, not any ratings/evaluation supplied by a model.
+      const ordered=output.subset.map(p=>subset.find(x=>x.n===p.n));
+      const checked=GPAIContext.lineup(ordered,output.teams);
+      subset=ordered;results=[checked.result];output={...output,...checked,subset};key='AI:'+Date.now();
+    }catch(e){
+      fallback=e.message;engine='Thuật toán';output=null;
+      $('createProcessEngine').textContent=engine;
+      createStep('engine','warn','AI không khả dụng: '+fallback+' Tự chuyển sang thuật toán; không gửi lại AI.');
+      createStep('search','active','Đang chia bằng thuật toán thay thế…');await createYield();
+    }
+    if(engine==='Thuật toán'){
+      key='algorithm:'+JSON.stringify({subset,instruction:context.instruction,history:context.history.slice(0,3)});
+      if(cstate.key===key&&cstate.results.length){results=cstate.results;idx=(cstate.idx+1)%results.length;}
+      else{
+        const candidates=await createSolveInWorker(subset);
+        if(candidates?.error)throw new Error(candidates.error);
+        results=(candidates||[]).flatMap(r=>{
+          try{return [GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}).result];}catch{return [];}
+        });
+        if(!results.length)throw new Error('Không tìm được phương án hợp lệ (gôn, đủ người, chia khách/dự bị). Hãy kiểm tra danh sách và vị trí.');
+      }
+    }
+    createStep('search','done',engine==='AI'?'Đã nhận phương án AI; đang kiểm tra độc lập.':`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
+    createStep('partition','active','Kiểm tra lại số lượng, người trùng/thiếu và khách…');await createYield();
+    const r=results[idx],check=GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}});
+    createStep('partition','done',`Mỗi bên 7 đá chính; dự bị A: ${r.evA.bench.length}, B: ${r.evB.bench.length}. Không trùng/thiếu người; khách chia đều, ưu tiên dự bị khi đủ thành viên.`);
+    createStep('balance','active','So điểm tuyến trên và tuyến dưới theo vị trí…');await createYield();
+    const front=Math.abs(r.evA.frontFit-r.evB.frontFit),back=Math.abs(r.evA.backFit-r.evB.backFit);
+    createStep('balance',front>1.5||back>1.5?'warn':'done',`Chênh tổng điểm 3 vị trí: công ${front.toFixed(1)}, thủ ${back.toFixed(1)}. `+(front>1.5||back>1.5?'Có tuyến chênh trên 1.5 điểm; cần kiểm tra so kè.':'Trong ngưỡng kiểm tra 1.5 điểm mỗi tuyến; không lấy gôn bù công/thủ.'));
+    createStep('positions','active','Đối chiếu vị trí và chất lượng người dự bị…');await createYield();
+    const positionWarnings=check.warnings.filter(w=>!w.startsWith('Chênh '));
+    createStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không phát hiện đá trái vị trí đăng ký hoặc thành viên dự bị vượt người đá chính cùng vai trò từ 0.5 điểm.');
+    createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
+    const rotation=createRotation(r,subset,context.history);createStep('rotation',rotation.state,rotation.detail);
+    createStep('draft','active','Vẽ sân và bảng so kè…');await createYield();
+    const notes=[...check.warnings];
+    if(rotation.state==='warn')notes.push(rotation.detail);
+    if(engine==='Thuật toán')notes.push('Thuật toán cân theo chỉ số/vị trí, chưa tối ưu lịch sử đồng đội hoặc hiểu ghi chú tự do. '+(context.instruction?'Ghi chú riêng cần được kiểm tra thủ công.':''));
+    const review='<p>Bản nháp '+engine+' · Chưa lưu trận.</p>'+(notes.length?'<ul>'+notes.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
+    render(r,subset,'result',review,true);
+    cstate={key,results,idx,subset};
+    if(output){
+      AI_STATE.output=output;AI_STATE.request={task:'lineup',context};aiRenderOutput(false);
+    }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
+    $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
+    $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
+    createStep('draft','done','Đội hình và so kè đã hiển thị. Chỉ lưu khi bạn bấm Lưu làm đội tuần này.');
+    const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
+    createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
+  }catch(e){
+    for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
+    for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
+    $('status').textContent=e.message+' Giữ nguyên bản nháp trước đó (nếu có).';
+    createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
+  }
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");

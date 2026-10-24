@@ -128,3 +128,21 @@ test('AI controls live inside Create instead of a separate navigation screen',()
     assert.ok(!menu.includes('Trợ lý AI'),file+' no extra AI menu item');
   }
 });
+test('Create has one action, a top select-all checkbox and an embedded worker in every entry',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    const start=html.indexOf('<div id="screen-create"'),end=html.indexOf('<div id="screen-players"'),create=html.slice(start,end);
+    assert.ok(create.indexOf('id="go"')<create.indexOf('id="roster"'),file+' toolbar precedes players');
+    assert.ok(create.indexOf('id="saveWeek"')<create.indexOf('id="roster"'),file+' save action at top');
+    assert.match(create,/<input type="checkbox" id="selectAll"/);
+    assert.ok(!/id="(?:all|none)"/.test(create));
+    assert.ok(!create.includes('Tạo đội bằng AI'));assert.ok(!create.includes('Tạo đội (Thuật Toán)'));
+    assert.ok(create.includes('id="createProcess"'));assert.ok(create.includes('id="createProcessSteps"'));
+    assert.ok(html.includes('id="solverWorkerSource" type="text/plain"'));
+  }
+});
+test('offline strict solver respects guest benches and distribution',()=>{
+  const candidates=require('../src/optimizer.js').solve(players,null,{strictGuests:true});
+  assert.ok(candidates.length>0);
+  for(const r of candidates)assert.doesNotThrow(()=>C.lineup(players,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}));
+});
