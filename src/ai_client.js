@@ -75,15 +75,13 @@ function aiTaskChanged(){
   $('aiAnalysisInstructionField').hidden=task==='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
 }
-function toggleAIOptions(){if($('createAI').hidden)openAITask('lineup');else aiClosePanel();}
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
-  $('createAI').hidden=false;$('aiCreateToggle').setAttribute('aria-expanded','true');$('aiTask').value=task;
+  $('aiTask').value=task;
   $('aiAnalysisTools').open=task!=='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function aiClosePanel(){$('createAI').hidden=true;$('aiCreateToggle').setAttribute('aria-expanded','false');}
 function aiShowRoster(){
   $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
   $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
@@ -141,7 +139,7 @@ function aiUseLineup(){
   cstate={key:'AI:'+Date.now(),results:[structuredClone(o.result)],idx:0,subset:structuredClone(o.subset)};
   render(cstate.results[0],cstate.subset,'result','<p>Bản nháp AI chưa chốt. Kiểm tra từng tuyến và bảng so kè trước khi lưu trận.</p>',true);$('saveWeek').style.display='inline-block';
   $('status').textContent='Bản nháp AI · Chưa lưu trận. Kiểm tra so kè rồi chọn Lưu làm đội tuần này nếu đồng ý.';
-  aiClosePanel();$('result').scrollIntoView({behavior:'smooth',block:'start'});
+  $('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiSaveReview(){
   if(AI_STATE.request?.task!=='match-review'||!AI_STATE.output)return;

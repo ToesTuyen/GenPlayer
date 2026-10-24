@@ -1002,7 +1002,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
 #createAI[hidden],#createAI [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
 .create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}
-:root[data-theme] #aiCreateToggle[aria-expanded="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
 .ai-analysis-tools{margin-top:6px}
 .ai-analysis-tools>summary{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
 .ai-analysis-tools>summary::before{content:'›';font-size:20px;color:var(--muted)}
@@ -1265,13 +1264,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
     <div class="bar create-toolbar">
       <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
-      <button class="btn alt sm" id="aiCreateToggle" onclick="toggleAIOptions()" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="Tuỳ chọn AI" hidden>
+    <section id="createAI" class="create-ai" aria-label="Kết nối OpenRouter và công cụ phân tích">
       <details class="ai-connection" id="aiConnection">
         <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
         <div class="ai-connection-body">
@@ -3030,7 +3028,7 @@ function show(id){
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
-  if(id==="screen-create") buildRoster();
+  if(id==="screen-create"){buildRoster();renderAIWorkspace();}
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
@@ -3656,7 +3654,7 @@ function updateCount(){
   const n=selectedIdx().length,all=$("selectAll");
   all.checked=curPlayers.length>0&&n===curPlayers.length;all.indeterminate=n>0&&n<curPlayers.length;all.disabled=!curPlayers.length;
   $("count").innerHTML=`Đã chọn <b>${n}/${curPlayers.length}</b>`+(n<14?` <span style="color:var(--red)">(cần ≥14)</span>`:(n%2?` <span style="color:var(--amber)">(lẻ)</span>`:""));
-  if(!$("createAI").hidden)aiTaskChanged();
+  aiTaskChanged();
 }
 $("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
 $("go").onclick=()=>createTeams();
@@ -5062,15 +5060,13 @@ function aiTaskChanged(){
   $('aiAnalysisInstructionField').hidden=task==='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
 }
-function toggleAIOptions(){if($('createAI').hidden)openAITask('lineup');else aiClosePanel();}
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
-  $('createAI').hidden=false;$('aiCreateToggle').setAttribute('aria-expanded','true');$('aiTask').value=task;
+  $('aiTask').value=task;
   $('aiAnalysisTools').open=task!=='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function aiClosePanel(){$('createAI').hidden=true;$('aiCreateToggle').setAttribute('aria-expanded','false');}
 function aiShowRoster(){
   $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
   $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
@@ -5128,7 +5124,7 @@ function aiUseLineup(){
   cstate={key:'AI:'+Date.now(),results:[structuredClone(o.result)],idx:0,subset:structuredClone(o.subset)};
   render(cstate.results[0],cstate.subset,'result','<p>Bản nháp AI chưa chốt. Kiểm tra từng tuyến và bảng so kè trước khi lưu trận.</p>',true);$('saveWeek').style.display='inline-block';
   $('status').textContent='Bản nháp AI · Chưa lưu trận. Kiểm tra so kè rồi chọn Lưu làm đội tuần này nếu đồng ý.';
-  aiClosePanel();$('result').scrollIntoView({behavior:'smooth',block:'start'});
+  $('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiSaveReview(){
   if(AI_STATE.request?.task!=='match-review'||!AI_STATE.output)return;

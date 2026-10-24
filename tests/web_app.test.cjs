@@ -192,7 +192,9 @@ test('AI controls live inside Create instead of a separate navigation screen',()
     const create=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),nextScreen=html.indexOf('<div id="screen-players"');
     assert.ok(create<inline&&inline<nextScreen,file+' embeds AI in Create');
     assert.ok(!html.includes('id="screen-ai"'),file+' no separate AI screen');
-    assert.ok(html.includes('id="aiCreateToggle"'),file+' has inline entry');
+    assert.ok(!html.includes('id="aiCreateToggle"'),file+' no extra AI options button');
+    assert.ok(!html.includes('Tuỳ chọn AI'),file+' no redundant AI options label');
+    assert.match(html,/<section id="createAI"[^>]*>/);assert.ok(!html.match(/<section id="createAI"[^>]*\bhidden\b/),file+' connection is directly accessible');
     assert.ok(!html.includes('AI trong Tạo đội'),file+' no redundant workspace heading');
     assert.ok(!html.includes('ai-inline-head'),file+' no separate AI header wrapper');
     assert.ok(!html.includes('id="aiRosterInfo"'),file+' no duplicate roster explanation');

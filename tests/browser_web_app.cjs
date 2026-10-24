@@ -67,7 +67,8 @@ async function main(){
       assert.equal(await page.locator('[data-step="roster"]').getAttribute('data-state'),'error');
       assert.equal(await page.locator('#createProcessSteps [data-state="done"]').count(),0);
       await page.locator('#createProcessClose').click();
-      await page.locator('#aiCreateToggle').click();
+      assert.equal(await page.locator('#aiCreateToggle').count(),0,'No redundant AI options button');
+      assert.equal(await page.locator('#createAI').isVisible(),true,'Connection is directly available on Create');
       assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
       assert.equal(await page.locator('.ai-inline-head').count(),0,'No separate AI workspace header');
       assert.ok(await page.locator('#createAI').evaluate(el=>el.closest('.card-box')===document.querySelector('#roster').closest('.card-box')),'AI settings stay in the same roster card');
@@ -80,18 +81,18 @@ async function main(){
       assert.equal(await page.locator('#aiMatchField').isVisible(),false);
       assert.equal(await page.locator('#aiRun').isVisible(),false,'No duplicate create button for AI');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
-      await page.locator('#aiCreateToggle').click();
-      assert.equal(await page.locator('#createAI').isVisible(),false,'Same options button closes settings');
-      assert.equal(await page.locator('#aiCreateToggle').getAttribute('aria-expanded'),'false');
+      await page.locator('#aiConnection summary').click();
+      assert.equal(await page.locator('#aiKeyForm').isVisible(),false,'Connection details collapse without an extra AI options wrapper');
+      assert.equal(await page.locator('#createAI').isVisible(),true,'Connection summary stays accessible');
       assert.equal(await page.evaluate(()=>selectedIdx().length),0,'Returning to roster must not reset selections');
       await page.locator('#selectAll').check();await page.locator('#roster .pl-item.guest input').last().uncheck();
       assert.equal(await page.locator('#selectAll').evaluate(el=>el.indeterminate),true,'Partial selection reflected on master checkbox');
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);
-      await page.locator('#aiCreateToggle').click();
+      await page.locator('#aiConnection summary').click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
       assert.equal(await page.locator('#createAI').isVisible(),true);
       await page.locator('#aiInstruction').fill(lineupNote);
-      await page.locator('#aiCreateToggle').click();await page.locator('#aiCreateToggle').click();
+      await page.locator('#aiConnection summary').click();await page.locator('#aiConnection summary').click();
       assert.equal(await page.locator('#aiInstruction').inputValue(),lineupNote);
       assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),false);
       await page.evaluate(()=>{

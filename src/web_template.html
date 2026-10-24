@@ -928,13 +928,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
     <div class="bar create-toolbar">
       <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
-      <button class="btn alt sm" id="aiCreateToggle" onclick="toggleAIOptions()" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="Tuỳ chọn AI" hidden>
+    <section id="createAI" class="create-ai" aria-label="Kết nối OpenRouter và công cụ phân tích">
       <details class="ai-connection" id="aiConnection">
         <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
         <div class="ai-connection-body">
@@ -1876,7 +1875,7 @@ function show(id){
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
-  if(id==="screen-create") buildRoster();
+  if(id==="screen-create"){buildRoster();renderAIWorkspace();}
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
@@ -2502,7 +2501,7 @@ function updateCount(){
   const n=selectedIdx().length,all=$("selectAll");
   all.checked=curPlayers.length>0&&n===curPlayers.length;all.indeterminate=n>0&&n<curPlayers.length;all.disabled=!curPlayers.length;
   $("count").innerHTML=`Đã chọn <b>${n}/${curPlayers.length}</b>`+(n<14?` <span style="color:var(--red)">(cần ≥14)</span>`:(n%2?` <span style="color:var(--amber)">(lẻ)</span>`:""));
-  if(!$("createAI").hidden)aiTaskChanged();
+  aiTaskChanged();
 }
 $("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
 $("go").onclick=()=>createTeams();
