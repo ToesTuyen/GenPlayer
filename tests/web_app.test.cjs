@@ -117,3 +117,14 @@ test('home has no unsolicited introduction block in any local entry',()=>{
     assert.ok(html.includes('class="ab-logo"'),file+' keeps existing header logo');
   }
 });
+test('AI controls live inside Create instead of a separate navigation screen',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    const create=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),nextScreen=html.indexOf('<div id="screen-players"');
+    assert.ok(create<inline&&inline<nextScreen,file+' embeds AI in Create');
+    assert.ok(!html.includes('id="screen-ai"'),file+' no separate AI screen');
+    assert.ok(html.includes('id="aiCreateToggle"'),file+' has inline entry');
+    const menu=html.slice(html.indexOf('<div class="ap-grid">'),html.indexOf('<div class="dash-main">'));
+    assert.ok(!menu.includes('Trợ lý AI'),file+' no extra AI menu item');
+  }
+});

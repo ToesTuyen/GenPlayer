@@ -32,7 +32,7 @@ async function main(){
           const buttons=[...document.querySelectorAll('.ap-grid .ap-btn')].filter(b=>b.getClientRects().length),labels=buttons.map(b=>b.lastElementChild);
           return {count:buttons.length,rows:new Set(buttons.map(b=>Math.round(b.getBoundingClientRect().top))).size,labelsFit:labels.every(el=>el.scrollWidth<=el.clientWidth+1&&el.clientHeight<=parseFloat(getComputedStyle(el).lineHeight)+1),heights:buttons.map(b=>b.getBoundingClientRect().height),overflow:document.documentElement.scrollWidth>innerWidth+1};
         });
-        assert.equal(menu.count,6);assert.equal(menu.rows,2,'Menu uses only two rows at '+width);assert.equal(menu.labelsFit,true,'Menu labels fit one line at '+width);assert.ok(menu.heights.every(h=>h>=44&&h<=70),'Compact but tappable menu items at '+width);assert.equal(menu.overflow,false);
+        assert.equal(menu.count,5);assert.equal(menu.rows,2,'Menu uses only two rows at '+width);assert.equal(menu.labelsFit,true,'Menu labels fit one line at '+width);assert.ok(menu.heights.every(h=>h>=44&&h<=70),'Compact but tappable menu items at '+width);assert.equal(menu.overflow,false);
       }
       await page.setViewportSize(mobile?{width:390,height:844}:{width:1440,height:1100});
       for(const theme of ['light','dark']){
@@ -40,11 +40,14 @@ async function main(){
         const density=await page.evaluate(()=>({menuPadding:parseFloat(getComputedStyle(document.querySelector('.action-panel')).paddingTop),historyPadding:[...document.querySelectorAll('#matchList .mc-main')].map(x=>parseFloat(getComputedStyle(x).paddingBottom)),historyHeights:[...document.querySelectorAll('#matchList .mc')].map(x=>x.getBoundingClientRect().height)}));
         assert.ok(density.menuPadding<=12);assert.ok(density.historyPadding.every(v=>v===0),'No phantom action space on dashboard history');assert.ok(density.historyHeights.every(v=>v<=115),'Dashboard match cards are compact');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-home.png`),fullPage:true,animations:'disabled'});
-        for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-history','screen-ai']){
+        for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-history']){
           await page.evaluate(id=>show(id),id);
           const state=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,body:getComputedStyle(document.body).backgroundImage,header:getComputedStyle(document.querySelector('.appbar')).backgroundImage}));
           assert.equal(state.overflow,false,`${id}/${theme} no horizontal overflow`);assert.equal(state.body,'none');assert.equal(state.header,'none');
         }
+        await page.evaluate(()=>openAITask('lineup'));
+        assert.equal(await page.locator('#createAI').isVisible(),true);assert.equal(await page.locator('#screen-create').isVisible(),true);
+        assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-ai.png`),fullPage:true,animations:'disabled'});
         await page.evaluate(()=>{isAdmin=true;canEdit=true;role='admin';sessionName='QA';show('screen-history');});
         const actions=await page.evaluate(()=>[...document.querySelectorAll('#history-list .mc-item-actions')].map(bar=>{
@@ -70,7 +73,7 @@ async function main(){
       }
       assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),original);assert.equal(await page.evaluate(()=>JSON.stringify(getFinance())),originalFinance,'Hiding finance must preserve its data');assert.deepEqual(network,[]);assert.deepEqual(errors,[]);await ctx.close();
     }
-    console.log(JSON.stringify({ok:true,screenshots,coverage:'8 screens + login/profile, finance hidden with preserved data, desktop/mobile, light/dark, button contrast, saved preference, unchanged data'}));
+    console.log(JSON.stringify({ok:true,screenshots,coverage:'7 screens + inline AI/login/profile, finance hidden with preserved data, desktop/mobile, light/dark, button contrast, saved preference, unchanged data'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

@@ -40,8 +40,12 @@ async function main(){
         localStorage.setItem('gp_web_preview_players',JSON.stringify(players));localStorage.setItem('gp_web_preview_history',JSON.stringify(history));
         localStorage.setItem('gp_web_preview_finance',JSON.stringify([{amount:99999,note:'PRIVATE_FINANCE_CANARY'}]));
       },{players,history});
-      page.on('dialog',d=>d.accept());
-      await page.goto(config.origin);await page.getByRole('button',{name:'Trợ lý AI',exact:true}).click();
+      let acceptDialogs=true;page.on('dialog',d=>acceptDialogs?d.accept():d.dismiss());
+      await page.goto(config.origin);
+      assert.equal(await page.getByRole('button',{name:'Trợ lý AI',exact:true}).count(),0,'No separate AI navigation');
+      await page.getByRole('button',{name:'Tạo đội',exact:true}).click();
+      await page.locator('#none').click();await page.locator('#aiCreateToggle').click();
+      assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
       await page.locator('#aiLoginForm').waitFor({state:'visible'});
       await page.locator('#aiPassword').fill(password);await page.locator('#aiLoginBtn').click();
       await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
@@ -49,13 +53,28 @@ async function main(){
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
       await page.locator('#aiRun').click();assert.match(await page.locator('#aiMessage').innerText(),/chọn ít nhất 14/i);
       await page.getByRole('button',{name:'Chọn người có mặt',exact:true}).click();
+      assert.equal(await page.evaluate(()=>selectedIdx().length),0,'Returning to roster must not reset selections');
+      await page.locator('#all').click();await page.locator('#roster .pl-item.guest input').last().uncheck();
+      assert.equal(await page.evaluate(()=>selectedIdx().length),15);
       await page.getByRole('button',{name:'Tạo đội bằng AI',exact:true}).click();
+      assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
+      assert.match(await page.locator('#aiRosterInfo').innerText(),/15 người/);
+      await page.locator('#aiInstruction').fill('Tách hai tiền vệ giữa, cân riêng công và thủ.');
+      await page.getByRole('button',{name:'Đóng AI',exact:true}).click();await page.locator('#aiCreateToggle').click();
+      assert.equal(await page.locator('#aiInstruction').inputValue(),'Tách hai tiền vệ giữa, cân riêng công và thủ.');
       await page.locator('#aiRun').click();await page.locator('#aiOutput').waitFor({state:'visible'});
       assert.equal(await page.locator('#aiLineupPreview .field .player').count(),14);
       assert.equal(await page.evaluate(()=>window.AI_XSS),undefined);assert.equal(await page.locator('#aiOutputText img').count(),0);
       assert.equal(await page.evaluate(()=>getHistory().length),5,'AI generation must not create a match');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-lineup.png'),fullPage:true});
+      const changed=page.locator('#roster .pl-item:not(.guest) input:checked').first();
+      await changed.uncheck();acceptDialogs=false;await page.locator('#aiUseLineup').click();
+      assert.equal(await page.evaluate(()=>selectedIdx().length),14,'Declining stale draft must preserve the newer selection');
+      assert.equal(await page.evaluate(()=>cstate.results.length),0,'Declining stale draft must not apply it');
+      await page.locator('#roster .pl-item:not(.guest) input:not(:checked)').first().check();acceptDialogs=true;
       await page.locator('#aiUseLineup').click();assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.evaluate(()=>getHistory().length),5);
+      assert.equal(await page.locator('#screen-create').isVisible(),true);assert.equal(await page.locator('#createAI').isVisible(),false);
+      assert.equal(await page.evaluate(()=>selectedIdx().length),15);assert.equal(await page.evaluate(()=>cstate.subset.length),15);
       await page.evaluate(()=>openAITask('match-review',100));
       await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='match-review'&&!AI_STATE.busy);
       assert.equal(await page.locator('#aiOutputText section').count(),6);await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/không ghi nhận định lên cloud/);
@@ -70,7 +89,7 @@ async function main(){
         window.firebase={firestore:Object.assign(()=>({}),{FieldValue:{arrayUnion:x=>x}})};
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
-      await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      await page.locator('#aiConnection summary').click();await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
       assert.ok(requests.every(r=>!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
       await ctx.close();
     }
@@ -95,7 +114,7 @@ async function main(){
     });assert.equal(saved.same,true);assert.equal(saved.safeHTML,true);assert.equal(saved.matches,5);
     await page.evaluate(()=>{window.QA_DOC.history.find(m=>m.id===100).score={a:9,b:9};});await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/đã thay đổi/);assert.equal(await page.evaluate(()=>window.QA_UPDATES),1);
     await ctx.close();
-    console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'desktop/mobile, dark/light, login/logout, all 4 tasks, preview/apply draft, no XSS, no Firebase writes, no secret/finance payloads'}));
+    console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'inline AI inside Create, roster/note preserved, desktop/mobile, dark/light, login/logout, all 4 tasks, preview/apply draft, no XSS, no Firebase writes, no secret/finance payloads'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

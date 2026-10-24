@@ -1,5 +1,13 @@
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
-#screen-ai [hidden]{display:none!important}
+#createAI[hidden],#createAI [hidden]{display:none!important}
+.create-ai{margin-top:12px}
+.ai-inline-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ai-inline-head h2{display:flex;align-items:center;gap:6px;font-size:15px}
+.ai-connection summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:28px}
+.ai-connection summary::before{content:'›';font-size:20px;color:var(--muted)}
+.ai-connection[open] summary::before{content:'⌄'}
+.ai-connection summary .ai-status{margin-left:auto;font-size:11px;font-weight:400}
+.ai-connection-body{border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
 .ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .ai-head h1{font-size:23px;margin-bottom:7px;display:flex;gap:9px;align-items:center}
 .ai-sub{font-size:13px;color:var(--muted);line-height:1.65;max-width:620px}
@@ -14,8 +22,8 @@
 .ai-field select,.ai-field input{min-height:40px}
 .ai-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .ai-actions .btn:disabled{opacity:.5;cursor:wait}
-#screen-ai .btn.alt{background:var(--surface2);color:var(--text);border:1px solid var(--line);box-shadow:none}
-#screen-ai .btn.alt:hover{background:var(--surface3)}
+#createAI .btn.alt{background:var(--surface2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+#createAI .btn.alt:hover{background:var(--surface3)}
 .ai-message{padding:9px 10px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:13px;line-height:1.6;margin-top:10px;overflow-wrap:anywhere}
 .ai-message.error{color:var(--red);border-color:var(--red)}
 .ai-result{line-height:1.8;overflow-wrap:anywhere}

@@ -4,7 +4,7 @@ Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho b�
 
 ## Web app + OpenRouter (branch `feat/web-app-openrouter`)
 
-Bản mới giữ nguyên giao diện, thuật toán, Firebase và lịch sử. Thêm Node backend cùng màn **Trợ lý AI**. Không chuyển framework hoặc migrate dữ liệu. Bản GitHub Pages trên `main` chưa thay đổi.
+Bản mới giữ nguyên thuật toán, Firebase và lịch sử. Thêm Node backend và tích hợp **AI ngay trong màn Tạo đội**, không có mục AI riêng ở menu. Không chuyển framework hoặc migrate dữ liệu. Bản GitHub Pages trên `main` chưa thay đổi.
 
 ### Chạy trên máy
 
@@ -16,7 +16,7 @@ cp .env.example .env
 npm start
 ```
 
-Mở **http://localhost:3000** → **Trợ lý AI** → nhập mật khẩu `AI_ACCESS_PASSWORD`. Đây là quyền gọi AI trả phí, tách biệt tài khoản quản lý trận hiện tại. Phiên hết hạn sau 30 phút. Không nhập OpenRouter key vào ô mật khẩu.
+Mở **http://localhost:3000** → **Tạo đội** → chọn người → **Tạo đội bằng AI** → mở **Kết nối OpenRouter** và nhập mật khẩu `AI_ACCESS_PASSWORD`. Ghi chú, kết quả AI và bảng so kè ở cùng màn Tạo đội; mở/đóng AI không đặt lại danh sách đang chọn. Đây là quyền gọi AI trả phí, tách biệt tài khoản quản lý trận hiện tại. Phiên hết hạn sau 30 phút. Không nhập OpenRouter key vào ô mật khẩu.
 
 - `OPENROUTER_API_KEY`: chỉ ở server `.env`, không vào HTML, localStorage, Firebase hay Git. `.env` đã được ignore. Nên đặt hạn mức tín dụng riêng cho key theo [hướng dẫn OpenRouter](https://openrouter.ai/docs/api_reference/authentication).
 - `OPENROUTER_MODEL`: model ID hỗ trợ [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), mặc định `openai/gpt-4.1-mini`. Có thể đổi model rồi restart; app không tự chuyển model hay tự retry gây phí.
@@ -28,7 +28,7 @@ Mở **http://localhost:3000** → **Trợ lý AI** → nhập mật khẩu `AI_
 
 ### Các case AI đã nối vào UI
 
-- **Chia đội sân 7 (14–24 người)**: chọn danh sách ở Tạo đội → Tạo đội bằng AI. Đọc chỉ số/vị trí và 3 trận gần nhất, yêu cầu cân riêng công–thủ, hạn chế lặp đồng đội/vị trí, ưu tiên thành viên và khách dự bị. Server kiểm tra đủ người, không trùng, khách dự bị khi đủ 14 thành viên; tự tính lại điểm, không tin điểm model bịa. Các lệch tuyến/ngoài vị trí được cảnh báo. Xem sân + bảng so kè rồi **Dùng làm bản nháp đội hình**; chưa tự lưu trận. Mức cân và yêu cầu ghi chú vẫn cần người duyệt, không phải bảo đảm toán học của LLM.
+- **Chia đội sân 7 (14–24 người)**: chọn danh sách ở Tạo đội → Tạo đội bằng AI. Đọc chỉ số/vị trí và 3 trận gần nhất, yêu cầu cân riêng công–thủ, hạn chế lặp đồng đội/vị trí, ưu tiên thành viên và khách dự bị. Server kiểm tra đủ người, không trùng, khách dự bị khi đủ 14 thành viên; tự tính lại điểm, không tin điểm model bịa. Các lệch tuyến/ngoài vị trí được cảnh báo. Xem sân + bảng so kè rồi **Dùng làm bản nháp đội hình** ngay trên cùng màn; sau đó dùng nút lưu trận hiện có. Nếu danh sách đã đổi trong lúc AI chạy, app hỏi xác nhận trước khi áp dụng bản nháp cũ. Chưa tự lưu trận. Mức cân và yêu cầu ghi chú vẫn cần người duyệt, không phải bảo đảm toán học của LLM.
 - **Nhận định trận**: chọn đúng trận; viết ít nhất 6 phần về các tuyến, đối đầu, chuỗi kết quả, bàn thắng và dự bị. Trận có tỉ số sẽ được phân tích như trận đã diễn ra. Các chỉ số dùng snapshot hồ sơ trong trận, không thay bằng điểm master hiện tại.
 - **Phong độ / đề xuất điểm**: cửa sổ 5 trận **của đội**, tính cả vắng mặt; tăng, giữ, giảm hoặc chưa đủ dữ liệu. Dưới 3 lần có mặt không nhận đề xuất đổi chỉ số. Không tự áp dụng điểm.
 - **Mô tả Cầu thủ nổi bật**: văn mới dựa trên chỉ số/phong độ, xem trước và sao chép; không tự đè mô tả đang dùng.

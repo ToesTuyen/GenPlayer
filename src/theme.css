@@ -73,8 +73,8 @@
 :root[data-theme] :is(.btn,.btn.dark){background:var(--action);color:var(--on-action);box-shadow:none;font-weight:600;padding:8px 12px;min-height:36px}
 :root[data-theme] .btn.sm{padding:6px 10px;min-height:32px}
 :root[data-theme] :is(.btn,.btn.dark):hover{background:var(--action-hover);filter:none;transform:none}
-:root[data-theme] .btn.alt,:root[data-theme] #screen-ai .btn.alt{background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:none}
-:root[data-theme] .btn.alt:hover,:root[data-theme] #screen-ai .btn.alt:hover{background:var(--surface2);border-color:var(--line)}
+:root[data-theme] .btn.alt,:root[data-theme] #createAI .btn.alt{background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:none}
+:root[data-theme] .btn.alt:hover,:root[data-theme] #createAI .btn.alt:hover{background:var(--surface2);border-color:var(--line)}
 :root[data-theme] .score-action{background:var(--action)!important;color:var(--on-action)!important;box-shadow:none}
 :root[data-theme] :is(.seg,.req-tabs button,.pstat-filter){font-weight:600}
 :root[data-theme] :is(.seg.on,.req-tabs button.on,.pstat-filter.on,.pl-item.on){background:var(--brand-soft);color:var(--text);border-color:var(--brand)}

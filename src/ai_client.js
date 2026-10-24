@@ -23,15 +23,17 @@ function aiRenderStatus(){
   if(!s){box.textContent='Chưa kết nối backend AI.';return;}
   box.textContent=`OpenRouter · ${s.model} · ${s.remainingRequests} lượt còn lại trong giờ · ${s.dataMode==='cloud'?'đồng bộ cloud':'xem thử, không ghi cloud'}. `+(s.configured?(s.authenticated?'Đã mở quyền AI (30 phút).':'Cần mở quyền AI để sử dụng.'):`Chưa cấu hình: ${s.missing.join(', ')}. Điền trong .env trên server rồi chạy lại npm start. Không nhập API key vào giao diện.`);
   $('aiLoginForm').hidden=!s.configured||s.authenticated;$('aiLogout').hidden=!s.authenticated;
+  $('aiConnectionSummary').textContent=!s.configured?'Chưa cấu hình':s.authenticated?'Đã mở quyền AI':'Cần đăng nhập';
+  if(!s.configured||!s.authenticated)$('aiConnection').open=true;
   $('aiRun').disabled=AI_STATE.busy||!s.configured||!s.authenticated;
 }
 async function aiRefresh(){
-  if(!window.GP_APP_CONFIG?.backend){$('aiServerStatus').textContent='AI chỉ hoạt động ở bản web app có backend. Chạy npm start, sau đó mở http://localhost:3000 (hoặc APP_ORIGIN đã cấu hình). Bản GitHub Pages vẫn hoạt động như cũ.';$('aiRun').disabled=true;$('aiLoginForm').hidden=true;return;}
+  if(!window.GP_APP_CONFIG?.backend){$('aiServerStatus').textContent='AI chỉ hoạt động ở bản web app có backend. Chạy npm start, sau đó mở http://localhost:3000 (hoặc APP_ORIGIN đã cấu hình). Bản GitHub Pages vẫn hoạt động như cũ.';$('aiConnectionSummary').textContent='Cần chạy backend';$('aiConnection').open=true;$('aiRun').disabled=true;$('aiLoginForm').hidden=true;return;}
   try{AI_STATE.status=await aiFetch('status');AI_STATE.csrf=AI_STATE.status.csrf;aiRenderStatus();}catch(e){aiMessage(e.message,true);}
 }
 async function aiLogin(event){
   event.preventDefault();const input=$('aiPassword'),btn=$('aiLoginBtn');btn.disabled=true;
-  try{const data=await aiFetch('login',{password:input.value});AI_STATE.csrf=data.csrf;aiMessage('Đã mở quyền sử dụng AI.');await aiRefresh();}catch(e){aiMessage(e.message,true);}finally{input.value='';btn.disabled=false;}
+  try{const data=await aiFetch('login',{password:input.value});AI_STATE.csrf=data.csrf;aiMessage('Đã mở quyền sử dụng AI.');await aiRefresh();$('aiConnection').open=false;}catch(e){aiMessage(e.message,true);}finally{input.value='';btn.disabled=false;}
 }
 async function aiLogout(){try{await aiFetch('logout',{});AI_STATE.csrf=null;await aiRefresh();}catch(e){aiMessage(e.message,true);}}
 function aiPopulateSources(){
@@ -48,9 +50,19 @@ function aiTaskChanged(){
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
   const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
   $('aiRosterInfo').hidden=task!=='lineup';
-  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người ở màn Tạo đội. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Có thể ghi yêu cầu vị trí/dự bị bên dưới.`;
+  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Có thể ghi yêu cầu vị trí/dự bị bên dưới.`;
 }
-function openAITask(task,matchId){$('aiTask').value=task;show('screen-ai');if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();}
+function openAITask(task,matchId){
+  if($('screen-create').style.display!=='block')show('screen-create');
+  $('createAI').hidden=false;$('aiCreateToggle').setAttribute('aria-expanded','true');$('aiTask').value=task;
+  renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
+  $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function aiClosePanel(){$('createAI').hidden=true;$('aiCreateToggle').setAttribute('aria-expanded','false');}
+function aiShowRoster(){
+  $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
+  $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function aiContextSnapshot(){
   const all=getPlayers().concat(guestPlayers),names=new Set();
   const players=all.map(p=>{names.add(p.n);return GPAIContext.player(p);});
@@ -69,7 +81,7 @@ function aiMatchFingerprint(match,players){
 async function aiRun(){
   if(AI_STATE.busy)return;
   let context;const task=$('aiTask').value;
-  try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Vào Tạo đội, chọn ít nhất 14 người rồi bấm Tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
+  try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Chọn ít nhất 14 người có mặt trước khi tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
   if(!confirm('Gửi tên, chỉ số cầu thủ và lịch sử bóng đá liên quan tới OpenRouter/model để tạo nội dung? Mỗi lượt có thể tính phí. Không gửi tài khoản, thu chi hay API key.'))return;
   AI_STATE.busy=true;aiRenderStatus();$('aiRun').textContent='Đang phân tích…';aiMessage('AI đang đọc chỉ số, chuỗi kết quả và bàn thắng. Không tự lưu đội hình hay thay đổi điểm.');
   try{
@@ -96,11 +108,14 @@ function aiRenderOutput(){
 async function aiCopy(){try{await navigator.clipboard.writeText(aiPlainOutput());aiMessage('Đã sao chép nội dung AI.');}catch{aiMessage('Trình duyệt không cho sao chép. Bạn có thể chọn nội dung bên dưới để copy.',true);}}
 function aiUseLineup(){
   if(AI_STATE.request?.task!=='lineup'||!AI_STATE.output)return;
-  const o=AI_STATE.output;show('screen-create');const chosen=new Set(o.subset.map(p=>p.n));
+  const o=AI_STATE.output;if($('screen-create').style.display!=='block')show('screen-create');
+  const chosen=new Set(o.subset.map(p=>p.n)),current=selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean);
+  if(current.length!==chosen.size||current.some(n=>!chosen.has(n)))if(!confirm('Danh sách người có mặt đã đổi sau khi AI tạo đội. Dùng lại danh sách của bản nháp AI này?'))return;
   $('roster').querySelectorAll('input').forEach(c=>{c.checked=chosen.has(curPlayers[+c.dataset.i].n);c.closest('.pl-item').classList.toggle('on',c.checked);c.closest('.pl-item').classList.toggle('off',!c.checked);});updateCount();
   cstate={key:'AI:'+Date.now(),results:[structuredClone(o.result)],idx:0,subset:structuredClone(o.subset)};
   render(cstate.results[0],cstate.subset,'result','<p>Bản nháp AI chưa chốt. Kiểm tra từng tuyến và bảng so kè trước khi lưu trận.</p>',true);$('saveWeek').style.display='inline-block';
   $('status').textContent='Bản nháp AI · Chưa lưu trận. Kiểm tra so kè rồi chọn Lưu làm đội tuần này nếu đồng ý.';
+  aiClosePanel();$('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiSaveReview(){
   if(AI_STATE.request?.task!=='match-review'||!AI_STATE.output)return;
