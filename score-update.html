@@ -1000,10 +1000,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 @keyframes process-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
-#createAI[hidden],#createAI [hidden]{display:none!important}
-.create-ai{margin-top:12px}
-.ai-inline-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.ai-inline-head h2{display:flex;align-items:center;gap:6px;font-size:15px}
+#createAI[hidden],#createAI [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
+.create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}
+:root[data-theme] #aiCreateToggle[aria-expanded="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.ai-analysis-tools{margin-top:6px}
+.ai-analysis-tools>summary{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
+.ai-analysis-tools>summary::before{content:'›';font-size:20px;color:var(--muted)}
+.ai-analysis-tools[open]>summary::before{content:'⌄'}
+.ai-analysis-body{padding-top:8px}
+@media(max-width:600px){.ai-analysis-tools>summary,.ai-connection>summary{min-height:44px}}
 .ai-connection summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:28px}
 .ai-connection summary::before{content:'›';font-size:20px;color:var(--muted)}
 .ai-connection[open] summary::before{content:'⌄'}
@@ -1255,12 +1260,38 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
     <div class="bar create-toolbar">
       <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
-      <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
+      <button class="btn alt sm" id="aiCreateToggle" onclick="toggleAIOptions()" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
+    <section id="createAI" class="create-ai" aria-label="Tuỳ chọn AI" hidden>
+      <details class="ai-connection" id="aiConnection">
+        <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
+        <div class="ai-connection-body">
+          <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
+          <form id="aiLoginForm" onsubmit="aiLogin(event)" hidden>
+            <div class="ai-actions"><label class="ai-field" for="aiPassword">Mật khẩu truy cập AI<input id="aiPassword" type="password" required maxlength="256" autocomplete="current-password" placeholder="AI_ACCESS_PASSWORD trên server"></label><button class="btn sm" id="aiLoginBtn" type="submit">Mở quyền AI</button></div>
+          </form>
+          <div class="ai-actions"><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" id="aiLogout" onclick="aiLogout()" hidden>Đóng quyền AI</button></div>
+          <p class="ai-footer">Chỉ gửi dữ liệu bóng đá liên quan tới OpenRouter, không gửi thu chi hay tài khoản. Mỗi lượt có thể tính phí; không tự gọi lại khi lỗi hoặc tự sửa điểm cầu thủ.</p>
+        </div>
+      </details>
+      <details id="aiAnalysisTools" class="ai-analysis-tools">
+        <summary>Công cụ phân tích</summary>
+        <div class="ai-analysis-body">
+          <div class="ai-fields">
+            <label class="ai-field">Nội dung<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chọn nội dung phân tích</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
+            <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
+            <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
+          </div>
+          <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
+          <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
+        </div>
+      </details>
+      <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+    </section>
     <div class="create-setup">
       <p class="create-priorities">Cân riêng công–thủ · Người mạnh đá chính · Đúng vị trí · Hạn chế lặp đội</p>
       <details id="createCriteria" class="create-criteria">
@@ -1292,40 +1323,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </div>
     <div class="grid" id="roster"></div>
   </div>
-  <!-- AI uses the selected roster and stays inside the Create workflow. -->
-  <section id="createAI" class="create-ai" aria-label="AI trong Tạo đội" hidden>
-  <div class="ai-inline-head"><h2><span data-ui-icon="match-analysis"></span>AI trong Tạo đội</h2><button class="btn alt sm" onclick="aiClosePanel()">Đóng AI</button></div>
-  <details class="ai-panel ai-connection" id="aiConnection">
-    <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
-    <div class="ai-connection-body"><div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
-    <form id="aiLoginForm" onsubmit="aiLogin(event)" hidden>
-      <div class="ai-actions"><label class="ai-field" for="aiPassword">Mật khẩu truy cập AI<input id="aiPassword" type="password" required maxlength="256" autocomplete="current-password" placeholder="AI_ACCESS_PASSWORD trên server"></label><button class="btn sm" id="aiLoginBtn" type="submit">Mở quyền AI</button></div>
-    </form>
-    <button class="btn alt sm" id="aiLogout" onclick="aiLogout()" hidden>Đóng quyền AI</button>
-    </div>
-  </details>
-  <div class="ai-panel">
-    <div class="ai-fields">
-      <label class="ai-field">Chức năng<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chia đội mới · 7 vs 7</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
-      <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
-      <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
-    </div>
-    <div id="aiRosterInfo" class="ai-status"></div>
-    <label class="ai-field" id="aiAnalysisInstructionField" style="margin-top:14px" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
-    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
-    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội và ô Note ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Note tự do chưa được thuật toán áp dụng.</p>
-    <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
-    <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
-  </div>
+  <div class="status" id="status"></div>
+  <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
+  <div id="result"></div>
   <div id="aiOutput" class="ai-panel" hidden>
     <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>
     <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
     <div id="aiLineupPreview"></div>
   </div>
-  </section>
-  <div class="status" id="status"></div>
-  <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
-  <div id="result"></div>
 </div>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
@@ -5023,16 +5028,15 @@ function aiPopulateSources(){
 function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
 function aiTaskChanged(){
   const task=$('aiTask').value;
-  $('aiRun').hidden=task==='lineup';$('aiLineupHint').hidden=task!=='lineup';
+  $('aiRun').hidden=task==='lineup';
   $('aiAnalysisInstructionField').hidden=task==='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
-  const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
-  $('aiRosterInfo').hidden=task!=='lineup';
-  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Yêu cầu riêng lấy từ ô Note ở đầu danh sách.`;
 }
+function toggleAIOptions(){if($('createAI').hidden)openAITask('lineup');else aiClosePanel();}
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
   $('createAI').hidden=false;$('aiCreateToggle').setAttribute('aria-expanded','true');$('aiTask').value=task;
+  $('aiAnalysisTools').open=task!=='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -5169,7 +5173,7 @@ async function createCompleteStep(id,state,detail){
 function createBegin(){
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
   $('reviewProcess').style.display='none';
-  $('aiTask').value='lineup';aiTaskChanged();
+  $('aiTask').value='lineup';$('aiAnalysisTools').open=false;aiTaskChanged();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';

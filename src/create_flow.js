@@ -54,7 +54,7 @@ async function createCompleteStep(id,state,detail){
 function createBegin(){
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
   $('reviewProcess').style.display='none';
-  $('aiTask').value='lineup';aiTaskChanged();
+  $('aiTask').value='lineup';$('aiAnalysisTools').open=false;aiTaskChanged();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';

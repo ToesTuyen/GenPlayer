@@ -124,6 +124,9 @@ test('AI controls live inside Create instead of a separate navigation screen',()
     assert.ok(create<inline&&inline<nextScreen,file+' embeds AI in Create');
     assert.ok(!html.includes('id="screen-ai"'),file+' no separate AI screen');
     assert.ok(html.includes('id="aiCreateToggle"'),file+' has inline entry');
+    assert.ok(!html.includes('AI trong Tạo đội'),file+' no redundant workspace heading');
+    assert.ok(!html.includes('ai-inline-head'),file+' no separate AI header wrapper');
+    assert.ok(!html.includes('id="aiRosterInfo"'),file+' no duplicate roster explanation');
     const menu=html.slice(html.indexOf('<div class="ap-grid">'),html.indexOf('<div class="dash-main">'));
     assert.ok(!menu.includes('Trợ lý AI'),file+' no extra AI menu item');
   }
@@ -149,8 +152,9 @@ test('offline strict solver respects guest benches and distribution',()=>{
 test('criteria and lineup Note are visible outside the optional AI panel in every entry',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
-    const start=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),setup=html.slice(start,inline);
+    const start=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),end=html.indexOf('</section>',inline),setup=html.slice(start,html.indexOf('<div class="roster-selection"',start));
     assert.ok(setup.includes('id="createCriteria"'));assert.ok(setup.includes('id="aiInstruction"'));
+    assert.ok(html.indexOf('id="aiInstruction"',start)>end,'Lineup Note stays outside optional AI settings');
     assert.equal((html.match(/id="aiInstruction"/g)||[]).length,1);
     const rules=setup.slice(setup.indexOf('<ol class="create-rule-list">'),setup.indexOf('</ol>'));
     assert.equal((rules.match(/<li>/g)||[]).length,12);

@@ -47,16 +47,15 @@ function aiPopulateSources(){
 function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
 function aiTaskChanged(){
   const task=$('aiTask').value;
-  $('aiRun').hidden=task==='lineup';$('aiLineupHint').hidden=task!=='lineup';
+  $('aiRun').hidden=task==='lineup';
   $('aiAnalysisInstructionField').hidden=task==='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
-  const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
-  $('aiRosterInfo').hidden=task!=='lineup';
-  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Yêu cầu riêng lấy từ ô Note ở đầu danh sách.`;
 }
+function toggleAIOptions(){if($('createAI').hidden)openAITask('lineup');else aiClosePanel();}
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
   $('createAI').hidden=false;$('aiCreateToggle').setAttribute('aria-expanded','true');$('aiTask').value=task;
+  $('aiAnalysisTools').open=task!=='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
