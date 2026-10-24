@@ -26,6 +26,15 @@ async function main(){
       await page.evaluate(()=>show('screen-finance'));
       assert.equal(await page.locator('#screen-finance').isVisible(),false,'Stale navigation cannot reopen hidden finance screen');
       assert.equal(await page.locator('#home').isVisible(),true);
+      for(const width of [320,390,768,900,1440]){
+        await page.setViewportSize({width,height:1100});
+        const menu=await page.evaluate(()=>{
+          const buttons=[...document.querySelectorAll('.ap-grid .ap-btn')].filter(b=>b.getClientRects().length),labels=buttons.map(b=>b.lastElementChild);
+          return {count:buttons.length,rows:new Set(buttons.map(b=>Math.round(b.getBoundingClientRect().top))).size,labelsFit:labels.every(el=>el.scrollWidth<=el.clientWidth+1&&el.clientHeight<=parseFloat(getComputedStyle(el).lineHeight)+1),overflow:document.documentElement.scrollWidth>innerWidth+1};
+        });
+        assert.equal(menu.count,6);assert.equal(menu.rows,2,'Menu uses only two rows at '+width);assert.equal(menu.labelsFit,true,'Menu labels fit one line at '+width);assert.equal(menu.overflow,false);
+      }
+      await page.setViewportSize(mobile?{width:390,height:844}:{width:1440,height:1100});
       for(const theme of ['light','dark']){
         await page.evaluate(theme=>{if(currentTheme()!==theme)toggleTheme();show('home');},theme);
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-home.png`),fullPage:true,animations:'disabled'});

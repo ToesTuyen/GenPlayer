@@ -886,14 +886,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="dash-top">
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
-      <div class="ap-title">Tạo đội</div>
-      <div class="ap-sub">Chia 2 đội cân bằng & quản lý cầu thủ</div>
+      <div class="ap-title">Truy cập nhanh</div>
+      <div class="ap-sub">Các công cụ của đội bóng</div>
       <div class="ap-grid">
         <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="lineup"></span><span>Tạo đội</span></button>
         <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="squad"></span><span>Cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="ranking"></span><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="match-history"></span><span>Lịch sử</span></button>
-        <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng cầu thủ</span></button>
+        <button class="ap-btn" onclick="show('screen-player-status')" title="Tình trạng cầu thủ" aria-label="Tình trạng cầu thủ"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng</span></button>
         <button class="ap-btn" id="financeNavBtn" onclick="show('screen-finance')" hidden><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
         <button class="ap-btn" onclick="show('screen-ai')"><span class="ap-icon" data-ui-icon="match-analysis"></span><span>Trợ lý AI</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="backup"></span><span>Backup</span></button>
