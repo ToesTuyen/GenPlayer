@@ -2,6 +2,55 @@
 
 Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho bóng đá sân 7, kèm sơ đồ thi đấu trực quan (HTML) và phân tích ưu/nhược điểm.
 
+## Web app + OpenRouter (branch `feat/web-app-openrouter`)
+
+Bản mới giữ nguyên giao diện, thuật toán, Firebase và lịch sử. Thêm Node backend cùng màn **Trợ lý AI**. Không chuyển framework hoặc migrate dữ liệu. Bản GitHub Pages trên `main` chưa thay đổi.
+
+### Chạy trên máy
+
+Cần Node.js >=18.20 và Python 3; không có package phụ thuộc phải cài.
+
+```bash
+cp .env.example .env
+# Mở .env, điền OPENROUTER_API_KEY và AI_ACCESS_PASSWORD (ít nhất 16 ký tự).
+npm start
+```
+
+Mở **http://localhost:3000** → **Trợ lý AI** → nhập mật khẩu `AI_ACCESS_PASSWORD`. Đây là quyền gọi AI trả phí, tách biệt tài khoản quản lý trận hiện tại. Phiên hết hạn sau 30 phút. Không nhập OpenRouter key vào ô mật khẩu.
+
+- `OPENROUTER_API_KEY`: chỉ ở server `.env`, không vào HTML, localStorage, Firebase hay Git. `.env` đã được ignore. Nên đặt hạn mức tín dụng riêng cho key theo [hướng dẫn OpenRouter](https://openrouter.ai/docs/api_reference/authentication).
+- `OPENROUTER_MODEL`: model ID hỗ trợ [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), mặc định `openai/gpt-4.1-mini`. Có thể đổi model rồi restart; app không tự chuyển model hay tự retry gây phí.
+- `APP_DATA_MODE=preview` **mặc định**: đọc dữ liệu Firestore hiện có; các luồng lưu cũ chỉ lưu local, không gửi lệnh ghi cloud. Banner luôn hiển thị chế độ. Bản nháp local có thể bị snapshot cloud mới thay thế; không coi đây là kho lưu trữ lâu dài.
+- `APP_DATA_MODE=cloud`: chủ động bật lại các luồng đồng bộ cũ sau khi kiểm thử. Admin có thể lưu nhận định AI vào đúng trận qua transaction; từ chối nếu đội hình/tỉ số/bàn thắng đã đổi trong lúc AI viết. Chỉ cập nhật nhận định, không tạo trận mới. Điểm cầu thủ không tự thay đổi.
+- `APP_ORIGIN`: origin chính xác (không có `/` cuối), cần khớp địa chỉ mở app. Mặc định `http://localhost:3000`; nếu đổi port/domain phải đổi theo.
+- `HOST=127.0.0.1` chỉ mở trên máy. Khi host server/container dùng `0.0.0.0` và HTTPS reverse proxy. Không công khai HTTP chứa mật khẩu.
+- `AI_MAX_REQUESTS_PER_HOUR=20`: giới hạn chung cả server, cả yêu cầu provider bị lỗi cũng tính lượt; tối đa 2 yêu cầu đồng thời. Hạn mức/phiên trong RAM, reset khi restart; khi chạy nhiều instance cần shared rate-limit/session store.
+
+### Các case AI đã nối vào UI
+
+- **Chia đội sân 7 (14–24 người)**: chọn danh sách ở Tạo đội → Tạo đội bằng AI. Đọc chỉ số/vị trí và 3 trận gần nhất, yêu cầu cân riêng công–thủ, hạn chế lặp đồng đội/vị trí, ưu tiên thành viên và khách dự bị. Server kiểm tra đủ người, không trùng, khách dự bị khi đủ 14 thành viên; tự tính lại điểm, không tin điểm model bịa. Các lệch tuyến/ngoài vị trí được cảnh báo. Xem sân + bảng so kè rồi **Dùng làm bản nháp đội hình**; chưa tự lưu trận. Mức cân và yêu cầu ghi chú vẫn cần người duyệt, không phải bảo đảm toán học của LLM.
+- **Nhận định trận**: chọn đúng trận; viết ít nhất 6 phần về các tuyến, đối đầu, chuỗi kết quả, bàn thắng và dự bị. Trận có tỉ số sẽ được phân tích như trận đã diễn ra. Các chỉ số dùng snapshot hồ sơ trong trận, không thay bằng điểm master hiện tại.
+- **Phong độ / đề xuất điểm**: cửa sổ 5 trận **của đội**, tính cả vắng mặt; tăng, giữ, giảm hoặc chưa đủ dữ liệu. Dưới 3 lần có mặt không nhận đề xuất đổi chỉ số. Không tự áp dụng điểm.
+- **Mô tả Cầu thủ nổi bật**: văn mới dựa trên chỉ số/phong độ, xem trước và sao chép; không tự đè mô tả đang dùng.
+
+Trước mỗi lượt có xác nhận gửi dữ liệu bóng đá tới OpenRouter/model. Backend chỉ whitelist tên/chỉ số/vị trí, đội hình, kết quả và bàn thắng; không gửi tài khoản, sổ quỹ hay lịch sử từng người chấm. Dữ liệu bàn chưa khóa được đánh dấu; danh sách dự bị không có phút ra sân nên AI không được khẳng định đã thi đấu đầy đủ. Nội dung AI được escape khi hiển thị/lưu, không chạy HTML do model trả về.
+
+### Build, test và triển khai
+
+```bash
+npm run build  # offline, dùng seed cầu thủ đã public trong index.html → dist/
+npm test       # API, xác thực, dữ liệu, output, rate-limit + regression giao diện cũ
+node server/index.cjs  # phục vụ dist/ đã build
+```
+
+`npm start` tự build lại trước khi chạy. Build không gọi Firestore và không sửa `index.html`/`score-update.html` đã deploy ở root. Dữ liệu mới nhất vẫn được tải qua Firebase khi mở app. Chỉ `python3 build_web.py` không cờ mới giữ hành vi đọc Firestore/build root cũ; không dùng lệnh đó để deploy branch này lên Pages.
+
+Server chỉ phục vụ HTML đã build, manifest, service worker và `assets/`; không phục vụ `.env`, `.git`, source hay backups. `/api/ai/*` không cache; cookie HttpOnly/SameSite, kiểm tra Origin + CSRF, giới hạn request/timeout, lỗi provider không trả nguyên văn chứa thông tin nhạy cảm.
+
+**GitHub Pages không chạy Node backend.** Để đưa bản này lên mạng cần một host chạy Node (VPS/container/app service), cấu hình biến môi trường và HTTPS; chạy `npm run build`, sau đó `node server/index.cjs`. Chưa thay domain/hosting và chưa deploy branch này. Xác thực/chính sách ghi Firestore cũ được giữ nguyên, **không phải** bản nâng cấp Firebase Security Rules; không coi mật khẩu AI là thay thế phân quyền DB. Không bật cloud công khai nếu chưa rà soát quyền Firebase.
+
+Cấu trúc thêm: `server/index.cjs` (HTTP/session/static), `server/ai.cjs` (task/prompt/schema/OpenRouter), `src/ai_context.js` (context/điểm/phong độ thuần), `src/ai_client.js` + `src/ai.css` (UI). Test trình duyệt tùy chọn: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser_web_app.cjs` (Chrome đã cài); dùng provider giả, không tốn phí, chặn Firebase.
+
 🌐 **Xem trực tiếp:** https://toestuyen.github.io/GenPlayer/ *(tự cập nhật mỗi khi push, F5 để xem)*
 
 ## Cách hoạt động

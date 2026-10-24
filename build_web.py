@@ -6,7 +6,7 @@ Day la noi web app ghi khi sua diem, nen luon la du lieu moi nhat. KHONG doc tu 
 
 Cau truc: src/ = nguon (template + optimizer); assets/ = anh; index.html = output o root (GitHub Pages).
 """
-import json, os, sys, re, urllib.request
+import argparse, json, os, sys, re, urllib.request
 
 ROOT=os.path.dirname(os.path.abspath(__file__))+"/"   # thu muc chua build_web.py (= root repo)
 SRC=ROOT+"src/"
@@ -32,9 +32,21 @@ def players_from_db():
     pl=doc.get("fields",{}).get("players")
     return fsval(pl) if pl else []
 
-# 1) doc diem 20 cau thu tu DB (Firestore)
+# Web-app builds are reproducible/offline by default through npm; the legacy
+# command without flags deliberately retains the existing Firestore build.
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--offline",action="store_true",help="Reuse the existing baked player seed; no network")
+parser.add_argument("--output-dir",default=ROOT,help="Output directory (e.g. dist)")
+args=parser.parse_args()
+# 1) doc diem cau thu tu DB, hoac dung seed da public khi build web app
 try:
-    players=players_from_db()
+    if args.offline:
+        with open(ROOT+"index.html",encoding="utf-8") as f: existing=f.read()
+        match=re.search(r"const DEFAULT_PLAYERS = (.*?);\s*\n",existing)
+        if not match: raise ValueError("Khong tim thay player seed trong index.html")
+        players=json.loads(match.group(1))
+    else:
+        players=players_from_db()
     if not players: raise ValueError("DB tra ve rong")
 except Exception as e:
     sys.exit("❌ Khong doc duoc diem tu Firestore (%s). Kiem tra mang/DB roi chay lai." % e)
@@ -67,11 +79,16 @@ html=(tpl.replace("/*__OPTIMIZER__*/",opt)
          .replace("/*__PLAYERS__*/",players_js)
          .replace("/*__FIREBASE__*/",fb)
          .replace("/*__HEROBG__*/",herobg))
+html=(html.replace("/*__AI_CLIENT__*/",open(SRC+"ai_client.js",encoding="utf-8").read())
+          .replace("/*__AI_CONTEXT__*/",open(SRC+"ai_context.js",encoding="utf-8").read())
+          .replace("/*__AI_CSS__*/",open(SRC+"ai.css",encoding="utf-8").read()))
 
-open(ROOT+"index.html","w",encoding="utf-8").write(html)
+out=os.path.abspath(args.output_dir)
+os.makedirs(out,exist_ok=True)
+open(os.path.join(out,"index.html"),"w",encoding="utf-8").write(html)
 # Lối vào riêng không nằm trong cache của index/PWA cũ; cùng nội dung, cùng dữ liệu thời gian thực.
-open(ROOT+"score-update.html","w",encoding="utf-8").write(html)
-print("Đã tạo index.html + score-update.html ·",len(players),"cầu thủ (nguồn: Firestore DB) · Firebase:",
+open(os.path.join(out,"score-update.html"),"w",encoding="utf-8").write(html)
+print("Đã tạo index.html + score-update.html ·",len(players),"cầu thủ (nguồn:",("seed offline" if args.offline else "Firestore DB"),") · Firebase:",
       ("BẬT" if fb!="null" else "tắt (cục bộ)"),"·",len(bgfiles),"nền banner ·",len(html),"ký tự")
-assert not any(ph in html for ph in ("/*__OPTIMIZER__*/","/*__UI_ICONS__*/","/*__UI_ICON_CSS__*/","/*__PLAYERS__*/","/*__FIREBASE__*/","/*__HEROBG__*/")), "Còn placeholder!"
+assert not re.search(r"/\*__[A-Z_]+__\*/",html), "Còn placeholder!"
 print("OK: không còn placeholder")

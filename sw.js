@@ -20,6 +20,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  if (new URL(req.url).pathname.startsWith('/api/')) return; // never cache AI session/status/output
 
   if (req.mode === 'navigate') {
     e.respondWith(

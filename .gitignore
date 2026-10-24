@@ -13,3 +13,9 @@ out.txt
 players.json
 preview_static.html
 backups/
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.web-app/

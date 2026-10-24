@@ -5,6 +5,7 @@
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a0e1a">
+<script>window.GP_APP_CONFIG=null;</script>
 <script>try{if(localStorage.getItem("gp_theme")==="light")document.documentElement.dataset.theme="light";}catch(e){}</script>
 <style>
 :root{
@@ -860,6 +861,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme="light"] .pm-pos-row .pp-tag.main{color:#fff}
 :root[data-theme="light"] .seg:hover,:root[data-theme="light"] .seg.on,:root[data-theme="light"] .rank-row:hover,:root[data-theme="light"] .mc:hover,:root[data-theme="light"] .pl-item:hover{border-color:rgba(39,59,113,.28)}
 /*__UI_ICON_CSS__*/
+/*__AI_CSS__*/
 </style></head><body>
 
 <header class="appbar">
@@ -868,6 +870,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện sáng" aria-label="Chuyển sang giao diện sáng">☀︎</button>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
+<div id="aiModeBanner" class="ai-banner" role="status"></div>
 
 <!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
 <button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức" aria-label="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
@@ -887,6 +890,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="match-history"></span><span>Lịch sử</span></button>
         <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
+        <button class="ap-btn" onclick="show('screen-ai')"><span class="ap-icon" data-ui-icon="match-analysis"></span><span>Trợ lý AI</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="backup"></span><span>Backup</span></button>
       </div>
     </section>
@@ -925,6 +929,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="grid" id="roster"></div>
     <div class="bar">
       <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác"><span data-ui-icon="lineup"></span>Tạo đội (Thuật Toán)</button>
+      <button class="btn alt sm" onclick="openAITask('lineup')"><span data-ui-icon="match-analysis"></span>Tạo đội bằng AI</button>
       <button class="btn alt sm" id="all">Chọn tất cả</button>
       <button class="btn alt sm" id="none">Bỏ chọn</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
@@ -935,6 +940,35 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="status" id="status"></div>
   <div style="text-align:center;margin:14px 0"><button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button></div>
   <div id="result"></div>
+</div>
+
+<!-- ====== AI WORKSPACE · server key only, preview before any write ====== -->
+<div id="screen-ai" class="screen">
+  <div class="ai-head"><div><h1><span data-ui-icon="match-analysis"></span>Trợ lý AI</h1><p class="ai-sub">Chia đội, nhận định trận và phân tích phong độ từ dữ liệu bóng đá thực tế. AI đề xuất — bạn kiểm tra và quyết định sử dụng.</p></div><span class="ai-pill">OpenRouter · server-side</span></div>
+  <div class="ai-panel">
+    <h2>Kết nối &amp; quyền sử dụng</h2><div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
+    <form id="aiLoginForm" onsubmit="aiLogin(event)" hidden>
+      <div class="ai-actions"><label class="ai-field" for="aiPassword">Mật khẩu truy cập AI<input id="aiPassword" type="password" required maxlength="256" autocomplete="current-password" placeholder="AI_ACCESS_PASSWORD trên server"></label><button class="btn sm" id="aiLoginBtn" type="submit">Mở quyền AI</button></div>
+    </form>
+    <button class="btn alt sm" id="aiLogout" onclick="aiLogout()" hidden>Đóng quyền AI</button>
+  </div>
+  <div class="ai-panel">
+    <div class="ai-fields">
+      <label class="ai-field">Chức năng<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chia đội mới · 7 vs 7</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
+      <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
+      <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
+    </div>
+    <div id="aiRosterInfo" class="ai-status"></div>
+    <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
+    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled>Tạo bằng AI</button><button class="btn alt sm" onclick="show('screen-create')">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
+    <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div id="aiOutput" class="ai-panel" hidden>
+    <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>
+    <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
+    <div id="aiLineupPreview"></div>
+  </div>
 </div>
 
 <!-- ====== CAP NHAT CAU THU ====== -->
@@ -1261,10 +1295,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>/*__UI_ICONS__*/</script>
 <script>/*__OPTIMIZER__*/</script>
+<script>/*__AI_CONTEXT__*/</script>
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
+if(window.GP_APP_CONFIG?.backend)for(const k of Object.keys(LS))LS[k]='gp_web_'+(aiIsPreview()?'preview_':'cloud_')+k;
 const TITLES={
   home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',
   "screen-create":GPIcons.render("lineup")+" Tạo đội",
@@ -1273,6 +1309,7 @@ const TITLES={
   "screen-week":GPIcons.render("lineup")+" Trận sắp tới",
   "screen-player-status":GPIcons.render("player-form")+" Tình trạng cầu thủ",
   "screen-finance":GPIcons.render("finance")+" Quản lý thu chi",
+  "screen-ai":GPIcons.render("match-analysis")+" Trợ lý AI",
   "screen-history":GPIcons.render("match-history")+" Lịch sử thi đấu",
   "screen-backup":GPIcons.render("backup")+" Backup đội hình"
 };
@@ -1348,6 +1385,7 @@ function _seedLastWritten(){const a=_fieldSnapshot(),o={};for(const k in a)o[k]=
 function persist(){
   try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog||[]));localStorage.setItem(LS.finance,JSON.stringify(STATE.finance||[]));}catch(e){}
   const allowShrink=STATE._allowShrink; STATE._allowShrink=false;   // cờ 1-lần: chỉ cho phép ghi cloud ngắn hơn khi vừa xoá/gộp có xác nhận
+  if(aiIsPreview())return true; // web-app preview: local drafts only, NEVER queue cloud writes
   if(!(STATE.cloud&&STATE.docRef)) return true;
   const all=_fieldSnapshot(), lw=STATE._lastWritten||(STATE._lastWritten={});
   const out={}, outJson={};
@@ -1375,6 +1413,7 @@ function setBackups(a){STATE.lineupBackups=a;persist();}
 // chỉ ghi field ta THỰC SỰ đổi trên nền tươi → không đè mất thay đổi thiết bị/tab khác vừa ghi.
 // Đọc cloud lỗi → HUỶ (không ghi đè bằng bản cũ). Không cloud → chạy cb luôn. Trả Promise để .finally.
 function freshDoc(cb){
+  if(aiIsPreview()){try{cb();}catch(e){console.warn(e);}return Promise.resolve();}
   if(!(STATE.cloud&&STATE.docRef)){ try{cb();}catch(e){console.warn(e);} return Promise.resolve(); }
   return STATE.docRef.get().then(snap=>{
     if(snap.exists){const d=snap.data();
@@ -1575,7 +1614,7 @@ function initCloud(){
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
       if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];STATE.matchLog=Array.isArray(d.matchLog)?d.matchLog:[];STATE.finance=Array.isArray(d.finance)?d.finance:[];STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]},{merge:true});
+      else if(!aiIsPreview())STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]},{merge:true});
       _seedLastWritten();   // vừa đồng bộ với cloud → chốt mốc từng field để persist() sau chỉ ghi field THỰC SỰ đổi
       ensureRatings(STATE.players);
       onCloudUpdate();
@@ -1794,6 +1833,7 @@ function show(id){
   if(id==="screen-week") showWeek();
   if(id==="screen-player-status") renderPlayerStatus();
   if(id==="screen-finance") renderFinance();
+  if(id==="screen-ai") renderAIWorkspace();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
 }
@@ -1878,7 +1918,7 @@ function logMatchAct(act,mid,mlabel,detail){
     ts:nowStamp(), at:Date.now() };
   STATE.matchLog=[entry,...(STATE.matchLog||[])].slice(0,500);   // bản sao cục bộ (mới → cũ)
   try{localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog));}catch(e){}
-  if(STATE.cloud&&STATE.docRef&&typeof firebase!=="undefined"&&firebase.firestore&&firebase.firestore.FieldValue){
+  if(!aiIsPreview()&&STATE.cloud&&STATE.docRef&&typeof firebase!=="undefined"&&firebase.firestore&&firebase.firestore.FieldValue){
     // set(...,{merge:true}) + arrayUnion: vừa TẠO field nếu chưa có, vừa append ATOMIC (chống đua ghi) — không cần fallback 2 bước.
     // Firebase offline sẽ tự xếp hàng chờ (không reject) nên chỉ toast khi lỗi thật (permission/quota).
     STATE.docRef.set({matchLog:firebase.firestore.FieldValue.arrayUnion(entry)},{merge:true})
@@ -3754,8 +3794,9 @@ function delHistory(id){
   });
 }
 
-localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); show("home");
+/*__AI_CLIENT__*/
+localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"}));   // ép tải service worker mới khi giao diện được cập nhật
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.backend) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // backend sessions/API must never be cached
 </script>
 </body></html>
