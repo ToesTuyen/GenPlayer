@@ -54,7 +54,7 @@ async function createCompleteStep(id,state,detail){
 function createBegin(){
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
   $('reviewProcess').style.display='none';
-  $('aiTask').value='lineup';$('aiAnalysisTools').open=false;aiTaskChanged();
+  $('aiTask').value='lineup';$('aiAnalysisTools').hidden=true;aiTaskChanged();aiSyncDraftAction();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';
@@ -68,6 +68,7 @@ function createBegin(){
 }
 function createFinish(success,message){
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
+  aiSyncDraftAction();
   $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
@@ -198,9 +199,10 @@ async function createTeams(){
     const review='<p>Bản nháp '+engine+' · Chưa lưu trận.</p>'+(notes.length?'<ul>'+notes.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
     render(r,subset,'result',review,true);
     cstate={key,results,idx,subset};
+    AI_STATE.draftReview=null;$('aiOutput').hidden=true;
     CREATE_STATE.draftNote=context.instruction;CREATE_STATE.draftEngine=engine;createNoteChanged();
     if(output){
-      AI_STATE.output=output;AI_STATE.request={task:'lineup',context};aiRenderOutput(false);
+      AI_STATE.output=output;AI_STATE.request={task:'lineup',context};
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
     $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
     $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(hasNote?(engine==='AI'?' Note đã gửi AI, cần kiểm tra trước khi lưu.':' Chưa áp dụng Note. Kiểm tra yêu cầu riêng trước khi lưu.'):'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');

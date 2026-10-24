@@ -931,12 +931,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+      <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="OpenRouter và công cụ phân tích">
+    <section id="createAI" class="create-ai" aria-label="Key OpenRouter">
       <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
-      <details id="aiAnalysisTools" class="ai-analysis-tools">
-        <summary>Công cụ phân tích</summary>
+      <div id="aiAnalysisTools" hidden>
         <div class="ai-analysis-body">
           <div class="ai-fields">
             <label class="ai-field">Nội dung<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chọn nội dung phân tích</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
@@ -946,7 +946,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
           <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
           <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
         </div>
-      </details>
+      </div>
       <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
     </section>
     <div class="create-setup">
@@ -2462,6 +2462,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
+  AI_STATE.draftReview=null;$("aiOutput").hidden=true;$("aiAnalysisTools").hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
@@ -3660,7 +3661,7 @@ function openMatchModal(mode,id){
   }else{ // create — chốt đội hình hiện tại, mặc định ngày hôm nay
     if(!cstate.results.length)return;
     date=todayStr();
-    mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length};
+    mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length,...aiDraftReviewFields()};
   }
   $("mm-title").innerHTML=GPIcons.render("lineup")+" "+(mode==="edit"?"Sửa thông tin trận":"Lưu trận mới");
   $("mm-date").value=date; $("mm-time").value=time; $("mm-venue").value=venue;
@@ -3707,7 +3708,7 @@ function saveMatch(){
     const h2=base.filter(r=>r.score);
     let nid=now.getTime(); while(h2.some(x=>x.id===nid))nid++;   // id không trùng trận đã có
     h2.unshift({id:nid,label:now.toLocaleDateString("vi-VN")+" "+now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),
-      n:draft.n, subset:draft.subset, result:draft.result, kickoff, venue});
+      n:draft.n, subset:draft.subset, result:draft.result, kickoff, venue,...(draft.review?{review:draft.review,aiReview:draft.aiReview}:{})});
     pendingLog.push(["create",nid,fmtKick(kickoff)||now.toLocaleDateString("vi-VN"),`${draft.n} cầu thủ${venue?` · 📍 ${venue}`:""}`]);
     if(setHistory(h2)){
       pendingLog.forEach(a=>logMatchAct(a[0],a[1],a[2],a[3]));

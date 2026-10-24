@@ -38,8 +38,10 @@ function prepare(body,now=Date.now()){
     const names=new Set([...c.match.teams.A,...c.match.teams.B].map(p=>p.n));
     if([...names].some(n=>!players.some(p=>p.n===n)))throw new AppError(400,'Thiếu chỉ số của cầu thủ trong trận. Tải lại dữ liệu rồi thử.');
     // Remove the target match from prior form to avoid treating it as its own history.
-    const past=c.history.filter(m=>m.id!==c.match.id&&m.kickoff<c.match.kickoff);
-    data.match=c.match;data.players=players.filter(p=>names.has(p.n)).map(p=>({...p,form:C.form(p.n,past,now)}));
+    const draft=c.match.id==='current-lineup-draft'&&c.match.kickoff===0;
+    const past=c.history.filter(m=>m.id!==c.match.id&&(draft?m.kickoff<=now:m.kickoff<c.match.kickoff));
+    data.match=draft?{...c.match,kickoff:null}:c.match;data.isDraft=draft;
+    data.players=players.filter(p=>names.has(p.n)).map(p=>({...p,form:C.form(p.n,past,now)}));
     data.previousMatches=past.filter(m=>m.score).slice(0,3);
   }else{
     const p=players.find(p=>p.n===c.playerName);if(!p)throw new AppError(400,'Chọn cầu thủ cần đánh giá.');
@@ -47,7 +49,7 @@ function prepare(body,now=Date.now()){
   }
   const guidance={
     lineup:'Đề xuất đội hình mới và giải thích cân công/thủ. Trả teams bằng index của data.players. Ba phần: cán cân hai đội, vị trí/đối đầu đáng chú ý, mức độ khác các trận cũ. Không tuyên bố cân nếu lệch rõ.',
-    'match-review':'Viết nhận định bóng đá chi tiết bằng tiếng Việt, ít nhất 6 phần, khoảng 600–900 từ: tổng quan, công/thủ mỗi đội, đối đầu then chốt, phong độ/chuỗi kết quả và bàn thắng, vai trò dự bị, kết luận. Chỉ tập trung trận đấu; không kể yêu cầu riêng, quy trình chia đội hay bảo người dùng sửa đội hình. Nếu trận có tỉ số, phân tích kết quả đã biết, không dự đoán lại.',
+    'match-review':'Viết nhận định bóng đá chi tiết bằng tiếng Việt, ít nhất 6 phần, khoảng 600–900 từ: tổng quan, công/thủ mỗi đội, đối đầu then chốt, phong độ/chuỗi kết quả và bàn thắng, vai trò dự bị, kết luận. Chỉ tập trung trận đấu; không kể yêu cầu riêng, quy trình chia đội hay bảo người dùng sửa đội hình. Nếu trận có tỉ số, phân tích kết quả đã biết, không dự đoán lại. Nếu isDraft=true, đây là đội hình nháp chưa chốt ngày giờ: đánh giá đúng hai đội được cung cấp, không bịa lịch thi đấu hoặc kết quả.',
     'player-form':'Đánh giá phong độ THỜI GIAN GẦN ĐÂY, diễn biến so với nền chỉ số, kết luận tăng/giữ/giảm hoặc chưa đủ dữ liệu. Dùng cửa sổ 5 TRẬN ĐỘI, tính cả vắng mặt. Dưới 3 lần có mặt trong 5 trận: verdict=insufficient, suggestions=[]; không quy vắng mặt thành thua hay tự giảm kỹ thuật. Không suy diễn kỹ thuật/phòng ngự từ bàn thắng và thắng thua. Chỉ gợi ý để admin quan sát, không chốt điểm. Không viết dự báo sắp tới, không meme.',
     'player-description':'Viết lại mô tả Cầu thủ nổi bật theo phong cách bình luận bóng đá tự nhiên, mới lời, dựa vào chỉ số và phong độ tháng/cửa sổ gần đây. Không nói vừa có màn thể hiện nếu không có bằng chứng. Không meme. 3 đoạn ngắn, không dự báo sắp tới.'
   }[task];

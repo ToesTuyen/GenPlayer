@@ -83,7 +83,7 @@ async function main(){
       assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
       assert.equal(await page.locator('.ai-inline-head').count(),0,'No separate AI workspace header');
       assert.ok(await page.locator('#createAI').evaluate(el=>el.closest('.card-box')===document.querySelector('#roster').closest('.card-box')),'AI settings stay in the same roster card');
-      assert.equal(await page.locator('#aiAnalysisTools').evaluate(el=>el.open),false,'Secondary analysis tools are collapsed by default');
+      assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false,'No generic analysis tools on Create');
       await page.locator('#aiKeySettings').click();
       await page.locator('#aiKeyForm').waitFor({state:'visible'});
       await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
@@ -129,6 +129,8 @@ async function main(){
       await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(providerCalls,beforeProvider+1);
       assert.equal(await page.locator('#result .field .player').count(),14);
+      assert.equal(await page.locator('#reviewDraft').isVisible(),true,'A review action appears only after a lineup exists');
+      assert.equal(await page.locator('#aiOutput').isVisible(),false,'Generation does not show a generic analysis panel');
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn','Free-text Note must not be marked satisfied without verification');
       assert.match(await page.locator('[data-step="note"]').innerText(),/Đã gửi Note hiện tại/);

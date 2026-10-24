@@ -57,7 +57,7 @@ async function main(){
         await page.locator('#createCriteria').evaluate(el=>el.open=false);
         assert.equal(await page.locator('#createAI').isVisible(),true);assert.equal(await page.locator('#screen-create').isVisible(),true);
         assert.equal(await page.locator('.ai-inline-head').count(),0);
-        assert.equal(await page.locator('#aiAnalysisTools').evaluate(el=>el.open),false);
+        assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false);
         assert.ok(await page.locator('#createAI').evaluate(el=>el.closest('.card-box')===document.querySelector('#roster').closest('.card-box')));
         assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-ai.png`),fullPage:true,animations:'disabled'});

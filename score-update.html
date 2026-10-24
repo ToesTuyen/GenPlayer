@@ -1001,6 +1001,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
 #createAI[hidden],#createAI [hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
+.create-toolbar [hidden]{display:none!important}
 .create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}
 .ai-key-dialog{width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 32px);padding:18px;margin:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:var(--sh);overflow:auto;overscroll-behavior:contain}
 .ai-key-dialog::backdrop{background:rgba(12,25,20,.5)}
@@ -1274,12 +1275,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+      <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="OpenRouter và công cụ phân tích">
+    <section id="createAI" class="create-ai" aria-label="Key OpenRouter">
       <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
-      <details id="aiAnalysisTools" class="ai-analysis-tools">
-        <summary>Công cụ phân tích</summary>
+      <div id="aiAnalysisTools" hidden>
         <div class="ai-analysis-body">
           <div class="ai-fields">
             <label class="ai-field">Nội dung<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chọn nội dung phân tích</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
@@ -1289,7 +1290,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
           <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
           <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
         </div>
-      </details>
+      </div>
       <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
     </section>
     <div class="create-setup">
@@ -2538,8 +2539,10 @@ function prepare(body,now=Date.now()){
     const names=new Set([...c.match.teams.A,...c.match.teams.B].map(p=>p.n));
     if([...names].some(n=>!players.some(p=>p.n===n)))throw new AppError(400,'Thiếu chỉ số của cầu thủ trong trận. Tải lại dữ liệu rồi thử.');
     // Remove the target match from prior form to avoid treating it as its own history.
-    const past=c.history.filter(m=>m.id!==c.match.id&&m.kickoff<c.match.kickoff);
-    data.match=c.match;data.players=players.filter(p=>names.has(p.n)).map(p=>({...p,form:C.form(p.n,past,now)}));
+    const draft=c.match.id==='current-lineup-draft'&&c.match.kickoff===0;
+    const past=c.history.filter(m=>m.id!==c.match.id&&(draft?m.kickoff<=now:m.kickoff<c.match.kickoff));
+    data.match=draft?{...c.match,kickoff:null}:c.match;data.isDraft=draft;
+    data.players=players.filter(p=>names.has(p.n)).map(p=>({...p,form:C.form(p.n,past,now)}));
     data.previousMatches=past.filter(m=>m.score).slice(0,3);
   }else{
     const p=players.find(p=>p.n===c.playerName);if(!p)throw new AppError(400,'Chọn cầu thủ cần đánh giá.');
@@ -2547,7 +2550,7 @@ function prepare(body,now=Date.now()){
   }
   const guidance={
     lineup:'Đề xuất đội hình mới và giải thích cân công/thủ. Trả teams bằng index của data.players. Ba phần: cán cân hai đội, vị trí/đối đầu đáng chú ý, mức độ khác các trận cũ. Không tuyên bố cân nếu lệch rõ.',
-    'match-review':'Viết nhận định bóng đá chi tiết bằng tiếng Việt, ít nhất 6 phần, khoảng 600–900 từ: tổng quan, công/thủ mỗi đội, đối đầu then chốt, phong độ/chuỗi kết quả và bàn thắng, vai trò dự bị, kết luận. Chỉ tập trung trận đấu; không kể yêu cầu riêng, quy trình chia đội hay bảo người dùng sửa đội hình. Nếu trận có tỉ số, phân tích kết quả đã biết, không dự đoán lại.',
+    'match-review':'Viết nhận định bóng đá chi tiết bằng tiếng Việt, ít nhất 6 phần, khoảng 600–900 từ: tổng quan, công/thủ mỗi đội, đối đầu then chốt, phong độ/chuỗi kết quả và bàn thắng, vai trò dự bị, kết luận. Chỉ tập trung trận đấu; không kể yêu cầu riêng, quy trình chia đội hay bảo người dùng sửa đội hình. Nếu trận có tỉ số, phân tích kết quả đã biết, không dự đoán lại. Nếu isDraft=true, đây là đội hình nháp chưa chốt ngày giờ: đánh giá đúng hai đội được cung cấp, không bịa lịch thi đấu hoặc kết quả.',
     'player-form':'Đánh giá phong độ THỜI GIAN GẦN ĐÂY, diễn biến so với nền chỉ số, kết luận tăng/giữ/giảm hoặc chưa đủ dữ liệu. Dùng cửa sổ 5 TRẬN ĐỘI, tính cả vắng mặt. Dưới 3 lần có mặt trong 5 trận: verdict=insufficient, suggestions=[]; không quy vắng mặt thành thua hay tự giảm kỹ thuật. Không suy diễn kỹ thuật/phòng ngự từ bàn thắng và thắng thua. Chỉ gợi ý để admin quan sát, không chốt điểm. Không viết dự báo sắp tới, không meme.',
     'player-description':'Viết lại mô tả Cầu thủ nổi bật theo phong cách bình luận bóng đá tự nhiên, mới lời, dựa vào chỉ số và phong độ tháng/cửa sổ gần đây. Không nói vừa có màn thể hiện nếu không có bằng chứng. Không meme. 3 đoạn ngắn, không dự báo sắp tới.'
   }[task];
@@ -3729,6 +3732,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
+  AI_STATE.draftReview=null;$("aiOutput").hidden=true;$("aiAnalysisTools").hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
@@ -4927,7 +4931,7 @@ function openMatchModal(mode,id){
   }else{ // create — chốt đội hình hiện tại, mặc định ngày hôm nay
     if(!cstate.results.length)return;
     date=todayStr();
-    mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length};
+    mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length,...aiDraftReviewFields()};
   }
   $("mm-title").innerHTML=GPIcons.render("lineup")+" "+(mode==="edit"?"Sửa thông tin trận":"Lưu trận mới");
   $("mm-date").value=date; $("mm-time").value=time; $("mm-venue").value=venue;
@@ -4974,7 +4978,7 @@ function saveMatch(){
     const h2=base.filter(r=>r.score);
     let nid=now.getTime(); while(h2.some(x=>x.id===nid))nid++;   // id không trùng trận đã có
     h2.unshift({id:nid,label:now.toLocaleDateString("vi-VN")+" "+now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),
-      n:draft.n, subset:draft.subset, result:draft.result, kickoff, venue});
+      n:draft.n, subset:draft.subset, result:draft.result, kickoff, venue,...(draft.review?{review:draft.review,aiReview:draft.aiReview}:{})});
     pendingLog.push(["create",nid,fmtKick(kickoff)||now.toLocaleDateString("vi-VN"),`${draft.n} cầu thủ${venue?` · 📍 ${venue}`:""}`]);
     if(setHistory(h2)){
       pendingLog.forEach(a=>logMatchAct(a[0],a[1],a[2],a[3]));
@@ -5115,7 +5119,7 @@ const AI_KEYS=(()=>{
     clear(){try{localStorage.removeItem(storageName);}catch{throw new Error('Chưa xoá được key đã lưu. Hãy xoá dữ liệu trang trong cài đặt trình duyệt.');}key='';remembered=false;}
   };
 })();
-const AI_STATE={status:null,busy:false,output:null,request:null};
+const AI_STATE={status:null,busy:false,output:null,request:null,draftReview:null,reviewingDraft:false};
 function aiSecurePage(){return location.protocol==='https:'||['localhost','127.0.0.1','[::1]'].includes(location.hostname);}
 function aiIsPreview(){return window.GP_APP_CONFIG?.dataMode==='preview';}
 function aiClientStatus(){return {mode:'direct',keyMode:'device',model:GPAIService.DEFAULTS.model,tasks:GPAIService.TASKS};}
@@ -5152,6 +5156,7 @@ function aiRenderStatus(){
   $('aiKey').placeholder=hasKey?'Nhập key mới nếu muốn thay':'sk-or-…';
   $('aiKeySkip').textContent=hasKey?'Đóng':'Bỏ qua, dùng thuật toán';
   $('aiRun').disabled=AI_STATE.busy||!hasKey;
+  aiSyncDraftAction();
 }
 async function aiRefresh(){
   AI_STATE.status=aiClientStatus();aiRenderStatus();
@@ -5180,7 +5185,7 @@ function aiTaskChanged(){
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
   $('aiTask').value=task;
-  $('aiAnalysisTools').open=task!=='lineup';
+  $('aiAnalysisTools').hidden=task==='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -5202,6 +5207,42 @@ function aiContextSnapshot(task=$('aiTask').value){
 function aiMatchFingerprint(match,players){
   if(!match)return null;const names=new Set([...match.teams.A,...match.teams.B].map(p=>p.n));
   return JSON.stringify({match,profiles:players.filter(p=>names.has(p.n)).map(GPAIContext.player).sort((a,b)=>a.n.localeCompare(b.n,'vi'))});
+}
+function aiDraftFingerprint(){
+  if(typeof cstate==='undefined'||!cstate.subset||!cstate.results[cstate.idx])return null;
+  return JSON.stringify({key:cstate.key,index:cstate.idx,subset:cstate.subset,result:cstate.results[cstate.idx]});
+}
+function aiSyncDraftAction(){
+  const button=$('reviewDraft');button.hidden=!aiDraftFingerprint();
+  button.disabled=AI_STATE.busy||(typeof CREATE_STATE!=='undefined'&&CREATE_STATE.busy);
+  $('reviewDraftLabel').textContent=AI_STATE.reviewingDraft?'Đang đánh giá…':'Đánh giá';
+}
+function aiDraftContext(){
+  if(!aiDraftFingerprint())throw new Error('Tạo đội hình trước khi đánh giá.');
+  const subset=structuredClone(cstate.subset),result=structuredClone(cstate.results[cstate.idx]);
+  const match=GPAIContext.compactLegacy({id:'current-lineup-draft',kickoff:Date.now(),subset,result});
+  match.kickoff=0; // Draft has no scheduled date; prepare() uses past completed matches, not this placeholder.
+  return {players:subset.map(GPAIContext.player),history:getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy),rosterNames:subset.map(p=>p.n),match,playerName:'',instruction:''};
+}
+function aiDraftReviewFields(){
+  const review=AI_STATE.draftReview;if(!review||review.fingerprint!==aiDraftFingerprint())return {};
+  return {review:aiReviewHTML(review.output),aiReview:{model:review.output.model,createdAt:review.output.createdAt}};
+}
+async function aiReviewDraft(){
+  if(AI_STATE.busy||CREATE_STATE.busy)return;
+  let context,fingerprint;
+  try{fingerprint=aiDraftFingerprint();context=aiDraftContext();}catch(e){aiMessage(e.message,true);return;}
+  if(!AI_KEYS.has()){aiOpenKeyDialog();aiKeyMessage('Nhập key để đánh giá đội hình này. Bỏ qua sẽ giữ nguyên bản nháp, không gọi AI.');return;}
+  if(!confirm('Gửi đội hình đang hiển thị, chỉ số và kết quả bóng đá liên quan trực tiếp tới OpenRouter để đánh giá? Có thể tính phí. Không gửi Note chia đội, tài khoản hoặc thu chi.'))return;
+  AI_STATE.busy=true;AI_STATE.reviewingDraft=true;aiRenderStatus();$('go').disabled=true;
+  aiMessage('Đang đánh giá đội hình hiện tại, so công/thủ, chuỗi kết quả và bàn thắng. Không tự đổi đội hình hoặc lưu trận.');
+  try{
+    const response=await aiFetch('run',{task:'match-review',context});
+    if(fingerprint!==aiDraftFingerprint()){aiMessage('Đội hình đã thay đổi trong lúc đánh giá. Đã bỏ kết quả cũ; hãy đánh giá lại.',true);return;}
+    AI_STATE.draftReview={fingerprint,output:response.output};AI_STATE.output=response.output;
+    AI_STATE.request={task:'match-review',context,source:'draft',draftFingerprint:fingerprint};
+    aiRenderOutput();aiMessage('Đã đánh giá đúng đội hình đang hiển thị. Nhận định sẽ đi cùng bản nháp khi bạn chọn Lưu làm đội tuần này; chưa ghi lên cloud.');
+  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;AI_STATE.reviewingDraft=false;$('go').disabled=false;aiRenderStatus();}
 }
 async function aiRun(){
   if(AI_STATE.busy||CREATE_STATE.busy)return;
@@ -5226,7 +5267,7 @@ function aiRenderOutput(showLineupPreview=true){
     $('aiOutputText').innerHTML+='<div class="ai-label">'+labels[o.verdict]+' · chỉ đề xuất, không tự sửa điểm</div>'+o.suggestions.map(s=>'<p>'+esc(s.attribute+' · '+({increase:'tăng',decrease:'giảm',keep:'giữ'}[s.direction])+': '+s.reason)+'</p>').join('');
   }
   $('aiOutputMeta').textContent=`${o.model} · ${new Date(o.createdAt).toLocaleString('vi-VN')} · ${o.usage?o.usage.promptTokens+' token vào / '+o.usage.completionTokens+' token ra':'chưa có số token'} · bản nháp, cần kiểm tra dữ kiện.`;
-  $('aiUseLineup').hidden=task!=='lineup'||!showLineupPreview;$('aiSaveReview').hidden=task!=='match-review';
+  $('aiUseLineup').hidden=task!=='lineup'||!showLineupPreview;$('aiSaveReview').hidden=task!=='match-review'||AI_STATE.request.source==='draft';
   $('aiLineupPreview').innerHTML='';$('aiWarnings').textContent=(o.warnings||[]).join('\n');
   if(task==='lineup'&&showLineupPreview)render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
   if(showLineupPreview)$('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
@@ -5239,12 +5280,14 @@ function aiUseLineup(){
   if(current.length!==chosen.size||current.some(n=>!chosen.has(n)))if(!confirm('Danh sách người có mặt đã đổi sau khi AI tạo đội. Dùng lại danh sách của bản nháp AI này?'))return;
   $('roster').querySelectorAll('input').forEach(c=>{c.checked=chosen.has(curPlayers[+c.dataset.i].n);c.closest('.pl-item').classList.toggle('on',c.checked);c.closest('.pl-item').classList.toggle('off',!c.checked);});updateCount();
   cstate={key:'AI:'+Date.now(),results:[structuredClone(o.result)],idx:0,subset:structuredClone(o.subset)};
+  AI_STATE.draftReview=null;aiSyncDraftAction();
   render(cstate.results[0],cstate.subset,'result','<p>Bản nháp AI chưa chốt. Kiểm tra từng tuyến và bảng so kè trước khi lưu trận.</p>',true);$('saveWeek').style.display='inline-block';
   $('status').textContent='Bản nháp AI · Chưa lưu trận. Kiểm tra so kè rồi chọn Lưu làm đội tuần này nếu đồng ý.';
   $('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function aiSaveReview(){
   if(AI_STATE.request?.task!=='match-review'||!AI_STATE.output)return;
+  if(AI_STATE.request.source==='draft'){aiMessage('Đây là đánh giá bản nháp. Chọn Lưu làm đội tuần này để lưu cùng đội hình, không ghi đè trận trong lịch sử.');return;}
   if(aiIsPreview()){aiMessage('Chế độ xem thử không ghi nhận định lên cloud. Dùng Sao chép; chỉ bật APP_DATA_MODE=cloud khi sẵn sàng.',true);return;}
   if(!requireAdmin())return;
   const request=AI_STATE.request,output=AI_STATE.output;
@@ -5316,7 +5359,7 @@ async function createCompleteStep(id,state,detail){
 function createBegin(){
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
   $('reviewProcess').style.display='none';
-  $('aiTask').value='lineup';$('aiAnalysisTools').open=false;aiTaskChanged();
+  $('aiTask').value='lineup';$('aiAnalysisTools').hidden=true;aiTaskChanged();aiSyncDraftAction();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';
@@ -5330,6 +5373,7 @@ function createBegin(){
 }
 function createFinish(success,message){
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
+  aiSyncDraftAction();
   $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
@@ -5460,9 +5504,10 @@ async function createTeams(){
     const review='<p>Bản nháp '+engine+' · Chưa lưu trận.</p>'+(notes.length?'<ul>'+notes.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
     render(r,subset,'result',review,true);
     cstate={key,results,idx,subset};
+    AI_STATE.draftReview=null;$('aiOutput').hidden=true;
     CREATE_STATE.draftNote=context.instruction;CREATE_STATE.draftEngine=engine;createNoteChanged();
     if(output){
-      AI_STATE.output=output;AI_STATE.request={task:'lineup',context};aiRenderOutput(false);
+      AI_STATE.output=output;AI_STATE.request={task:'lineup',context};
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
     $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
     $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(hasNote?(engine==='AI'?' Note đã gửi AI, cần kiểm tra trước khi lưu.':' Chưa áp dụng Note. Kiểm tra yêu cầu riêng trước khi lưu.'):'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');

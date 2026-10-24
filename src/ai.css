@@ -53,6 +53,7 @@
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
 #createAI[hidden],#createAI [hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
+.create-toolbar [hidden]{display:none!important}
 .create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}
 .ai-key-dialog{width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 32px);padding:18px;margin:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:var(--sh);overflow:auto;overscroll-behavior:contain}
 .ai-key-dialog::backdrop{background:rgba(12,25,20,.5)}

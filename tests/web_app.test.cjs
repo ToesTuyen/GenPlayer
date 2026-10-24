@@ -99,6 +99,11 @@ test('form counts five team matches, absences, oldest-first results and real str
 test('target match never counted in its own pre-match form',()=>{
   const c=context();c.match=c.history[0];const p=prepare({task:'match-review',context:c});const d=JSON.parse(p.messages[1].content);assert.equal(d.players[0].form.played,4);
 });
+test('draft review uses recent history but never invents a kickoff time',()=>{
+  const c=context();c.match={...c.match,id:'current-lineup-draft',kickoff:0};c.instruction='';
+  const data=JSON.parse(prepare({task:'match-review',context:c}).messages[1].content);
+  assert.equal(data.isDraft,true);assert.equal(data.match.kickoff,null);assert.equal(data.players[0].form.played,5);assert.equal(data.players[0].form.goalsRecorded,10);assert.equal(data.instruction,'');
+});
 test('match context keeps explicit keeper and role ratings without editing profiles',()=>{
   const r={id:10,kickoff:1000,subset:structuredClone(players),result:C.lineup(players,teams).result};
   r.result.evA.gkFit=7.4;r.result.evB.gkRated=false;
@@ -202,6 +207,13 @@ test('key input lives in a dismissible dialog, not in the Create card, in every 
     assert.ok(!inline.includes('id="aiKeyForm"'),file+' no inline key form');assert.ok(inline.includes('id="aiKeySettings"'),file+' manual key management');
     assert.match(html,/<dialog id="aiKeyDialog"[^>]*aria-labelledby="aiKeyTitle"/);assert.ok(html.includes('id="aiKeySkip"'));assert.ok(html.includes('Bỏ qua, dùng thuật toán'));
     assert.ok(html.includes('renderAIWorkspace();aiEnterCreate();'),file+' prompt on entry, not on each Create click');
+  }
+});
+test('Create has a contextual review button, not a generic analysis menu',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    assert.ok(!html.includes('Công cụ phân tích'),file+' no generic analysis menu');
+    assert.match(html,/<button[^>]*id="reviewDraft"[^>]*\bhidden\b/);assert.ok(html.includes('onclick="aiReviewDraft()"'));
   }
 });
 test('Create has one action, a top select-all checkbox and an embedded worker in every entry',()=>{
