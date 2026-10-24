@@ -1,5 +1,12 @@
+// Shared browser/Node module: public prompts, schemas and validation; no stored credentials.
+(function(root,factory){
+  'use strict';
+  const api=factory(typeof module!=='undefined'&&module.exports?require('./ai_context.js'):root.GPAIContext);
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;
+  root.GPAIService=api;
+})(typeof window==='undefined'?globalThis:window,function(C){
 'use strict';
-const C=require('../src/ai_context.js');
+const DEFAULTS=Object.freeze({model:'openai/gpt-4.1-mini',timeoutMs:90000,maxTokens:5000});
 const TASKS=['lineup','match-review','player-form','player-description'];
 class AppError extends Error{constructor(status,message){super(message);this.status=status;}}
 const str={type:'string'},section={type:'object',properties:{heading:str,body:str},required:['heading','body'],additionalProperties:false};
@@ -16,6 +23,7 @@ function schema(task){
 function prepare(body,now=Date.now()){
   if(!body||!TASKS.includes(body.task))throw new AppError(400,'Chức năng AI không hợp lệ.');
   let c;try{c=C.normalize(body.context);}catch(e){throw new AppError(400,e.message);}
+  if(new TextEncoder().encode(JSON.stringify(c)).length>256*1024)throw new AppError(413,'Dữ liệu bóng đá gửi AI vượt 256 KB. Hãy giảm phạm vi lịch sử.');
   const task=body.task;
   const players=c.players.map(p=>({...p,overall:+C.positionScore(p,p.pos).toFixed(2),form:C.form(p.n,c.history,now)}));
   const data={instruction:c.instruction};
@@ -64,22 +72,36 @@ function validateOutput(raw,prepared){
   return clean;
 }
 async function complete(prepared,config,fetchImpl=fetch){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),config.timeoutMs);
+  const options={...DEFAULTS,...config};
+  if(typeof options.apiKey!=='string'||!/^sk-or-[A-Za-z0-9_-]{12,240}$/.test(options.apiKey))throw new AppError(401,'Nhập và lưu key OpenRouter trên trình duyệt này trước.');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),options.timeoutMs);
   try{
-    const response=await fetchImpl('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal:controller.signal,headers:{Authorization:'Bearer '+config.apiKey,'Content-Type':'application/json','HTTP-Referer':config.origin,'X-OpenRouter-Title':'GenPlayer — FC Haha'},body:JSON.stringify({model:config.model,messages:prepared.messages,response_format:{type:'json_schema',json_schema:{name:prepared.task.replaceAll('-','_'),strict:true,schema:prepared.schema}},provider:{require_parameters:true},max_tokens:config.maxTokens,temperature:0.5,stream:false})});
+    const response=await fetchImpl('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',mode:'cors',credentials:'omit',redirect:'error',cache:'no-store',referrerPolicy:'no-referrer',signal:controller.signal,
+      headers:{Authorization:'Bearer '+options.apiKey,'Content-Type':'application/json','X-OpenRouter-Title':'GenPlayer'},
+      body:JSON.stringify({model:options.model,messages:prepared.messages,response_format:{type:'json_schema',json_schema:{name:prepared.task.replaceAll('-','_'),strict:true,schema:prepared.schema}},provider:{require_parameters:true},max_tokens:options.maxTokens,temperature:0.5,stream:false})
+    });
     if(!response.ok){
       await response.body?.cancel();
-      const message={401:'OpenRouter từ chối key cá nhân. Kiểm tra hoặc thay key trong Tuỳ chọn AI.',402:'Key OpenRouter hết hạn mức/tín dụng.',429:'OpenRouter đang giới hạn lượt gọi. Hãy thử lại sau.'}[response.status]||'OpenRouter chưa xử lý được yêu cầu; kiểm tra model hỗ trợ structured outputs.';
+      const message={401:'OpenRouter từ chối key cá nhân. Mở Key OpenRouter để kiểm tra hoặc thay key.',402:'Key OpenRouter hết hạn mức/tín dụng.',429:'OpenRouter đang giới hạn lượt gọi. Hãy thử lại sau.'}[response.status]||'OpenRouter chưa xử lý được yêu cầu; kiểm tra model hỗ trợ structured outputs.';
       throw new AppError(502,message);
     }
-    let size=0,parts=[];
-    for await(const chunk of response.body){size+=chunk.length;if(size>512*1024){controller.abort();throw new AppError(502,'Phản hồi AI vượt giới hạn.');}parts.push(chunk);}
-    let data;try{data=JSON.parse(Buffer.concat(parts).toString('utf8'));}catch{throw new AppError(502,'Không đọc được phản hồi OpenRouter.');}
+    const reader=response.body?.getReader();if(!reader)throw new AppError(502,'Không đọc được phản hồi OpenRouter.');
+    const decoder=new TextDecoder();let size=0,raw='';
+    try{
+      while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;
+        if(size>512*1024){controller.abort();await reader.cancel();throw new AppError(502,'Phản hồi AI vượt giới hạn.');}
+        raw+=decoder.decode(value,{stream:true});
+      }
+      raw+=decoder.decode();
+    }finally{reader.releaseLock();}
+    let data;try{data=JSON.parse(raw);}catch{throw new AppError(502,'Không đọc được phản hồi OpenRouter.');}
     if(data.error||data.choices?.[0]?.finish_reason!=='stop')throw new AppError(502,'AI chưa hoàn tất nội dung (giới hạn token hoặc lỗi provider). Chưa áp dụng thay đổi.');
     const content=data.choices?.[0]?.message?.content;
     if(typeof content!=='string')throw new AppError(502,'Model không trả nội dung văn bản.');
-    return {...validateOutput(content,prepared),model:typeof data.model==='string'?data.model:config.model,usage:data.usage?{promptTokens:+data.usage.prompt_tokens||0,completionTokens:+data.usage.completion_tokens||0}:null,createdAt:new Date().toISOString()};
-  }catch(e){if(e instanceof AppError)throw e;if(controller.signal.aborted)throw new AppError(504,'AI quá thời gian chờ. Không tự gọi lại để tránh phát sinh phí.');throw new AppError(502,'Không kết nối được OpenRouter. Không có dữ liệu nào bị sửa.');}
+    return {...validateOutput(content,prepared),model:typeof data.model==='string'?data.model:options.model,usage:data.usage?{promptTokens:+data.usage.prompt_tokens||0,completionTokens:+data.usage.completion_tokens||0}:null,createdAt:new Date().toISOString()};
+  }catch(e){if(e instanceof AppError)throw e;if(controller.signal.aborted)throw new AppError(504,'AI quá thời gian chờ. Không tự gọi lại để tránh phát sinh phí.');throw new AppError(502,'Không kết nối được OpenRouter (mạng hoặc CORS). Không tự gửi lại hoặc sửa dữ liệu.');}
   finally{clearTimeout(timer);}
 }
-module.exports={AppError,TASKS,prepare,validateOutput,complete};
+return {DEFAULTS,AppError,TASKS,prepare,validateOutput,complete};
+});

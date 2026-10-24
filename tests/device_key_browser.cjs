@@ -2,20 +2,21 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const {getConfig,createApp}=require('../server/index.cjs');
+const {getConfig,createApp}=require('../scripts/serve_web.cjs');
 const C=require('../src/ai_context.js');
 const secret='sk-or-device-browser-fake-key',storageName='gp_openrouter_device_key_v1';
 const players=Array.from({length:16},(_,i)=>({n:'QA cầu thủ '+i,pos:C.SLOTS[i%7],pos2:[],guest:i>=14,...Object.fromEntries(C.KEYS.map(k=>[k,6]))}));
 const screenshots=fs.mkdtempSync(path.join(os.tmpdir(),'genplayer-device-key-'));
 async function main(){
   let providerCalls=0;const errors=[],apiRequests=[];
-  const config=getConfig({}),app=createApp(config,{fetchImpl:async()=>{providerCalls++;throw new Error('Provider must not be called by key management');}});
+  const config=getConfig({}),app=createApp(config);
   await new Promise(r=>app.listen(0,'127.0.0.1',r));config.origin='http://127.0.0.1:'+app.address().port;
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
   async function newContext(){
     const ctx=await browser.newContext({viewport:{width:1280,height:1000},serviceWorkers:'block'});
     await ctx.addInitScript(players=>{try{localStorage.setItem('gp_web_preview_players',JSON.stringify(players));localStorage.setItem('gp_web_preview_history','[]');}catch{/* Initial about:blank can have an opaque origin. */}},players);
     await ctx.route(/^https:\/\//,r=>r.request().url().includes('www.gstatic.com/firebasejs/')?r.fulfill({contentType:'application/javascript',body:'/* Firebase disabled for QA */'}):r.abort());
+    await ctx.route('https://openrouter.ai/api/v1/chat/completions',r=>{providerCalls++;return r.abort();});
     ctx.on('page',page=>{
       page.on('pageerror',e=>errors.push(e.message));
       page.on('request',r=>{if(r.url().includes('/api/'))apiRequests.push({url:r.url(),headers:r.headers(),body:r.postData()||''});});
@@ -78,12 +79,12 @@ async function main(){
       const response=await route.fetch({url:local});await route.fulfill({response});
     });
     const lan=await unsafe.newPage();await lan.goto('http://genplayer-lan.test');await lan.evaluate(()=>openAITask('lineup'));
-    assert.equal(await lan.locator('#aiKey').isDisabled(),true);assert.equal(await lan.locator('#aiSaveKeyBtn').isDisabled(),true);
-    assert.match(await lan.locator('#aiServerStatus').innerText(),/HTTP/);await lan.locator('#aiKeySkip').click();assert.equal(await lan.locator('#aiKeyDialog').isVisible(),false,'Unsafe HTTP still allows skip');await unsafe.close();
+    assert.equal(await lan.locator('#aiKey').isDisabled(),false);assert.equal(await lan.locator('#aiSaveKeyBtn').isDisabled(),false);
+    assert.match(await lan.locator('#aiServerStatus').innerText(),/HTTP/);await lan.locator('#aiKey').fill(secret);await lan.locator('#aiSaveKeyBtn').click();assert.equal(await lan.locator('#aiKeyDialog').isVisible(),false,'LAN HTTP allows local entry/save without contacting a backend');assert.equal(await lan.evaluate(()=>AI_KEYS.has()),true);await unsafe.close();
     assert.equal(providerCalls,0,'Saving, reloading and deleting keys never calls the provider');
     assert.ok(apiRequests.every(r=>!r.headers.authorization&&!r.body.includes(secret)),'Status/key management cannot transmit a key');
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({ok:true,screenshots,coverage:'auto popup only without key, skip/Escape, real offline fallback, save closes popup, manual management, masked input, persist/reload, device isolation, ephemeral mode, multi-tab delete, blocked storage, unsafe HTTP skip, zero paid calls or cloud writes, unchanged data'}));
+    console.log(JSON.stringify({ok:true,screenshots,coverage:'auto popup only without key, skip/Escape, real offline fallback, save closes popup, manual management, masked input, persist/reload, device isolation, ephemeral mode, multi-tab delete, blocked storage, LAN HTTP entry/save, zero paid calls or app API/cloud writes, unchanged data'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

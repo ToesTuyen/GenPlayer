@@ -3,7 +3,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const {getConfig,createApp}=require('../server/index.cjs'),C=require('../src/ai_context.js');
+const {getConfig,createApp}=require('../scripts/serve_web.cjs'),C=require('../src/ai_context.js');
 const secret='sk-or-browser-test-not-real';
 const names=['Danh Tuyên','Trịnh Mạnh','Văn Quyền','Nam Khắc','Quy Bong','Huy Hoàng','Quyết Nguyễn','Khắc Trọng','Hưng','Quốc An','Duy Hùng','Doan Ha','Việt Dũng','Văn Thanh','Khách (Mạnh Tiến)','Khách (Mạnh Khắc)'];
 const players=names.map((n,i)=>({n,pos:C.SLOTS[i%7],pos2:[],guest:i>=14,...Object.fromEntries(C.KEYS.map(k=>[k,6]))}));
@@ -28,8 +28,16 @@ const fakeProvider=async(url,init)=>{
   if(task==='player-form'){output.verdict='keep';output.suggestions=[{attribute:'DD',direction:'keep',reason:'Cần quan sát trực tiếp trước khi đổi điểm.'}];}
   return new Response(JSON.stringify({model:'fake/qa',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output)}}],usage:{prompt_tokens:100,completion_tokens:200}}));
 };
+async function installProviderRoute(ctx){
+  await ctx.route('https://openrouter.ai/api/v1/chat/completions',async route=>{
+    const req=route.request();
+    if(req.method()==='OPTIONS')return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'authorization,content-type,x-openrouter-title'}});
+    const response=await fakeProvider(req.url(),{headers:{Authorization:req.headers().authorization},body:req.postData()});
+    await route.fulfill({status:response.status,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:await response.text()});
+  });
+}
 async function main(){
-  const config={...getConfig({}),origin:''},app=createApp(config,{fetchImpl:fakeProvider});
+  const config={...getConfig({}),origin:''},app=createApp(config);
   await new Promise(r=>app.listen(0,'127.0.0.1',r));config.origin='http://127.0.0.1:'+app.address().port;
   const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
   try{
@@ -39,6 +47,7 @@ async function main(){
       page.on('pageerror',e=>errors.push(e.message));
       await ctx.route('https://www.gstatic.com/firebasejs/**',route=>route.fulfill({contentType:'application/javascript',body:'/* cloud disabled for QA */'}));
       await ctx.route('**/firestore.googleapis.com/**',route=>{writes.push(route.request().method());return route.abort();});
+      await installProviderRoute(ctx);
       page.on('request',r=>{if(r.url().includes('/api/'))requests.push({url:r.url(),body:r.postData()||''});});
       await ctx.addInitScript(({players,history})=>{
         localStorage.setItem('gp_theme','dark');
@@ -168,12 +177,13 @@ async function main(){
       assert.equal(await page.locator('#result .field .player').count(),14);
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
       await page.locator('#createProcessClose').click();
-      // An unsafe connection must not attempt a paid request at all.
-      await page.route('**/api/ai/status',r=>r.fulfill({json:{keyMode:'device',secureTransport:false,model:'fake/qa',remainingRequests:20,dataMode:'preview'}}));
+      // Removing the local key must not attempt a paid request at all.
+      await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();
       const beforeMissing=providerCalls;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(providerCalls,beforeMissing);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
-      await page.locator('#createProcessClose').click();await page.unroute('**/api/ai/status');
+      await page.locator('#createProcessClose').click();
+      await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       const beforeCancel=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeCancel=providerCalls;
       acceptDialogs=false;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);acceptDialogs=true;
       assert.match(await page.locator('#createProcessSummary').innerText(),/Đã huỷ/);
@@ -210,7 +220,7 @@ async function main(){
       await page.locator('#createProcessClose').click();
       assert.ok(providerInputs.filter(x=>x.task==='lineup').every(x=>x.instruction===lineupNote),'Provider receives the exact current lineup Note');
       assert.ok(providerInputs.filter(x=>x.task!=='lineup').every(x=>x.instruction!==lineupNote),'Lineup Note cannot leak into other AI tasks');
-      assert.ok(requests.every(r=>!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
+      assert.ok(requests.every(r=>r.url==='https://openrouter.ai/api/v1/chat/completions'&&!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')),'Only OpenRouter receives AI requests; no app backend');assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
       await ctx.close();
     }
     if(progressOnly){console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'desktop/mobile progress: active first, newest completed first, pending last, readable timing, persistent/reopened reverse checklist, no Firebase writes'}));return;}
@@ -219,6 +229,7 @@ async function main(){
     const ctx=await browser.newContext({serviceWorkers:'block'}),page=await ctx.newPage();page.on('dialog',d=>d.accept());
     await ctx.route('https://www.gstatic.com/firebasejs/**',r=>r.fulfill({contentType:'application/javascript',body:'/* cloud disabled */'}));
     await ctx.route('**/firestore.googleapis.com/**',r=>r.abort());
+    await installProviderRoute(ctx);
     await ctx.addInitScript(({players,history})=>{localStorage.setItem('gp_web_cloud_players',JSON.stringify(players));localStorage.setItem('gp_web_cloud_history',JSON.stringify(history));},{players,history});
     await page.goto(config.origin);await page.evaluate(()=>openAITask('match-review',100));await page.locator('#aiKeyForm').waitFor({state:'visible'});
     await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);

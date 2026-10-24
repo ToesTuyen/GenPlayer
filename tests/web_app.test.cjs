@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const C=require('../src/ai_context.js'),{prepare,validateOutput,complete}=require('../server/ai.cjs'),{getConfig,createApp}=require('../server/index.cjs');
+const C=require('../src/ai_context.js'),S=require('../src/ai_service.js'),{DEFAULTS,prepare,validateOutput,complete}=S,{getConfig,createApp}=require('../scripts/serve_web.cjs');
 const password='test-ai-password-private',secret='sk-or-test-key-not-real';
 const player=(i,guest=false)=>({n:'Cầu thủ '+i,pos:C.SLOTS[i%7],pos2:[],guest,...Object.fromEntries(C.KEYS.map(k=>[k,6]))});
 const players=Array.from({length:16},(_,i)=>player(i,i>=14));
@@ -11,7 +11,7 @@ const output=(task='lineup')=>({title:'Nhận định kiểm thử',sections:Arr
 const provider=value=>async(url,init)=>new Response(JSON.stringify({model:'test/model',choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}],usage:{prompt_tokens:30,completion_tokens:50}}),{status:200,headers:{'Content-Type':'application/json'}});
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
-  const app=createApp(config,{fetchImpl:options.fetchImpl||provider(output())});await new Promise(r=>app.listen(0,'127.0.0.1',r));
+  const app=createApp(config,options);await new Promise(r=>app.listen(0,'127.0.0.1',r));
   const base='http://127.0.0.1:'+app.address().port;
   const request=(route,body,headers={})=>fetch(base+route,{method:body===undefined?'GET':'POST',headers:{Origin:config.origin,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:typeof body==='string'?body:JSON.stringify(body)});
   const headers={Authorization:'Bearer '+secret};
@@ -28,6 +28,7 @@ function deviceSandbox(initial={},options={}){
   const sandbox={location:{protocol:'https:',hostname:'genplayer.example'},window:{addEventListener:(name,fn)=>events[name]=fn},AbortController,setTimeout,clearTimeout,
     localStorage:{getItem:k=>{if(options.blocked)throw new Error('blocked');return store.get(k)??null;},setItem:(k,v)=>{if(options.blocked)throw new Error('blocked');store.set(k,v);},removeItem:k=>{if(options.blocked)throw new Error('blocked');store.delete(k);}},
     $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,style:{},open:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},showModal(){this.open=true;},close(){this.open=false;this.listeners.close?.();}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
+  sandbox.GPAIService={...S,complete:(prepared,config)=>S.complete(prepared,config,sandbox.fetch)};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/ai_client.js'),'utf8')+'\nglobalThis.qa={keys:AI_KEYS,state:AI_STATE,fetch:aiFetch,init:aiInit,save:aiSaveKey,forget:aiForgetKey,enter:aiEnterCreate,open:aiOpenKeyDialog,skip:aiSkipKeyDialog};',sandbox);
   return {...sandbox.qa,sandbox,store,elements,events};
 }
@@ -53,7 +54,7 @@ test('saving clears the masked input; storage deletion in another tab revokes th
   const x=deviceSandbox();x.init();const input=x.elements.get('aiKey');input.value=secret;x.save({preventDefault(){}});
   assert.equal(input.value,'');assert.ok(!JSON.stringify([...x.elements.values()]).includes(secret),'The key must not enter rendered UI text or placeholder');
   x.store.delete(x.keys.storageName);x.events.storage({key:x.keys.storageName});assert.equal(x.keys.has(),false);assert.equal(x.elements.get('aiRun').disabled,true);
-  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};input.value=secret;x.save({preventDefault(){}});assert.equal(x.keys.has(),false);assert.equal(input.value,'');
+  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};input.value=secret;x.save({preventDefault(){}});assert.equal(x.keys.has(),true);assert.equal(input.value,'');assert.equal(x.elements.get('aiKey').disabled,false);
 });
 test('key dialog prompts on entry only without a key; skip, Escape and save clear input without calling AI',()=>{
   const x=deviceSandbox();x.init();x.enter();const dialog=x.elements.get('aiKeyDialog'),input=x.elements.get('aiKey');
@@ -66,13 +67,23 @@ test('key dialog prompts on entry only without a key; skip, Escape and save clea
   x.enter();assert.equal(dialog.open,false,'A saved or ephemeral key suppresses the automatic popup');
   x.open();assert.equal(dialog.open,true,'The key can still be managed manually');x.skip();assert.equal(x.keys.get(),secret,'Closing management does not remove a saved key');
 });
-test('only run attaches device key in Authorization, never JSON; unsafe transport sends nothing',async()=>{
-  const calls=[],x=deviceSandbox({}, {fetch:async(url,init)=>{calls.push({url,init});return new Response('{}',{headers:{'Content-Type':'application/json'}});}});
-  x.keys.save(secret,true);await x.fetch('status');await x.fetch('run',{task:'lineup',context:context()});
-  assert.equal(calls[0].init.headers.Authorization,undefined);assert.equal(calls[1].init.headers.Authorization,'Bearer '+secret);
-  assert.equal(calls[1].init.credentials,'omit');assert.equal(calls[1].init.redirect,'error');assert.ok(!calls[1].init.body.includes(secret));
-  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};await assert.rejects(x.fetch('run',{}),/HTTPS/);assert.equal(calls.length,2);
-  x.sandbox.location={protocol:'https:',hostname:'genplayer.example'};x.keys.clear();await assert.rejects(x.fetch('run',{}),/Nhập và lưu key/);assert.equal(calls.length,2);
+test('browser calls HTTPS OpenRouter directly even from LAN HTTP; status/key save sends nothing',async()=>{
+  const calls=[],x=deviceSandbox({}, {fetch:async(url,init)=>{calls.push({url,init});return provider(output())(url,init);}});
+  x.keys.save(secret,true);assert.equal((await x.fetch('status')).mode,'direct');assert.equal(calls.length,0);
+  const response=await x.fetch('run',{task:'lineup',context:context()});assert.equal(response.output.subset.length,16);
+  assert.equal(calls[0].url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(calls[0].init.headers.Authorization,'Bearer '+secret);
+  assert.equal(calls[0].init.credentials,'omit');assert.equal(calls[0].init.redirect,'error');assert.equal(calls[0].init.mode,'cors');
+  assert.ok(!calls[0].init.body.includes(secret));assert.ok(!JSON.stringify(x.state).includes(secret));
+  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};x.init();assert.equal(x.elements.get('aiKey').disabled,false);
+  await x.fetch('run',{task:'lineup',context:context()});assert.equal(calls.length,2);assert.ok(calls.every(c=>c.url==='https://openrouter.ai/api/v1/chat/completions'));
+  await assert.rejects(x.fetch('run',{task:'invalid',context:context()}));assert.equal(calls.length,2,'Bad inputs cannot incur a paid request');
+  x.keys.clear();await assert.rejects(x.fetch('run',{}),/Nhập và lưu key/);assert.equal(calls.length,2);
+});
+test('two browser/device keys go independently to OpenRouter, with no shared-key fallback',async()=>{
+  const seen=[],other='sk-or-another-device-test-key',fetch=async(url,init)=>{seen.push(init.headers.Authorization);return provider(output())(url,init);};
+  const a=deviceSandbox({}, {fetch}),b=deviceSandbox({}, {fetch});
+  a.keys.save(secret,true);b.keys.save(other,true);await a.fetch('run',{task:'lineup',context:context()});await b.fetch('run',{task:'lineup',context:context()});
+  assert.deepEqual(seen,['Bearer '+secret,'Bearer '+other]);a.keys.clear();await assert.rejects(a.fetch('run',{}));assert.equal(seen.length,2);
 });
 test('only whitelisted football data reaches provider; no credentials or finance',()=>{
   const c=context();c.finance=[{secret:'private-finance'}];c.players[0]={...c.players[0],ratings:{secret:'private-rater'},apiKey:'private-key'};
@@ -110,64 +121,36 @@ test('insufficient recent attendance suppresses point changes; prose still needs
   assert.equal(out.verdict,'insufficient');assert.deepEqual(out.suggestions,[]);
 });
 test('provider fixed endpoint, request-local key, strict schema and safe error messages',async()=>{
-  const config={...getConfig({}),apiKey:secret};let sent;
+  const config={...DEFAULTS,apiKey:secret};let sent;
   await complete(prepare({task:'lineup',context:context()}),config,async(url,init)=>{sent={url,init};return provider(output())(url,init);});
   assert.equal(sent.url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(sent.init.headers.Authorization,'Bearer '+secret);
   assert.equal(JSON.parse(sent.init.body).response_format.json_schema.strict,true);
   for(const code of [401,402,429,500])await assert.rejects(complete(prepare({task:'lineup',context:context()}),config,async()=>new Response(secret,{status:code})),e=>!e.message.includes(secret));
 });
 test('malformed/truncated/oversized provider output and timeout do not apply anything',async()=>{
-  const p=prepare({task:'lineup',context:context()}),c=getConfig({});
+  const p=prepare({task:'lineup',context:context()}),c={...DEFAULTS,apiKey:secret};
   assert.throws(()=>validateOutput('not json',p));assert.throws(()=>validateOutput('{"title":"bad"}',p));
   await assert.rejects(complete(p,c,async()=>new Response(JSON.stringify({choices:[{finish_reason:'length'}]}))),/chưa hoàn tất/);
   await assert.rejects(complete(p,c,async()=>new Response('x'.repeat(600000))),/vượt giới hạn/);
   await assert.rejects(complete(p,{...c,timeoutMs:10},async(_,init)=>new Promise((r,reject)=>init.signal.addEventListener('abort',()=>reject(new Error('aborted'))))),/quá thời gian/);
 });
-test('API requires a device key even with an obsolete server key; no login or shared fallback',async()=>{
-  let calls=0;
+test('optional local file server has no AI API or provider proxy',async()=>{
   await withServer(async({request})=>{
-    for(const headers of [{},{Authorization:'Bearer invalid'},{Authorization:'Bearer sk-or-'+ 'x'.repeat(241)},{Cookie:'gp_ai_session=old','X-GP-CSRF':'old'}])assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,401);
-    const status=await(await request('/api/ai/status')).json();assert.equal(status.keyMode,'device');assert.equal(status.secureTransport,true);assert.ok(!JSON.stringify(status).includes(secret));assert.ok(!('authenticated' in status));
-    for(const route of ['login','logout'])assert.equal((await request('/api/ai/'+route,{})).status,404);
-    assert.equal(calls,0);
-  },{apiKey:secret,fetchImpl:async()=>{calls++;return provider(output())();}});
-});
-test('Origin guard and independent per-request Authorization; no session or key retention',async()=>{
-  const seen=[],other='sk-or-another-device-test-key';
-  await withServer(async({request,headers,config})=>{
-    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},{...headers,Origin:'https://evil.example'})).status,403);
-    assert.equal((await request('/api/ai/run',{}, {...headers,Origin:''})).status,403);
-    for(const key of [secret,other]){
-      const r=await request('/api/ai/run',{task:'lineup',context:context()},{Authorization:'Bearer '+key});assert.equal(r.status,200);assert.equal(r.headers.get('set-cookie'),null);
-      const b=await r.json();assert.equal(b.output.subset.length,16);assert.ok(!JSON.stringify(b).includes(key));
+    for(const route of ['status','run','login','logout']){
+      const r=await request('/api/ai/'+route,route==='status'?undefined:{task:'lineup',context:context()},{Authorization:'Bearer '+secret});
+      assert.equal(r.status,404);assert.ok(!(await r.text()).includes(secret));
     }
-    assert.deepEqual(seen,['Bearer '+secret,'Bearer '+other]);assert.ok(!('apiKey' in config));
-    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()})).status,401,'Previous requests must not become a server fallback');
-  },{fetchImpl:async(url,init)=>{seen.push(init.headers.Authorization);assert.ok(!init.body.includes(secret)&&!init.body.includes(other));return provider(output())(url,init);}});
+  });
 });
-test('HTTP LAN cannot send keys; configured HTTPS proxy and localhost are supported',async()=>{
-  let calls=0;
-  await withServer(async({request,headers})=>{assert.equal((await(await request('/api/ai/status')).json()).secureTransport,false);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,426);assert.equal(calls,0);},{origin:'http://192.168.1.10:3000',fetchImpl:async()=>{calls++;}});
-  await withServer(async({request,headers})=>{assert.equal((await(await request('/api/ai/status')).json()).secureTransport,true);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,200);},{origin:'https://genplayer.example'});
-});
-test('request budgets, malformed JSON and size limits apply before paid calls',async()=>{
-  await withServer(async({request,headers:h})=>{
-    assert.equal((await request('/api/ai/run','{bad',h)).status,400);assert.equal((await request('/api/ai/run',{large:'x'.repeat(270000)},h)).status,413);
-    assert.equal((await request('/api/ai/run',{task:'invalid',context:context()},h)).status,400);
-    assert.equal((await request('/api/ai/run',{}, {...h,'Content-Type':'text/plain'})).status,415);
-    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,200);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,429);
-  },{hourLimit:1});
-});
-test('concurrent device requests still share the backend two-request limit',async()=>{
-  let entered=0,ready,release;const both=new Promise(r=>ready=r),gate=new Promise(r=>release=r);
-  await withServer(async({request,headers})=>{
-    const first=request('/api/ai/run',{task:'lineup',context:context()},headers),second=request('/api/ai/run',{task:'lineup',context:context()},{Authorization:'Bearer sk-or-another-device-test-key'});
-    await both;assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,429);
-    release();assert.deepEqual((await Promise.all([first,second])).map(r=>r.status),[200,200]);
-  },{fetchImpl:async(url,init)=>{if(++entered===2)ready();await gate;return provider(output())(url,init);}});
+test('provider input limit, Unicode streaming and network/CORS failures are safe and never retry',async()=>{
+  const c=context();c.instruction='x'.repeat(2001);assert.throws(()=>prepare({task:'lineup',context:c}));
+  const p=prepare({task:'lineup',context:context()}),bytes=new TextEncoder().encode(JSON.stringify({model:'fake/unicode',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output())}}]}));
+  let i=0;const stream=new ReadableStream({pull(controller){if(i===bytes.length)return controller.close();controller.enqueue(bytes.slice(i,i+1));i++;}});
+  assert.equal((await complete(p,{...DEFAULTS,apiKey:secret},async()=>new Response(stream))).title,output().title);
+  let calls=0;await assert.rejects(complete(p,{...DEFAULTS,apiKey:secret},async()=>{calls++;throw new TypeError(secret);}),e=>e.message.includes('CORS')&&!e.message.includes(secret));assert.equal(calls,1);
 });
 test('static allowlist never serves .env, backups, source, Git or symlink secrets',async()=>{
-  await withServer(async({request})=>{for(const route of ['/.env','/.git/config','/backups/data.json','/server/index.cjs','/firebase_config.json','/src/web_template.html','/assets/%2e%2e/.env'])assert.equal((await request(route)).status,404);const r=await request('/');assert.equal(r.status,200);const html=await r.text();assert.ok(html.includes('window.GP_APP_CONFIG={"backend":true,"dataMode":"preview"}'));assert.ok(!html.includes(secret));assert.ok(!html.includes(password));assert.equal(r.headers.get('cache-control'),'no-store');});
+  await withServer(async({request})=>{for(const route of ['/.env','/.git/config','/backups/data.json','/server/index.cjs','/firebase_config.json','/src/web_template.html','/assets/%2e%2e/.env'])assert.equal((await request(route)).status,404);const r=await request('/');assert.equal(r.status,200);const html=await r.text();assert.ok(html.includes('window.GP_APP_CONFIG={"dataMode":"preview"}'));assert.ok(!html.includes(secret));assert.ok(!html.includes(password));assert.equal(r.headers.get('cache-control'),'no-store');});
 });
 test('built JavaScript parses; preview blocks every existing direct cloud write',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../dist/index.html'),'utf8');

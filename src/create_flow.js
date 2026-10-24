@@ -136,23 +136,18 @@ async function createTeams(){
     const withData=forms.filter(f=>f.played>0).length;
     await createCompleteStep('history',done.length?'done':'warn',`${done.length} trận có tỉ số · ${withData}/${subset.length} người có dữ liệu kết quả. Đã tổng hợp chuỗi thắng/thua và bàn được ghi nhận; không tự đổi điểm.`);
     createStep('engine','active','Kiểm tra khả năng dùng AI…');await createYield();
-    if(!window.GP_APP_CONFIG?.backend)fallback='Bản static không có backend AI.';
-    else try{
+    try{
       AI_STATE.status=await aiFetch('status');aiRenderStatus();
-      const s=AI_STATE.status;
       if(!AI_KEYS.has())fallback='Chưa có key OpenRouter trên trình duyệt này.';
-      else if(!aiSecurePage()||!s.secureTransport)fallback='Cần HTTPS để gửi key cá nhân; link Wi-Fi HTTP chỉ dùng thuật toán.';
-      else if(s.keyMode!=='device')fallback='Backend chưa hỗ trợ key riêng của thiết bị.';
-      else if(s.remainingRequests<=0)fallback='Đã hết lượt AI trong giờ.';
       else engine='AI';
     }catch(e){fallback=e.message;}
     if(engine==='AI'){
-      if(!confirm('Gửi dữ liệu bóng đá tới OpenRouter/model bằng key cá nhân trên thiết bị này? Có thể tính phí. Key chỉ dùng xác thực qua HTTPS, không vào prompt; không gửi tài khoản hoặc thu chi.')){
+      if(!confirm('Trình duyệt gửi trực tiếp dữ liệu bóng đá và key cá nhân tới OpenRouter qua HTTPS? Có thể tính phí. Key chỉ nằm trong header xác thực, không vào prompt; không gửi tài khoản hoặc thu chi.')){
         createStep('engine','skip','Bạn đã huỷ gửi dữ liệu; không gọi AI hoặc tạo đội thay thế.');
         for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
         createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
       }
-      await createCompleteStep('engine','done','Đã kết nối backend; dùng key riêng trên thiết bị qua kết nối an toàn.');
+      await createCompleteStep('engine','done','Có key riêng trên thiết bị; trình duyệt sẽ gọi trực tiếp OpenRouter qua HTTPS, không qua backend.');
     }else await createCompleteStep('engine','warn',fallback+' Tự chuyển sang thuật toán, không gọi AI trả phí.');
     $('createProcessEngine').textContent=engine;
     createStep('search','active',engine==='AI'?'AI đang phân tích và chia đội. Chưa có kết quả để kiểm tra tiêu chí.':'Thuật toán đang duyệt cách chia và gán vị trí trong bộ xử lý riêng…');await createYield();

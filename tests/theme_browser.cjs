@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const {createApp,getConfig}=require('../server/index.cjs'),C=require('../src/ai_context.js');
+const {createApp,getConfig}=require('../scripts/serve_web.cjs'),C=require('../src/ai_context.js');
 const seed=JSON.parse(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/const DEFAULT_PLAYERS = (.*?);\s*\n/)[1]);
 const players=seed.map(C.player),rest=players.map((_,i)=>i).slice(14),teams={A:{starters:[0,1,2,3,4,5,6],bench:rest.filter((_,i)=>i%2===0)},B:{starters:[7,8,9,10,11,12,13],bench:rest.filter((_,i)=>i%2===1)}};
 const result=C.lineup(players,teams).result;

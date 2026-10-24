@@ -2,12 +2,12 @@
   "name": "genplayer-web-app",
   "version": "1.0.0",
   "private": true,
-  "description": "FC Haha web app with a private OpenRouter backend",
+  "description": "GenPlayer static web app with browser-direct OpenRouter and per-device keys",
   "engines": { "node": ">=18.20" },
   "scripts": {
     "build": "python3 build_web.py --offline --output-dir dist",
     "prestart": "npm run build",
-    "start": "node server/index.cjs",
+    "start": "node scripts/serve_web.cjs",
     "pretest": "npm run build",
     "test": "node --test tests/web_app.test.cjs && node tests/ui_icons.test.cjs && node tests/match_comparison.test.cjs"
   }

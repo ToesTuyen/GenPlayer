@@ -994,12 +994,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <p id="aiKeyIntro" class="ai-footer">Nhập key riêng để tạo đội bằng AI, hoặc bỏ qua để dùng thuật toán. Lưu key không gọi AI và không phát sinh phí.</p>
   <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
   <form id="aiKeyForm" onsubmit="aiSaveKey(event)">
-    <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" autofocus disabled></label><button class="btn sm" id="aiSaveKeyBtn" type="submit" disabled>Lưu key</button></div>
+    <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" autofocus></label><button class="btn sm" id="aiSaveKeyBtn" type="submit">Lưu key</button></div>
     <label class="ai-remember"><input type="checkbox" id="aiRememberKey" checked>Lưu trên trình duyệt này</label>
   </form>
   <div id="aiKeyMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
-  <details class="ai-key-privacy"><summary>Lưu key &amp; bảo mật</summary><p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Mỗi lượt key được gửi qua HTTPS tới backend và OpenRouter để xác thực; backend không lưu key. Thiết bị khác cần nhập riêng. Tránh lưu trên máy dùng chung; script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p></details>
-  <div class="ai-actions"><button class="btn alt sm" type="button" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" type="button" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
+  <details class="ai-key-privacy"><summary>Lưu key &amp; bảo mật</summary><p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Khi gọi AI, trình duyệt gửi key trực tiếp tới OpenRouter qua HTTPS, không qua backend của app. Thiết bị khác cần nhập riêng. Nên mở app bằng HTTPS và tránh máy dùng chung: script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p></details>
+  <div class="ai-actions"><button class="btn alt sm" type="button" onclick="aiRefresh()">Thông tin kết nối</button><button class="btn alt sm" type="button" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
   <div class="ai-key-dismiss"><button class="btn alt" type="button" id="aiKeySkip" onclick="aiSkipKeyDialog()">Bỏ qua, dùng thuật toán</button></div>
 </dialog>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
@@ -1345,11 +1345,12 @@ self.onmessage=function(event){
 };
 </script>
 <script>/*__AI_CONTEXT__*/</script>
+<script>/*__AI_SERVICE__*/</script>
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
 const FIREBASE_CONFIG = /*__FIREBASE__*/;
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
-if(window.GP_APP_CONFIG?.backend)for(const k of Object.keys(LS))LS[k]='gp_web_'+(aiIsPreview()?'preview_':'cloud_')+k;
+if(window.GP_APP_CONFIG?.dataMode)for(const k of Object.keys(LS))LS[k]='gp_web_'+(aiIsPreview()?'preview_':'cloud_')+k;
 const TITLES={
   home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',
   "screen-create":GPIcons.render("lineup")+" Tạo đội",
@@ -3837,6 +3838,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.backend) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // backend sessions/API must never be cached
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>

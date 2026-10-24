@@ -82,6 +82,7 @@ html=(tpl.replace("/*__OPTIMIZER__*/",opt)
 html=(html.replace("/*__AI_CLIENT__*/",open(SRC+"ai_client.js",encoding="utf-8").read())
           .replace("/*__CREATE_FLOW__*/",open(SRC+"create_flow.js",encoding="utf-8").read())
           .replace("/*__AI_CONTEXT__*/",open(SRC+"ai_context.js",encoding="utf-8").read())
+          .replace("/*__AI_SERVICE__*/",open(SRC+"ai_service.js",encoding="utf-8").read())
           .replace("/*__AI_CSS__*/",open(SRC+"ai.css",encoding="utf-8").read())
           .replace("/*__THEME_CSS__*/",open(SRC+"theme.css",encoding="utf-8").read()))
 

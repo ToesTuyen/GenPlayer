@@ -2,74 +2,63 @@
 
 Công cụ chia **20 cầu thủ** thành **2 đội cân bằng nhất** cho bóng đá sân 7, kèm sơ đồ thi đấu trực quan (HTML) và phân tích ưu/nhược điểm.
 
-## Web app + OpenRouter (branch `feat/web-app-openrouter`)
+## Web app + OpenRouter trực tiếp (branch `feat/web-app-openrouter`)
 
-Bản mới giữ nguyên thuật toán, Firebase và lịch sử. Thêm Node backend và tích hợp **AI ngay trong màn Tạo đội**, không có mục AI riêng ở menu. Không chuyển framework hoặc migrate dữ liệu. Bản GitHub Pages trên `main` chưa thay đổi.
+AI chạy **ngay trong trình duyệt → OpenRouter qua HTTPS**, không có backend AI/proxy hay API `/api/ai/*`. Mỗi người nhập key riêng trong popup khi vào Tạo đội; không nhúng key vào mã nguồn public. Thuật toán, Firebase, lịch sử và quyền quản lý trận được giữ nguyên. Bản GitHub Pages trên `main` chưa thay đổi.
 
-### Chạy trên máy
+### Nhập key và tạo đội
 
-Cần Node.js >=18.20 và Python 3; không có package phụ thuộc phải cài.
+Vào **Tạo đội**: chưa có key thì popup **Kết nối OpenRouter** tự hiện. **Lưu key** đóng popup; **Bỏ qua, dùng thuật toán**, Esc hoặc × cũng đóng popup và xoá nội dung chưa lưu. Bỏ qua không gọi AI và không tự tạo đội: chọn người rồi bấm nút **Tạo đội** duy nhất để dùng thuật toán. Không hỏi lại khi bấm Tạo đội trong cùng màn; lần sau vào màn mà vẫn chưa có key thì nhắc lại. Có key đã lưu hoặc key tạm thì không tự hiện. Nút nhỏ **Key OpenRouter** mở lại để nhập/đổi/xoá key; không có nút hay lớp **Tuỳ chọn AI** hoặc form key dài trong danh sách.
 
-```bash
-cp .env.example .env
-# Không đặt key OpenRouter trong .env. Mỗi người nhập key riêng trong UI.
-npm start
-```
+Mặc định lưu key bằng localStorage trên đúng trình duyệt/origin, không đồng bộ sang máy khác. Bỏ chọn **Lưu trên trình duyệt này** nếu chỉ dùng tới khi tải lại/đóng trang. **Xoá key trên máy này** không thu hồi key tại OpenRouter hoặc huỷ lượt đã gửi. Ô nhập che key, xoá sau khi lưu/đóng và không tự điền lại; lỗi lưu hiển thị ngay trong popup. Lưu key và xem thông tin kết nối chỉ xử lý local, không gửi key hoặc kiểm tra provider. Chỉ lúc chạy AI mới có xác nhận gửi dữ liệu/tính phí theo key đó.
 
-Mở **http://localhost:3000** → **Tạo đội**: chưa có key thì popup **Kết nối OpenRouter** tự hiện. Nhập key của bạn → **Lưu key** để đóng popup, hoặc chọn **Bỏ qua, dùng thuật toán** (Esc/nút × cũng bỏ qua). Bỏ qua không gọi AI, không tự tạo đội; bạn chọn người rồi bấm **Tạo đội** để dùng thuật toán dự phòng. Popup không hiện lại khi bấm Tạo đội trong cùng màn; chỉ nhắc lại khi vào màn lần sau mà vẫn chưa có key. Có key đã lưu hoặc key tạm trong phiên thì không tự hiện. Nút nhỏ **Key OpenRouter** cho phép mở lại để nhập/đổi/xoá key.
+Key chỉ nằm trong storage riêng và header `Authorization` gửi thẳng tới `https://openrouter.ai/api/v1/chat/completions`, không đi qua máy chủ của app, không vào prompt, Git, HTML build, Firebase hay backup. Cách gọi dùng [Bearer token theo tài liệu OpenRouter](https://openrouter.ai/docs/api_reference/authentication).
 
-Mặc định key lưu bằng localStorage trên đúng trình duyệt và origin đang dùng, không đồng bộ sang thiết bị khác. Bỏ chọn **Lưu trên trình duyệt này** nếu chỉ dùng tới khi tải lại/đóng trang; **Xoá key trên máy này** xoá bản lưu ở origin hiện tại, không thu hồi key tại OpenRouter hoặc huỷ yêu cầu đã gửi. Ô nhập được che và xoá sau khi lưu/đóng, không tự điền lại key. Lỗi nhập/lưu được hiển thị ngay trong popup, không đóng popup. Lưu key không gọi provider/không kiểm tra tín dụng; mỗi lượt AI vẫn có xác nhận tính phí theo key riêng.
+**Cho phép nhập/lưu key cả trên link Wi-Fi HTTP.** Request API vẫn trực tiếp qua HTTPS, không gửi key tới máy chủ HTTP trên mạng nội bộ. Tuy nhiên trang HTTP có thể bị thay mã trên đường truyền; nên dùng bản online HTTPS. LocalStorage không phải kho bí mật tuyệt đối: script cùng origin/XSS, tiện ích có quyền hoặc người mở profile trình duyệt có thể đọc key. Các repo cùng origin không cách ly storage. Tránh máy dùng chung, đặt hạn mức cho từng key và thu hồi key từng lộ trong chat/log. Không dán key vào Note/nhận định.
 
-Không còn mật khẩu/phiên AI dùng chung. Tài khoản quản lý trận vẫn tách biệt. Key không nằm trong Git, HTML, dữ liệu bóng đá, Firebase hoặc backup; backend chỉ giữ key trong bộ nhớ của yêu cầu đang chuyển tiếp, không lưu lại. Trình duyệt gửi key ở header `Authorization` qua backend HTTPS tới OpenRouter, **không đưa vào prompt**. `OPENROUTER_API_KEY` và `AI_ACCESS_PASSWORD` cũ không còn được đọc làm cấu hình AI; hãy xoá chúng khỏi môi trường host cũ.
+### Luồng AI và tiêu chí
 
-Lưu trên máy **không phải kho bí mật tuyệt đối**: script cùng origin, XSS, tiện ích có quyền hoặc người truy cập profile trình duyệt có thể đọc localStorage. Các đường dẫn/repo cùng origin cũng không cách ly localStorage. Tránh máy dùng chung, dùng key có hạn mức riêng và thu hồi key đã lộ trong chat/log tại OpenRouter. Xoá dữ liệu trình duyệt sẽ mất key đã lưu. Không chuyển key vào Note, nhận định hay file backup.
+- **Chia đội 7 vs 7 (14–24 người)**: một nút **Tạo đội**. Có key thì trình duyệt chuẩn bị dữ liệu, gọi model và kiểm tra kết quả; thiếu key, lỗi mạng/CORS, key lỗi, timeout hoặc output không hợp lệ thì chuyển sang thuật toán Web Worker, không retry AI. Huỷ xác nhận gửi dữ liệu thì dừng, giữ bản nháp cũ.
+- **12 tiêu chí và Note** luôn hiện trên danh sách. Cân riêng công/thủ, ưu tiên người mạnh/thành viên, vị trí phù hợp, chia khách/dự bị, xoay tua đội hình và xét phong độ. Note hiện tại là nguồn duy nhất cho yêu cầu riêng, không lấy lệnh trận cũ; không đưa Note vào nhận định public. Thuật toán chưa hiểu Note hoặc tối ưu lịch sử/phong độ nên có cảnh báo rõ. Sửa Note sau khi tạo báo bản nháp chưa cập nhật.
+- **Tiến trình 11 bước** là kiểm tra thực tế, không giả lập suy nghĩ LLM; mỗi bước tối thiểu 1 giây, active ở trên cùng, đã chạy mới nhất trước rồi tới pending. Xong không tự đóng; **Xem tiêu chí** mở lại không gọi AI. Chênh tuyến trên 1.5 điểm tổng, trái vị trí, dự bị mạnh hơn, lặp đồng đội/vị trí đều cảnh báo; yêu cầu chưa xác minh không được tích xanh.
+- **Nhận định trận**: ít nhất 6 phần về các tuyến, đối đầu, chuỗi kết quả, bàn thắng, dự bị và kết luận; trận có tỉ số phân tích kết quả đã biết. Dùng snapshot chỉ số trong trận. Admin lưu đúng trận qua transaction, từ chối nếu đội hình/tỉ số/bàn thắng đã đổi; không tạo trận mới.
+- **Phong độ / đề xuất điểm**: 5 trận của đội, tính cả vắng mặt, có tăng/giữ/giảm/chưa đủ dữ liệu. Dưới 3 lần có mặt không đề xuất đổi điểm; không tự áp dụng.
+- **Mô tả Cầu thủ nổi bật**: văn mới dựa vào chỉ số/phong độ gần đây; không meme, không dự báo, không tự đè mô tả.
 
-Chọn người rồi bấm nút **Tạo đội** duy nhất ở đầu danh sách. Checkbox **Chọn tất cả** hỗ trợ chọn, bỏ chọn và trạng thái chọn một phần.
+Prompt chỉ lấy tên/chỉ số/vị trí, đội hình, kết quả, bàn thắng và Note liên quan; không lấy tài khoản, sổ quỹ hay từng người chấm. Bàn chưa khóa và thiếu phút ra sân dự bị được nêu rõ. Output được kiểm tra JSON/schema và tính lại điểm bằng code trước khi vẽ; nội dung AI luôn escape. Tạo nháp không tự lưu trận hoặc đổi điểm.
 
-Không có nút hay lớp mở/đóng **Tuỳ chọn AI**, không còn form key dài trong thẻ danh sách. Form key chỉ nằm trong dialog; phần bảo mật thu gọn, nút bỏ qua luôn dùng được kể cả trên link Wi-Fi HTTP không cho gửi key. Nhận định, phong độ và mô tả cầu thủ được giữ trong mục thu gọn **Công cụ phân tích**. Kết quả phân tích xuất hiện cùng khu vực kết quả, không nằm trong khung cấu hình.
+Cấu hình **public, không chứa key** nằm ở `src/ai_service.js` → `DEFAULTS`: model `openai/gpt-4.1-mini`, tối đa 5.000 output token, timeout 90 giây; model phải hỗ trợ [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs). Không tự đổi model hay retry gây phí. Dữ liệu đầu vào tối đa 256 KB, phản hồi 512 KB. Không còn mật khẩu/phiên AI, giới hạn lượt chung ở server hoặc cấu hình key/model trong `.env`; hạn mức chi tiêu đặt tại OpenRouter.
 
-Ngay trên danh sách có phần **Tiêu chí tạo đội** (12 mục, mở xem chi tiết) và ô **Note — yêu cầu riêng cho lần tạo này**, luôn hiện. Note hiện tại là nguồn duy nhất cho yêu cầu riêng: để trống thì không có chỉ định riêng, không lấy lệnh của trận cũ từ lịch sử. Note chỉ nằm trong phiên trang, không tự lưu vào trận/nhận định; ghi chú phân tích là ô riêng. Tiến trình có bước Note và kết quả giữ snapshot Note đã dùng: AI nhận Note nhưng vẫn cần đối chiếu thủ công; thuật toán dự phòng chưa hiểu Note nên cảnh báo **Chưa áp dụng Note**. Sửa Note sau khi tạo sẽ báo bản nháp chưa cập nhật, cần Tạo đội lại.
+### Chạy local và triển khai static
 
-- `OPENROUTER_MODEL`: model ID hỗ trợ [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), mặc định `openai/gpt-4.1-mini`. Có thể đổi model rồi restart; app không tự chuyển model hay tự retry gây phí.
-- `APP_DATA_MODE=preview` **mặc định**: đọc dữ liệu Firestore hiện có; các luồng lưu cũ chỉ lưu local, không gửi lệnh ghi cloud. Banner luôn hiển thị chế độ. Bản nháp local có thể bị snapshot cloud mới thay thế; không coi đây là kho lưu trữ lâu dài.
-- `APP_DATA_MODE=cloud`: chủ động bật lại các luồng đồng bộ cũ sau khi kiểm thử. Admin có thể lưu nhận định AI vào đúng trận qua transaction; từ chối nếu đội hình/tỉ số/bàn thắng đã đổi trong lúc AI viết. Chỉ cập nhật nhận định, không tạo trận mới. Điểm cầu thủ không tự thay đổi.
-- `APP_ORIGIN`: origin chính xác (không có `/` cuối), cần khớp địa chỉ mở app. Mặc định `http://localhost:3000`; nếu đổi port/domain phải đổi theo.
-- `HOST=127.0.0.1` chỉ mở trên máy. Khi host server/container dùng `0.0.0.0` sau HTTPS reverse proxy, không mở cổng HTTP nội bộ ra Internet. Chỉ HTTPS hoặc localhost/loopback trên chính máy server được gửi key. Link Wi-Fi `http://192.168.…` vẫn xem/tạo đội thuật toán được nhưng không cho nhập/gửi key; điện thoại cần link HTTPS.
-- `AI_MAX_REQUESTS_PER_HOUR=20`: giới hạn chung cả server, cả yêu cầu provider bị lỗi cũng tính lượt; tối đa 2 yêu cầu đồng thời. Hạn mức trong RAM, reset khi restart; khi chạy nhiều instance cần shared rate-limit store. Chi phí provider thuộc key của từng người, không có key thanh toán chung.
-
-### Các case AI đã nối vào UI
-
-- **Chia đội sân 7 (14–24 người)**: chỉ một nút **Tạo đội**. Ưu tiên AI khi có key cá nhân/backend/kết nối an toàn; thiếu key, hết lượt, key lỗi, timeout hoặc kết quả AI không hợp lệ thì tự dùng thuật toán cục bộ, không gọi lại AI. Nếu người dùng huỷ xác nhận gửi dữ liệu thì dừng, không tự chạy thay thế. AI đọc chỉ số/vị trí và 3 trận gần nhất, yêu cầu cân riêng công–thủ, hạn chế lặp đồng đội/vị trí, ưu tiên thành viên và khách dự bị. Kết quả tự thành bản nháp trên sân + bảng so kè; chỉ lưu trận bằng nút **Lưu làm đội tuần này** ở đầu danh sách.
-- **Tiến trình tạo đội**: checklist phản ánh bước đọc dữ liệu/kiểm tra thực tế, không mô phỏng suy nghĩ LLM. Chỉ tích xanh sau khi hoàn tất; chênh công/thủ trên 1.5 điểm tổng ba vị trí, trái vị trí, người dự bị mạnh hơn hoặc lặp đội/vị trí sẽ được cảnh báo riêng. Thuật toán chạy trong Web Worker (giới hạn 90 giây) để giao diện không bị treo, giữ các phương án để bấm Tạo đội lần nữa đổi cách chia. Thuật toán chưa hiểu ghi chú tự do hoặc tối ưu lịch sử đồng đội; có thông báo rõ và kiểm tra xoay tua sau khi chia. Mức cân/yêu cầu riêng vẫn cần người duyệt. Không tự sửa chỉ số hoặc ghi Firebase khi tạo nháp.
-
-Mỗi bước tiến trình được giữ hiển thị ít nhất **1 giây** để dễ đọc (thời gian xử lý thật đã tính vào khoảng này, không chờ thêm nếu API/thuật toán vốn chậm). Lỗi/huỷ hiển thị ngay. **Bước đang chạy luôn ở đầu**, được tô nổi; bên dưới là các bước đã chạy theo thứ tự mới nhất trước, rồi đến các bước chưa chạy. Chuyển bước thì bước trước lùi xuống, không cần cuộn đuổi theo. Xong vẫn giữ thứ tự đảo, cuộn về đầu và không tự đóng. Nút **Xem tiêu chí** ở thanh thao tác mở lại báo cáo lần tạo gần nhất trong phiên trang, không gọi lại AI hoặc sửa đội hình.
-- **Nhận định trận**: chọn đúng trận; viết ít nhất 6 phần về các tuyến, đối đầu, chuỗi kết quả, bàn thắng và dự bị. Trận có tỉ số sẽ được phân tích như trận đã diễn ra. Các chỉ số dùng snapshot hồ sơ trong trận, không thay bằng điểm master hiện tại.
-- **Phong độ / đề xuất điểm**: cửa sổ 5 trận **của đội**, tính cả vắng mặt; tăng, giữ, giảm hoặc chưa đủ dữ liệu. Dưới 3 lần có mặt không nhận đề xuất đổi chỉ số. Không tự áp dụng điểm.
-- **Mô tả Cầu thủ nổi bật**: văn mới dựa trên chỉ số/phong độ, xem trước và sao chép; không tự đè mô tả đang dùng.
-
-Trước mỗi lượt có xác nhận gửi dữ liệu bóng đá tới OpenRouter/model. Backend chỉ whitelist tên/chỉ số/vị trí, đội hình, kết quả và bàn thắng; không gửi tài khoản, sổ quỹ hay lịch sử từng người chấm. Dữ liệu bàn chưa khóa được đánh dấu; danh sách dự bị không có phút ra sân nên AI không được khẳng định đã thi đấu đầy đủ. Nội dung AI được escape khi hiển thị/lưu, không chạy HTML do model trả về.
-
-### Build, test và triển khai
+AI không cần Node ở môi trường triển khai. Để xem local an toàn, có máy chủ file tĩnh tuỳ chọn (Node >=18.20, Python 3 để build; không cần npm dependencies):
 
 ```bash
-npm run build  # offline, dùng seed cầu thủ đã public trong index.html → dist/
-npm test       # API, xác thực, dữ liệu, output, rate-limit + regression giao diện cũ
-node server/index.cjs  # phục vụ dist/ đã build
+npm start  # offline build → dist/, phục vụ file tĩnh ở http://localhost:3000
+npm test   # prompt/context, gọi trực tiếp, key, output, fallback và hồi quy UI
 ```
 
-`npm start` tự build lại trước khi chạy. Build không gọi Firestore và không sửa `index.html`/`score-update.html` đã deploy ở root. Dữ liệu mới nhất vẫn được tải qua Firebase khi mở app. Chỉ `python3 build_web.py` không cờ mới giữ hành vi đọc Firestore/build root cũ; không dùng lệnh đó để deploy branch này lên Pages.
+`scripts/serve_web.cjs` chỉ phục vụ HTML/assets theo allowlist, không xử lý AI, không nhận/chuyển tiếp key. API AI cũ luôn 404; không phục vụ `.env`, source, Git hay backups. `.env.example` chỉ còn HOST/PORT/APP_ORIGIN/APP_DATA_MODE cho máy chủ file local, không liên quan OpenRouter.
 
-Server chỉ phục vụ HTML đã build, manifest, service worker và `assets/`; không phục vụ `.env`, `.git`, source hay backups. `/api/ai/*` không cache; kiểm tra Origin chính xác, chỉ `/api/ai/run` nhận key cá nhân trong Authorization, không dùng cookie/session hoặc key từ request trước. Giới hạn request/timeout vẫn giữ; lỗi provider không trả nguyên văn chứa thông tin nhạy cảm. Không bật log Authorization/body hoặc debug HTTP ở hosting/proxy.
+Mặc định local `APP_DATA_MODE=preview`: giữ đọc Firebase, mọi thay đổi chỉ lưu namespace local, không ghi cloud; banner nêu rõ. `APP_DATA_MODE=cloud` chỉ bật chủ động sau khi kiểm thử. Bản static public giữ luồng Firebase và quyền cũ, không migrate dữ liệu hoặc thay Security Rules. Key AI không thay thế quyền admin/database.
 
-**GitHub Pages không chạy Node backend.** BYOK này vẫn dùng backend; không phải browser gọi OpenRouter trực tiếp. Ví dụ Render: kết nối repo/branch này, Build `npm run build`, Start `node server/index.cjs`; đặt `HOST=0.0.0.0`, `APP_ORIGIN=https://<domain-host>`, `APP_DATA_MODE=preview` và dùng `PORT` do host cấp. **Không thêm key OpenRouter hay mật khẩu AI vào biến môi trường host.** Model/hạn mức giữ như `.env.example`. Cần HTTPS cả khi dùng điện thoại; mở domain mới thì nhập key lại vì khác origin. Chưa thay domain/hosting và chưa deploy branch này. Xác thực/chính sách ghi Firestore cũ được giữ nguyên, **không phải** bản nâng cấp Firebase Security Rules; key AI không thay thế phân quyền DB. Không bật cloud công khai nếu chưa rà soát quyền Firebase.
+**GitHub Pages có thể chạy bản này trực tiếp**, không cần Render/backend/biến môi trường chứa key. Khi đã được duyệt triển khai, build static offline tại root:
 
-Cấu trúc thêm: `server/index.cjs` (HTTP/BYOK/static), `server/ai.cjs` (task/prompt/schema/OpenRouter), `src/ai_context.js` (context/điểm/phong độ thuần), `src/ai_client.js` + `src/ai.css` (UI/key theo thiết bị). Test trình duyệt tùy chọn: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser_web_app.cjs` và `node tests/device_key_browser.cjs` (Chrome đã cài); dùng provider giả, không tốn phí, chặn Firebase.
+```bash
+python3 build_web.py --offline --output-dir .
+```
+
+Chỉ build trên branch không tự cập nhật Pages từ `main`; chưa merge/push/deploy bản này. Không dùng `python3 build_web.py` thiếu cờ vì lệnh cũ đọc Firestore. `npm run build` tạo `dist/` offline, không sửa HTML root; các assets dùng chung thư mục `assets/`. Đổi domain/trình duyệt thì nhập key lại.
+
+Mã AI nằm ở `src/ai_service.js` (prompt/schema/HTTPS OpenRouter/output), `src/ai_context.js` (điểm/phong độ thuần), `src/ai_client.js` (popup/key/các tác vụ), `src/create_flow.js` (AI → thuật toán/checklist). Đã bỏ thư mục backend AI `server/`.
+
+Test trình duyệt: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser_web_app.cjs`, `tests/device_key_browser.cjs`, `tests/static_ai_browser.cjs`, `tests/theme_browser.cjs` (Chrome đã cài). Dùng provider giả và chặn Firebase; không dùng key thật hoặc phát sinh phí.
 
 Theme web app nằm ở `src/theme.css`, nhúng cuối cùng khi build. Mặc định sáng (trắng ngà/xanh sage), tối dùng xám than; giữ lựa chọn đã lưu bằng nút sáng/tối. Lớp theme dùng chung cho dashboard, màn con, AI và popup; không đổi màu áo hai đội, logo/ảnh cầu thủ hay ngọn lửa phong độ. Kiểm tra hình ảnh/độ tương phản: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/theme_browser.cjs`.
 Layout dùng mật độ gọn: padding menu/thẻ chính khoảng 10–14px, nút menu khoảng 64px cao. Hàng thao tác lịch sử nằm trong luồng grid, chỉ chiếm chỗ khi có nút; không chừa sẵn 44–82px trống. Nút chức năng trên mobile vẫn giữ vùng bấm tối thiểu 44px.
 
 Mục Thu chi đang tạm ẩn bằng `hidden` ở `financeNavBtn` và `screen-finance`; không xóa dữ liệu, mã xử lý hoặc đồng bộ sổ quỹ. Muốn hiện lại thì bỏ hai thuộc tính `hidden` này rồi build.
-Hai file HTML ở root trên branch này cũng đã được đồng bộ offline để mở local không còn thấy menu Thu chi cũ. Đây chỉ là bản static xem giao diện; muốn sử dụng AI phải mở backend ở `APP_ORIGIN`. Cập nhật file trên branch không tự cập nhật bản GitHub Pages đang chạy từ `main`.
+Hai file HTML ở root trên branch này đã đồng bộ offline; AI gọi OpenRouter trực tiếp cả ở bản static. Cập nhật branch không tự cập nhật GitHub Pages đang chạy từ `main`.
 
 🌐 **Xem trực tiếp:** https://toestuyen.github.io/GenPlayer/ *(tự cập nhật mỗi khi push, F5 để xem)*
 
