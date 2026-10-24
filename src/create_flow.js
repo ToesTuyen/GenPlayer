@@ -9,9 +9,21 @@ const CREATE_STEPS=[
   ['balance','Cân riêng hàng công & hàng thủ'],
   ['positions','Đúng vị trí & ưu tiên người mạnh'],
   ['rotation','Đối chiếu đội hình gần nhất'],
+  ['note','Yêu cầu riêng từ Note'],
   ['draft','Hiển thị đội hình & bảng so kè']
 ];
-const CREATE_STATE={busy:false,steps:new Map(),success:false};
+const CREATE_STATE={busy:false,steps:new Map(),success:false,draftNote:null,draftEngine:null};
+function createNoteChanged(){
+  const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;
+  if(note===null){box.hidden=true;return;}
+  const changed=$('aiInstruction').value.trim()!==note,algorithm=CREATE_STATE.draftEngine==='Thuật toán';
+  box.hidden=false;box.dataset.state=changed||note?'warn':'none';
+  const heading=document.createElement('strong'),detail=document.createElement('p');
+  heading.textContent=changed?'Note đã thay đổi — bản nháp chưa cập nhật':!note?'Bản nháp không có yêu cầu riêng':algorithm?'Chưa áp dụng Note — đang dùng thuật toán':'Note đã gửi AI — cần đối chiếu trước khi lưu';
+  detail.textContent=changed?'Bấm Tạo đội lại để dùng Note hiện tại; đội hình bên dưới vẫn theo lần tạo trước.':!note?'Lần tạo này chỉ dùng các tiêu chí chung, không lấy chỉ định từ trận cũ.':algorithm?'Thuật toán chưa hiểu Note tự do. Đừng coi bản nháp này là đã đáp ứng yêu cầu riêng.':'AI đã nhận Note nhưng hệ thống chưa tự xác minh được toàn bộ yêu cầu bằng văn bản.';
+  box.replaceChildren(heading,detail);
+  if(note){const quote=document.createElement('blockquote');quote.textContent=note;box.appendChild(quote);}
+}
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 function createStep(id,state,detail=''){
   CREATE_STATE.steps.set(id,state);
@@ -34,6 +46,7 @@ function createBegin(){
   $('createProcessSteps').innerHTML=CREATE_STEPS.map(([id,title])=>'<li data-step="'+id+'" data-state="pending"><span class="process-step-icon" role="img" aria-label="Chờ xử lý"></span><div><span class="process-step-title">'+title+'</span><span class="process-step-detail"></span></div></li>').join('');
   CREATE_STEPS.forEach(([id])=>CREATE_STATE.steps.set(id,'pending'));
   $('createProcessProgress').value=0;$('createProcessCount').textContent='0/'+CREATE_STEPS.length+' bước đã xử lý';
+  $('createProcessProgress').max=CREATE_STEPS.length;
   $('createProcess').showModal();
 }
 function createFinish(success,message){
@@ -155,6 +168,9 @@ async function createTeams(){
     createStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không phát hiện đá trái vị trí đăng ký hoặc thành viên dự bị vượt người đá chính cùng vai trò từ 0.5 điểm.');
     createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
     const rotation=createRotation(r,subset,context.history);createStep('rotation',rotation.state,rotation.detail);
+    createStep('note','active','Đối chiếu với Note của lần tạo này…');await createYield();
+    const hasNote=!!context.instruction;
+    createStep('note',hasNote?'warn':'done',!hasNote?'Note để trống: không có yêu cầu riêng; không kế thừa chỉ định từ trận cũ.':engine==='AI'?'Đã gửi Note hiện tại cho AI. Cần kiểm tra thủ công yêu cầu trên đội hình; chưa thể xác nhận tự động là đã đáp ứng. Note: '+context.instruction:'CHƯA ÁP DỤNG NOTE: thuật toán dự phòng chưa hiểu yêu cầu tự do. Note cần kiểm tra: '+context.instruction);
     createStep('draft','active','Vẽ sân và bảng so kè…');await createYield();
     const notes=[...check.warnings];
     if(rotation.state==='warn')notes.push(rotation.detail);
@@ -162,14 +178,15 @@ async function createTeams(){
     const review='<p>Bản nháp '+engine+' · Chưa lưu trận.</p>'+(notes.length?'<ul>'+notes.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
     render(r,subset,'result',review,true);
     cstate={key,results,idx,subset};
+    CREATE_STATE.draftNote=context.instruction;CREATE_STATE.draftEngine=engine;createNoteChanged();
     if(output){
       AI_STATE.output=output;AI_STATE.request={task:'lineup',context};aiRenderOutput(false);
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
     $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
-    $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
+    $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(hasNote?(engine==='AI'?' Note đã gửi AI, cần kiểm tra trước khi lưu.':' Chưa áp dụng Note. Kiểm tra yêu cầu riêng trước khi lưu.'):'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
     createStep('draft','done','Đội hình và so kè đã hiển thị. Chỉ lưu khi bạn bấm Lưu làm đội tuần này.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
-    createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
+    createFinish(true,`Hoàn tất bằng ${engine}. ${hasNote?(engine==='AI'?'Note cần đối chiếu trước khi lưu. ':'Chưa áp dụng Note. '):''}${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
   }catch(e){
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');

@@ -948,6 +948,25 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
 .create-toolbar{margin:0 0 8px;gap:6px}
+.create-setup{border-block:1px solid var(--line);margin:10px 0;padding:10px 0}
+.create-priorities{font-size:12px;color:var(--brand);line-height:1.6;margin:0 0 7px}
+.create-criteria summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;cursor:pointer;font-size:13px;font-weight:600}
+.create-criteria summary::before{content:'›';color:var(--muted);font-size:20px}
+.create-criteria[open] summary::before{content:'⌄'}
+.criteria-summary-hint{margin-left:auto;color:var(--muted);font-size:11px;font-weight:400}
+.create-rule-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;padding-left:20px;margin:8px 0;font-size:12px;line-height:1.65;color:var(--muted)}
+.create-rule-list li{padding-left:2px;min-width:0}
+.create-rule-list b{color:var(--text);font-weight:600}
+.criteria-scope,.create-note-help{font-size:11px;color:var(--muted);line-height:1.6;margin:6px 0 0}
+.create-note{margin-top:10px}
+.create-note textarea{min-height:66px}
+.create-note-status{margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:12px;line-height:1.6;color:var(--muted)}
+.create-note-status[hidden]{display:none!important}
+.create-note-status strong{display:block;color:var(--text);font-size:13px;font-weight:600}
+.create-note-status p{margin:4px 0 0}
+.create-note-status blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;padding-left:10px;border-left:2px solid var(--amber);color:var(--text)}
+.create-note-status[data-state="warn"]{border-color:var(--amber)}
+@media(max-width:600px){.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}}
 .roster-selection{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:8px}
 .roster-select-all{display:inline-flex;align-items:center;gap:8px;min-height:36px;font-size:13px;font-weight:600;cursor:pointer}
 .roster-select-all input{width:18px;height:18px;margin:0;accent-color:var(--action);cursor:pointer}
@@ -1239,6 +1258,31 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
+    <div class="create-setup">
+      <p class="create-priorities">Cân riêng công–thủ · Người mạnh đá chính · Đúng vị trí · Hạn chế lặp đội</p>
+      <details id="createCriteria" class="create-criteria">
+        <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">Xem đủ 12 tiêu chí</span></summary>
+        <ol class="create-rule-list">
+          <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
+          <li><b>Người mạnh đá chính.</b> Xét năng lực ở vị trí được xếp, không chỉ điểm tổng; ưu tiên thành viên.</li>
+          <li><b>Khách &amp; dự bị.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người.</li>
+          <li><b>Cân hàng công.</b> So riêng khả năng kiến tạo, tiền vệ và tiền đạo; tránh một bên vượt trội.</li>
+          <li><b>Cân hàng thủ.</b> So riêng thòng, hậu vệ và hỗ trợ phòng ngự; không chỉ cân tổng đội.</li>
+          <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
+          <li><b>Đúng vị trí.</b> Ưu tiên vị trí chính rồi vị trí phụ; hạn chế kéo người giỏi ngoài sân vào gôn.</li>
+          <li><b>Chia đều chất lượng.</b> Cân người nổi bật, tốc độ, thể lực và sức chạy giữa hai bên.</li>
+          <li><b>Xoay tua đội hình.</b> Hạn chế lặp nhóm đồng đội và vị trí trận trước; không chỉ đổi màu A/B.</li>
+          <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
+          <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
+          <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
+        </ol>
+        <p class="criteria-scope">Số người, không trùng/thiếu và phân bổ khách/dự bị được kiểm tra bắt buộc. Các ưu tiên còn lại cần xem so kè/cảnh báo. Thuật toán dự phòng chưa tối ưu lịch sử đồng đội, phong độ hoặc hiểu Note tự do.</p>
+      </details>
+      <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng cho lần tạo này
+        <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh; Trịnh Mạnh ưu tiên dự bị…" oninput="createNoteChanged()"></textarea>
+      </label>
+      <p id="createNoteHelp" class="create-note-help">Để trống = không có yêu cầu riêng. AI nhận đúng Note này; nếu chuyển sang thuật toán, Note chưa được áp dụng và sẽ có cảnh báo. Note không tự lưu vào trận hoặc nhận định.</p>
+    </div>
     <div class="roster-selection">
       <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
       <span class="count" id="count"></span>
@@ -1264,9 +1308,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
     </div>
     <div id="aiRosterInfo" class="ai-status"></div>
-    <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
+    <label class="ai-field" id="aiAnalysisInstructionField" style="margin-top:14px" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
     <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
-    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Ghi chú tự do chỉ được gửi khi dùng AI.</p>
+    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội và ô Note ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Note tự do chưa được thuật toán áp dụng.</p>
     <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
     <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   </div>
@@ -1277,12 +1321,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   </section>
   <div class="status" id="status"></div>
+  <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
   <div id="result"></div>
 </div>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
   <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
-  <progress id="createProcessProgress" max="10" value="0" aria-label="Tiến trình kiểm tra"></progress>
+  <progress id="createProcessProgress" max="11" value="0" aria-label="Tiến trình kiểm tra"></progress>
   <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
   <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
   <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
@@ -3554,6 +3599,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
+  CREATE_STATE.draftNote=null;$("createNoteStatus").hidden=true;
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");
@@ -4975,10 +5021,11 @@ function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
 function aiTaskChanged(){
   const task=$('aiTask').value;
   $('aiRun').hidden=task==='lineup';$('aiLineupHint').hidden=task!=='lineup';
+  $('aiAnalysisInstructionField').hidden=task==='lineup';
   $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
   const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
   $('aiRosterInfo').hidden=task!=='lineup';
-  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Có thể ghi yêu cầu vị trí/dự bị bên dưới.`;
+  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Yêu cầu riêng lấy từ ô Note ở đầu danh sách.`;
 }
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
@@ -5000,7 +5047,7 @@ function aiContextSnapshot(task=$('aiTask').value){
     else if(task==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
   }
   const history=getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy);
-  return {players,history,rosterNames:selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean),match:matchRecord?GPAIContext.compactLegacy(matchRecord):null,playerName:$('aiPlayer').value,instruction:$('aiInstruction').value.trim()};
+  return {players,history,rosterNames:selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean),match:matchRecord?GPAIContext.compactLegacy(matchRecord):null,playerName:$('aiPlayer').value,instruction:$(task==='lineup'?'aiInstruction':'aiAnalysisInstruction').value.trim()};
 }
 function aiMatchFingerprint(match,players){
   if(!match)return null;const names=new Set([...match.teams.A,...match.teams.B].map(p=>p.n));
@@ -5074,9 +5121,21 @@ const CREATE_STEPS=[
   ['balance','Cân riêng hàng công & hàng thủ'],
   ['positions','Đúng vị trí & ưu tiên người mạnh'],
   ['rotation','Đối chiếu đội hình gần nhất'],
+  ['note','Yêu cầu riêng từ Note'],
   ['draft','Hiển thị đội hình & bảng so kè']
 ];
-const CREATE_STATE={busy:false,steps:new Map(),success:false};
+const CREATE_STATE={busy:false,steps:new Map(),success:false,draftNote:null,draftEngine:null};
+function createNoteChanged(){
+  const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;
+  if(note===null){box.hidden=true;return;}
+  const changed=$('aiInstruction').value.trim()!==note,algorithm=CREATE_STATE.draftEngine==='Thuật toán';
+  box.hidden=false;box.dataset.state=changed||note?'warn':'none';
+  const heading=document.createElement('strong'),detail=document.createElement('p');
+  heading.textContent=changed?'Note đã thay đổi — bản nháp chưa cập nhật':!note?'Bản nháp không có yêu cầu riêng':algorithm?'Chưa áp dụng Note — đang dùng thuật toán':'Note đã gửi AI — cần đối chiếu trước khi lưu';
+  detail.textContent=changed?'Bấm Tạo đội lại để dùng Note hiện tại; đội hình bên dưới vẫn theo lần tạo trước.':!note?'Lần tạo này chỉ dùng các tiêu chí chung, không lấy chỉ định từ trận cũ.':algorithm?'Thuật toán chưa hiểu Note tự do. Đừng coi bản nháp này là đã đáp ứng yêu cầu riêng.':'AI đã nhận Note nhưng hệ thống chưa tự xác minh được toàn bộ yêu cầu bằng văn bản.';
+  box.replaceChildren(heading,detail);
+  if(note){const quote=document.createElement('blockquote');quote.textContent=note;box.appendChild(quote);}
+}
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 function createStep(id,state,detail=''){
   CREATE_STATE.steps.set(id,state);
@@ -5099,6 +5158,7 @@ function createBegin(){
   $('createProcessSteps').innerHTML=CREATE_STEPS.map(([id,title])=>'<li data-step="'+id+'" data-state="pending"><span class="process-step-icon" role="img" aria-label="Chờ xử lý"></span><div><span class="process-step-title">'+title+'</span><span class="process-step-detail"></span></div></li>').join('');
   CREATE_STEPS.forEach(([id])=>CREATE_STATE.steps.set(id,'pending'));
   $('createProcessProgress').value=0;$('createProcessCount').textContent='0/'+CREATE_STEPS.length+' bước đã xử lý';
+  $('createProcessProgress').max=CREATE_STEPS.length;
   $('createProcess').showModal();
 }
 function createFinish(success,message){
@@ -5220,6 +5280,9 @@ async function createTeams(){
     createStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không phát hiện đá trái vị trí đăng ký hoặc thành viên dự bị vượt người đá chính cùng vai trò từ 0.5 điểm.');
     createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
     const rotation=createRotation(r,subset,context.history);createStep('rotation',rotation.state,rotation.detail);
+    createStep('note','active','Đối chiếu với Note của lần tạo này…');await createYield();
+    const hasNote=!!context.instruction;
+    createStep('note',hasNote?'warn':'done',!hasNote?'Note để trống: không có yêu cầu riêng; không kế thừa chỉ định từ trận cũ.':engine==='AI'?'Đã gửi Note hiện tại cho AI. Cần kiểm tra thủ công yêu cầu trên đội hình; chưa thể xác nhận tự động là đã đáp ứng. Note: '+context.instruction:'CHƯA ÁP DỤNG NOTE: thuật toán dự phòng chưa hiểu yêu cầu tự do. Note cần kiểm tra: '+context.instruction);
     createStep('draft','active','Vẽ sân và bảng so kè…');await createYield();
     const notes=[...check.warnings];
     if(rotation.state==='warn')notes.push(rotation.detail);
@@ -5227,14 +5290,15 @@ async function createTeams(){
     const review='<p>Bản nháp '+engine+' · Chưa lưu trận.</p>'+(notes.length?'<ul>'+notes.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
     render(r,subset,'result',review,true);
     cstate={key,results,idx,subset};
+    CREATE_STATE.draftNote=context.instruction;CREATE_STATE.draftEngine=engine;createNoteChanged();
     if(output){
       AI_STATE.output=output;AI_STATE.request={task:'lineup',context};aiRenderOutput(false);
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
     $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
-    $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
+    $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(hasNote?(engine==='AI'?' Note đã gửi AI, cần kiểm tra trước khi lưu.':' Chưa áp dụng Note. Kiểm tra yêu cầu riêng trước khi lưu.'):'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
     createStep('draft','done','Đội hình và so kè đã hiển thị. Chỉ lưu khi bạn bấm Lưu làm đội tuần này.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
-    createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
+    createFinish(true,`Hoàn tất bằng ${engine}. ${hasNote?(engine==='AI'?'Note cần đối chiếu trước khi lưu. ':'Chưa áp dụng Note. '):''}${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
   }catch(e){
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');

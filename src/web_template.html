@@ -933,6 +933,31 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
+    <div class="create-setup">
+      <p class="create-priorities">Cân riêng công–thủ · Người mạnh đá chính · Đúng vị trí · Hạn chế lặp đội</p>
+      <details id="createCriteria" class="create-criteria">
+        <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">Xem đủ 12 tiêu chí</span></summary>
+        <ol class="create-rule-list">
+          <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
+          <li><b>Người mạnh đá chính.</b> Xét năng lực ở vị trí được xếp, không chỉ điểm tổng; ưu tiên thành viên.</li>
+          <li><b>Khách &amp; dự bị.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người.</li>
+          <li><b>Cân hàng công.</b> So riêng khả năng kiến tạo, tiền vệ và tiền đạo; tránh một bên vượt trội.</li>
+          <li><b>Cân hàng thủ.</b> So riêng thòng, hậu vệ và hỗ trợ phòng ngự; không chỉ cân tổng đội.</li>
+          <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
+          <li><b>Đúng vị trí.</b> Ưu tiên vị trí chính rồi vị trí phụ; hạn chế kéo người giỏi ngoài sân vào gôn.</li>
+          <li><b>Chia đều chất lượng.</b> Cân người nổi bật, tốc độ, thể lực và sức chạy giữa hai bên.</li>
+          <li><b>Xoay tua đội hình.</b> Hạn chế lặp nhóm đồng đội và vị trí trận trước; không chỉ đổi màu A/B.</li>
+          <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
+          <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
+          <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
+        </ol>
+        <p class="criteria-scope">Số người, không trùng/thiếu và phân bổ khách/dự bị được kiểm tra bắt buộc. Các ưu tiên còn lại cần xem so kè/cảnh báo. Thuật toán dự phòng chưa tối ưu lịch sử đồng đội, phong độ hoặc hiểu Note tự do.</p>
+      </details>
+      <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng cho lần tạo này
+        <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh; Trịnh Mạnh ưu tiên dự bị…" oninput="createNoteChanged()"></textarea>
+      </label>
+      <p id="createNoteHelp" class="create-note-help">Để trống = không có yêu cầu riêng. AI nhận đúng Note này; nếu chuyển sang thuật toán, Note chưa được áp dụng và sẽ có cảnh báo. Note không tự lưu vào trận hoặc nhận định.</p>
+    </div>
     <div class="roster-selection">
       <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
       <span class="count" id="count"></span>
@@ -958,9 +983,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
     </div>
     <div id="aiRosterInfo" class="ai-status"></div>
-    <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
+    <label class="ai-field" id="aiAnalysisInstructionField" style="margin-top:14px" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
     <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button><button class="btn alt sm" onclick="aiShowRoster()">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
-    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Ghi chú tự do chỉ được gửi khi dùng AI.</p>
+    <p id="aiLineupHint" class="ai-footer">Dùng nút Tạo đội và ô Note ở đầu danh sách. Ưu tiên AI khi đã kết nối và mở quyền; tự chuyển sang thuật toán nếu AI không khả dụng. Note tự do chưa được thuật toán áp dụng.</p>
     <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
     <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   </div>
@@ -971,12 +996,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   </section>
   <div class="status" id="status"></div>
+  <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
   <div id="result"></div>
 </div>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
   <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
-  <progress id="createProcessProgress" max="10" value="0" aria-label="Tiến trình kiểm tra"></progress>
+  <progress id="createProcessProgress" max="11" value="0" aria-label="Tiến trình kiểm tra"></progress>
   <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
   <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
   <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
@@ -2431,6 +2457,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
+  CREATE_STATE.draftNote=null;$("createNoteStatus").hidden=true;
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");

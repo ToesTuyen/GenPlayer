@@ -11,10 +11,12 @@ const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12
 const result=C.lineup(players,teams).result;
 const history=Array.from({length:5},(_,i)=>({id:100+i,kickoff:Date.now()-(i+1)*86400000,n:16,subset:players,result,score:{a:3,b:2},goals:{'Huy Hoàng':2},goalsLocked:true}));
 const reports=fs.mkdtempSync(path.join(os.tmpdir(),'genplayer-web-app-qa-'));
-let providerCalls=0,lineupGate=null,providerFailure=false;
+let providerCalls=0,lineupGate=null,providerFailure=false;const providerInputs=[];
+const lineupNote='Tách hai tiền vệ giữa, cân riêng công và thủ.';
 const fakeProvider=async(url,init)=>{
   providerCalls++;assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');
   const req=JSON.parse(init.body),task=req.response_format.json_schema.name.replaceAll('_','-'),data=JSON.parse(req.messages[1].content);
+  providerInputs.push({task,instruction:data.instruction});
   if(task==='lineup'&&lineupGate)await lineupGate;
   if(task==='lineup'&&providerFailure)return new Response('{"error":{"message":"private provider detail"}}',{status:401});
   const output={title:'Bản phân tích kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phân tích '+(i+1),body:i===0?'<img src=x onerror="window.AI_XSS=true"> — văn bản AI phải được escape.':'Đội hình được đối chiếu chỉ số và kết quả gần đây; đây là dữ liệu kiểm thử, không phải nhận định thật.'}))};
@@ -46,6 +48,14 @@ async function main(){
       await page.goto(config.origin);
       assert.equal(await page.getByRole('button',{name:'Trợ lý AI',exact:true}).count(),0,'No separate AI navigation');
       await page.getByRole('button',{name:'Tạo đội',exact:true}).click();
+      assert.equal(await page.locator('#aiInstruction').isVisible(),true,'Lineup Note is visible without opening AI options');
+      assert.equal(await page.locator('#aiInstruction').evaluate(el=>el.closest('#createAI')),null,'Lineup Note is not hidden inside AI options');
+      await page.locator('#createCriteria summary').click();
+      assert.equal(await page.locator('.create-rule-list li').count(),12);
+      assert.equal(await page.locator('.create-rule-list').isVisible(),true);
+      assert.match(await page.locator('.criteria-scope').innerText(),/chưa tối ưu/);
+      await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-criteria-note.png'),fullPage:true,animations:'disabled'});
+      await page.locator('#createCriteria summary').click();
       await page.locator('#selectAll').uncheck();
       assert.equal(await page.locator('#all,#none').count(),0);
       assert.ok(await page.locator('#go').evaluate(el=>Boolean(el.compareDocumentPosition(document.querySelector('#roster'))&Node.DOCUMENT_POSITION_FOLLOWING)));
@@ -72,9 +82,10 @@ async function main(){
       await page.locator('#aiCreateToggle').click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
       assert.match(await page.locator('#aiRosterInfo').innerText(),/15 người/);
-      await page.locator('#aiInstruction').fill('Tách hai tiền vệ giữa, cân riêng công và thủ.');
+      await page.locator('#aiInstruction').fill(lineupNote);
       await page.getByRole('button',{name:'Đóng AI',exact:true}).click();await page.locator('#aiCreateToggle').click();
-      assert.equal(await page.locator('#aiInstruction').inputValue(),'Tách hai tiền vệ giữa, cân riêng công và thủ.');
+      assert.equal(await page.locator('#aiInstruction').inputValue(),lineupNote);
+      assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),false);
       let release;lineupGate=new Promise(r=>release=r);const beforeProvider=providerCalls;
       await page.locator('#go').click();
       await page.waitForFunction(()=>document.querySelector('[data-step="search"]').dataset.state==='active');
@@ -89,11 +100,20 @@ async function main(){
       assert.equal(providerCalls,beforeProvider+1);
       assert.equal(await page.locator('#result .field .player').count(),14);
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
+      assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn','Free-text Note must not be marked satisfied without verification');
+      assert.match(await page.locator('[data-step="note"]').innerText(),/Đã gửi Note hiện tại/);
+      assert.equal(await page.locator('#createProcessProgress').getAttribute('max'),'11');
       assert.equal(await page.locator('[data-step="rotation"]').getAttribute('data-state'),'warn','Repeated positions must not receive a green check');
       assert.equal(await page.evaluate(()=>window.AI_XSS),undefined);assert.equal(await page.locator('#aiOutputText img').count(),0);
       assert.equal(await page.evaluate(()=>getHistory().length),5,'AI generation must not create a match');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-lineup.png'),fullPage:true});
       await page.locator('#createProcessClose').click();
+      assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã gửi AI/);
+      assert.ok((await page.locator('#createNoteStatus').innerText()).includes(lineupNote));
+      await page.locator('#aiInstruction').fill('Tuyên bắt gôn theo Note mới');
+      assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã thay đổi/);
+      assert.equal(await page.evaluate(()=>CREATE_STATE.draftNote),lineupNote,'Displayed draft keeps its actual Note snapshot');
+      await page.locator('#aiInstruction').fill(lineupNote);
       assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.evaluate(()=>getHistory().length),5);
       assert.equal(await page.locator('#screen-create').isVisible(),true);
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);assert.equal(await page.evaluate(()=>cstate.subset.length),15);
@@ -103,6 +123,9 @@ async function main(){
       assert.equal(providerCalls,beforeFailure+1,'No retry of an invalid key');
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.locator('[data-step="engine"]').getAttribute('data-state'),'warn');
+      assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn');
+      assert.match(await page.locator('#createNoteStatus').innerText(),/Chưa áp dụng Note/);
+      assert.equal(await page.locator('#result').evaluate((el,note)=>el.innerText.includes(note),lineupNote),false,'Private Note is not inserted into a publishable review');
       assert.equal(await page.locator('#result .field .player').count(),14);
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
       await page.locator('#createProcessClose').click();
@@ -119,7 +142,12 @@ async function main(){
       assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),beforeCancel,'Cancellation preserves the previous draft');
       await page.locator('#createProcessClose').click();
       await page.evaluate(()=>openAITask('match-review',100));
+      assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),true);
+      assert.equal(await page.locator('#aiAnalysisInstruction').inputValue(),'');
+      assert.equal(await page.evaluate(()=>aiContextSnapshot().instruction),'','Lineup Note is not reused as review instructions');
+      await page.locator('#aiAnalysisInstruction').fill('Phân tích chuỗi kết quả.');
       await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='match-review'&&!AI_STATE.busy);
+      assert.equal(await page.evaluate(()=>AI_STATE.request.context.instruction),'Phân tích chuỗi kết quả.');
       assert.equal(await page.locator('#aiOutputText section').count(),6);await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/không ghi nhận định lên cloud/);
       await page.locator('#aiTask').selectOption('player-form');await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='player-form'&&!AI_STATE.busy);
       assert.equal(await page.locator('#aiPlayerField').isVisible(),true);assert.equal(await page.locator('#aiMatchField').isVisible(),false);
@@ -133,6 +161,15 @@ async function main(){
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
       await page.locator('#aiConnection').evaluate(el=>el.open=true);await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      // Empty Note really means no per-match requests, even with history available.
+      await page.locator('#aiInstruction').fill(' ');await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
+      assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'done');
+      assert.match(await page.locator('[data-step="note"]').innerText(),/không có yêu cầu riêng/);
+      assert.equal(await page.evaluate(()=>CREATE_STATE.draftNote),'');
+      assert.match(await page.locator('#createNoteStatus').innerText(),/không có yêu cầu riêng/);
+      await page.locator('#createProcessClose').click();
+      assert.ok(providerInputs.filter(x=>x.task==='lineup').every(x=>x.instruction===lineupNote),'Provider receives the exact current lineup Note');
+      assert.ok(providerInputs.filter(x=>x.task!=='lineup').every(x=>x.instruction!==lineupNote),'Lineup Note cannot leak into other AI tasks');
       assert.ok(requests.every(r=>!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
       await ctx.close();
     }

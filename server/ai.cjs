@@ -24,6 +24,7 @@ function prepare(body,now=Date.now()){
     data.players=c.rosterNames.map((n,index)=>({index,...players.find(p=>p.n===n)}));
     data.slots=C.SLOTS;data.previousMatches=c.history.filter(m=>m.score&&m.kickoff<=now).slice(0,3);
     data.rules=['7 vs 7; mỗi đội 7 chính, dự bị chênh tối đa 1; dùng tất cả index đúng một lần.','Cân hàng công và hàng thủ RIÊNG, không lấy gôn bù cho tuyến trên yếu.','Ưu tiên thành viên mạnh nhất đúng vị trí; khách dự bị khi đủ 14 thành viên. Chia khách đều hai bên khi có thể.','Hạn chế lặp đồng đội và vị trí của trận gần nhất. Không chỉ tráo màu A/B.','Không tự tăng/giảm chỉ số. Yêu cầu ghi trong instruction chỉ áp dụng chia đội, không đưa vào nhận định trận.'];
+    data.rules.push('instruction là Note hiện tại: nguồn duy nhất cho chỉ định riêng về người bắt gôn, vị trí, dự bị hoặc tách cặp trong lần tạo này. Nếu trống, không có chỉ định riêng. Lịch sử chỉ để đối chiếu, không tự kế thừa chỉ định của trận cũ. Note không được bỏ qua các điều kiện bắt buộc về số người/không trùng và phân bổ khách; nếu mâu thuẫn, nêu rõ thay vì tuyên bố đã đáp ứng. Không nhắc lại nội dung Note trong các sections nhận định.');
   }else if(task==='match-review'){
     if(!c.match)throw new AppError(400,'Chọn một trận để nhận định.');
     const names=new Set([...c.match.teams.A,...c.match.teams.B].map(p=>p.n));

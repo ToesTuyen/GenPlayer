@@ -146,3 +146,23 @@ test('offline strict solver respects guest benches and distribution',()=>{
   assert.ok(candidates.length>0);
   for(const r of candidates)assert.doesNotThrow(()=>C.lineup(players,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}));
 });
+test('criteria and lineup Note are visible outside the optional AI panel in every entry',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    const start=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),setup=html.slice(start,inline);
+    assert.ok(setup.includes('id="createCriteria"'));assert.ok(setup.includes('id="aiInstruction"'));
+    assert.equal((html.match(/id="aiInstruction"/g)||[]).length,1);
+    const rules=setup.slice(setup.indexOf('<ol class="create-rule-list">'),setup.indexOf('</ol>'));
+    assert.equal((rules.match(/<li>/g)||[]).length,12);
+    assert.ok(html.includes('id="aiAnalysisInstruction"'));assert.ok(html.includes('id="createNoteStatus"'));
+  }
+});
+test('current Note is the only source of per-match lineup instructions',()=>{
+  const c=context();c.instruction='Tuyên bắt gôn theo Note hiện tại.';c.history[0].instruction='OLD_MATCH_INSTRUCTION_CANARY';
+  const prepared=prepare({task:'lineup',context:c}),payload=JSON.parse(prepared.messages[1].content);
+  assert.equal(payload.instruction,c.instruction);
+  assert.ok(payload.rules.some(r=>r.includes('nguồn duy nhất')&&r.includes('không tự kế thừa')));
+  assert.ok(!JSON.stringify(payload).includes('OLD_MATCH_INSTRUCTION_CANARY'));
+  c.instruction='';const empty=JSON.parse(prepare({task:'lineup',context:c}).messages[1].content);
+  assert.equal(empty.instruction,'');
+});

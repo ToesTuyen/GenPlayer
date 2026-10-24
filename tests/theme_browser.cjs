@@ -46,6 +46,12 @@ async function main(){
           assert.equal(state.overflow,false,`${id}/${theme} no horizontal overflow`);assert.equal(state.body,'none');assert.equal(state.header,'none');
         }
         await page.evaluate(()=>openAITask('lineup'));
+        await page.locator('#createCriteria').evaluate(el=>el.open=true);
+        assert.equal(await page.locator('#aiInstruction').isVisible(),true);
+        assert.equal(await page.locator('.create-rule-list li').count(),12);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Expanded criteria fit both themes and mobile');
+        await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-criteria-note.png`),fullPage:true,animations:'disabled'});
+        await page.locator('#createCriteria').evaluate(el=>el.open=false);
         assert.equal(await page.locator('#createAI').isVisible(),true);assert.equal(await page.locator('#screen-create').isVisible(),true);
         assert.equal(await page.locator('#createAI').evaluate(el=>el.closest('.screen').id),'screen-create');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-ai.png`),fullPage:true,animations:'disabled'});

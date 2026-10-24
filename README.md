@@ -16,7 +16,9 @@ cp .env.example .env
 npm start
 ```
 
-Mở **http://localhost:3000** → **Tạo đội** → chọn người → bấm **Tạo đội** ở đầu danh sách. Checkbox **Chọn tất cả** hỗ trợ chọn, bỏ chọn và trạng thái chọn một phần. Nút **Tuỳ chọn AI** mở ghi chú, các tác vụ phân tích và **Kết nối OpenRouter** để nhập mật khẩu `AI_ACCESS_PASSWORD`. Đây là quyền gọi AI trả phí, tách biệt tài khoản quản lý trận hiện tại. Phiên hết hạn sau 30 phút. Không nhập OpenRouter key vào ô mật khẩu.
+Mở **http://localhost:3000** → **Tạo đội** → chọn người → bấm **Tạo đội** ở đầu danh sách. Checkbox **Chọn tất cả** hỗ trợ chọn, bỏ chọn và trạng thái chọn một phần. Nút **Tuỳ chọn AI** mở các tác vụ phân tích và **Kết nối OpenRouter** để nhập mật khẩu `AI_ACCESS_PASSWORD`. Đây là quyền gọi AI trả phí, tách biệt tài khoản quản lý trận hiện tại. Phiên hết hạn sau 30 phút. Không nhập OpenRouter key vào ô mật khẩu.
+
+Ngay trên danh sách có phần **Tiêu chí tạo đội** (12 mục, mở xem chi tiết) và ô **Note — yêu cầu riêng cho lần tạo này**, luôn hiện dù chưa mở Tuỳ chọn AI. Note hiện tại là nguồn duy nhất cho yêu cầu riêng: để trống thì không có chỉ định riêng, không lấy lệnh của trận cũ từ lịch sử. Note chỉ nằm trong phiên trang, không tự lưu vào trận/nhận định; ghi chú phân tích là ô riêng. Tiến trình có bước Note và kết quả giữ snapshot Note đã dùng: AI nhận Note nhưng vẫn cần đối chiếu thủ công; thuật toán dự phòng chưa hiểu Note nên cảnh báo **Chưa áp dụng Note**. Sửa Note sau khi tạo sẽ báo bản nháp chưa cập nhật, cần Tạo đội lại.
 
 - `OPENROUTER_API_KEY`: chỉ ở server `.env`, không vào HTML, localStorage, Firebase hay Git. `.env` đã được ignore. Nên đặt hạn mức tín dụng riêng cho key theo [hướng dẫn OpenRouter](https://openrouter.ai/docs/api_reference/authentication).
 - `OPENROUTER_MODEL`: model ID hỗ trợ [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), mặc định `openai/gpt-4.1-mini`. Có thể đổi model rồi restart; app không tự chuyển model hay tự retry gây phí.
