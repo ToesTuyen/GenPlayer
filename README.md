@@ -52,6 +52,7 @@ Server chỉ phục vụ HTML đã build, manifest, service worker và `assets/`
 Cấu trúc thêm: `server/index.cjs` (HTTP/session/static), `server/ai.cjs` (task/prompt/schema/OpenRouter), `src/ai_context.js` (context/điểm/phong độ thuần), `src/ai_client.js` + `src/ai.css` (UI). Test trình duyệt tùy chọn: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser_web_app.cjs` (Chrome đã cài); dùng provider giả, không tốn phí, chặn Firebase.
 
 Theme web app nằm ở `src/theme.css`, nhúng cuối cùng khi build. Mặc định sáng (trắng ngà/xanh sage), tối dùng xám than; giữ lựa chọn đã lưu bằng nút sáng/tối. Lớp theme dùng chung cho dashboard, màn con, AI và popup; không đổi màu áo hai đội, logo/ảnh cầu thủ hay ngọn lửa phong độ. Kiểm tra hình ảnh/độ tương phản: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/theme_browser.cjs`.
+Layout dùng mật độ gọn: padding menu/thẻ chính khoảng 10–14px, nút menu khoảng 64px cao. Hàng thao tác lịch sử nằm trong luồng grid, chỉ chiếm chỗ khi có nút; không chừa sẵn 44–82px trống. Nút chức năng trên mobile vẫn giữ vùng bấm tối thiểu 44px.
 
 Mục Thu chi đang tạm ẩn bằng `hidden` ở `financeNavBtn` và `screen-finance`; không xóa dữ liệu, mã xử lý hoặc đồng bộ sổ quỹ. Muốn hiện lại thì bỏ hai thuộc tính `hidden` này rồi build.
 Hai file HTML ở root trên branch này cũng đã được đồng bộ offline để mở local không còn thấy menu Thu chi cũ. Đây chỉ là bản static xem giao diện; muốn sử dụng AI phải mở backend ở `APP_ORIGIN`. Cập nhật file trên branch không tự cập nhật bản GitHub Pages đang chạy từ `main`.

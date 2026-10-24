@@ -30,13 +30,15 @@ async function main(){
         await page.setViewportSize({width,height:1100});
         const menu=await page.evaluate(()=>{
           const buttons=[...document.querySelectorAll('.ap-grid .ap-btn')].filter(b=>b.getClientRects().length),labels=buttons.map(b=>b.lastElementChild);
-          return {count:buttons.length,rows:new Set(buttons.map(b=>Math.round(b.getBoundingClientRect().top))).size,labelsFit:labels.every(el=>el.scrollWidth<=el.clientWidth+1&&el.clientHeight<=parseFloat(getComputedStyle(el).lineHeight)+1),overflow:document.documentElement.scrollWidth>innerWidth+1};
+          return {count:buttons.length,rows:new Set(buttons.map(b=>Math.round(b.getBoundingClientRect().top))).size,labelsFit:labels.every(el=>el.scrollWidth<=el.clientWidth+1&&el.clientHeight<=parseFloat(getComputedStyle(el).lineHeight)+1),heights:buttons.map(b=>b.getBoundingClientRect().height),overflow:document.documentElement.scrollWidth>innerWidth+1};
         });
-        assert.equal(menu.count,6);assert.equal(menu.rows,2,'Menu uses only two rows at '+width);assert.equal(menu.labelsFit,true,'Menu labels fit one line at '+width);assert.equal(menu.overflow,false);
+        assert.equal(menu.count,6);assert.equal(menu.rows,2,'Menu uses only two rows at '+width);assert.equal(menu.labelsFit,true,'Menu labels fit one line at '+width);assert.ok(menu.heights.every(h=>h>=44&&h<=70),'Compact but tappable menu items at '+width);assert.equal(menu.overflow,false);
       }
       await page.setViewportSize(mobile?{width:390,height:844}:{width:1440,height:1100});
       for(const theme of ['light','dark']){
         await page.evaluate(theme=>{if(currentTheme()!==theme)toggleTheme();show('home');},theme);
+        const density=await page.evaluate(()=>({menuPadding:parseFloat(getComputedStyle(document.querySelector('.action-panel')).paddingTop),historyPadding:[...document.querySelectorAll('#matchList .mc-main')].map(x=>parseFloat(getComputedStyle(x).paddingBottom)),historyHeights:[...document.querySelectorAll('#matchList .mc')].map(x=>x.getBoundingClientRect().height)}));
+        assert.ok(density.menuPadding<=12);assert.ok(density.historyPadding.every(v=>v===0),'No phantom action space on dashboard history');assert.ok(density.historyHeights.every(v=>v<=115),'Dashboard match cards are compact');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-home.png`),fullPage:true,animations:'disabled'});
         for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-history','screen-ai']){
           await page.evaluate(id=>show(id),id);
@@ -44,6 +46,15 @@ async function main(){
           assert.equal(state.overflow,false,`${id}/${theme} no horizontal overflow`);assert.equal(state.body,'none');assert.equal(state.header,'none');
         }
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-ai.png`),fullPage:true,animations:'disabled'});
+        await page.evaluate(()=>{isAdmin=true;canEdit=true;role='admin';sessionName='QA';show('screen-history');});
+        const actions=await page.evaluate(()=>[...document.querySelectorAll('#history-list .mc-item-actions')].map(bar=>{
+          const b=bar.getBoundingClientRect(),m=bar.closest('.mc-main').getBoundingClientRect();
+          return {position:getComputedStyle(bar).position,inside:b.top>=m.top&&b.bottom<=m.bottom+1,buttons:[...bar.querySelectorAll('button')].map(x=>({height:x.getBoundingClientRect().height,left:x.getBoundingClientRect().left,right:x.getBoundingClientRect().right})),left:m.left,right:m.right};
+        }));
+        assert.ok(actions.length>0);for(const row of actions){assert.equal(row.position,'static');assert.ok(row.inside,'History actions stay in normal flow');assert.ok(row.buttons.every(b=>b.left>=row.left-1&&b.right<=row.right+1));if(mobile)assert.ok(row.buttons.filter(b=>b.height>32).every(b=>b.height>=44));}
+        await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-history-admin.png`),fullPage:true,animations:'disabled'});
+        await page.locator('#history-list .score-action').first().click();assert.equal(await page.locator('#scoreModal').isVisible(),true);await page.evaluate(()=>closeScoreModal());
+        await page.evaluate(()=>{isAdmin=false;canEdit=false;role='guest';sessionName='';});
         await page.evaluate(()=>{show('screen-players');openPlayer(0);});
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-profile.png`),animations:'disabled'});
         const profile=await page.evaluate(()=>({background:getComputedStyle(document.querySelector('.pm-panel')).backgroundImage,rating:getComputedStyle(document.querySelector('.pm-attr .val')).color}));assert.equal(profile.background,'none');assert.notEqual(profile.rating,'rgb(232, 236, 246)','Profile scores cannot retain unreadable dark-only text');

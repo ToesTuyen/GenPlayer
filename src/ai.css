@@ -1,21 +1,22 @@
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
 #screen-ai [hidden]{display:none!important}
-.ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .ai-head h1{font-size:23px;margin-bottom:7px;display:flex;gap:9px;align-items:center}
 .ai-sub{font-size:13px;color:var(--muted);line-height:1.65;max-width:620px}
 .ai-pill{display:inline-flex;padding:5px 9px;border:1px solid var(--line);border-radius:20px;background:var(--surface2);color:var(--blue);font-size:11px;white-space:nowrap}
-.ai-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.ai-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
 .ai-panel h2{font-size:15px;margin:0 0 12px}
 .ai-status{font-size:13px;line-height:1.7;color:var(--muted)}
-.ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .ai-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:var(--muted);min-width:0}
-.ai-field select,.ai-field input,.ai-field textarea{width:100%;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;font-size:13px;font-weight:400}
-.ai-field textarea{min-height:96px;resize:vertical;line-height:1.6}
-.ai-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.ai-field select,.ai-field input,.ai-field textarea{width:100%;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:13px;font-weight:400}
+.ai-field textarea{min-height:88px;resize:vertical;line-height:1.6}
+.ai-field select,.ai-field input{min-height:40px}
+.ai-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .ai-actions .btn:disabled{opacity:.5;cursor:wait}
 #screen-ai .btn.alt{background:var(--surface2);color:var(--text);border:1px solid var(--line);box-shadow:none}
 #screen-ai .btn.alt:hover{background:var(--surface3)}
-.ai-message{padding:12px 14px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:13px;line-height:1.6;margin-top:12px;overflow-wrap:anywhere}
+.ai-message{padding:9px 10px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:13px;line-height:1.6;margin-top:10px;overflow-wrap:anywhere}
 .ai-message.error{color:var(--red);border-color:var(--red)}
 .ai-result{line-height:1.8;overflow-wrap:anywhere}
 .ai-result h2{font-size:20px;margin-bottom:14px}
@@ -26,4 +27,4 @@
 .ai-warnings{color:var(--amber);font-size:12px;white-space:pre-line;line-height:1.7}
 .ai-footer{font-size:12px;color:var(--muted);line-height:1.65;margin-top:12px}
 #aiLineupPreview .report{margin-top:16px}
-@media(max-width:600px){.ai-head{flex-direction:column;gap:8px}.ai-fields{grid-template-columns:1fr}.ai-panel{padding:16px}.ai-head h1{font-size:21px}.ai-actions .btn{flex:1 1 auto}.ai-result h2{font-size:18px}}
+@media(max-width:600px){.ai-head{flex-direction:column;gap:8px}.ai-fields{grid-template-columns:1fr}.ai-panel{padding:12px}.ai-field select,.ai-field input{min-height:44px}.ai-head h1{font-size:21px}.ai-actions .btn{flex:1 1 auto}.ai-result h2{font-size:18px}}
