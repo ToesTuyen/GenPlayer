@@ -11,6 +11,7 @@ const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12
 const result=C.lineup(players,teams).result;
 const history=Array.from({length:5},(_,i)=>({id:100+i,kickoff:Date.now()-(i+1)*86400000,n:16,subset:players,result,score:{a:3,b:2},goals:{'Huy Hoàng':2},goalsLocked:true}));
 const reports=fs.mkdtempSync(path.join(os.tmpdir(),'genplayer-web-app-qa-'));
+const progressOnly=process.env.GP_QA_PROGRESS_ONLY==='1';
 let providerCalls=0,lineupGate=null,providerFailure=false;const providerInputs=[];
 const lineupNote='Tách hai tiền vệ giữa, cân riêng công và thủ.';
 const fakeProvider=async(url,init)=>{
@@ -89,7 +90,7 @@ async function main(){
       await page.evaluate(()=>{
         window.QA_STEP_TIMES=[];
         window.QA_STEP_OBSERVER=new MutationObserver(records=>{
-          for(const m of records)if(m.type==='attributes'&&m.target.matches('li[data-step]'))window.QA_STEP_TIMES.push({id:m.target.dataset.step,state:m.target.dataset.state,at:performance.now()});
+          for(const m of records)if(m.type==='attributes'&&m.target.matches('li[data-step]'))window.QA_STEP_TIMES.push({id:m.target.dataset.step,state:m.target.dataset.state,at:performance.now(),top:document.querySelector('#createProcessSteps').firstElementChild.dataset.step});
         });
         window.QA_STEP_OBSERVER.observe(document.querySelector('#createProcessSteps'),{attributes:true,attributeFilter:['data-state'],subtree:true});
       });
@@ -99,6 +100,8 @@ async function main(){
       assert.equal(await page.locator('#createProcess').isVisible(),true);
       assert.equal(await page.locator('[data-step="balance"]').getAttribute('data-state'),'pending','No fabricated checks before the model returns');
       assert.equal(await page.locator('#go').isDisabled(),true);
+      assert.deepEqual(await page.locator('#createProcessSteps > li').evaluateAll(rows=>rows.slice(0,5).map(el=>el.dataset.step)),['search','engine','history','ratings','roster'],'Active step precedes completed steps, newest first');
+      assert.equal(await page.locator('#createProcessSteps').evaluate(el=>el.scrollTop),0,'Active step is visible at the top without following it down');
       // A second call while busy cannot send an extra request.
       await page.evaluate(()=>createTeams());
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-process.png'),animations:'disabled'});
@@ -116,19 +119,23 @@ async function main(){
       const durations=await page.evaluate(()=>{
         window.QA_STEP_OBSERVER.disconnect();return CREATE_STEPS.map(([id])=>{
           const events=window.QA_STEP_TIMES.filter(e=>e.id===id),start=events.find(e=>e.state==='active'),end=events.find(e=>['done','warn'].includes(e.state));
-          return {id,ms:start&&end?end.at-start.at:0};
+          return {id,ms:start&&end?end.at-start.at:0,first:start?.top===id};
         });
       });assert.ok(durations.every(s=>s.ms>=950),'Every completed row stays visible for about one second: '+JSON.stringify(durations));
+      assert.ok(durations.every(s=>s.first),'Every active row moves to the top');
+      assert.deepEqual(await page.locator('#createProcessSteps > li').evaluateAll(rows=>rows.map(el=>el.dataset.step)),await page.evaluate(()=>CREATE_STEPS.map(([id])=>id).reverse()),'Finished checklist remains newest-first');
       assert.equal(await page.locator('#createProcess').isVisible(),true,'Completion leaves the checklist open');
       assert.equal(await page.locator('#createProcessSteps').evaluate(el=>el.scrollTop),0,'Completed checklist returns to the beginning for reading');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-lineup.png'),fullPage:true});
       await page.locator('#createProcessClose').click();
       const draftBeforeReview=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeReview=providerCalls;
       await page.locator('#reviewProcess').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
+      assert.equal(await page.locator('#createProcessSteps > li').first().getAttribute('data-step'),'draft','Reopened report preserves reverse order');
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(providerCalls,callsBeforeReview,'Reopening the checklist cannot call AI');
       assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),draftBeforeReview,'Reopening checklist cannot modify a draft');
       await page.locator('#createProcessClose').click();
+      if(progressOnly){assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);await ctx.close();continue;}
       assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã gửi AI/);
       assert.ok((await page.locator('#createNoteStatus').innerText()).includes(lineupNote));
       await page.locator('#aiInstruction').fill('Tuyên bắt gôn theo Note mới');
@@ -194,6 +201,7 @@ async function main(){
       assert.ok(requests.every(r=>!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')));assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
       await ctx.close();
     }
+    if(progressOnly){console.log(JSON.stringify({ok:true,providerCalls,reports,coverage:'desktop/mobile progress: active first, newest completed first, pending last, readable timing, persistent/reopened reverse checklist, no Firebase writes'}));return;}
     // Test review save against an isolated in-memory transaction, NEVER live Firebase.
     config.dataMode='cloud';
     const ctx=await browser.newContext({serviceWorkers:'block'}),page=await ctx.newPage();page.on('dialog',d=>d.accept());

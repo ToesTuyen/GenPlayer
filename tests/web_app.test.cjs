@@ -180,3 +180,24 @@ test('progress holds fast steps for reading, but never adds a full delay after s
   assert.deepEqual(delays,[250],'Two seconds of real work already exceed the minimum; no extra wait');
   assert.equal(events[1][1],'warn','Pacing must preserve warning semantics');
 });
+test('active progress row stays first, including when an earlier step gets a fallback warning',()=>{
+  const ids=['roster','ratings','engine','search','partition'];
+  const rows=new Map(ids.map(id=>[id,{dataset:{step:id},querySelector:()=>({textContent:'',setAttribute(){}})}]));
+  const list={children:ids.map(id=>rows.get(id)),scrollTop:50,
+    get firstElementChild(){return this.children[0];},
+    querySelector(selector){return rows.get(selector.match(/"([^"]+)"/)[1]);},
+    prepend(row){this.children=[row,...this.children.filter(x=>x!==row)];}
+  };
+  const controls=new Map([['createProcessSteps',list]]),sandbox={performance:{now:()=>100},$:id=>{
+    if(!controls.has(id))controls.set(id,{addEventListener(){}});return controls.get(id);
+  }};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/create_flow.js'),'utf8')+'\nglobalThis.qaStep=createStep;',sandbox);
+  const step=sandbox.qaStep,order=()=>list.children.map(row=>row.dataset.step);
+  for(const id of ['roster','ratings','engine']){step(id,'active');step(id,'done');}
+  step('search','active');
+  assert.deepEqual(order(),['search','engine','ratings','roster','partition']);assert.equal(list.scrollTop,0);
+  step('engine','warn','AI failed, using algorithm');
+  assert.deepEqual(order(),['search','engine','ratings','roster','partition'],'Updating a previous warning cannot displace the active row');
+  step('search','done');step('partition','active');step('partition','done');
+  assert.deepEqual(order(),ids.slice().reverse(),'Completed rows remain in reverse order');
+});

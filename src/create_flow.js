@@ -34,7 +34,13 @@ function createStep(id,state,detail=''){
   const labels={pending:'Chờ xử lý',active:'Đang xử lý',done:'Đã kiểm tra',warn:'Cần lưu ý',error:'Không hoàn tất',skip:'Chưa kiểm tra'};
   row.querySelector('.process-step-icon').textContent=({done:'✓',warn:'!',error:'×',skip:'–'})[state]||'';
   row.querySelector('.process-step-icon').setAttribute('aria-label',labels[state]);
-  if(state==='active')row.scrollIntoView({block:'nearest'});
+  if(state==='active'){
+    // Current step first, then previously run steps newest-first; untouched steps stay below.
+    // Move the actual node so visual, keyboard and screen-reader order stay consistent.
+    const list=$('createProcessSteps');
+    if(list.firstElementChild!==row)list.prepend(row);
+    list.scrollTop=0;
+  }
   const finished=[...CREATE_STATE.steps.values()].filter(s=>['done','warn'].includes(s)).length;
   $('createProcessProgress').value=finished;$('createProcessCount').textContent=finished+'/'+CREATE_STEPS.length+' bước đã xử lý';
 }
@@ -52,7 +58,7 @@ function createBegin(){
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';
-  $('createProcessNote').textContent='Mỗi bước hiển thị ít nhất 1 giây để dễ theo dõi; chỉ tích xanh sau khi đã kiểm tra. Cảnh báo được giữ riêng.';
+  $('createProcessNote').textContent='Bước đang chạy ở trên cùng; các bước đã chạy nằm bên dưới, mới nhất trước. Mỗi bước hiển thị ít nhất 1 giây; chỉ tích xanh sau khi đã kiểm tra.';
   $('createProcessSummary').hidden=true;$('createProcessClose').disabled=true;$('createProcessClose').textContent='Đang xử lý…';
   $('createProcessSteps').innerHTML=CREATE_STEPS.map(([id,title])=>'<li data-step="'+id+'" data-state="pending"><span class="process-step-icon" role="img" aria-label="Chờ xử lý"></span><div><span class="process-step-title">'+title+'</span><span class="process-step-detail"></span></div></li>').join('');
   CREATE_STEPS.forEach(([id])=>CREATE_STATE.steps.set(id,'pending'));
@@ -65,7 +71,7 @@ function createFinish(success,message){
   $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
-  $('createProcessNote').textContent='Bạn có thể cuộn đọc toàn bộ checklist. Màn hình không tự đóng; xem lại bất cứ lúc nào bằng nút Xem tiêu chí.';
+  $('createProcessNote').textContent='Checklist hiển thị bước mới nhất trước. Bạn có thể cuộn đọc hoặc mở lại bằng nút Xem tiêu chí; màn hình không tự đóng.';
   $('createProcessSummary').textContent=message;$('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
