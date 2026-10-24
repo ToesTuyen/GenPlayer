@@ -60,7 +60,12 @@
 .ai-analysis-tools>summary::before{content:'›';font-size:20px;color:var(--muted)}
 .ai-analysis-tools[open]>summary::before{content:'⌄'}
 .ai-analysis-body{padding-top:8px}
-@media(max-width:600px){.ai-analysis-tools>summary,.ai-connection>summary{min-height:44px}}
+.ai-remember{display:flex;align-items:center;gap:8px;font-size:12px;min-height:36px;color:var(--muted);cursor:pointer}
+.ai-remember input{width:18px;height:18px;accent-color:var(--action)}
+#aiKeyForm .ai-actions{align-items:flex-end;flex-wrap:nowrap}
+#aiKeyForm .ai-field{flex:1}
+#aiKeyForm .btn{flex:0 0 auto}
+@media(max-width:600px){.ai-analysis-tools>summary,.ai-connection>summary,.ai-remember{min-height:44px}}
 .ai-connection summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:28px}
 .ai-connection summary::before{content:'›';font-size:20px;color:var(--muted)}
 .ai-connection[open] summary::before{content:'⌄'}

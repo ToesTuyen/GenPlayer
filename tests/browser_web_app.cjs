@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const {getConfig,createApp}=require('../server/index.cjs'),C=require('../src/ai_context.js');
-const password='browser-test-password-not-real',secret='sk-or-browser-test-not-real';
+const secret='sk-or-browser-test-not-real';
 const names=['Danh Tuyên','Trịnh Mạnh','Văn Quyền','Nam Khắc','Quy Bong','Huy Hoàng','Quyết Nguyễn','Khắc Trọng','Hưng','Quốc An','Duy Hùng','Doan Ha','Việt Dũng','Văn Thanh','Khách (Mạnh Tiến)','Khách (Mạnh Khắc)'];
 const players=names.map((n,i)=>({n,pos:C.SLOTS[i%7],pos2:[],guest:i>=14,...Object.fromEntries(C.KEYS.map(k=>[k,6]))}));
 const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12,13],bench:[15]}};
@@ -15,7 +15,7 @@ const progressOnly=process.env.GP_QA_PROGRESS_ONLY==='1';
 let providerCalls=0,lineupGate=null,providerFailure=false;const providerInputs=[];
 const lineupNote='Tách hai tiền vệ giữa, cân riêng công và thủ.';
 const fakeProvider=async(url,init)=>{
-  providerCalls++;assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');
+  providerCalls++;assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(init.headers.Authorization,'Bearer '+secret);
   const req=JSON.parse(init.body),task=req.response_format.json_schema.name.replaceAll('_','-'),data=JSON.parse(req.messages[1].content);
   providerInputs.push({task,instruction:data.instruction});
   if(task==='lineup'&&lineupGate)await lineupGate;
@@ -29,7 +29,7 @@ const fakeProvider=async(url,init)=>{
   return new Response(JSON.stringify({model:'fake/qa',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output)}}],usage:{prompt_tokens:100,completion_tokens:200}}));
 };
 async function main(){
-  const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password}),origin:''},app=createApp(config,{fetchImpl:fakeProvider});
+  const config={...getConfig({}),origin:''},app=createApp(config,{fetchImpl:fakeProvider});
   await new Promise(r=>app.listen(0,'127.0.0.1',r));config.origin='http://127.0.0.1:'+app.address().port;
   const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
   try{
@@ -72,9 +72,11 @@ async function main(){
       assert.equal(await page.locator('.ai-inline-head').count(),0,'No separate AI workspace header');
       assert.ok(await page.locator('#createAI').evaluate(el=>el.closest('.card-box')===document.querySelector('#roster').closest('.card-box')),'AI settings stay in the same roster card');
       assert.equal(await page.locator('#aiAnalysisTools').evaluate(el=>el.open),false,'Secondary analysis tools are collapsed by default');
-      await page.locator('#aiLoginForm').waitFor({state:'visible'});
-      await page.locator('#aiPassword').fill(password);await page.locator('#aiLoginBtn').click();
+      await page.locator('#aiKeyForm').waitFor({state:'visible'});
+      await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
+      assert.equal(await page.locator('#aiKey').inputValue(),'','Never prefill or retain the key in the input');
+      assert.equal(await page.evaluate(()=>localStorage.getItem(AI_KEYS.storageName)),secret);
       assert.equal(await page.locator('#aiMatchField').isVisible(),false);
       assert.equal(await page.locator('#aiRun').isVisible(),false,'No duplicate create button for AI');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
@@ -162,8 +164,8 @@ async function main(){
       assert.equal(await page.locator('#result .field .player').count(),14);
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
       await page.locator('#createProcessClose').click();
-      // Missing configuration must not attempt a paid request at all.
-      await page.route('**/api/ai/status',r=>r.fulfill({json:{configured:false,authenticated:false,model:'fake/qa',remainingRequests:20,missing:['OPENROUTER_API_KEY'],dataMode:'preview'}}));
+      // An unsafe connection must not attempt a paid request at all.
+      await page.route('**/api/ai/status',r=>r.fulfill({json:{keyMode:'device',secureTransport:false,model:'fake/qa',remainingRequests:20,dataMode:'preview'}}));
       const beforeMissing=providerCalls;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(providerCalls,beforeMissing);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
@@ -193,7 +195,8 @@ async function main(){
         window.firebase={firestore:Object.assign(()=>({}),{FieldValue:{arrayUnion:x=>x}})};
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
-      await page.locator('#aiConnection').evaluate(el=>el.open=true);await page.locator('#aiLogout').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      await page.locator('#aiConnection').evaluate(el=>el.open=true);await page.locator('#aiRemoveKey').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      assert.equal(await page.evaluate(()=>localStorage.getItem(AI_KEYS.storageName)),null);
       // Empty Note really means no per-match requests, even with history available.
       await page.locator('#aiInstruction').fill(' ');await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'done');
@@ -213,8 +216,8 @@ async function main(){
     await ctx.route('https://www.gstatic.com/firebasejs/**',r=>r.fulfill({contentType:'application/javascript',body:'/* cloud disabled */'}));
     await ctx.route('**/firestore.googleapis.com/**',r=>r.abort());
     await ctx.addInitScript(({players,history})=>{localStorage.setItem('gp_web_cloud_players',JSON.stringify(players));localStorage.setItem('gp_web_cloud_history',JSON.stringify(history));},{players,history});
-    await page.goto(config.origin);await page.evaluate(()=>openAITask('match-review',100));await page.locator('#aiLoginForm').waitFor({state:'visible'});
-    await page.locator('#aiPassword').fill(password);await page.locator('#aiLoginBtn').click();await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
+    await page.goto(config.origin);await page.evaluate(()=>openAITask('match-review',100));await page.locator('#aiKeyForm').waitFor({state:'visible'});
+    await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
     await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='match-review'&&!AI_STATE.busy);
     await page.evaluate(()=>{
       window.QA_DOC={history:structuredClone(getHistory()),finance:[{amount:4321}]};window.QA_BEFORE=structuredClone(window.QA_DOC);window.QA_UPDATES=0;

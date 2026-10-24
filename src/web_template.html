@@ -939,11 +939,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
         <div class="ai-connection-body">
           <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
-          <form id="aiLoginForm" onsubmit="aiLogin(event)" hidden>
-            <div class="ai-actions"><label class="ai-field" for="aiPassword">Mật khẩu truy cập AI<input id="aiPassword" type="password" required maxlength="256" autocomplete="current-password" placeholder="AI_ACCESS_PASSWORD trên server"></label><button class="btn sm" id="aiLoginBtn" type="submit">Mở quyền AI</button></div>
+          <form id="aiKeyForm" onsubmit="aiSaveKey(event)">
+            <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" disabled></label><button class="btn sm" id="aiSaveKeyBtn" type="submit" disabled>Lưu key</button></div>
+            <label class="ai-remember"><input type="checkbox" id="aiRememberKey" checked>Lưu trên trình duyệt này</label>
           </form>
-          <div class="ai-actions"><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" id="aiLogout" onclick="aiLogout()" hidden>Đóng quyền AI</button></div>
-          <p class="ai-footer">Chỉ gửi dữ liệu bóng đá liên quan tới OpenRouter, không gửi thu chi hay tài khoản. Mỗi lượt có thể tính phí; không tự gọi lại khi lỗi hoặc tự sửa điểm cầu thủ.</p>
+          <div class="ai-actions"><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
+          <p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Mỗi lượt key được gửi qua HTTPS tới backend và OpenRouter để xác thực; backend không lưu key. Thiết bị khác cần nhập riêng. Tránh lưu trên máy dùng chung; script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p>
         </div>
       </details>
       <details id="aiAnalysisTools" class="ai-analysis-tools">

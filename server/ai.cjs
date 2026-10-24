@@ -69,7 +69,7 @@ async function complete(prepared,config,fetchImpl=fetch){
     const response=await fetchImpl('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal:controller.signal,headers:{Authorization:'Bearer '+config.apiKey,'Content-Type':'application/json','HTTP-Referer':config.origin,'X-OpenRouter-Title':'GenPlayer — FC Haha'},body:JSON.stringify({model:config.model,messages:prepared.messages,response_format:{type:'json_schema',json_schema:{name:prepared.task.replaceAll('-','_'),strict:true,schema:prepared.schema}},provider:{require_parameters:true},max_tokens:config.maxTokens,temperature:0.5,stream:false})});
     if(!response.ok){
       await response.body?.cancel();
-      const message={401:'OpenRouter từ chối key. Kiểm tra cấu hình server.',402:'OpenRouter hết hạn mức/tín dụng.',429:'OpenRouter đang giới hạn lượt gọi. Hãy thử lại sau.'}[response.status]||'OpenRouter chưa xử lý được yêu cầu; kiểm tra model hỗ trợ structured outputs.';
+      const message={401:'OpenRouter từ chối key cá nhân. Kiểm tra hoặc thay key trong Tuỳ chọn AI.',402:'Key OpenRouter hết hạn mức/tín dụng.',429:'OpenRouter đang giới hạn lượt gọi. Hãy thử lại sau.'}[response.status]||'OpenRouter chưa xử lý được yêu cầu; kiểm tra model hỗ trợ structured outputs.';
       throw new AppError(502,message);
     }
     let size=0,parts=[];

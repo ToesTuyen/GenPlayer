@@ -14,12 +14,54 @@ async function withServer(fn,options={}){
   const app=createApp(config,{fetchImpl:options.fetchImpl||provider(output())});await new Promise(r=>app.listen(0,'127.0.0.1',r));
   const base='http://127.0.0.1:'+app.address().port;
   const request=(route,body,headers={})=>fetch(base+route,{method:body===undefined?'GET':'POST',headers:{Origin:config.origin,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:typeof body==='string'?body:JSON.stringify(body)});
-  const login=async()=>{const r=await request('/api/ai/login',{password});assert.equal(r.status,200);const b=await r.json();return {Cookie:r.headers.get('set-cookie').split(';')[0],'X-GP-CSRF':b.csrf};};
-  try{await fn({request,login,config});}finally{app.closeAllConnections();await new Promise(r=>app.close(r));}
+  const headers={Authorization:'Bearer '+secret};
+  try{await fn({request,headers,config});}finally{app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
-test('config safe defaults; short password and ambiguous origins fail closed',()=>{
+test('config safe defaults; obsolete shared credentials are ignored, ambiguous origins fail closed',()=>{
   assert.equal(getConfig({}).dataMode,'preview');assert.equal(getConfig({}).host,'127.0.0.1');
-  assert.throws(()=>getConfig({AI_ACCESS_PASSWORD:'short'}));assert.throws(()=>getConfig({APP_ORIGIN:'https://app.example/'}));assert.throws(()=>getConfig({APP_DATA_MODE:'wrong'}));
+  const config=getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:'short'});
+  assert.ok(!('apiKey' in config));assert.ok(!('password' in config));assert.ok(!JSON.stringify(config).includes(secret));
+  assert.throws(()=>getConfig({APP_ORIGIN:'https://app.example/'}));assert.throws(()=>getConfig({APP_DATA_MODE:'wrong'}));
+});
+function deviceSandbox(initial={},options={}){
+  const store=new Map(Object.entries(initial)),elements=new Map(),events={};
+  const sandbox={location:{protocol:'https:',hostname:'genplayer.example'},window:{addEventListener:(name,fn)=>events[name]=fn},AbortController,setTimeout,clearTimeout,
+    localStorage:{getItem:k=>{if(options.blocked)throw new Error('blocked');return store.get(k)??null;},setItem:(k,v)=>{if(options.blocked)throw new Error('blocked');store.set(k,v);},removeItem:k=>{if(options.blocked)throw new Error('blocked');store.delete(k);}},
+    $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,style:{}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/ai_client.js'),'utf8')+'\nglobalThis.qa={keys:AI_KEYS,state:AI_STATE,fetch:aiFetch,init:aiInit,save:aiSaveKey,forget:aiForgetKey};',sandbox);
+  return {...sandbox.qa,sandbox,store,elements,events};
+}
+test('device key is isolated from app state; remember, ephemeral, reload, replace and clear are honest',()=>{
+  const first=deviceSandbox(),name=first.keys.storageName,secondKey='sk-or-other-device-key-for-tests';
+  assert.equal(first.keys.has(),false);assert.throws(()=>first.keys.save('wrong',true),/định dạng/);
+  first.keys.save(' '+secret+' ',true);assert.equal(first.store.get(name),secret);assert.equal(first.keys.remembered(),true);
+  assert.equal(deviceSandbox(Object.fromEntries(first.store)).keys.get(),secret,'Reload restores this browser origin only');
+  assert.equal(deviceSandbox().keys.has(),false,'A different browser/device starts without a key');
+  assert.ok(!JSON.stringify(first.state).includes(secret));assert.equal(first.store.size,1,'Only dedicated key storage is changed');
+  first.keys.save(secondKey,false);assert.equal(first.store.has(name),false);assert.equal(first.keys.get(),secondKey);assert.equal(first.keys.remembered(),false);
+  assert.equal(deviceSandbox(Object.fromEntries(first.store)).keys.has(),false,'Ephemeral keys cannot survive reload');
+  first.keys.save(secret,true);first.keys.clear();assert.equal(first.keys.has(),false);assert.equal(first.store.has(name),false);
+  assert.equal(deviceSandbox({[name]:'invalid'}).keys.has(),false);
+});
+test('blocked storage cannot claim success or silently replace an existing key',()=>{
+  const options={},x=deviceSandbox({},options);x.keys.save(secret,true);options.blocked=true;
+  assert.throws(()=>x.keys.save('sk-or-different-private-test-key',true),/chưa thay key/);assert.equal(x.keys.get(),secret);
+  assert.throws(()=>x.keys.clear(),/Chưa xoá được/);assert.equal(x.keys.get(),secret);
+  assert.equal(deviceSandbox({}, {blocked:true}).keys.has(),false,'Read failure fails closed');
+});
+test('saving clears the masked input; storage deletion in another tab revokes the in-memory key',()=>{
+  const x=deviceSandbox();x.init();const input=x.elements.get('aiKey');input.value=secret;x.save({preventDefault(){}});
+  assert.equal(input.value,'');assert.ok(!JSON.stringify([...x.elements.values()]).includes(secret),'The key must not enter rendered UI text or placeholder');
+  x.store.delete(x.keys.storageName);x.events.storage({key:x.keys.storageName});assert.equal(x.keys.has(),false);assert.equal(x.elements.get('aiRun').disabled,true);
+  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};input.value=secret;x.save({preventDefault(){}});assert.equal(x.keys.has(),false);assert.equal(input.value,'');
+});
+test('only run attaches device key in Authorization, never JSON; unsafe transport sends nothing',async()=>{
+  const calls=[],x=deviceSandbox({}, {fetch:async(url,init)=>{calls.push({url,init});return new Response('{}',{headers:{'Content-Type':'application/json'}});}});
+  x.keys.save(secret,true);await x.fetch('status');await x.fetch('run',{task:'lineup',context:context()});
+  assert.equal(calls[0].init.headers.Authorization,undefined);assert.equal(calls[1].init.headers.Authorization,'Bearer '+secret);
+  assert.equal(calls[1].init.credentials,'omit');assert.equal(calls[1].init.redirect,'error');assert.ok(!calls[1].init.body.includes(secret));
+  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};await assert.rejects(x.fetch('run',{}),/HTTPS/);assert.equal(calls.length,2);
+  x.sandbox.location={protocol:'https:',hostname:'genplayer.example'};x.keys.clear();await assert.rejects(x.fetch('run',{}),/Nhập và lưu key/);assert.equal(calls.length,2);
 });
 test('only whitelisted football data reaches provider; no credentials or finance',()=>{
   const c=context();c.finance=[{secret:'private-finance'}];c.players[0]={...c.players[0],ratings:{secret:'private-rater'},apiKey:'private-key'};
@@ -56,8 +98,8 @@ test('insufficient recent attendance suppresses point changes; prose still needs
   const p=prepare({task:'player-form',context:c}),out=validateOutput(JSON.stringify({...output('player-form'),verdict:'increase',suggestions:[{attribute:'DD',direction:'increase',reason:'test'}]}),p);
   assert.equal(out.verdict,'insufficient');assert.deepEqual(out.suggestions,[]);
 });
-test('provider fixed endpoint, server key, strict schema and safe error messages',async()=>{
-  const config=getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password});let sent;
+test('provider fixed endpoint, request-local key, strict schema and safe error messages',async()=>{
+  const config={...getConfig({}),apiKey:secret};let sent;
   await complete(prepare({task:'lineup',context:context()}),config,async(url,init)=>{sent={url,init};return provider(output())(url,init);});
   assert.equal(sent.url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(sent.init.headers.Authorization,'Bearer '+secret);
   assert.equal(JSON.parse(sent.init.body).response_format.json_schema.strict,true);
@@ -70,21 +112,48 @@ test('malformed/truncated/oversized provider output and timeout do not apply any
   await assert.rejects(complete(p,c,async()=>new Response('x'.repeat(600000))),/vượt giới hạn/);
   await assert.rejects(complete(p,{...c,timeoutMs:10},async(_,init)=>new Promise((r,reject)=>init.signal.addEventListener('abort',()=>reject(new Error('aborted'))))),/quá thời gian/);
 });
-test('API fails closed without key/password; no unauthenticated paid calls',async()=>{
-  await withServer(async({request})=>{assert.equal((await request('/api/ai/run',{task:'lineup',context:context()})).status,401);const status=await(await request('/api/ai/status')).json();assert.equal(status.configured,false);assert.ok(!JSON.stringify(status).includes(secret));assert.equal((await request('/api/ai/login',{password})).status,503);},{apiKey:''});
+test('API requires a device key even with an obsolete server key; no login or shared fallback',async()=>{
+  let calls=0;
+  await withServer(async({request})=>{
+    for(const headers of [{},{Authorization:'Bearer invalid'},{Authorization:'Bearer sk-or-'+ 'x'.repeat(241)},{Cookie:'gp_ai_session=old','X-GP-CSRF':'old'}])assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,401);
+    const status=await(await request('/api/ai/status')).json();assert.equal(status.keyMode,'device');assert.equal(status.secureTransport,true);assert.ok(!JSON.stringify(status).includes(secret));assert.ok(!('authenticated' in status));
+    for(const route of ['login','logout'])assert.equal((await request('/api/ai/'+route,{})).status,404);
+    assert.equal(calls,0);
+  },{apiKey:secret,fetchImpl:async()=>{calls++;return provider(output())();}});
 });
-test('cookie session, CSRF/origin guards, successful AI roundtrip and logout',async()=>{
-  await withServer(async({request,login})=>{
-    const headers=await login();assert.ok(headers.Cookie.startsWith('gp_ai_session='));
+test('Origin guard and independent per-request Authorization; no session or key retention',async()=>{
+  const seen=[],other='sk-or-another-device-test-key';
+  await withServer(async({request,headers,config})=>{
     assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},{...headers,Origin:'https://evil.example'})).status,403);
-    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},{Cookie:headers.Cookie})).status,403);
-    const r=await request('/api/ai/run',{task:'lineup',context:context()},headers);assert.equal(r.status,200);const b=await r.json();assert.equal(b.output.subset.length,16);assert.ok(!JSON.stringify(b).includes(secret));
-    assert.equal((await request('/api/ai/logout',{},headers)).status,200);assert.equal((await request('/api/ai/run',{},headers)).status,401);
-  });
+    assert.equal((await request('/api/ai/run',{}, {...headers,Origin:''})).status,403);
+    for(const key of [secret,other]){
+      const r=await request('/api/ai/run',{task:'lineup',context:context()},{Authorization:'Bearer '+key});assert.equal(r.status,200);assert.equal(r.headers.get('set-cookie'),null);
+      const b=await r.json();assert.equal(b.output.subset.length,16);assert.ok(!JSON.stringify(b).includes(key));
+    }
+    assert.deepEqual(seen,['Bearer '+secret,'Bearer '+other]);assert.ok(!('apiKey' in config));
+    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()})).status,401,'Previous requests must not become a server fallback');
+  },{fetchImpl:async(url,init)=>{seen.push(init.headers.Authorization);assert.ok(!init.body.includes(secret)&&!init.body.includes(other));return provider(output())(url,init);}});
 });
-test('login brute force, request budgets, malformed JSON and size limits',async()=>{
-  await withServer(async({request,login})=>{const h=await login();assert.equal((await request('/api/ai/run','{bad',h)).status,400);assert.equal((await request('/api/ai/run',{large:'x'.repeat(270000)},h)).status,413);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,200);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,429);},{hourLimit:1});
-  await withServer(async({request})=>{for(let i=0;i<5;i++)assert.equal((await request('/api/ai/login',{password:'bad'})).status,401);assert.equal((await request('/api/ai/login',{password})).status,429);});
+test('HTTP LAN cannot send keys; configured HTTPS proxy and localhost are supported',async()=>{
+  let calls=0;
+  await withServer(async({request,headers})=>{assert.equal((await(await request('/api/ai/status')).json()).secureTransport,false);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,426);assert.equal(calls,0);},{origin:'http://192.168.1.10:3000',fetchImpl:async()=>{calls++;}});
+  await withServer(async({request,headers})=>{assert.equal((await(await request('/api/ai/status')).json()).secureTransport,true);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,200);},{origin:'https://genplayer.example'});
+});
+test('request budgets, malformed JSON and size limits apply before paid calls',async()=>{
+  await withServer(async({request,headers:h})=>{
+    assert.equal((await request('/api/ai/run','{bad',h)).status,400);assert.equal((await request('/api/ai/run',{large:'x'.repeat(270000)},h)).status,413);
+    assert.equal((await request('/api/ai/run',{task:'invalid',context:context()},h)).status,400);
+    assert.equal((await request('/api/ai/run',{}, {...h,'Content-Type':'text/plain'})).status,415);
+    assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,200);assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},h)).status,429);
+  },{hourLimit:1});
+});
+test('concurrent device requests still share the backend two-request limit',async()=>{
+  let entered=0,ready,release;const both=new Promise(r=>ready=r),gate=new Promise(r=>release=r);
+  await withServer(async({request,headers})=>{
+    const first=request('/api/ai/run',{task:'lineup',context:context()},headers),second=request('/api/ai/run',{task:'lineup',context:context()},{Authorization:'Bearer sk-or-another-device-test-key'});
+    await both;assert.equal((await request('/api/ai/run',{task:'lineup',context:context()},headers)).status,429);
+    release();assert.deepEqual((await Promise.all([first,second])).map(r=>r.status),[200,200]);
+  },{fetchImpl:async(url,init)=>{if(++entered===2)ready();await gate;return provider(output())(url,init);}});
 });
 test('static allowlist never serves .env, backups, source, Git or symlink secrets',async()=>{
   await withServer(async({request})=>{for(const route of ['/.env','/.git/config','/backups/data.json','/server/index.cjs','/firebase_config.json','/src/web_template.html','/assets/%2e%2e/.env'])assert.equal((await request(route)).status,404);const r=await request('/');assert.equal(r.status,200);const html=await r.text();assert.ok(html.includes('window.GP_APP_CONFIG={"backend":true,"dataMode":"preview"}'));assert.ok(!html.includes(secret));assert.ok(!html.includes(password));assert.equal(r.headers.get('cache-control'),'no-store');});

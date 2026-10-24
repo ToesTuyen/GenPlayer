@@ -138,20 +138,21 @@ async function createTeams(){
     createStep('engine','active','Kiểm tra khả năng dùng AI…');await createYield();
     if(!window.GP_APP_CONFIG?.backend)fallback='Bản static không có backend AI.';
     else try{
-      AI_STATE.status=await aiFetch('status');AI_STATE.csrf=AI_STATE.status.csrf;aiRenderStatus();
+      AI_STATE.status=await aiFetch('status');aiRenderStatus();
       const s=AI_STATE.status;
-      if(!s.configured)fallback='AI chưa được cấu hình key/kết nối.';
-      else if(!s.authenticated)fallback='Chưa mở quyền AI hoặc phiên AI đã hết hạn.';
+      if(!AI_KEYS.has())fallback='Chưa có key OpenRouter trên trình duyệt này.';
+      else if(!aiSecurePage()||!s.secureTransport)fallback='Cần HTTPS để gửi key cá nhân; link Wi-Fi HTTP chỉ dùng thuật toán.';
+      else if(s.keyMode!=='device')fallback='Backend chưa hỗ trợ key riêng của thiết bị.';
       else if(s.remainingRequests<=0)fallback='Đã hết lượt AI trong giờ.';
       else engine='AI';
     }catch(e){fallback=e.message;}
     if(engine==='AI'){
-      if(!confirm('Gửi tên, chỉ số và lịch sử bóng đá tới OpenRouter/model để tạo đội? Có thể tính phí. Không gửi tài khoản, thu chi hay API key.')){
+      if(!confirm('Gửi dữ liệu bóng đá tới OpenRouter/model bằng key cá nhân trên thiết bị này? Có thể tính phí. Key chỉ dùng xác thực qua HTTPS, không vào prompt; không gửi tài khoản hoặc thu chi.')){
         createStep('engine','skip','Bạn đã huỷ gửi dữ liệu; không gọi AI hoặc tạo đội thay thế.');
         for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
         createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
       }
-      await createCompleteStep('engine','done','Đã kết nối và mở quyền AI.');
+      await createCompleteStep('engine','done','Đã kết nối backend; dùng key riêng trên thiết bị qua kết nối an toàn.');
     }else await createCompleteStep('engine','warn',fallback+' Tự chuyển sang thuật toán, không gọi AI trả phí.');
     $('createProcessEngine').textContent=engine;
     createStep('search','active',engine==='AI'?'AI đang phân tích và chia đội. Chưa có kết quả để kiểm tra tiêu chí.':'Thuật toán đang duyệt cách chia và gán vị trí trong bộ xử lý riêng…');await createYield();

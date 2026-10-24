@@ -1,7 +1,23 @@
-// AI is opt-in; no provider key, password, or output is stored in localStorage.
-const AI_STATE={status:null,csrf:null,busy:false,output:null,request:null};
+// BYOK: keys are separate from football state, backups, prompts and Firebase.
+const AI_KEYS=(()=>{
+  const storageName='gp_openrouter_device_key_v1';let key='',remembered=false;
+  const valid=value=>/^sk-or-[A-Za-z0-9_-]{12,240}$/.test(value);
+  function reload(){try{const value=localStorage.getItem(storageName)||'';key=valid(value)?value:'';remembered=!!key;}catch{key='';remembered=false;}}
+  reload();
+  return {storageName,has:()=>!!key,get:()=>key,remembered:()=>remembered,reload,
+    save(value,remember){value=value.trim();if(!valid(value))throw new Error('Key OpenRouter không đúng định dạng. Hãy kiểm tra lại, không dán vào Note.');
+      try{if(remember)localStorage.setItem(storageName,value);else localStorage.removeItem(storageName);}catch{throw new Error('Trình duyệt không cho lưu/xoá key. Hãy kiểm tra quyền lưu trữ; chưa thay key đang dùng.');}
+      key=value;remembered=remember;
+    },
+    clear(){try{localStorage.removeItem(storageName);}catch{throw new Error('Chưa xoá được key đã lưu. Hãy xoá dữ liệu trang trong cài đặt trình duyệt.');}key='';remembered=false;}
+  };
+})();
+const AI_STATE={status:null,busy:false,output:null,request:null};
+function aiSecurePage(){return location.protocol==='https:'||['localhost','127.0.0.1','[::1]'].includes(location.hostname);}
 function aiIsPreview(){return window.GP_APP_CONFIG?.backend&&window.GP_APP_CONFIG.dataMode!=='cloud';}
 function aiInit(){
+  aiRenderStatus();
+  window.addEventListener('storage',event=>{if(event.key===AI_KEYS.storageName||event.key===null){AI_KEYS.reload();aiRenderStatus();}});
   if(!window.GP_APP_CONFIG?.backend)return;
   const banner=$('aiModeBanner');banner.style.display='block';
   banner.textContent=aiIsPreview()?'BẢN WEB APP · Xem thử an toàn — đọc dữ liệu cloud; thay đổi chỉ lưu trên máy này, không ghi lên web đang chạy.':'BẢN WEB APP · Đồng bộ cloud đang bật — thao tác lưu sẽ cập nhật dữ liệu chung.';
@@ -9,33 +25,41 @@ function aiInit(){
 async function aiFetch(route,body){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),125000);
   try{
-    const response=await fetch('/api/ai/'+route,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json','X-GP-CSRF':AI_STATE.csrf||''}:{},body:body?JSON.stringify(body):undefined});
+    const headers=body?{'Content-Type':'application/json'}:{};
+    if(route==='run'){
+      if(!aiSecurePage())throw new Error('Cần HTTPS để gửi key cá nhân. Link Wi-Fi HTTP chỉ dùng thuật toán.');
+      if(!AI_KEYS.has())throw new Error('Nhập và lưu key OpenRouter trên trình duyệt này trước.');
+      headers.Authorization='Bearer '+AI_KEYS.get();
+    }
+    const response=await fetch('/api/ai/'+route,{method:body?'POST':'GET',credentials:'omit',redirect:'error',cache:'no-store',signal:controller.signal,headers,body:body?JSON.stringify(body):undefined});
     if(!(response.headers.get('content-type')||'').includes('application/json'))throw new Error('Khu vực AI cần backend. Chạy npm start và mở APP_ORIGIN; GitHub Pages không chạy API.');
     const data=await response.json();
-    if(!response.ok){if(response.status===401){AI_STATE.csrf=null;if(AI_STATE.status)AI_STATE.status.authenticated=false;aiRenderStatus();}throw new Error(data.error||'Không gọi được AI.');}
+    if(!response.ok)throw new Error(data.error||'Không gọi được AI.');
     return data;
   }catch(e){if(e.name==='AbortError')throw new Error('Đã hết thời gian chờ AI. Không tự gửi lại yêu cầu.');throw e;}
   finally{clearTimeout(timer);}
 }
 function aiMessage(text,error=false){const el=$('aiMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
 function aiRenderStatus(){
-  const s=AI_STATE.status,box=$('aiServerStatus');
-  if(!s){box.textContent='Chưa kết nối backend AI.';return;}
-  box.textContent=`OpenRouter · ${s.model} · ${s.remainingRequests} lượt còn lại trong giờ · ${s.dataMode==='cloud'?'đồng bộ cloud':'xem thử, không ghi cloud'}. `+(s.configured?(s.authenticated?'Đã mở quyền AI (30 phút).':'Cần mở quyền AI để sử dụng.'):`Chưa cấu hình: ${s.missing.join(', ')}. Điền trong .env trên server rồi chạy lại npm start. Không nhập API key vào giao diện.`);
-  $('aiLoginForm').hidden=!s.configured||s.authenticated;$('aiLogout').hidden=!s.authenticated;
-  $('aiConnectionSummary').textContent=!s.configured?'Chưa cấu hình':s.authenticated?'Đã mở quyền AI':'Cần đăng nhập';
-  if(!s.configured||!s.authenticated)$('aiConnection').open=true;
-  $('aiRun').disabled=AI_STATE.busy||!s.configured||!s.authenticated;
+  const s=AI_STATE.status,secure=aiSecurePage(),hasKey=AI_KEYS.has();
+  $('aiServerStatus').textContent=(s?`OpenRouter · ${s.model} · ${s.remainingRequests} lượt backend còn lại trong giờ. `:window.GP_APP_CONFIG?.backend?'Chưa kết nối backend AI. ':'Bản static cần backend để gọi AI. ')+(!secure?'Trang đang dùng HTTP: không nhập/gửi key ở đây. Hãy mở HTTPS hoặc localhost trên Mac.':hasKey?(AI_KEYS.remembered()?'Đã lưu key trên trình duyệt này. ':'Key chỉ dùng trong phiên trang này. ')+'Chưa kiểm tra key với OpenRouter; chi phí thuộc key của bạn.':'Chưa có key cá nhân. Không dùng key chung của server.');
+  $('aiConnectionSummary').textContent=!secure?'Cần HTTPS':!hasKey?'Chưa có key':AI_KEYS.remembered()?'Đã lưu trên máy':'Chỉ phiên này';
+  $('aiKey').disabled=!secure;$('aiSaveKeyBtn').disabled=!secure;
+  $('aiRemoveKey').hidden=!hasKey;
+  $('aiKey').placeholder=hasKey?'Nhập key mới nếu muốn thay':'sk-or-…';
+  if(!hasKey||!secure)$('aiConnection').open=true;
+  $('aiRun').disabled=AI_STATE.busy||!secure||!hasKey||!s?.secureTransport||s?.keyMode!=='device';
 }
 async function aiRefresh(){
-  if(!window.GP_APP_CONFIG?.backend){$('aiServerStatus').textContent='AI chỉ hoạt động ở bản web app có backend. Chạy npm start, sau đó mở http://localhost:3000 (hoặc APP_ORIGIN đã cấu hình). Bản GitHub Pages vẫn hoạt động như cũ.';$('aiConnectionSummary').textContent='Cần chạy backend';$('aiConnection').open=true;$('aiRun').disabled=true;$('aiLoginForm').hidden=true;return;}
-  try{AI_STATE.status=await aiFetch('status');AI_STATE.csrf=AI_STATE.status.csrf;aiRenderStatus();}catch(e){aiMessage(e.message,true);}
+  if(!window.GP_APP_CONFIG?.backend){AI_STATE.status=null;aiRenderStatus();return;}
+  try{AI_STATE.status=await aiFetch('status');aiRenderStatus();}catch(e){AI_STATE.status=null;aiRenderStatus();aiMessage(e.message,true);}
 }
-async function aiLogin(event){
-  event.preventDefault();const input=$('aiPassword'),btn=$('aiLoginBtn');btn.disabled=true;
-  try{const data=await aiFetch('login',{password:input.value});AI_STATE.csrf=data.csrf;aiMessage('Đã mở quyền sử dụng AI.');await aiRefresh();$('aiConnection').open=false;}catch(e){aiMessage(e.message,true);}finally{input.value='';btn.disabled=false;}
+function aiSaveKey(event){
+  event.preventDefault();const input=$('aiKey');
+  try{if(!aiSecurePage())throw new Error('Chỉ nhập key trên HTTPS hoặc localhost.');AI_KEYS.save(input.value,$('aiRememberKey').checked);input.value='';aiRenderStatus();aiMessage(AI_KEYS.remembered()?'Đã lưu key riêng trên trình duyệt/địa chỉ web này. Không đồng bộ sang máy khác.':'Key chỉ dùng tới khi đóng hoặc tải lại trang.');}
+  catch(e){input.value='';aiMessage(e.message,true);}
 }
-async function aiLogout(){try{await aiFetch('logout',{});AI_STATE.csrf=null;await aiRefresh();}catch(e){aiMessage(e.message,true);}}
+function aiForgetKey(){try{AI_KEYS.clear();$('aiKey').value='';aiRenderStatus();aiMessage('Đã xoá key khỏi trình duyệt này. Không thu hồi key tại OpenRouter hoặc huỷ lượt đã gửi trước đó.');}catch(e){aiMessage(e.message,true);}}
 function aiPopulateSources(){
   const matchSelect=$('aiMatch'),playerSelect=$('aiPlayer'),oldMatch=matchSelect.value,oldPlayer=playerSelect.value;
   matchSelect.innerHTML=getHistory().slice().sort((a,b)=>(b.kickoff||b.id)-(a.kickoff||a.id)).map(r=>`<option value="${esc(String(r.id))}">${esc(fmtKick(r.kickoff)||r.label||String(r.id))}${r.score?` · ${r.score.a}–${r.score.b}`:' · chưa có tỉ số'}</option>`).join('');
@@ -84,7 +108,7 @@ async function aiRun(){
   if($('aiTask').value==='lineup')return createTeams();
   let context;const task=$('aiTask').value;
   try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Chọn ít nhất 14 người có mặt trước khi tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
-  if(!confirm('Gửi tên, chỉ số cầu thủ và lịch sử bóng đá liên quan tới OpenRouter/model để tạo nội dung? Mỗi lượt có thể tính phí. Không gửi tài khoản, thu chi hay API key.'))return;
+  if(!confirm('Gửi dữ liệu bóng đá tới OpenRouter/model bằng key cá nhân trên thiết bị này? Có thể tính phí. Key chỉ dùng xác thực qua HTTPS, không vào prompt; không gửi tài khoản hoặc thu chi.'))return;
   AI_STATE.busy=true;aiRenderStatus();$('aiRun').textContent='Đang phân tích…';aiMessage('AI đang đọc chỉ số, chuỗi kết quả và bàn thắng. Không tự lưu đội hình hay thay đổi điểm.');
   try{
     const response=await aiFetch('run',{task,context});
