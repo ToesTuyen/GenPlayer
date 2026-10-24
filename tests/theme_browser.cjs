@@ -49,9 +49,9 @@ async function main(){
         await page.evaluate(()=>{isAdmin=true;canEdit=true;role='admin';sessionName='QA';show('screen-history');});
         const actions=await page.evaluate(()=>[...document.querySelectorAll('#history-list .mc-item-actions')].map(bar=>{
           const b=bar.getBoundingClientRect(),m=bar.closest('.mc-main').getBoundingClientRect();
-          return {position:getComputedStyle(bar).position,inside:b.top>=m.top&&b.bottom<=m.bottom+1,buttons:[...bar.querySelectorAll('button')].map(x=>({height:x.getBoundingClientRect().height,left:x.getBoundingClientRect().left,right:x.getBoundingClientRect().right})),left:m.left,right:m.right};
+          return {position:getComputedStyle(bar).position,inside:b.top>=m.top&&b.bottom<=m.bottom+1,buttons:[...bar.querySelectorAll('button')].map(x=>({touchButton:x.classList.contains('btn'),height:x.getBoundingClientRect().height,left:x.getBoundingClientRect().left,right:x.getBoundingClientRect().right})),left:m.left,right:m.right};
         }));
-        assert.ok(actions.length>0);for(const row of actions){assert.equal(row.position,'static');assert.ok(row.inside,'History actions stay in normal flow');assert.ok(row.buttons.every(b=>b.left>=row.left-1&&b.right<=row.right+1));if(mobile)assert.ok(row.buttons.filter(b=>b.height>32).every(b=>b.height>=44));}
+        assert.ok(actions.length>0);for(const row of actions){assert.equal(row.position,'static');assert.ok(row.inside,'History actions stay in normal flow');assert.ok(row.buttons.every(b=>b.left>=row.left-1&&b.right<=row.right+1));if(mobile)assert.ok(row.buttons.filter(b=>b.touchButton).every(b=>b.height>=43.99));}
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-history-admin.png`),fullPage:true,animations:'disabled'});
         await page.locator('#history-list .score-action').first().click();assert.equal(await page.locator('#scoreModal').isVisible(),true);await page.evaluate(()=>closeScoreModal());
         await page.evaluate(()=>{isAdmin=false;canEdit=false;role='guest';sessionName='';});

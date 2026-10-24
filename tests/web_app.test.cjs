@@ -108,3 +108,12 @@ test('finance is hidden in every local HTML entry, not just the backend build',(
     assert.ok(html.includes('.screen[hidden],.ap-btn[hidden]{display:none!important}'),file+' explicit hidden styles');
   }
 });
+test('home has no unsolicited introduction block in any local entry',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    assert.ok(!html.includes('club-intro'),file+' has no extra intro');
+    assert.ok(!html.includes('Đội bóng của chúng ta'),file+' has no extra headline');
+    assert.ok(!html.includes('gọn trong một chỗ'),file+' has no extra slogan');
+    assert.ok(html.includes('class="ab-logo"'),file+' keeps existing header logo');
+  }
+});
