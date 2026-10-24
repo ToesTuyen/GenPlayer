@@ -53,7 +53,7 @@ async function createCompleteStep(id,state,detail){
 }
 function createBegin(){
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
-  aiMessage('');
+  aiMessage('');AI_STATE.lastFailure=null;
   $('reviewProcess').style.display='none';
   $('aiTask').value='lineup';$('aiAnalysisTools').hidden=true;aiTaskChanged();aiSyncDraftAction();
   $('go').disabled=true;$('selectAll').disabled=true;
@@ -160,8 +160,11 @@ async function createTeams(){
       subset=ordered;results=[checked.result];output={...output,...checked,subset};key='AI:'+Date.now();
     }catch(e){
       fallback=e.message;engine='Thuật toán';output=null;
+      // Metadata only, in memory: never persist keys, prompts or raw responses.
+      AI_STATE.lastFailure={kind:e.kind||'unknown',message:e.message,...(e.aiMeta||{})};
       $('createProcessEngine').textContent=engine;
-      createStep('engine','warn','AI không khả dụng: '+fallback+' Tự chuyển sang thuật toán; không gửi lại AI.');
+      const rejected=['lineup','output'].includes(e.kind),generationId=e.aiMeta?.generationId;
+      createStep('engine','warn',(rejected?'Kết quả AI chưa hợp lệ: ':'Không dùng được AI: ')+fallback+' Đã dùng thuật toán; không gọi lại AI.'+(generationId?' Mã lượt: '+generationId+'.':''));
       createStep('search','active','Đang chia bằng thuật toán thay thế…');await createYield();
     }
     if(engine==='Thuật toán'){

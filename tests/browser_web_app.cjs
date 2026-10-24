@@ -4,6 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const {getConfig,createApp}=require('../scripts/serve_web.cjs'),C=require('../src/ai_context.js');
+const {assignmentsFor}=require('./lineup_fixture.cjs');
 const secret='sk-or-browser-test-not-real';
 const names=['Danh Tuyên','Trịnh Mạnh','Văn Quyền','Nam Khắc','Quy Bong','Huy Hoàng','Quyết Nguyễn','Khắc Trọng','Hưng','Quốc An','Duy Hùng','Doan Ha','Việt Dũng','Văn Thanh','Khách (Mạnh Tiến)','Khách (Mạnh Khắc)'];
 const players=names.map((n,i)=>({n,pos:C.SLOTS[i%7],pos2:[],guest:i>=14,...Object.fromEntries(C.KEYS.map(k=>[k,6]))}));
@@ -23,7 +24,7 @@ const fakeProvider=async(url,init)=>{
   const output={title:'Bản phân tích kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phân tích '+(i+1),body:i===0?'<img src=x onerror="window.AI_XSS=true"> — văn bản AI phải được escape.':'Đội hình được đối chiếu chỉ số và kết quả gần đây; đây là dữ liệu kiểm thử, không phải nhận định thật.'}))};
   if(task==='lineup'){
     const member=data.players.filter(p=>!p.guest).map(p=>p.index),guests=data.players.filter(p=>p.guest).map(p=>p.index),rest=[...member.slice(14),...guests];
-    output.teams={A:{starters:member.slice(0,7),bench:rest.filter((_,i)=>i%2===0)},B:{starters:member.slice(7,14),bench:rest.filter((_,i)=>i%2===1)}};
+    output.assignments=assignmentsFor({A:{starters:member.slice(0,7),bench:rest.filter((_,i)=>i%2===0)},B:{starters:member.slice(7,14),bench:rest.filter((_,i)=>i%2===1)}});
   }
   if(task==='player-form'){output.verdict='keep';output.suggestions=[{attribute:'DD',direction:'keep',reason:'Cần quan sát trực tiếp trước khi đổi điểm.'}];}
   return new Response(JSON.stringify({model:'fake/qa',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output)}}],usage:{prompt_tokens:100,completion_tokens:200}}));

@@ -12,7 +12,7 @@ const AI_KEYS=(()=>{
     clear(){try{localStorage.removeItem(storageName);}catch{throw new Error('Chưa xoá được key đã lưu. Hãy xoá dữ liệu trang trong cài đặt trình duyệt.');}key='';remembered=false;}
   };
 })();
-const AI_STATE={status:null,busy:false,output:null,request:null,draftReview:null,reviewingDraft:false};
+const AI_STATE={status:null,busy:false,output:null,request:null,draftReview:null,reviewingDraft:false,lastFailure:null};
 function aiSecurePage(){return location.protocol==='https:'||['localhost','127.0.0.1','[::1]'].includes(location.hostname);}
 function aiIsPreview(){return window.GP_APP_CONFIG?.dataMode==='preview';}
 function aiClientStatus(){return {mode:'direct',keyMode:'device',model:GPAIService.DEFAULTS.model,tasks:GPAIService.TASKS};}
