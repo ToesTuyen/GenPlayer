@@ -51,6 +51,8 @@ Server chỉ phục vụ HTML đã build, manifest, service worker và `assets/`
 
 Cấu trúc thêm: `server/index.cjs` (HTTP/session/static), `server/ai.cjs` (task/prompt/schema/OpenRouter), `src/ai_context.js` (context/điểm/phong độ thuần), `src/ai_client.js` + `src/ai.css` (UI). Test trình duyệt tùy chọn: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser_web_app.cjs` (Chrome đã cài); dùng provider giả, không tốn phí, chặn Firebase.
 
+Theme web app nằm ở `src/theme.css`, nhúng cuối cùng khi build. Mặc định sáng (trắng ngà/xanh sage), tối dùng xám than; giữ lựa chọn đã lưu bằng nút sáng/tối. Lớp theme dùng chung cho dashboard, màn con, AI và popup; không đổi màu áo hai đội, logo/ảnh cầu thủ hay ngọn lửa phong độ. Kiểm tra hình ảnh/độ tương phản: `PLAYWRIGHT_MODULE=/path/to/playwright node tests/theme_browser.cjs`.
+
 🌐 **Xem trực tiếp:** https://toestuyen.github.io/GenPlayer/ *(tự cập nhật mỗi khi push, F5 để xem)*
 
 ## Cách hoạt động

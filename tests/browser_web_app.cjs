@@ -36,6 +36,7 @@ async function main(){
       await ctx.route('**/firestore.googleapis.com/**',route=>{writes.push(route.request().method());return route.abort();});
       page.on('request',r=>{if(r.url().includes('/api/'))requests.push({url:r.url(),body:r.postData()||''});});
       await ctx.addInitScript(({players,history})=>{
+        localStorage.setItem('gp_theme','dark');
         localStorage.setItem('gp_web_preview_players',JSON.stringify(players));localStorage.setItem('gp_web_preview_history',JSON.stringify(history));
         localStorage.setItem('gp_web_preview_finance',JSON.stringify([{amount:99999,note:'PRIVATE_FINANCE_CANARY'}]));
       },{players,history});

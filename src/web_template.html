@@ -4,9 +4,9 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0a0e1a">
+<meta name="theme-color" content="#f4f6f5">
 <script>window.GP_APP_CONFIG=null;</script>
-<script>try{if(localStorage.getItem("gp_theme")==="light")document.documentElement.dataset.theme="light";}catch(e){}</script>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("gp_theme")==="dark"?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}</script>
 <style>
 :root{
   --bg:#090b1e; --bg2:#060713; --surface:#151b3b; --surface2:#202653; --surface3:#2c3470;
@@ -862,6 +862,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme="light"] .seg:hover,:root[data-theme="light"] .seg.on,:root[data-theme="light"] .rank-row:hover,:root[data-theme="light"] .mc:hover,:root[data-theme="light"] .pl-item:hover{border-color:rgba(39,59,113,.28)}
 /*__UI_ICON_CSS__*/
 /*__AI_CSS__*/
+/*__THEME_CSS__*/
 </style></head><body>
 
 <header class="appbar">
@@ -877,7 +878,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
-  <div class="page-banner"><img src="assets/banner.jpg" alt="FC Haha" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
+  <section class="club-intro" aria-label="FC Haha">
+    <div><p class="club-kicker">FC Haha</p><h1>Đội bóng của chúng ta</h1><p class="club-description">Đội hình, phong độ và lịch thi đấu — gọn trong một chỗ.</p></div>
+    <img class="ab-logo club-crest" src="assets/logo.png" alt="Logo FC Haha">
+  </section>
   <div class="dash-top">
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
@@ -1796,11 +1800,11 @@ function currentTheme(){return document.documentElement.dataset.theme==="light"?
 function applyThemeUI(){
   const light=currentTheme()==="light", b=$("themeBtn"), meta=document.querySelector('meta[name="theme-color"]');
   if(b){b.textContent=light?"☾":"☀︎";b.title=light?"Chuyển sang giao diện tối":"Chuyển sang giao diện sáng";b.setAttribute("aria-label",b.title);}
-  if(meta)meta.content=light?"#f5f7ff":"#0a0e1a";
+  if(meta)meta.content=light?"#f4f6f5":"#151d21";
 }
 function toggleTheme(){
   const next=currentTheme()==="light"?"dark":"light";
-  if(next==="light")document.documentElement.dataset.theme="light";else delete document.documentElement.dataset.theme;
+  document.documentElement.dataset.theme=next;
   try{localStorage.setItem(THEME_KEY,next);}catch(e){}
   applyThemeUI(); toast(next==="light"?"Đã bật giao diện sáng ☀︎":"Đã bật giao diện tối ☾");
 }
@@ -2623,7 +2627,7 @@ const ATTR_HINT={
   TD:"Nhãn quan, đọc trận chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
   OD:"Ổn định phong độ · 1–2 thất thường · 3–4 phập phù · 5–6 ổn · 7–8 đều · 9–10 rất đều mọi trận",
 };
-function attrColor(v){v=+v||0;return v>=8?"#22e07a":(v>=6?"#e8ecf6":(v>=4?"#f5c451":"#ff6b6b"));}
+function attrColor(v){v=+v||0;return v>=8?"var(--success)":(v>=6?"var(--text)":(v>=4?"var(--amber)":"var(--red)"));}
 function pmFind(){return getPlayers().find(x=>x.n===pmName);}
 function openPlayer(i){const p=pcards[i];if(!p)return;pmName=p.n;renderPlayerProfile();$("playerModal").classList.add("on");}
 function closePlayer(){$("playerModal").classList.remove("on");}
@@ -3171,7 +3175,7 @@ function renderScorer(boxId){
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
-function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}
+function evRate(v){return v>=8?["Xuất sắc","var(--success)"]:v>=6.5?["Tốt","var(--brand)"]:v>=5?["Khá","var(--faint)"]:v>=3.5?["Trung bình","var(--amber)"]:["Yếu","var(--red)"];}
 // Xếp loại 1 câu theo VỊ TRÍ ĐĂNG KÝ + trình độ (dùng cho hồ sơ, bảng xếp hạng, vua phá lưới) — 1 nguồn duy nhất
 // Vai trò chính BÁM vị trí (posCodeOf), không còn chọn theo năng lực cao nhất -> mô tả không mâu thuẫn vị trí.
 function evalTitle(p){
