@@ -59,11 +59,12 @@ test('saving clears the masked input; storage deletion in another tab revokes th
 test('key dialog prompts on entry only without a key; skip, Escape and save clear input without calling AI',()=>{
   const x=deviceSandbox();x.init();x.enter();const dialog=x.elements.get('aiKeyDialog'),input=x.elements.get('aiKey');
   assert.equal(dialog.open,true);input.value='unsaved-value';x.skip();assert.equal(dialog.open,false);assert.equal(input.value,'');assert.equal(x.keys.has(),false);assert.equal(x.store.size,0);
-  assert.match(x.elements.get('aiMessage').textContent,/thuật toán/);
+  assert.equal(x.elements.get('aiMessage').hidden,true,'Skipping does not add a redundant status banner');
   x.enter();assert.equal(dialog.open,true,'A later entry can prompt again');input.value='another-unsaved-value';let prevented=false;
   dialog.listeners.cancel({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(dialog.open,false);assert.equal(input.value,'');
   x.enter();input.value='bad';x.save({preventDefault(){}});assert.equal(dialog.open,true,'Invalid input cannot close the dialog');assert.match(x.elements.get('aiKeyMessage').textContent,/định dạng/);
   input.value=secret;x.save({preventDefault(){}});assert.equal(dialog.open,false);assert.equal(x.keys.has(),true);assert.equal(input.value,'');
+  assert.equal(x.elements.get('aiMessage').hidden,true,'Saved-key status is already visible on the settings button');
   x.enter();assert.equal(dialog.open,false,'A saved or ephemeral key suppresses the automatic popup');
   x.open();assert.equal(dialog.open,true,'The key can still be managed manually');x.skip();assert.equal(x.keys.get(),secret,'Closing management does not remove a saved key');
 });
@@ -245,6 +246,19 @@ test('criteria and lineup Note are visible outside the optional AI panel in ever
     assert.equal((rules.match(/<li>/g)||[]).length,12);
     assert.ok(html.includes('id="aiAnalysisInstruction"'));assert.ok(html.includes('id="createNoteStatus"'));
   }
+});
+test('compact UI removes repeated explanations but keeps criteria, key safety and cost notice',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8');
+  assert.ok(!html.includes('class="create-priorities"'));
+  assert.ok(!html.includes('Các công cụ của đội bóng'));
+  assert.ok(!html.includes('Thông tin kết nối'));
+  assert.match(html,/<p id="createNoteHelp"[^>]*>Chỉ áp dụng khi tạo bằng AI\.<\/p>/);
+  const privacy=html.match(/<p id="aiKeyHelp"[^>]*>(.*?)<\/p>/)[1];
+  for(const term of ['trình duyệt','Git','Firebase','backup','OpenRouter','HTTPS','script độc hại'])assert.ok(privacy.includes(term));
+  const x=deviceSandbox();x.init();
+  assert.match(x.elements.get('aiServerStatus').textContent,/openai\/gpt-4\.1-mini.*Phí tính theo key/);
+  x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};x.init();
+  assert.match(x.elements.get('aiServerStatus').textContent,/HTTP có nguy cơ bị can thiệp/);
 });
 test('current Note is the only source of per-match lineup instructions',()=>{
   const c=context();c.instruction='Tuyên bắt gôn theo Note hiện tại.';c.history[0].instruction='OLD_MATCH_INSTRUCTION_CANARY';

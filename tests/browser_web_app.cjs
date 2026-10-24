@@ -201,6 +201,7 @@ async function main(){
       assert.equal(await page.evaluate(()=>AI_STATE.request.context.instruction),'Phân tích chuỗi kết quả.');
       assert.equal(await page.locator('#aiOutputText section').count(),6);await page.locator('#aiSaveReview').click();assert.match(await page.locator('#aiMessage').innerText(),/không ghi nhận định lên cloud/);
       await page.locator('#aiTask').selectOption('player-form');await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='player-form'&&!AI_STATE.busy);
+      assert.equal(await page.locator('#aiMessage').isVisible(),false,'Visible analysis replaces routine success explanations');
       assert.equal(await page.locator('#aiPlayerField').isVisible(),true);assert.equal(await page.locator('#aiMatchField').isVisible(),false);
       await page.locator('#aiTask').selectOption('player-description');await page.locator('#aiRun').click();await page.waitForFunction(()=>AI_STATE.request?.task==='player-description'&&!AI_STATE.busy);
       await page.locator('#themeBtn').click();await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-light.png'),fullPage:true,animations:'disabled'});
@@ -218,8 +219,13 @@ async function main(){
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'done');
       assert.match(await page.locator('[data-step="note"]').innerText(),/không có yêu cầu riêng/);
       assert.equal(await page.evaluate(()=>CREATE_STATE.draftNote),'');
-      assert.match(await page.locator('#createNoteStatus').innerText(),/không có yêu cầu riêng/);
+      assert.equal(await page.locator('#createNoteStatus').isVisible(),false,'Empty Note does not add a redundant explanation box');
+      assert.equal(await page.locator('#status').textContent(),'','Draft status is not repeated above the pitch');
       await page.locator('#createProcessClose').click();
+      await page.locator('#aiInstruction').fill('Yêu cầu mới sau khi tạo đội');
+      assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã thay đổi/);
+      await page.locator('#aiInstruction').fill('');
+      assert.equal(await page.locator('#createNoteStatus').isVisible(),false);
       assert.ok(providerInputs.filter(x=>x.task==='lineup').every(x=>x.instruction===lineupNote),'Provider receives the exact current lineup Note');
       assert.ok(providerInputs.filter(x=>x.task!=='lineup').every(x=>x.instruction!==lineupNote),'Lineup Note cannot leak into other AI tasks');
       assert.ok(requests.every(r=>r.url==='https://openrouter.ai/api/v1/chat/completions'&&!r.body.includes(secret)&&!r.body.includes('PRIVATE_FINANCE_CANARY')),'Only OpenRouter receives AI requests; no app backend');assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);

@@ -1,7 +1,6 @@
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
 .create-toolbar{margin:0 0 8px;gap:6px}
 .create-setup{border-block:1px solid var(--line);margin:10px 0;padding:10px 0}
-.create-priorities{font-size:12px;color:var(--brand);line-height:1.6;margin:0 0 7px}
 .create-criteria summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;cursor:pointer;font-size:13px;font-weight:600}
 .create-criteria summary::before{content:'›';color:var(--muted);font-size:20px}
 .create-criteria[open] summary::before{content:'⌄'}

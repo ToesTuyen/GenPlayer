@@ -44,6 +44,7 @@ async function main(){
       assert.equal(await page.locator('#reviewDraft').isDisabled(),true);assert.equal(await page.locator('#go').isDisabled(),true);assert.match(await page.locator('#reviewDraft').innerText(),/Đang đánh giá/);
       await page.evaluate(()=>aiReviewDraft());release();await page.waitForFunction(()=>!AI_STATE.busy);
       assert.equal(calls,beforeCalls+1,'Double invocation cannot incur another model call');assert.equal(await page.locator('#aiOutputText section').count(),6);assert.equal(await page.locator('#aiOutputText img').count(),0);assert.equal(await page.evaluate(()=>window.BAD_AI),undefined);
+      assert.equal(await page.locator('#aiMessage').isVisible(),false,'Completed review does not add a redundant explanatory banner');
       assert.equal(await page.locator('#aiSaveReview').isVisible(),false,'Draft assessment must never overwrite a history match');
       assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original,'Assessing or changing pending attendance cannot change the displayed draft');assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),originalHistory);
       const pending=await page.evaluate(()=>{canEdit=true;openMatchModal('create');const data={review:mmDraft.review,subset:mmDraft.subset.length,meta:mmDraft.aiReview};closeMatchModal();return data;});

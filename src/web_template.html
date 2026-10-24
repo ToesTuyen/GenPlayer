@@ -883,7 +883,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
       <div class="ap-title">Truy cập nhanh</div>
-      <div class="ap-sub">Các công cụ của đội bóng</div>
       <div class="ap-grid">
         <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="lineup"></span><span>Tạo đội</span></button>
         <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="squad"></span><span>Cầu thủ</span></button>
@@ -943,16 +942,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
             <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
             <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
           </div>
-          <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú cho phần phân tích (không bắt buộc)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Ghi chú cho nhận định hoặc đánh giá; tách biệt với Note tạo đội."></textarea></label>
+          <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú phân tích (tuỳ chọn)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Điểm cần tập trung đánh giá…"></textarea></label>
           <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
         </div>
       </div>
       <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
     </section>
     <div class="create-setup">
-      <p class="create-priorities">Cân riêng công–thủ · Người mạnh đá chính · Đúng vị trí · Hạn chế lặp đội</p>
       <details id="createCriteria" class="create-criteria">
-        <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">Xem đủ 12 tiêu chí</span></summary>
+        <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">12 tiêu chí</span></summary>
         <ol class="create-rule-list">
           <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
           <li><b>Người mạnh đá chính.</b> Xét năng lực ở vị trí được xếp, không chỉ điểm tổng; ưu tiên thành viên.</li>
@@ -967,12 +965,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
           <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
           <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
         </ol>
-        <p class="criteria-scope">Số người, không trùng/thiếu và phân bổ khách/dự bị được kiểm tra bắt buộc. Các ưu tiên còn lại cần xem so kè/cảnh báo. Thuật toán dự phòng chưa tối ưu lịch sử đồng đội, phong độ hoặc hiểu Note tự do.</p>
+        <p class="criteria-scope">Thuật toán dự phòng chưa tối ưu lịch sử, phong độ hoặc áp dụng Note. Xem so kè và cảnh báo trước khi lưu.</p>
       </details>
-      <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng cho lần tạo này
-        <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh; Trịnh Mạnh ưu tiên dự bị…" oninput="createNoteChanged()"></textarea>
+      <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
+        <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
       </label>
-      <p id="createNoteHelp" class="create-note-help">Để trống = không có yêu cầu riêng. AI nhận đúng Note này; nếu chuyển sang thuật toán, Note chưa được áp dụng và sẽ có cảnh báo. Note không tự lưu vào trận hoặc nhận định.</p>
+      <p id="createNoteHelp" class="create-note-help">Chỉ áp dụng khi tạo bằng AI.</p>
     </div>
     <div class="roster-selection">
       <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
@@ -991,20 +989,20 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </div>
 <dialog id="aiKeyDialog" class="ai-key-dialog" aria-labelledby="aiKeyTitle" aria-describedby="aiKeyIntro">
   <div class="ai-key-head"><h2 id="aiKeyTitle">Kết nối OpenRouter</h2><button class="btn alt sm" type="button" onclick="aiSkipKeyDialog()" aria-label="Đóng cửa sổ nhập key">×</button></div>
-  <p id="aiKeyIntro" class="ai-footer">Nhập key riêng để tạo đội bằng AI, hoặc bỏ qua để dùng thuật toán. Lưu key không gọi AI và không phát sinh phí.</p>
-  <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
+  <p id="aiKeyIntro" class="ai-footer">Dùng key riêng cho AI. Bỏ qua để dùng thuật toán.</p>
+  <div id="aiServerStatus" class="ai-status" role="status"></div>
   <form id="aiKeyForm" onsubmit="aiSaveKey(event)">
-    <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" autofocus></label><button class="btn sm" id="aiSaveKeyBtn" type="submit">Lưu key</button></div>
+    <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" autofocus></label><button class="btn sm" id="aiSaveKeyBtn" type="submit">Lưu key</button></div>
     <label class="ai-remember"><input type="checkbox" id="aiRememberKey" checked>Lưu trên trình duyệt này</label>
   </form>
   <div id="aiKeyMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
-  <details class="ai-key-privacy"><summary>Lưu key &amp; bảo mật</summary><p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Khi gọi AI, trình duyệt gửi key trực tiếp tới OpenRouter qua HTTPS, không qua backend của app. Thiết bị khác cần nhập riêng. Nên mở app bằng HTTPS và tránh máy dùng chung: script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p></details>
-  <div class="ai-actions"><button class="btn alt sm" type="button" onclick="aiRefresh()">Thông tin kết nối</button><button class="btn alt sm" type="button" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
+  <details class="ai-key-privacy"><summary>Bảo mật key</summary><p id="aiKeyHelp" class="ai-footer">Key lưu riêng trong trình duyệt này, không vào Git, Firebase hay backup; chỉ gửi trực tiếp tới OpenRouter qua HTTPS khi gọi AI. Lưu key không gọi AI hoặc tính phí. Dùng trang HTTPS, tránh máy dùng chung: người truy cập trình duyệt hoặc script độc hại có thể đọc key.</p></details>
+  <div class="ai-actions"><button class="btn alt sm" type="button" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
   <div class="ai-key-dismiss"><button class="btn alt" type="button" id="aiKeySkip" onclick="aiSkipKeyDialog()">Bỏ qua, dùng thuật toán</button></div>
 </dialog>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
-  <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
+  <p id="createProcessNote">✓ Đã kiểm tra · ! Cần xem lại</p>
   <progress id="createProcessProgress" max="11" value="0" aria-label="Tiến trình kiểm tra"></progress>
   <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
   <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
@@ -1047,7 +1045,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TINH TRANG CAU THU ====== -->
 <div id="screen-player-status" class="screen">
   <div class="pstat-head">
-    <div><div class="pstat-title"><span data-ui-icon="player-form"></span> Tình trạng cầu thủ</div><div class="pstat-sub">AI Form đọc tối đa 5 trận đã chốt gần nhất, thắng–hòa–thua và bàn thắng đã ghi để đề xuất tăng, giữ hoặc đánh giá giảm điểm. Điểm không tự thay đổi.</div></div>
+    <div><div class="pstat-title"><span data-ui-icon="player-form"></span> Tình trạng cầu thủ</div><div class="pstat-sub">5 trận đã chốt gần nhất · Điểm không tự thay đổi.</div></div>
     <div class="pstat-source">🤖 AI Form · lịch sử đã chốt</div>
   </div>
   <div id="pstat-summary" class="pstat-summary"></div>
