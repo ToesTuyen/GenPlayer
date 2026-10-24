@@ -44,6 +44,8 @@
 .process-steps [data-state="warn"] .process-step-icon{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
 .process-steps [data-state="error"] .process-step-icon{background:var(--loss-soft);color:var(--red);border-color:var(--red)}
 .process-steps [data-state="active"] .process-step-icon{border:2px solid var(--line);border-top-color:var(--brand);animation:process-spin 1s linear infinite}
+.process-steps [data-state="active"]{background:var(--brand-soft);border-radius:8px}
+.process-steps [data-state="active"] .process-step-title{color:var(--brand)}
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}

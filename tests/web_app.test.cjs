@@ -166,3 +166,17 @@ test('current Note is the only source of per-match lineup instructions',()=>{
   c.instruction='';const empty=JSON.parse(prepare({task:'lineup',context:c}).messages[1].content);
   assert.equal(empty.instruction,'');
 });
+test('progress holds fast steps for reading, but never adds a full delay after slow work',async()=>{
+  let now=1750;const delays=[],events=[],controls=new Map();
+  const sandbox={performance:{now:()=>now},setTimeout:(fn,ms)=>{delays.push(ms);now+=ms;fn();},events,$:id=>{
+    if(!controls.has(id))controls.set(id,{addEventListener(){}});return controls.get(id);
+  }};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/create_flow.js'),'utf8')+'\ncreateStep=(...args)=>events.push(args);globalThis.qa={state:CREATE_STATE,complete:createCompleteStep,minimum:CREATE_STEP_READ_MS};',sandbox);
+  const {state,complete,minimum}=sandbox.qa;assert.equal(minimum,1000);
+  state.startedAt.set('roster',1000);const first=complete('roster','done','Checked');
+  assert.equal(events.length,0,'Completion cannot be shown before its reading interval');
+  await first;assert.deepEqual(delays,[250]);assert.equal(events[0][1],'done');
+  now=5000;state.startedAt.set('engine',3000);await complete('engine','warn','Unavailable');
+  assert.deepEqual(delays,[250],'Two seconds of real work already exceed the minimum; no extra wait');
+  assert.equal(events[1][1],'warn','Pacing must preserve warning semantics');
+});

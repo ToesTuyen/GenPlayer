@@ -86,6 +86,13 @@ async function main(){
       await page.getByRole('button',{name:'Đóng AI',exact:true}).click();await page.locator('#aiCreateToggle').click();
       assert.equal(await page.locator('#aiInstruction').inputValue(),lineupNote);
       assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),false);
+      await page.evaluate(()=>{
+        window.QA_STEP_TIMES=[];
+        window.QA_STEP_OBSERVER=new MutationObserver(records=>{
+          for(const m of records)if(m.type==='attributes'&&m.target.matches('li[data-step]'))window.QA_STEP_TIMES.push({id:m.target.dataset.step,state:m.target.dataset.state,at:performance.now()});
+        });
+        window.QA_STEP_OBSERVER.observe(document.querySelector('#createProcessSteps'),{attributes:true,attributeFilter:['data-state'],subtree:true});
+      });
       let release;lineupGate=new Promise(r=>release=r);const beforeProvider=providerCalls;
       await page.locator('#go').click();
       await page.waitForFunction(()=>document.querySelector('[data-step="search"]').dataset.state==='active');
@@ -106,7 +113,21 @@ async function main(){
       assert.equal(await page.locator('[data-step="rotation"]').getAttribute('data-state'),'warn','Repeated positions must not receive a green check');
       assert.equal(await page.evaluate(()=>window.AI_XSS),undefined);assert.equal(await page.locator('#aiOutputText img').count(),0);
       assert.equal(await page.evaluate(()=>getHistory().length),5,'AI generation must not create a match');
+      const durations=await page.evaluate(()=>{
+        window.QA_STEP_OBSERVER.disconnect();return CREATE_STEPS.map(([id])=>{
+          const events=window.QA_STEP_TIMES.filter(e=>e.id===id),start=events.find(e=>e.state==='active'),end=events.find(e=>['done','warn'].includes(e.state));
+          return {id,ms:start&&end?end.at-start.at:0};
+        });
+      });assert.ok(durations.every(s=>s.ms>=950),'Every completed row stays visible for about one second: '+JSON.stringify(durations));
+      assert.equal(await page.locator('#createProcess').isVisible(),true,'Completion leaves the checklist open');
+      assert.equal(await page.locator('#createProcessSteps').evaluate(el=>el.scrollTop),0,'Completed checklist returns to the beginning for reading');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-lineup.png'),fullPage:true});
+      await page.locator('#createProcessClose').click();
+      const draftBeforeReview=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeReview=providerCalls;
+      await page.locator('#reviewProcess').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
+      assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
+      assert.equal(providerCalls,callsBeforeReview,'Reopening the checklist cannot call AI');
+      assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),draftBeforeReview,'Reopening checklist cannot modify a draft');
       await page.locator('#createProcessClose').click();
       assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã gửi AI/);
       assert.ok((await page.locator('#createNoteStatus').innerText()).includes(lineupNote));

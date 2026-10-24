@@ -931,6 +931,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
+      <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
     <div class="create-setup">
@@ -2457,7 +2458,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
-  CREATE_STATE.draftNote=null;$("createNoteStatus").hidden=true;
+  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");

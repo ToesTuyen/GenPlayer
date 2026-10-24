@@ -992,6 +992,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .process-steps [data-state="warn"] .process-step-icon{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
 .process-steps [data-state="error"] .process-step-icon{background:var(--loss-soft);color:var(--red);border-color:var(--red)}
 .process-steps [data-state="active"] .process-step-icon{border:2px solid var(--line);border-top-color:var(--brand);animation:process-spin 1s linear infinite}
+.process-steps [data-state="active"]{background:var(--brand-soft);border-radius:8px}
+.process-steps [data-state="active"] .process-step-title{color:var(--brand)}
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
@@ -1256,6 +1258,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="aiCreateToggle" onclick="openAITask('lineup')" aria-controls="createAI" aria-expanded="false"><span data-ui-icon="match-analysis"></span>Tuỳ chọn AI</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
+      <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
     <div class="create-setup">
@@ -3599,7 +3602,7 @@ window.addEventListener("resize",fitMatch);
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
-  CREATE_STATE.draftNote=null;$("createNoteStatus").hidden=true;
+  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");
@@ -5124,7 +5127,8 @@ const CREATE_STEPS=[
   ['note','Yêu cầu riêng từ Note'],
   ['draft','Hiển thị đội hình & bảng so kè']
 ];
-const CREATE_STATE={busy:false,steps:new Map(),success:false,draftNote:null,draftEngine:null};
+const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinished work as complete.
+const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null};
 function createNoteChanged(){
   const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;
   if(note===null){box.hidden=true;return;}
@@ -5138,6 +5142,7 @@ function createNoteChanged(){
 }
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 function createStep(id,state,detail=''){
+  if(state==='active'&&CREATE_STATE.steps.get(id)!=='active')CREATE_STATE.startedAt.set(id,performance.now());
   CREATE_STATE.steps.set(id,state);
   const row=$('createProcessSteps').querySelector('[data-step="'+id+'"]');
   row.dataset.state=state;row.querySelector('.process-step-detail').textContent=detail;
@@ -5148,12 +5153,21 @@ function createStep(id,state,detail=''){
   const finished=[...CREATE_STATE.steps.values()].filter(s=>['done','warn'].includes(s)).length;
   $('createProcessProgress').value=finished;$('createProcessCount').textContent=finished+'/'+CREATE_STEPS.length+' bước đã xử lý';
 }
+async function createCompleteStep(id,state,detail){
+  const started=CREATE_STATE.startedAt.get(id),remaining=started===undefined?0:Math.max(0,CREATE_STEP_READ_MS-(performance.now()-started));
+  // The check has already run. Keep its current row readable before showing its result.
+  // A slow API/solver naturally consumes this interval; it does not get an extra delay.
+  if(remaining>0)await new Promise(resolve=>setTimeout(resolve,remaining));
+  createStep(id,state,detail);
+}
 function createBegin(){
-  CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.steps.clear();
+  CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
+  $('reviewProcess').style.display='none';
   $('aiTask').value='lineup';aiTaskChanged();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
   $('createProcessTitle').textContent='Đang tạo đội';$('createProcessEngine').textContent='Chuẩn bị';
+  $('createProcessNote').textContent='Mỗi bước hiển thị ít nhất 1 giây để dễ theo dõi; chỉ tích xanh sau khi đã kiểm tra. Cảnh báo được giữ riêng.';
   $('createProcessSummary').hidden=true;$('createProcessClose').disabled=true;$('createProcessClose').textContent='Đang xử lý…';
   $('createProcessSteps').innerHTML=CREATE_STEPS.map(([id,title])=>'<li data-step="'+id+'" data-state="pending"><span class="process-step-icon" role="img" aria-label="Chờ xử lý"></span><div><span class="process-step-title">'+title+'</span><span class="process-step-detail"></span></div></li>').join('');
   CREATE_STEPS.forEach(([id])=>CREATE_STATE.steps.set(id,'pending'));
@@ -5162,12 +5176,19 @@ function createBegin(){
   $('createProcess').showModal();
 }
 function createFinish(success,message){
-  CREATE_STATE.busy=false;CREATE_STATE.success=success;$('go').disabled=false;
+  CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
+  $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
+  $('createProcessNote').textContent='Bạn có thể cuộn đọc toàn bộ checklist. Màn hình không tự đóng; xem lại bất cứ lúc nào bằng nút Xem tiêu chí.';
   $('createProcessSummary').textContent=message;$('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
+  $('createProcessSteps').scrollTop=0;
+}
+function createReviewProcess(){
+  if(CREATE_STATE.busy||!CREATE_STATE.hasReport)return;
+  $('createProcess').showModal();$('createProcessSteps').scrollTop=0;
 }
 $('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
 $('createProcessClose').onclick=()=>{
@@ -5211,18 +5232,18 @@ async function createTeams(){
     createStep('roster','active','Đọc danh sách đang chọn…');await createYield();
     const selected=selectedIdx();
     if(selected.length<14||selected.length>24)throw new Error('Cần chọn từ 14 đến 24 người (7 vs 7).');
-    createStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
+    await createCompleteStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
     createStep('ratings','active','Kiểm tra điểm và vị trí trước khi chia…');await createYield();
     context=GPAIContext.normalize(aiContextSnapshot('lineup'));
     subset=context.rosterNames.map(n=>context.players.find(p=>p.n===n));
     // Lineup creation never needs an unrelated match/player selected for another AI task.
     context.match=null;context.playerName='';
     const noPosition=subset.filter(p=>!p.pos).length;
-    createStep('ratings',noPosition?'warn':'done',noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.');
+    await createCompleteStep('ratings',noPosition?'warn':'done',noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.');
     createStep('history','active','Tổng hợp lịch sử bóng đá hiện có…');await createYield();
     const forms=subset.map(p=>GPAIContext.form(p.n,context.history)),done=context.history.filter(m=>m.score&&m.kickoff<=Date.now());
     const withData=forms.filter(f=>f.played>0).length;
-    createStep('history',done.length?'done':'warn',`${done.length} trận có tỉ số · ${withData}/${subset.length} người có dữ liệu kết quả. Đã tổng hợp chuỗi thắng/thua và bàn được ghi nhận; không tự đổi điểm.`);
+    await createCompleteStep('history',done.length?'done':'warn',`${done.length} trận có tỉ số · ${withData}/${subset.length} người có dữ liệu kết quả. Đã tổng hợp chuỗi thắng/thua và bàn được ghi nhận; không tự đổi điểm.`);
     createStep('engine','active','Kiểm tra khả năng dùng AI…');await createYield();
     if(!window.GP_APP_CONFIG?.backend)fallback='Bản static không có backend AI.';
     else try{
@@ -5239,8 +5260,8 @@ async function createTeams(){
         for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
         createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
       }
-      createStep('engine','done','Đã kết nối và mở quyền AI.');
-    }else createStep('engine','warn',fallback+' Tự chuyển sang thuật toán, không gọi AI trả phí.');
+      await createCompleteStep('engine','done','Đã kết nối và mở quyền AI.');
+    }else await createCompleteStep('engine','warn',fallback+' Tự chuyển sang thuật toán, không gọi AI trả phí.');
     $('createProcessEngine').textContent=engine;
     createStep('search','active',engine==='AI'?'AI đang phân tích và chia đội. Chưa có kết quả để kiểm tra tiêu chí.':'Thuật toán đang duyệt cách chia và gán vị trí trong bộ xử lý riêng…');await createYield();
     if(engine==='AI')try{
@@ -5268,21 +5289,21 @@ async function createTeams(){
         if(!results.length)throw new Error('Không tìm được phương án hợp lệ (gôn, đủ người, chia khách/dự bị). Hãy kiểm tra danh sách và vị trí.');
       }
     }
-    createStep('search','done',engine==='AI'?'Đã nhận phương án AI; đang kiểm tra độc lập.':`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
+    await createCompleteStep('search','done',engine==='AI'?'Đã nhận phương án AI; đang kiểm tra độc lập.':`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
     createStep('partition','active','Kiểm tra lại số lượng, người trùng/thiếu và khách…');await createYield();
     const r=results[idx],check=GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}});
-    createStep('partition','done',`Mỗi bên 7 đá chính; dự bị A: ${r.evA.bench.length}, B: ${r.evB.bench.length}. Không trùng/thiếu người; khách chia đều, ưu tiên dự bị khi đủ thành viên.`);
+    await createCompleteStep('partition','done',`Mỗi bên 7 đá chính; dự bị A: ${r.evA.bench.length}, B: ${r.evB.bench.length}. Không trùng/thiếu người; khách chia đều, ưu tiên dự bị khi đủ thành viên.`);
     createStep('balance','active','So điểm tuyến trên và tuyến dưới theo vị trí…');await createYield();
     const front=Math.abs(r.evA.frontFit-r.evB.frontFit),back=Math.abs(r.evA.backFit-r.evB.backFit);
-    createStep('balance',front>1.5||back>1.5?'warn':'done',`Chênh tổng điểm 3 vị trí: công ${front.toFixed(1)}, thủ ${back.toFixed(1)}. `+(front>1.5||back>1.5?'Có tuyến chênh trên 1.5 điểm; cần kiểm tra so kè.':'Trong ngưỡng kiểm tra 1.5 điểm mỗi tuyến; không lấy gôn bù công/thủ.'));
+    await createCompleteStep('balance',front>1.5||back>1.5?'warn':'done',`Chênh tổng điểm 3 vị trí: công ${front.toFixed(1)}, thủ ${back.toFixed(1)}. `+(front>1.5||back>1.5?'Có tuyến chênh trên 1.5 điểm; cần kiểm tra so kè.':'Trong ngưỡng kiểm tra 1.5 điểm mỗi tuyến; không lấy gôn bù công/thủ.'));
     createStep('positions','active','Đối chiếu vị trí và chất lượng người dự bị…');await createYield();
     const positionWarnings=check.warnings.filter(w=>!w.startsWith('Chênh '));
-    createStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không phát hiện đá trái vị trí đăng ký hoặc thành viên dự bị vượt người đá chính cùng vai trò từ 0.5 điểm.');
+    await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không phát hiện đá trái vị trí đăng ký hoặc thành viên dự bị vượt người đá chính cùng vai trò từ 0.5 điểm.');
     createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
-    const rotation=createRotation(r,subset,context.history);createStep('rotation',rotation.state,rotation.detail);
+    const rotation=createRotation(r,subset,context.history);await createCompleteStep('rotation',rotation.state,rotation.detail);
     createStep('note','active','Đối chiếu với Note của lần tạo này…');await createYield();
     const hasNote=!!context.instruction;
-    createStep('note',hasNote?'warn':'done',!hasNote?'Note để trống: không có yêu cầu riêng; không kế thừa chỉ định từ trận cũ.':engine==='AI'?'Đã gửi Note hiện tại cho AI. Cần kiểm tra thủ công yêu cầu trên đội hình; chưa thể xác nhận tự động là đã đáp ứng. Note: '+context.instruction:'CHƯA ÁP DỤNG NOTE: thuật toán dự phòng chưa hiểu yêu cầu tự do. Note cần kiểm tra: '+context.instruction);
+    await createCompleteStep('note',hasNote?'warn':'done',!hasNote?'Note để trống: không có yêu cầu riêng; không kế thừa chỉ định từ trận cũ.':engine==='AI'?'Đã gửi Note hiện tại cho AI. Cần kiểm tra thủ công yêu cầu trên đội hình; chưa thể xác nhận tự động là đã đáp ứng. Note: '+context.instruction:'CHƯA ÁP DỤNG NOTE: thuật toán dự phòng chưa hiểu yêu cầu tự do. Note cần kiểm tra: '+context.instruction);
     createStep('draft','active','Vẽ sân và bảng so kè…');await createYield();
     const notes=[...check.warnings];
     if(rotation.state==='warn')notes.push(rotation.detail);
@@ -5296,7 +5317,7 @@ async function createTeams(){
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
     $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
     $('status').textContent=`Bản nháp ${engine} · Chưa lưu trận.`+(fallback?' '+fallback+' Đã dùng thuật toán thay thế.':'')+(hasNote?(engine==='AI'?' Note đã gửi AI, cần kiểm tra trước khi lưu.':' Chưa áp dụng Note. Kiểm tra yêu cầu riêng trước khi lưu.'):'')+(notes.length?' Có lưu ý cần kiểm tra trong bảng tiến trình/so kè.':'');
-    createStep('draft','done','Đội hình và so kè đã hiển thị. Chỉ lưu khi bạn bấm Lưu làm đội tuần này.');
+    await createCompleteStep('draft','done','Đội hình và so kè đã hiển thị. Chỉ lưu khi bạn bấm Lưu làm đội tuần này.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
     createFinish(true,`Hoàn tất bằng ${engine}. ${hasNote?(engine==='AI'?'Note cần đối chiếu trước khi lưu. ':'Chưa áp dụng Note. '):''}${warnings?warnings+' mục cần lưu ý; xem chi tiết phía trên.':'Các bước kiểm tra đã hoàn tất.'} Chưa lưu hoặc sửa trận nào.`);
   }catch(e){
