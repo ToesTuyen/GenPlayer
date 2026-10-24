@@ -3,7 +3,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),os=require('node:os');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),C=require('../src/ai_context.js');
-const {assignmentsFor}=require('./lineup_fixture.cjs');
 const root=path.resolve(__dirname,'..'),secret='sk-or-static-browser-fake-key';
 const players=Array.from({length:16},(_,i)=>({n:'Static cầu thủ '+i,pos:C.SLOTS[i%7],pos2:[],guest:i>=14,...Object.fromEntries(C.KEYS.map(k=>[k,6]))}));
 const screenshots=fs.mkdtempSync(path.join(os.tmpdir(),'genplayer-direct-static-'));
@@ -36,8 +35,7 @@ async function main(){
           if(req.method()==='OPTIONS')return route.fulfill({status:204,headers:cors});
           paidCalls++;assert.equal(req.headers().authorization,'Bearer '+secret);assert.ok(!req.postData().includes(secret)&&!req.postData().includes('PRIVATE_FINANCE_CANARY'));
           const data=JSON.parse(JSON.parse(req.postData()).messages[1].content);assert.equal(data.players.length,16);assert.equal(data.instruction,'Cân công và thủ.');
-          const members=data.players.filter(p=>!p.guest).map(p=>p.index),guests=data.players.filter(p=>p.guest).map(p=>p.index);
-          const output={title:'Bản nháp static',sections:[0,1,2].map(i=>({heading:'Phân tích '+i,body:'Nội dung thử, không phải nhận định thật.'})),assignments:assignmentsFor({A:{starters:members.slice(0,7),bench:[guests[0]]},B:{starters:members.slice(7,14),bench:[guests[1]]}})};
+          const output={title:'Bản nháp static',sections:[0,1,2].map(i=>({heading:'Phân tích '+i,body:'Nội dung thử, không phải nhận định thật.'})),candidateId:data.candidates[0].id,flipTeams:false,swaps:[]};
           return route.fulfill({headers:{...cors,'Content-Type':'application/json'},body:JSON.stringify({model:'fake/static',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output)}}]})});
         }
         return route.abort();

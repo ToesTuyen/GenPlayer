@@ -118,7 +118,7 @@ function createRotation(result,subset,history){
 }
 async function createTeams(){
   if(CREATE_STATE.busy||AI_STATE.busy)return;
-  createBegin();let engine='Thuật toán',fallback='',context,subset,results,idx=0,key,output;
+  createBegin();let engine='Thuật toán',fallback='',context,subset,results,localResults,idx=0,key,output;
   try{
     createStep('roster','active','Đọc danh sách đang chọn…');await createYield();
     const selected=selectedIdx();
@@ -150,14 +150,23 @@ async function createTeams(){
       await createCompleteStep('engine','done','Dùng key cá nhân, gọi trực tiếp OpenRouter qua HTTPS.');
     }else await createCompleteStep('engine','warn',fallback+' Dùng thuật toán.');
     $('createProcessEngine').textContent=engine;
-    createStep('search','active',engine==='AI'?'AI đang chia đội…':'Thuật toán đang tìm cách chia và xếp vị trí…');await createYield();
+    createStep('search','active',engine==='AI'?'Chuẩn bị các phương án đủ người, đúng số vị trí…':'Thuật toán đang tìm cách chia và xếp vị trí…');await createYield();
+    const validCandidates=candidates=>(candidates||[]).flatMap(r=>{
+      try{return [GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}).result];}catch{return [];}
+    });
+    if(engine==='AI'){
+      localResults=validCandidates(await createSolveInWorker(subset));
+      if(!localResults.length)throw new Error('Không tìm được phương án nền hợp lệ. Chưa gọi AI; hãy kiểm tra danh sách và vị trí.');
+      context.lineupCandidates=localResults.slice(0,4).map(r=>({teams:{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}}));
+      createStep('search','active','AI đang chọn phương án và đề xuất đổi chỗ theo tiêu chí, lịch sử và Note…');await createYield();
+    }
     if(engine==='AI')try{
       const response=await aiFetch('run',{task:'lineup',context});output=response.output;
       if(!output||!Array.isArray(output.subset)||output.subset.length!==subset.length||new Set(output.subset.map(p=>p.n)).size!==subset.length||output.subset.some(p=>!context.rosterNames.includes(p.n)))throw new Error('Kết quả AI không khớp danh sách đã chọn.');
       // Recalculate from our snapshot, not any ratings/evaluation supplied by a model.
       const ordered=output.subset.map(p=>subset.find(x=>x.n===p.n));
       const checked=GPAIContext.lineup(ordered,output.teams);
-      subset=ordered;results=[checked.result];output={...output,...checked,subset};key='AI:'+Date.now();
+      subset=ordered;results=[checked.result];output={...output,...checked,warnings:[...new Set([...checked.warnings,...(output.warnings||[])])],subset};key='AI:'+Date.now();
     }catch(e){
       fallback=e.message;engine='Thuật toán';output=null;
       // Metadata only, in memory: never persist keys, prompts or raw responses.
@@ -170,18 +179,18 @@ async function createTeams(){
     if(engine==='Thuật toán'){
       key='algorithm:'+JSON.stringify({subset,instruction:context.instruction,history:context.history.slice(0,3)});
       if(cstate.key===key&&cstate.results.length){results=cstate.results;idx=(cstate.idx+1)%results.length;}
+      else if(localResults){results=localResults;}
       else{
         const candidates=await createSolveInWorker(subset);
         if(candidates?.error)throw new Error(candidates.error);
-        results=(candidates||[]).flatMap(r=>{
-          try{return [GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}).result];}catch{return [];}
-        });
+        results=validCandidates(candidates);
         if(!results.length)throw new Error('Không tìm được phương án hợp lệ (gôn, đủ người, chia khách/dự bị). Hãy kiểm tra danh sách và vị trí.');
       }
     }
-    await createCompleteStep('search','done',engine==='AI'?'Đã nhận phương án AI; đang kiểm tra độc lập.':`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
+    await createCompleteStep('search','done',engine==='AI'?`AI chọn phương án hợp lệ · áp dụng ${output.plan.applied}/${output.plan.requested} đổi chỗ.`:`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
     createStep('partition','active','Kiểm tra lại số lượng, người trùng/thiếu và khách…');await createYield();
     const r=results[idx],check=GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}});
+    if(output?.warnings)check.warnings=[...new Set([...check.warnings,...output.warnings])];
     await createCompleteStep('partition','done',`Mỗi bên 7 đá chính · Dự bị A: ${r.evA.bench.length}, B: ${r.evB.bench.length}. Đủ người, không trùng; khách chia đều.`);
     createStep('balance','active','So điểm tuyến trên và tuyến dưới theo vị trí…');await createYield();
     const front=Math.abs(r.evA.frontFit-r.evB.frontFit),back=Math.abs(r.evA.backFit-r.evB.backFit);

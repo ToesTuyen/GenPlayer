@@ -1,14 +1,14 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const C=require('../src/ai_context.js'),S=require('../src/ai_service.js'),{DEFAULTS,prepare,validateOutput,complete}=S,{getConfig,createApp}=require('../scripts/serve_web.cjs');
-const {assignmentsFor}=require('./lineup_fixture.cjs');
+const {assignmentsFor,teamsForPlayers,candidatesFor}=require('./lineup_fixture.cjs');
 const password='test-ai-password-private',secret='sk-or-test-key-not-real';
 const player=(i,guest=false)=>({n:'Cầu thủ '+i,pos:C.SLOTS[i%7],pos2:[],guest,...Object.fromEntries(C.KEYS.map(k=>[k,6]))});
 const players=Array.from({length:16},(_,i)=>player(i,i>=14));
 const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12,13],bench:[15]}};
 const match=(i=1,score={a:3,b:1})=>({id:String(i),kickoff:Date.now()-i*86400000,score,teams:{A:players.slice(0,7).map(p=>({n:p.n,slot:p.pos,bench:false})),B:players.slice(7,14).map(p=>({n:p.n,slot:p.pos,bench:false}))},goals:{[players[0].n]:2},goalsLocked:true});
-const context=()=>({players:structuredClone(players),history:Array.from({length:5},(_,i)=>match(i+1)),rosterNames:players.map(p=>p.n),match:match(6,null),playerName:players[0].n,instruction:'Cân công và thủ riêng.'});
-const output=(task='lineup')=>({title:'Nhận định kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phần '+i,body:'Văn bản dựa trên dữ liệu bóng đá.'})),...(task==='lineup'?{assignments:assignmentsFor(teams)}:{}),...(task==='player-form'?{verdict:'keep',suggestions:[]}:{})});
+const context=()=>({players:structuredClone(players),history:Array.from({length:5},(_,i)=>match(i+1)),rosterNames:players.map(p=>p.n),lineupCandidates:candidatesFor(teams),match:match(6,null),playerName:players[0].n,instruction:'Cân công và thủ riêng.'});
+const output=(task='lineup')=>({title:'Nhận định kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phần '+i,body:'Văn bản dựa trên dữ liệu bóng đá.'})),...(task==='lineup'?{candidateId:'c0',flipTeams:false,swaps:[]}:{}),...(task==='player-form'?{verdict:'keep',suggestions:[]}:{})});
 const provider=value=>async(url,init)=>new Response(JSON.stringify({model:'test/model',choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}],usage:{prompt_tokens:30,completion_tokens:50}}),{status:200,headers:{'Content-Type':'application/json'}});
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
@@ -118,56 +118,49 @@ test('lineup recomputes ratings locally, ignores model stats, covers each name o
   assert.throws(()=>C.lineup(players,{A:{starters:[14,1,2,3,4,5,6],bench:[0]},B:teams.B}),/Khách phải dự bị/);
   assert.throws(()=>C.lineup(players,{A:{...teams.A,bench:[99]},B:teams.B}),/ngoài danh sách/);
 });
-test('lineup schema requires one fixed ID per selected player, including every bench player',()=>{
+test('AI can only select validated candidates and exchange fixed IDs, with all 12 criteria intact',()=>{
   for(let n=14;n<=24;n++){
     const c=context();c.players=Array.from({length:n},(_,i)=>player(i,i>=14));c.rosterNames=c.players.map(p=>p.n).reverse();
-    const p=prepare({task:'lineup',context:c}),data=JSON.parse(p.messages[1].content),s=p.schema.properties.assignments;
+    c.lineupCandidates=candidatesFor(teamsForPlayers(c.rosterNames.map(n=>c.players.find(p=>p.n===n))));
+    const p=prepare({task:'lineup',context:c}),data=JSON.parse(p.messages[1].content),s=p.schema.properties;
     const ids=Array.from({length:n},(_,i)=>'p'+i);
-    assert.equal(p.schema.additionalProperties,false);assert.equal(p.schema.properties.teams,undefined);
-    assert.deepEqual(s.required,ids);assert.deepEqual(Object.keys(s.properties),ids);assert.equal(s.additionalProperties,false);
+    assert.equal(p.schema.additionalProperties,false);assert.equal(s.teams,undefined);assert.equal(s.assignments,undefined);
+    assert.deepEqual(s.candidateId.enum,['c0']);assert.deepEqual(s.swaps.items.properties.first.enum,ids);assert.deepEqual(s.swaps.items.properties.second.enum,ids);
+    assert.equal(s.swaps.items.additionalProperties,false);assert.equal(s.swaps.maxItems,24);
     assert.deepEqual(data.players.map(p=>p.id),ids);assert.deepEqual(data.players.map(p=>p.n),c.rosterNames);
     assert.equal(data.lineupRequirements.requiredStarterSlots.length,14);
     assert.deepEqual(data.lineupRequirements.benchPerTeam,{min:Math.floor((n-14)/2),max:Math.ceil((n-14)/2)});
-    data.players.forEach(p=>assert.equal(s.properties[p.id].enum.length,p.guest?2:16));
-    for(const p of data.players.filter(p=>p.guest))assert.deepEqual(s.properties[p.id].enum,['A_BENCH','B_BENCH']);
+    assert.equal(data.candidates.length,1);assert.equal(new Set([...data.candidates[0].teams.A.starters,...data.candidates[0].teams.A.bench,...data.candidates[0].teams.B.starters,...data.candidates[0].teams.B.bench]).size,n);
     assert.equal(data.rules.length,12,'All 12 existing criteria reach the model');
     for(const term of ['hàng công','hàng thủ','Gôn','vị trí','tốc độ','phong độ','Xoay tua','instruction'])assert.ok(data.rules.join(' ').includes(term));
-    assert.match(p.messages[0].content,/assignments/);
+    assert.match(p.messages[0].content,/đổi chỗ/);
   }
-  const c=context();c.players[13].guest=true;
-  const s=prepare({task:'lineup',context:c}).schema.properties.assignments;
-  assert.equal(s.properties.p14.enum.length,16,'Guests may start if fewer than 14 members attend');
+  const c=context();delete c.lineupCandidates;assert.throws(()=>prepare({task:'lineup',context:c}),/phương án hợp lệ trước khi gọi AI/);
+  c.lineupCandidates=candidatesFor({...teams,A:{...teams.A,starters:[0,0,2,3,4,5,6]}});assert.throws(()=>prepare({task:'lineup',context:c}),/trùng/);
 });
-test('20-player regression: fixed IDs decode to 14 starters plus 6 benches, with original criteria intact',()=>{
-  const c=context();c.players=Array.from({length:20},(_,i)=>player(i,i>=14));c.rosterNames=c.players.map(p=>p.n);
-  const p=prepare({task:'lineup',context:c}),t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};
-  const raw={...output(),assignments:assignmentsFor(t)},before=JSON.stringify(c);
+test('Nam Khắc / Trịnh Mạnh A_SW regression: swaps cannot duplicate either players or seats',()=>{
+  const c=context();c.players=Array.from({length:20},(_,i)=>player(i));c.players[1].n='Nam Khắc';c.players[8].n='Trịnh Mạnh';c.rosterNames=c.players.map(p=>p.n);
+  const t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};c.lineupCandidates=candidatesFor(t);
+  const p=prepare({task:'lineup',context:c}),raw={...output(),swaps:[{first:'p1',second:'p8'}]},before=JSON.stringify(c);
   const out=validateOutput(JSON.stringify(raw),p);
-  assert.deepEqual(out.teams,t);assert.deepEqual(out.result,C.lineup(c.players,t).result);
+  assert.equal(out.teams.A.starters[1],8);assert.equal(out.teams.B.starters[1],1);assert.equal(out.plan.applied,1);
   assert.equal(new Set([...out.result.A,...out.result.B]).size,20);assert.equal(out.result.evA.bench.length,3);assert.equal(out.result.evB.bench.length,3);
   assert.equal(JSON.stringify(c),before,'No profile, history, Note or rating mutations');
-  const missing=structuredClone(raw);delete missing.assignments.p19;
-  assert.throws(()=>validateOutput(JSON.stringify(missing),p),e=>e.kind==='lineup'&&e.message.includes(c.players[19].n));
-  const extra=structuredClone(raw);extra.assignments.p20='B_BENCH';
-  assert.throws(()=>validateOutput(JSON.stringify(extra),p),/ID ngoài danh sách/);
-  const duplicateSlot=structuredClone(raw);duplicateSlot.assignments.p1='A_GK';
-  assert.throws(()=>validateOutput(JSON.stringify(duplicateSlot),p),/Trùng vị trí A_GK/);
-  const badRole=structuredClone(raw);badRole.assignments.p1='A_ANYTHING';
-  assert.throws(()=>validateOutput(JSON.stringify(badRole),p),/mã vị trí/);
-  const missingStarter=structuredClone(raw);missingStarter.assignments.p1='A_BENCH';
-  assert.throws(()=>validateOutput(JSON.stringify(missingStarter),p),/chưa đủ 7 vị trí/);
-  const uneven=structuredClone(raw);uneven.assignments.p19='A_BENCH';
-  assert.throws(()=>validateOutput(JSON.stringify(uneven),p),/dự bị hai đội chênh/);
-  const guestStarts=structuredClone(raw);guestStarts.assignments.p0='A_BENCH';guestStarts.assignments.p14='A_GK';
-  assert.throws(()=>validateOutput(JSON.stringify(guestStarts),p),/Khách phải dự bị/);
-  const legacy={...raw,teams:{A:{...t.A,starters:[0,0,2,3,4,5,6]},B:t.B}};delete legacy.assignments;
-  assert.throws(()=>validateOutput(JSON.stringify(legacy),p),/phân vị trí theo ID/,'Legacy duplicate lists are not silently patched or accepted');
+  const cycle=validateOutput(JSON.stringify({...raw,swaps:[...raw.swaps,...raw.swaps,{first:'p1',second:'p1'}]}),p);assert.deepEqual(cycle.teams,t);
+  const legacy={...output('player-description'),assignments:assignmentsFor(t)};legacy.assignments.p8='A_SW';
+  assert.throws(()=>validateOutput(JSON.stringify(legacy),p),/phương án và danh sách đổi chỗ/,'Old position assignment contract is no longer used');
+  assert.throws(()=>validateOutput(JSON.stringify({...raw,candidateId:'c99'}),p),/phương án và danh sách/);
+  assert.throws(()=>validateOutput(JSON.stringify({...raw,swaps:[{first:'p0',second:'p99'}]}),p),/ID đổi chỗ ngoài danh sách/);
 });
-test('new AI contract preserves guest distribution, balance thresholds, position and strongest-player warnings',()=>{
+test('unsafe guest swaps are explicitly skipped, never discard the valid AI draft or relax a criterion',()=>{
   const c=context();c.players=Array.from({length:20},(_,i)=>player(i,i>=16));c.rosterNames=c.players.map(p=>p.n);
   const t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};
-  const p=prepare({task:'lineup',context:c}),a=assignmentsFor(t);a.p15='A_BENCH';a.p18='B_BENCH';
-  assert.throws(()=>validateOutput(JSON.stringify({...output(),assignments:a}),p),/chia khách đều/);
+  c.lineupCandidates=candidatesFor(t);const p=prepare({task:'lineup',context:c});
+  const out=validateOutput(JSON.stringify({...output(),swaps:[{first:'p15',second:'p18'},{first:'p0',second:'p16'}]}),p);
+  assert.deepEqual(out.teams,t);assert.equal(out.plan.skipped,2);assert.ok(out.warnings.some(w=>w.includes('chia khách đều')));assert.ok(out.warnings.some(w=>w.includes('Khách phải dự bị')));
+  assert.equal(out.plan.applied,0);assert.equal(out.subset.length,20);
+});
+test('new AI contract preserves balance thresholds, position and strongest-player warnings',()=>{
   const strong=context();for(const i of [4,5,6])for(const k of C.KEYS)strong.players[i][k]=10;
   strong.players[1].pos='TĐ';strong.players[14].guest=false;strong.players[14].pos='TV';
   for(const k of C.KEYS)strong.players[14][k]=10;strong.players[5].KT=1;
@@ -177,13 +170,26 @@ test('new AI contract preserves guest distribution, balance thresholds, position
   assert.ok(out.warnings.some(w=>w.includes('dự bị dù điểm vị trí cao hơn')));
   assert.deepEqual(out.teams,teams,'Warnings do not silently change AI choices, Note or ratings');
 });
+test('1100 generated swap plans preserve one player per seat, all selected people and guest/bench constraints',()=>{
+  let seed=918273;const random=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n;};
+  let count=0;
+  for(let n=14;n<=24;n++)for(let variant=0;variant<100;variant++){
+    const c=context(),guestStart=[n,14,10][variant%3];c.players=Array.from({length:n},(_,i)=>player(i,i>=guestStart));c.rosterNames=c.players.map(p=>p.n);
+    c.lineupCandidates=candidatesFor(teamsForPlayers(c.players));
+    const p=prepare({task:'lineup',context:c}),swaps=Array.from({length:24},()=>({first:'p'+random(n),second:'p'+random(n)}));
+    const out=validateOutput(JSON.stringify({...output(),flipTeams:variant%2===1,swaps}),p);
+    assert.equal(new Set([...out.result.A,...out.result.B]).size,n);assert.equal(out.teams.A.starters.length,7);assert.equal(out.teams.B.starters.length,7);
+    assert.doesNotThrow(()=>C.lineup(c.players,out.teams));count++;
+  }
+  assert.equal(count,1100);
+});
 test('invalid paid-style response retains safe request metadata, identifies failure stage, never retries',async()=>{
-  const p=prepare({task:'lineup',context:context()}),bad=output();delete bad.assignments.p15;
+  const p=prepare({task:'lineup',context:context()}),bad={...output(),candidateId:'c99'};
   let calls=0;
   await assert.rejects(complete(p,{...DEFAULTS,apiKey:secret},async()=>{
     calls++;return new Response(JSON.stringify({id:'gen-fixture-rejected',model:'fake/model',private:'PRIVATE_ACCOUNT_CANARY',choices:[{finish_reason:'stop',message:{content:JSON.stringify(bad)}}],usage:{prompt_tokens:100,completion_tokens:50,cost:0.003},apiKey:secret}));
   }),e=>{
-    assert.equal(e.kind,'lineup');assert.match(e.message,/Cầu thủ 15/);assert.equal(e.aiMeta.generationId,'gen-fixture-rejected');
+    assert.equal(e.kind,'lineup');assert.match(e.message,/phương án và danh sách/);assert.equal(e.aiMeta.generationId,'gen-fixture-rejected');
     assert.deepEqual(e.aiMeta.usage,{promptTokens:100,completionTokens:50,cost:0.003});assert.equal(e.aiMeta.finishReason,'stop');
     assert.ok(!JSON.stringify(e.aiMeta).includes(secret));assert.ok(!JSON.stringify(e.aiMeta).includes('PRIVATE_ACCOUNT_CANARY'));assert.ok(!JSON.stringify(e.aiMeta).includes('assignments'));
     return true;
