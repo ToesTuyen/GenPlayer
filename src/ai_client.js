@@ -17,6 +17,8 @@ function aiSecurePage(){return location.protocol==='https:'||['localhost','127.0
 function aiIsPreview(){return window.GP_APP_CONFIG?.backend&&window.GP_APP_CONFIG.dataMode!=='cloud';}
 function aiInit(){
   aiRenderStatus();
+  $('aiKeyDialog').addEventListener('cancel',event=>{event.preventDefault();aiSkipKeyDialog();});
+  $('aiKeyDialog').addEventListener('close',()=>{$('aiKey').value='';});
   window.addEventListener('storage',event=>{if(event.key===AI_KEYS.storageName||event.key===null){AI_KEYS.reload();aiRenderStatus();}});
   if(!window.GP_APP_CONFIG?.backend)return;
   const banner=$('aiModeBanner');banner.style.display='block';
@@ -40,6 +42,11 @@ async function aiFetch(route,body){
   finally{clearTimeout(timer);}
 }
 function aiMessage(text,error=false){const el=$('aiMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
+function aiKeyMessage(text,error=false){const el=$('aiKeyMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
+function aiEnterCreate(){if(!AI_KEYS.has())aiOpenKeyDialog();}
+function aiOpenKeyDialog(){aiRenderStatus();aiKeyMessage('');const dialog=$('aiKeyDialog');if(!dialog.open)dialog.showModal();}
+function aiCloseKeyDialog(){$('aiKey').value='';if($('aiKeyDialog').open)$('aiKeyDialog').close();}
+function aiSkipKeyDialog(){aiCloseKeyDialog();if(!AI_KEYS.has())aiMessage('Đã bỏ qua key. Bấm Tạo đội để dùng thuật toán; không gọi AI trả phí.');}
 function aiRenderStatus(){
   const s=AI_STATE.status,secure=aiSecurePage(),hasKey=AI_KEYS.has();
   $('aiServerStatus').textContent=(s?`OpenRouter · ${s.model} · ${s.remainingRequests} lượt backend còn lại trong giờ. `:window.GP_APP_CONFIG?.backend?'Chưa kết nối backend AI. ':'Bản static cần backend để gọi AI. ')+(!secure?'Trang đang dùng HTTP: không nhập/gửi key ở đây. Hãy mở HTTPS hoặc localhost trên Mac.':hasKey?(AI_KEYS.remembered()?'Đã lưu key trên trình duyệt này. ':'Key chỉ dùng trong phiên trang này. ')+'Chưa kiểm tra key với OpenRouter; chi phí thuộc key của bạn.':'Chưa có key cá nhân. Không dùng key chung của server.');
@@ -47,19 +54,19 @@ function aiRenderStatus(){
   $('aiKey').disabled=!secure;$('aiSaveKeyBtn').disabled=!secure;
   $('aiRemoveKey').hidden=!hasKey;
   $('aiKey').placeholder=hasKey?'Nhập key mới nếu muốn thay':'sk-or-…';
-  if(!hasKey||!secure)$('aiConnection').open=true;
+  $('aiKeySkip').textContent=hasKey?'Đóng':'Bỏ qua, dùng thuật toán';
   $('aiRun').disabled=AI_STATE.busy||!secure||!hasKey||!s?.secureTransport||s?.keyMode!=='device';
 }
 async function aiRefresh(){
   if(!window.GP_APP_CONFIG?.backend){AI_STATE.status=null;aiRenderStatus();return;}
-  try{AI_STATE.status=await aiFetch('status');aiRenderStatus();}catch(e){AI_STATE.status=null;aiRenderStatus();aiMessage(e.message,true);}
+  try{AI_STATE.status=await aiFetch('status');aiRenderStatus();}catch(e){AI_STATE.status=null;aiRenderStatus();if($('aiKeyDialog').open)aiKeyMessage(e.message,true);else aiMessage(e.message,true);}
 }
 function aiSaveKey(event){
   event.preventDefault();const input=$('aiKey');
-  try{if(!aiSecurePage())throw new Error('Chỉ nhập key trên HTTPS hoặc localhost.');AI_KEYS.save(input.value,$('aiRememberKey').checked);input.value='';aiRenderStatus();aiMessage(AI_KEYS.remembered()?'Đã lưu key riêng trên trình duyệt/địa chỉ web này. Không đồng bộ sang máy khác.':'Key chỉ dùng tới khi đóng hoặc tải lại trang.');}
-  catch(e){input.value='';aiMessage(e.message,true);}
+  try{if(!aiSecurePage())throw new Error('Chỉ nhập key trên HTTPS hoặc localhost.');AI_KEYS.save(input.value,$('aiRememberKey').checked);input.value='';aiKeyMessage('');aiRenderStatus();aiCloseKeyDialog();aiMessage(AI_KEYS.remembered()?'Đã lưu key riêng trên trình duyệt/địa chỉ web này. Không đồng bộ sang máy khác.':'Key chỉ dùng tới khi đóng hoặc tải lại trang.');}
+  catch(e){input.value='';aiKeyMessage(e.message,true);}
 }
-function aiForgetKey(){try{AI_KEYS.clear();$('aiKey').value='';aiRenderStatus();aiMessage('Đã xoá key khỏi trình duyệt này. Không thu hồi key tại OpenRouter hoặc huỷ lượt đã gửi trước đó.');}catch(e){aiMessage(e.message,true);}}
+function aiForgetKey(){try{AI_KEYS.clear();$('aiKey').value='';aiRenderStatus();const message='Đã xoá key khỏi trình duyệt này. Không thu hồi key tại OpenRouter hoặc huỷ lượt đã gửi trước đó.';aiKeyMessage(message);aiMessage(message);}catch(e){aiKeyMessage(e.message,true);}}
 function aiPopulateSources(){
   const matchSelect=$('aiMatch'),playerSelect=$('aiPlayer'),oldMatch=matchSelect.value,oldPlayer=playerSelect.value;
   matchSelect.innerHTML=getHistory().slice().sort((a,b)=>(b.kickoff||b.id)-(a.kickoff||a.id)).map(r=>`<option value="${esc(String(r.id))}">${esc(fmtKick(r.kickoff)||r.label||String(r.id))}${r.score?` · ${r.score.a}–${r.score.b}`:' · chưa có tỉ số'}</option>`).join('');

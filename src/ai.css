@@ -52,8 +52,20 @@
 @keyframes process-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
-#createAI[hidden],#createAI [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
+#createAI[hidden],#createAI [hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
 .create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}
+.ai-key-dialog{width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 32px);padding:18px;margin:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:var(--sh);overflow:auto;overscroll-behavior:contain}
+.ai-key-dialog::backdrop{background:rgba(12,25,20,.5)}
+.ai-key-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ai-key-head h2{font-size:19px;margin:0}
+.ai-key-head .btn{min-width:36px;min-height:36px;font-size:20px;padding:2px 10px}
+.ai-key-dialog .ai-footer{font-size:12px;line-height:1.65;margin:10px 0}
+.ai-key-dialog .ai-status{font-size:12px;line-height:1.65}
+.ai-key-privacy{margin:8px 0;color:var(--muted);font-size:12px}
+.ai-key-privacy summary{cursor:pointer;min-height:32px;align-content:center}
+.ai-key-dismiss{display:flex;justify-content:flex-end;margin-top:14px}
+.ai-key-settings{display:inline-flex;align-items:center;gap:10px}
+.ai-key-settings .ai-status{font-size:11px;font-weight:400}
 .ai-analysis-tools{margin-top:6px}
 .ai-analysis-tools>summary{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
 .ai-analysis-tools>summary::before{content:'›';font-size:20px;color:var(--muted)}
@@ -64,12 +76,7 @@
 #aiKeyForm .ai-actions{align-items:flex-end;flex-wrap:nowrap}
 #aiKeyForm .ai-field{flex:1}
 #aiKeyForm .btn{flex:0 0 auto}
-@media(max-width:600px){.ai-analysis-tools>summary,.ai-connection>summary,.ai-remember{min-height:44px}}
-.ai-connection summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:28px}
-.ai-connection summary::before{content:'›';font-size:20px;color:var(--muted)}
-.ai-connection[open] summary::before{content:'⌄'}
-.ai-connection summary .ai-status{margin-left:auto;font-size:11px;font-weight:400}
-.ai-connection-body{border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
+@media(max-width:600px){.ai-analysis-tools>summary,.ai-remember,.ai-key-privacy summary{min-height:44px}.ai-key-dialog{padding:14px}.ai-key-head .btn{min-width:44px;min-height:44px}}
 .ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .ai-head h1{font-size:23px;margin-bottom:7px;display:flex;gap:9px;align-items:center}
 .ai-sub{font-size:13px;color:var(--muted);line-height:1.65;max-width:620px}

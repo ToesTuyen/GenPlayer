@@ -933,19 +933,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="Kết nối OpenRouter và công cụ phân tích">
-      <details class="ai-connection" id="aiConnection">
-        <summary>Kết nối OpenRouter <span id="aiConnectionSummary" class="ai-status">Đang kiểm tra…</span></summary>
-        <div class="ai-connection-body">
-          <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
-          <form id="aiKeyForm" onsubmit="aiSaveKey(event)">
-            <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" disabled></label><button class="btn sm" id="aiSaveKeyBtn" type="submit" disabled>Lưu key</button></div>
-            <label class="ai-remember"><input type="checkbox" id="aiRememberKey" checked>Lưu trên trình duyệt này</label>
-          </form>
-          <div class="ai-actions"><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
-          <p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Mỗi lượt key được gửi qua HTTPS tới backend và OpenRouter để xác thực; backend không lưu key. Thiết bị khác cần nhập riêng. Tránh lưu trên máy dùng chung; script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p>
-        </div>
-      </details>
+    <section id="createAI" class="create-ai" aria-label="OpenRouter và công cụ phân tích">
+      <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
       <details id="aiAnalysisTools" class="ai-analysis-tools">
         <summary>Công cụ phân tích</summary>
         <div class="ai-analysis-body">
@@ -1000,6 +989,19 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div id="aiLineupPreview"></div>
   </div>
 </div>
+<dialog id="aiKeyDialog" class="ai-key-dialog" aria-labelledby="aiKeyTitle" aria-describedby="aiKeyIntro">
+  <div class="ai-key-head"><h2 id="aiKeyTitle">Kết nối OpenRouter</h2><button class="btn alt sm" type="button" onclick="aiSkipKeyDialog()" aria-label="Đóng cửa sổ nhập key">×</button></div>
+  <p id="aiKeyIntro" class="ai-footer">Nhập key riêng để tạo đội bằng AI, hoặc bỏ qua để dùng thuật toán. Lưu key không gọi AI và không phát sinh phí.</p>
+  <div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
+  <form id="aiKeyForm" onsubmit="aiSaveKey(event)">
+    <div class="ai-actions"><label class="ai-field" for="aiKey">Key OpenRouter của bạn<input id="aiKey" type="password" required maxlength="246" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="aiKeyHelp" placeholder="sk-or-…" autofocus disabled></label><button class="btn sm" id="aiSaveKeyBtn" type="submit" disabled>Lưu key</button></div>
+    <label class="ai-remember"><input type="checkbox" id="aiRememberKey" checked>Lưu trên trình duyệt này</label>
+  </form>
+  <div id="aiKeyMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+  <details class="ai-key-privacy"><summary>Lưu key &amp; bảo mật</summary><p id="aiKeyHelp" class="ai-footer">Key chỉ lưu trong trình duyệt/địa chỉ web này, không vào Git, Firebase hoặc backup. Mỗi lượt key được gửi qua HTTPS tới backend và OpenRouter để xác thực; backend không lưu key. Thiết bị khác cần nhập riêng. Tránh lưu trên máy dùng chung; script độc hại hoặc người có quyền truy cập trình duyệt vẫn có thể đọc key đã lưu.</p></details>
+  <div class="ai-actions"><button class="btn alt sm" type="button" onclick="aiRefresh()">Kiểm tra kết nối</button><button class="btn alt sm" type="button" id="aiRemoveKey" onclick="aiForgetKey()" hidden>Xoá key trên máy này</button></div>
+  <div class="ai-key-dismiss"><button class="btn alt" type="button" id="aiKeySkip" onclick="aiSkipKeyDialog()">Bỏ qua, dùng thuật toán</button></div>
+</dialog>
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
   <p id="createProcessNote">Tích xanh sau khi đã kiểm tra; mục cần xem lại sẽ có cảnh báo riêng.</p>
@@ -1867,6 +1869,7 @@ function keyLogoBackgrounds(){document.querySelectorAll(".ab-logo").forEach(keyL
 function show(id){
   if(id==="screen-ai"){openAITask("lineup");return;} // old entry now opens inline, not a separate page
   if($(id)?.hidden)id="home"; // temporarily hidden modules must not open through stale navigation
+  if(id!=="screen-create"&&$("aiKeyDialog").open)aiCloseKeyDialog();
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
@@ -1875,7 +1878,7 @@ function show(id){
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
-  if(id==="screen-create"){buildRoster();renderAIWorkspace();}
+  if(id==="screen-create"){buildRoster();renderAIWorkspace();aiEnterCreate();}
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();

@@ -27,8 +27,8 @@ function deviceSandbox(initial={},options={}){
   const store=new Map(Object.entries(initial)),elements=new Map(),events={};
   const sandbox={location:{protocol:'https:',hostname:'genplayer.example'},window:{addEventListener:(name,fn)=>events[name]=fn},AbortController,setTimeout,clearTimeout,
     localStorage:{getItem:k=>{if(options.blocked)throw new Error('blocked');return store.get(k)??null;},setItem:(k,v)=>{if(options.blocked)throw new Error('blocked');store.set(k,v);},removeItem:k=>{if(options.blocked)throw new Error('blocked');store.delete(k);}},
-    $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,style:{}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/ai_client.js'),'utf8')+'\nglobalThis.qa={keys:AI_KEYS,state:AI_STATE,fetch:aiFetch,init:aiInit,save:aiSaveKey,forget:aiForgetKey};',sandbox);
+    $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,style:{},open:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},showModal(){this.open=true;},close(){this.open=false;this.listeners.close?.();}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/ai_client.js'),'utf8')+'\nglobalThis.qa={keys:AI_KEYS,state:AI_STATE,fetch:aiFetch,init:aiInit,save:aiSaveKey,forget:aiForgetKey,enter:aiEnterCreate,open:aiOpenKeyDialog,skip:aiSkipKeyDialog};',sandbox);
   return {...sandbox.qa,sandbox,store,elements,events};
 }
 test('device key is isolated from app state; remember, ephemeral, reload, replace and clear are honest',()=>{
@@ -54,6 +54,17 @@ test('saving clears the masked input; storage deletion in another tab revokes th
   assert.equal(input.value,'');assert.ok(!JSON.stringify([...x.elements.values()]).includes(secret),'The key must not enter rendered UI text or placeholder');
   x.store.delete(x.keys.storageName);x.events.storage({key:x.keys.storageName});assert.equal(x.keys.has(),false);assert.equal(x.elements.get('aiRun').disabled,true);
   x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};input.value=secret;x.save({preventDefault(){}});assert.equal(x.keys.has(),false);assert.equal(input.value,'');
+});
+test('key dialog prompts on entry only without a key; skip, Escape and save clear input without calling AI',()=>{
+  const x=deviceSandbox();x.init();x.enter();const dialog=x.elements.get('aiKeyDialog'),input=x.elements.get('aiKey');
+  assert.equal(dialog.open,true);input.value='unsaved-value';x.skip();assert.equal(dialog.open,false);assert.equal(input.value,'');assert.equal(x.keys.has(),false);assert.equal(x.store.size,0);
+  assert.match(x.elements.get('aiMessage').textContent,/thuật toán/);
+  x.enter();assert.equal(dialog.open,true,'A later entry can prompt again');input.value='another-unsaved-value';let prevented=false;
+  dialog.listeners.cancel({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(dialog.open,false);assert.equal(input.value,'');
+  x.enter();input.value='bad';x.save({preventDefault(){}});assert.equal(dialog.open,true,'Invalid input cannot close the dialog');assert.match(x.elements.get('aiKeyMessage').textContent,/định dạng/);
+  input.value=secret;x.save({preventDefault(){}});assert.equal(dialog.open,false);assert.equal(x.keys.has(),true);assert.equal(input.value,'');
+  x.enter();assert.equal(dialog.open,false,'A saved or ephemeral key suppresses the automatic popup');
+  x.open();assert.equal(dialog.open,true,'The key can still be managed manually');x.skip();assert.equal(x.keys.get(),secret,'Closing management does not remove a saved key');
 });
 test('only run attaches device key in Authorization, never JSON; unsafe transport sends nothing',async()=>{
   const calls=[],x=deviceSandbox({}, {fetch:async(url,init)=>{calls.push({url,init});return new Response('{}',{headers:{'Content-Type':'application/json'}});}});
@@ -200,6 +211,14 @@ test('AI controls live inside Create instead of a separate navigation screen',()
     assert.ok(!html.includes('id="aiRosterInfo"'),file+' no duplicate roster explanation');
     const menu=html.slice(html.indexOf('<div class="ap-grid">'),html.indexOf('<div class="dash-main">'));
     assert.ok(!menu.includes('Trợ lý AI'),file+' no extra AI menu item');
+  }
+});
+test('key input lives in a dismissible dialog, not in the Create card, in every HTML entry',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8'),start=html.indexOf('<section id="createAI"'),end=html.indexOf('</section>',start),inline=html.slice(start,end);
+    assert.ok(!inline.includes('id="aiKeyForm"'),file+' no inline key form');assert.ok(inline.includes('id="aiKeySettings"'),file+' manual key management');
+    assert.match(html,/<dialog id="aiKeyDialog"[^>]*aria-labelledby="aiKeyTitle"/);assert.ok(html.includes('id="aiKeySkip"'));assert.ok(html.includes('Bỏ qua, dùng thuật toán'));
+    assert.ok(html.includes('renderAIWorkspace();aiEnterCreate();'),file+' prompt on entry, not on each Create click');
   }
 });
 test('Create has one action, a top select-all checkbox and an embedded worker in every entry',()=>{

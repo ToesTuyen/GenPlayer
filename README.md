@@ -16,7 +16,9 @@ cp .env.example .env
 npm start
 ```
 
-Mở **http://localhost:3000** → **Tạo đội** → **Kết nối OpenRouter** → nhập key của bạn → **Lưu key**. Mặc định key lưu bằng localStorage trên đúng trình duyệt và origin đang dùng, không đồng bộ sang thiết bị khác. Bỏ chọn **Lưu trên trình duyệt này** nếu chỉ dùng tới khi tải lại/đóng trang; **Xoá key trên máy này** xoá bản lưu ở origin hiện tại, không thu hồi key tại OpenRouter hoặc huỷ yêu cầu đã gửi. Ô nhập được che và xoá sau khi lưu, không tự điền lại key. Lưu key không gọi provider/không kiểm tra tín dụng; mỗi lượt AI vẫn có xác nhận tính phí theo key riêng.
+Mở **http://localhost:3000** → **Tạo đội**: chưa có key thì popup **Kết nối OpenRouter** tự hiện. Nhập key của bạn → **Lưu key** để đóng popup, hoặc chọn **Bỏ qua, dùng thuật toán** (Esc/nút × cũng bỏ qua). Bỏ qua không gọi AI, không tự tạo đội; bạn chọn người rồi bấm **Tạo đội** để dùng thuật toán dự phòng. Popup không hiện lại khi bấm Tạo đội trong cùng màn; chỉ nhắc lại khi vào màn lần sau mà vẫn chưa có key. Có key đã lưu hoặc key tạm trong phiên thì không tự hiện. Nút nhỏ **Key OpenRouter** cho phép mở lại để nhập/đổi/xoá key.
+
+Mặc định key lưu bằng localStorage trên đúng trình duyệt và origin đang dùng, không đồng bộ sang thiết bị khác. Bỏ chọn **Lưu trên trình duyệt này** nếu chỉ dùng tới khi tải lại/đóng trang; **Xoá key trên máy này** xoá bản lưu ở origin hiện tại, không thu hồi key tại OpenRouter hoặc huỷ yêu cầu đã gửi. Ô nhập được che và xoá sau khi lưu/đóng, không tự điền lại key. Lỗi nhập/lưu được hiển thị ngay trong popup, không đóng popup. Lưu key không gọi provider/không kiểm tra tín dụng; mỗi lượt AI vẫn có xác nhận tính phí theo key riêng.
 
 Không còn mật khẩu/phiên AI dùng chung. Tài khoản quản lý trận vẫn tách biệt. Key không nằm trong Git, HTML, dữ liệu bóng đá, Firebase hoặc backup; backend chỉ giữ key trong bộ nhớ của yêu cầu đang chuyển tiếp, không lưu lại. Trình duyệt gửi key ở header `Authorization` qua backend HTTPS tới OpenRouter, **không đưa vào prompt**. `OPENROUTER_API_KEY` và `AI_ACCESS_PASSWORD` cũ không còn được đọc làm cấu hình AI; hãy xoá chúng khỏi môi trường host cũ.
 
@@ -24,7 +26,7 @@ Lưu trên máy **không phải kho bí mật tuyệt đối**: script cùng ori
 
 Chọn người rồi bấm nút **Tạo đội** duy nhất ở đầu danh sách. Checkbox **Chọn tất cả** hỗ trợ chọn, bỏ chọn và trạng thái chọn một phần.
 
-Không có nút hay lớp mở/đóng **Tuỳ chọn AI**. **Kết nối OpenRouter** nằm trực tiếp dưới thanh nút của màn Tạo đội, thu gọn bằng chính tiêu đề kết nối. Nhận định, phong độ và mô tả cầu thủ được giữ trong mục thu gọn **Công cụ phân tích**. Kết quả phân tích xuất hiện cùng khu vực kết quả, không nằm trong khung cấu hình.
+Không có nút hay lớp mở/đóng **Tuỳ chọn AI**, không còn form key dài trong thẻ danh sách. Form key chỉ nằm trong dialog; phần bảo mật thu gọn, nút bỏ qua luôn dùng được kể cả trên link Wi-Fi HTTP không cho gửi key. Nhận định, phong độ và mô tả cầu thủ được giữ trong mục thu gọn **Công cụ phân tích**. Kết quả phân tích xuất hiện cùng khu vực kết quả, không nằm trong khung cấu hình.
 
 Ngay trên danh sách có phần **Tiêu chí tạo đội** (12 mục, mở xem chi tiết) và ô **Note — yêu cầu riêng cho lần tạo này**, luôn hiện. Note hiện tại là nguồn duy nhất cho yêu cầu riêng: để trống thì không có chỉ định riêng, không lấy lệnh của trận cũ từ lịch sử. Note chỉ nằm trong phiên trang, không tự lưu vào trận/nhận định; ghi chú phân tích là ô riêng. Tiến trình có bước Note và kết quả giữ snapshot Note đã dùng: AI nhận Note nhưng vẫn cần đối chiếu thủ công; thuật toán dự phòng chưa hiểu Note nên cảnh báo **Chưa áp dụng Note**. Sửa Note sau khi tạo sẽ báo bản nháp chưa cập nhật, cần Tạo đội lại.
 

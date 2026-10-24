@@ -41,11 +41,14 @@ async function main(){
         assert.ok(density.menuPadding<=12);assert.ok(density.historyPadding.every(v=>v===0),'No phantom action space on dashboard history');assert.ok(density.historyHeights.every(v=>v<=115),'Dashboard match cards are compact');
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-home.png`),fullPage:true,animations:'disabled'});
         for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-history']){
-          await page.evaluate(id=>show(id),id);
+          await page.evaluate(id=>{show(id);if(document.querySelector('#aiKeyDialog').open)aiSkipKeyDialog();},id);
           const state=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,body:getComputedStyle(document.body).backgroundImage,header:getComputedStyle(document.querySelector('.appbar')).backgroundImage}));
           assert.equal(state.overflow,false,`${id}/${theme} no horizontal overflow`);assert.equal(state.body,'none');assert.equal(state.header,'none');
         }
         await page.evaluate(()=>openAITask('lineup'));
+        assert.equal(await page.locator('#aiKeyDialog').isVisible(),true,'Missing key opens the themed popup');
+        await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-key-dialog.png`),animations:'disabled'});
+        await page.locator('#aiKeySkip').click();
         await page.locator('#createCriteria').evaluate(el=>el.open=true);
         assert.equal(await page.locator('#aiInstruction').isVisible(),true);
         assert.equal(await page.locator('.create-rule-list li').count(),12);

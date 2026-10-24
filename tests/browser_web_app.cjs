@@ -49,6 +49,8 @@ async function main(){
       await page.goto(config.origin);
       assert.equal(await page.getByRole('button',{name:'Trợ lý AI',exact:true}).count(),0,'No separate AI navigation');
       await page.getByRole('button',{name:'Tạo đội',exact:true}).click();
+      assert.equal(await page.locator('#aiKeyDialog').isVisible(),true,'Missing key prompts on entering Create');
+      await page.locator('#aiKeySkip').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),false,'Skip does not block roster selection');
       assert.equal(await page.locator('#aiInstruction').isVisible(),true,'Lineup Note is visible without opening AI options');
       assert.equal(await page.locator('#aiInstruction').evaluate(el=>el.closest('#createAI')),null,'Lineup Note is not hidden inside AI options');
       await page.locator('#createCriteria summary').click();
@@ -73,6 +75,7 @@ async function main(){
       assert.equal(await page.locator('.ai-inline-head').count(),0,'No separate AI workspace header');
       assert.ok(await page.locator('#createAI').evaluate(el=>el.closest('.card-box')===document.querySelector('#roster').closest('.card-box')),'AI settings stay in the same roster card');
       assert.equal(await page.locator('#aiAnalysisTools').evaluate(el=>el.open),false,'Secondary analysis tools are collapsed by default');
+      await page.locator('#aiKeySettings').click();
       await page.locator('#aiKeyForm').waitFor({state:'visible'});
       await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       await page.waitForFunction(()=>!document.querySelector('#aiRun').disabled);
@@ -81,18 +84,18 @@ async function main(){
       assert.equal(await page.locator('#aiMatchField').isVisible(),false);
       assert.equal(await page.locator('#aiRun').isVisible(),false,'No duplicate create button for AI');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
-      await page.locator('#aiConnection summary').click();
-      assert.equal(await page.locator('#aiKeyForm').isVisible(),false,'Connection details collapse without an extra AI options wrapper');
+      assert.equal(await page.locator('#aiKeyForm').isVisible(),false,'Saving closes the key popup');
       assert.equal(await page.locator('#createAI').isVisible(),true,'Connection summary stays accessible');
       assert.equal(await page.evaluate(()=>selectedIdx().length),0,'Returning to roster must not reset selections');
       await page.locator('#selectAll').check();await page.locator('#roster .pl-item.guest input').last().uncheck();
       assert.equal(await page.locator('#selectAll').evaluate(el=>el.indeterminate),true,'Partial selection reflected on master checkbox');
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);
-      await page.locator('#aiConnection summary').click();
+      await page.locator('#aiKeySettings').click();
+      assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
       assert.equal(await page.locator('#createAI').isVisible(),true);
       await page.locator('#aiInstruction').fill(lineupNote);
-      await page.locator('#aiConnection summary').click();await page.locator('#aiConnection summary').click();
+      await page.locator('#aiKeySettings').click();await page.locator('#aiKeySkip').click();
       assert.equal(await page.locator('#aiInstruction').inputValue(),lineupNote);
       assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),false);
       await page.evaluate(()=>{
@@ -196,7 +199,7 @@ async function main(){
         window.firebase={firestore:Object.assign(()=>({}),{FieldValue:{arrayUnion:x=>x}})};
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
-      await page.locator('#aiConnection').evaluate(el=>el.open=true);await page.locator('#aiRemoveKey').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);
+      await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);await page.locator('#aiKeySkip').click();
       assert.equal(await page.evaluate(()=>localStorage.getItem(AI_KEYS.storageName)),null);
       // Empty Note really means no per-match requests, even with history available.
       await page.locator('#aiInstruction').fill(' ');await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
