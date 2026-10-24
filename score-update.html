@@ -4,8 +4,9 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0a0e1a">
-<script>try{if(localStorage.getItem("gp_theme")==="light")document.documentElement.dataset.theme="light";}catch(e){}</script>
+<meta name="theme-color" content="#f4f6f5">
+<script>window.GP_APP_CONFIG=null;</script>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("gp_theme")==="dark"?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}</script>
 <style>
 :root{
   --bg:#090b1e; --bg2:#060713; --surface:#151b3b; --surface2:#202653; --surface3:#2c3470;
@@ -25,6 +26,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 input,button,select{font-family:inherit}
 input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;height:16px}
 .screen{display:none;max-width:920px;margin:0 auto;padding:18px 16px 40px}
+.screen[hidden],.ap-btn[hidden]{display:none!important}
 .home-screen{max-width:1120px}
 /* app bar */
 .appbar{position:sticky;top:0;z-index:30;background:linear-gradient(100deg,rgba(83,28,104,.76),rgba(31,55,142,.78) 58%,rgba(78,111,202,.70)),rgba(8,10,30,.82);backdrop-filter:saturate(145%) blur(18px);
@@ -944,6 +946,164 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 @media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:46px;height:46px;border-radius:13px}.ap-btn .ap-icon .ui-icon{width:21px;height:21px}.ap-btn .ap-icon .ui-icon-image{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.ap-icon{transition:none}.ap-btn:hover .ap-icon{transform:none}}
 
+.ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
+#screen-ai [hidden]{display:none!important}
+.ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.ai-head h1{font-size:23px;margin-bottom:7px;display:flex;gap:9px;align-items:center}
+.ai-sub{font-size:13px;color:var(--muted);line-height:1.65;max-width:620px}
+.ai-pill{display:inline-flex;padding:5px 9px;border:1px solid var(--line);border-radius:20px;background:var(--surface2);color:var(--blue);font-size:11px;white-space:nowrap}
+.ai-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.ai-panel h2{font-size:15px;margin:0 0 12px}
+.ai-status{font-size:13px;line-height:1.7;color:var(--muted)}
+.ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ai-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:var(--muted);min-width:0}
+.ai-field select,.ai-field input,.ai-field textarea{width:100%;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;font-size:13px;font-weight:400}
+.ai-field textarea{min-height:96px;resize:vertical;line-height:1.6}
+.ai-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.ai-actions .btn:disabled{opacity:.5;cursor:wait}
+#screen-ai .btn.alt{background:var(--surface2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+#screen-ai .btn.alt:hover{background:var(--surface3)}
+.ai-message{padding:12px 14px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:13px;line-height:1.6;margin-top:12px;overflow-wrap:anywhere}
+.ai-message.error{color:var(--red);border-color:var(--red)}
+.ai-result{line-height:1.8;overflow-wrap:anywhere}
+.ai-result h2{font-size:20px;margin-bottom:14px}
+.ai-result h3{font-size:14px;color:var(--blue);margin:18px 0 6px}
+.ai-result p{white-space:pre-line;font-size:14px;color:var(--text)}
+.ai-meta{font-size:11px;color:var(--muted);margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
+.ai-label{font-weight:700;color:var(--gold);margin:12px 0}
+.ai-warnings{color:var(--amber);font-size:12px;white-space:pre-line;line-height:1.7}
+.ai-footer{font-size:12px;color:var(--muted);line-height:1.65;margin-top:12px}
+#aiLineupPreview .report{margin-top:16px}
+@media(max-width:600px){.ai-head{flex-direction:column;gap:8px}.ai-fields{grid-template-columns:1fr}.ai-panel{padding:16px}.ai-head h1{font-size:21px}.ai-actions .btn{flex:1 1 auto}.ai-result h2{font-size:18px}}
+
+/* Quiet club-management theme. Applied last so legacy screens share one palette.
+   Team kits, football pitch labels, avatars, logo and the classic form flame stay intact. */
+:root{
+  color-scheme:dark;
+  --bg:#151d21; --bg2:#11191d; --surface:#1e282e; --surface2:#263239; --surface3:#303e45;
+  --line:rgba(170,190,197,.18); --line2:rgba(170,190,197,.10);
+  --text:#e0e8e8; --muted:#a8b7bb; --faint:#82969c;
+  --brand:#a5c4b9; --brand-d:#85afa0; --brand-soft:rgba(151,184,171,.12);
+  --blue:#a8c0cf; --blue-soft:rgba(151,181,199,.12);
+  --amber:#c6ad81; --amber-soft:rgba(190,159,110,.12); --gold:#c6ad81; --red:#d59498;
+  --slate-soft:rgba(173,192,199,.09); --cb1:#486e63; --cb2:#486e63;
+  --action:#436f63; --action-hover:#507e70; --on-action:#ffffff;
+  --success:#97bdaa; --danger:#d59498;
+  --loss-soft:#382e32;
+  --sh:0 2px 10px rgba(0,0,0,.12); --sh-sm:0 1px 3px rgba(0,0,0,.08);
+  --ui-icon-color:#a8bbbc; --ui-icon-soft:rgba(168,187,188,.10);
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f4f6f5; --bg2:#ecf0ed; --surface:#ffffff; --surface2:#eef2f0; --surface3:#e3eae6;
+  --line:#dbe3de; --line2:#e9eeeb;
+  --text:#34443e; --muted:#63756c; --faint:#77877f;
+  --brand:#3c6d5e; --brand-d:#315b4e; --brand-soft:#e7efea;
+  --blue:#4a7085; --blue-soft:#eaf0f4;
+  --amber:#8c6b38; --amber-soft:#f4efe5; --gold:#927345; --red:#ac5c62;
+  --slate-soft:#edf1ef; --cb1:#3c6d5e; --cb2:#3c6d5e;
+  --action:#3c6d5e; --action-hover:#315b4e; --on-action:#ffffff;
+  --success:#48765f; --danger:#ac5c62;
+  --loss-soft:#f4e9ea;
+  --sh:0 2px 8px rgba(40,59,48,.04); --sh-sm:0 1px 3px rgba(40,59,48,.035);
+  --ui-icon-color:#748c80; --ui-icon-soft:#edf2ef;
+}
+:root[data-theme] body{min-height:100vh;background:var(--bg)}
+:root[data-theme] .appbar{background:var(--surface);border-color:var(--line);box-shadow:none;backdrop-filter:none}
+:root[data-theme] :is(.ab-back,.ab-theme,.ab-admin){background:var(--surface);border-color:var(--line);color:var(--muted)}
+:root[data-theme] :is(.ab-back,.ab-theme,.ab-admin):hover{background:var(--surface2);border-color:var(--line);transform:none}
+:root[data-theme] .ab-brand{color:var(--text)}
+.ab-logo{filter:none}
+.club-intro{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 28px;margin-bottom:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.club-kicker{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:7px}
+.club-intro h1{font-size:25px;font-weight:700;letter-spacing:-.025em;line-height:1.3}
+.club-description{margin-top:8px;font-size:13px;line-height:1.6;color:var(--muted)}
+.club-crest{width:72px;height:78px;object-fit:contain;flex:0 0 auto}
+:root[data-theme] body.is-admin .ab-admin{color:var(--brand);border-color:var(--line);background:var(--brand-soft)}
+:root[data-theme] :is(.action-panel,.card-box,.m-row,.spot-card,.pcard,.pm-panel,.history-item,.mc,.fin-row,.fin-kpi,.pstat-kpi,.pstat-card,.ai-panel){background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:var(--sh-sm);backdrop-filter:none}
+:root[data-theme] :is(.m-row,.pcard,.mc,.pstat-card):hover{background:var(--surface);border-color:var(--brand);transform:none}
+.action-panel::before,.fin-kpi::after,.pstat-kpi::after{display:none}
+.ap-title{font-size:20px;font-weight:700;letter-spacing:0}
+.ap-sub{color:var(--muted);line-height:1.5;margin-bottom:14px}
+:root[data-theme] .action-panel{padding:18px}
+.ap-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+:root[data-theme] .ap-btn{background:var(--surface);border-color:var(--line);color:var(--text);font-weight:600;min-width:0;min-height:78px;padding:10px 6px;flex-direction:column;justify-content:center;text-align:center;gap:7px;font-size:12.5px}
+.ap-btn>span:last-child{white-space:nowrap;line-height:1.3}
+:root[data-theme] .ap-btn:hover{background:var(--surface2);border-color:var(--line);transform:none}
+:root[data-theme] .ap-icon,:root[data-theme] .ap-btn:hover .ap-icon{background:transparent;border:0;transform:none;width:34px;height:34px;border-radius:8px}
+:root[data-theme] .ap-btn .ap-icon .ui-icon-image{filter:saturate(.75);width:34px;height:34px}
+:root[data-theme] #backupNavBtn{grid-column:1/-1;flex-direction:row;min-height:36px;padding:6px;gap:8px}
+:root[data-theme] #backupNavBtn .ap-icon,:root[data-theme] #backupNavBtn .ui-icon-image{width:24px;height:24px}
+:root[data-theme] .ui-icon-image{filter:saturate(.82)}
+:root[data-theme] .page-banner{height:180px;background:var(--surface2);box-shadow:none;border-color:var(--line)}
+.page-banner img{filter:saturate(.65)}
+.page-banner .pb-fade{background:linear-gradient(to bottom,transparent 70%,rgba(22,37,29,.16))}
+.hero-feat{box-shadow:none}
+.hero-feat>.hf-bg{filter:saturate(.7)}
+.hf-fx{display:none} /* remove floating particles, not the player's form flame */
+.hf-bg::after{background:linear-gradient(90deg,rgba(16,30,25,.92),rgba(16,30,25,.64) 60%,rgba(16,30,25,.36))}
+.hf-title{font-size:29px;font-weight:700;text-shadow:none}
+.hf-desc{background:rgba(16,30,25,.35);border-left-color:#9eb7a8;text-shadow:none;font-style:normal}
+.hf-tag{color:#d3dfd7;letter-spacing:.03em}
+.hf-ava,.hf-logos .tlogo,.hf-play{box-shadow:none}
+:root[data-theme] .pcard .stripe{width:4px;left:0;top:0;bottom:0;transform:none;background:var(--brand);opacity:.28}
+:root[data-theme] .pc-badge{color:var(--muted);background:var(--surface2);border-color:var(--line)}
+.pc-ov .n{font-size:30px;font-weight:700}
+.pc-avatar,.pm-ava{box-shadow:none}
+:root[data-theme] :is(.pm-head,.pm-arch,.pm-pos-row,.pstat-ai,.fin-kpi.balance){background:var(--surface2)}
+.pm-h-name,.pstat-name,.fin-name{font-weight:700}
+:root[data-theme] .pm-pos-row .pp-tag.main{color:var(--on-action);background:var(--action);border-color:var(--action)}
+:root[data-theme] :is(.btn,.btn.dark){background:var(--action);color:var(--on-action);box-shadow:none;font-weight:600}
+:root[data-theme] :is(.btn,.btn.dark):hover{background:var(--action-hover);filter:none;transform:none}
+:root[data-theme] .btn.alt,:root[data-theme] #screen-ai .btn.alt{background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:none}
+:root[data-theme] .btn.alt:hover,:root[data-theme] #screen-ai .btn.alt:hover{background:var(--surface2);border-color:var(--line)}
+:root[data-theme] .score-action{background:var(--action)!important;color:var(--on-action)!important;box-shadow:none}
+:root[data-theme] :is(.seg,.req-tabs button,.pstat-filter){font-weight:600}
+:root[data-theme] :is(.seg.on,.req-tabs button.on,.pstat-filter.on,.pl-item.on){background:var(--brand-soft);color:var(--text);border-color:var(--brand)}
+:root[data-theme] .stat.accent{background:var(--brand-soft);color:var(--text);border:1px solid var(--line);box-shadow:none}
+:root[data-theme] .stat.accent .k{color:var(--muted)}
+:root[data-theme] .fb-fab{width:46px;height:46px;border-radius:14px;background:var(--surface);color:var(--brand);border:1px solid var(--line);box-shadow:var(--sh)}
+:root[data-theme] :is(.fin-empty,.ai-banner){background:var(--surface2);color:var(--muted)}
+:root[data-theme] .ai-pill{color:var(--muted);background:var(--surface2)}
+:root[data-theme] :is(.fin-kpi.in .fin-kpi-val,.fin-amt.in,.fin-type.in,.pstat-kpi.hot .val,.mc-sc.win,.rank-wr,.ulog-act.add,.ulog-badge.add){color:var(--success)}
+:root[data-theme] :is(.fin-kpi.out .fin-kpi-val,.fin-amt.out,.fin-type.out,.fin-error){color:var(--danger)}
+:root[data-theme] :is(.pstat-kpi.cold .val,.pstat-state.steady,.pstat-state.cold){color:var(--blue)}
+:root[data-theme] .pstat-state.hot{background:var(--brand-soft);color:var(--success)}
+:root[data-theme] :is(.pstat-state.steady,.pstat-state.cold){background:var(--blue-soft)}
+:root[data-theme] :is(.pstat-source,.ai-pill){border-color:var(--line)}
+:root[data-theme] :is(.persuade,.ai-review){color:var(--text)}
+:root[data-theme] .pm-attr .lab{color:var(--muted)}
+:root[data-theme] :is(.ps-wld .w,.gl-sum.ok,.pl-win){color:var(--success)}
+:root[data-theme] .fc.w{background:var(--brand-soft);color:var(--success);border:1px solid var(--line);box-shadow:none}
+:root[data-theme] .fc.d{background:var(--amber-soft);color:var(--amber);border:1px solid var(--line);box-shadow:none}
+:root[data-theme] .fc.l{background:var(--loss-soft);color:var(--danger);border:1px solid var(--line);box-shadow:none}
+:root[data-theme] .gc-line{stroke:var(--gold)}
+:root[data-theme] .gc-dot.sc{fill:var(--gold);stroke:var(--amber)}
+:root[data-theme] :is(.field,.vpitch){background-color:#294238;background-image:repeating-linear-gradient(0deg,transparent 0 16.66%,rgba(255,255,255,.035) 16.66% 33.33%);border-color:#425c50;box-shadow:none}
+:root[data-theme] .benchrow{background:var(--surface2);border-color:var(--line)}
+:root[data-theme] :is(.subchip,.subs-lbl,.vsub){color:var(--muted)}
+:root[data-theme] .subchip{background:var(--surface);border-color:var(--line)}
+:root[data-theme] :is(.modal,.pm-overlay){background:rgba(21,32,26,.42);backdrop-filter:blur(5px)}
+:root[data-theme] .modal-box{background:var(--surface);border-color:var(--line);border-radius:18px;box-shadow:0 18px 50px rgba(15,30,22,.18);backdrop-filter:none}
+#adminModal{background:rgba(21,32,26,.42);backdrop-filter:blur(5px)}
+#adminModal .modal-box{background:var(--surface);border-color:var(--line);border-radius:20px;box-shadow:0 18px 50px rgba(15,30,22,.18)}
+#adminModal .modal-box::before{display:none}
+.admin-login-avatar{width:72px;height:72px;background:var(--brand-soft);box-shadow:none}
+.admin-login-avatar::before,.admin-login-avatar::after{background:var(--brand);opacity:.55}
+#adminModal h3{color:var(--text);font-size:21px;text-shadow:none}
+#adminModal :is(.admin-login-sub,.mrow .lbl,.nm-hint,.admin-login-cancel){color:var(--muted)}
+#adminModal .nm-hint b{color:var(--text)}
+.admin-login-field{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--muted)}
+.admin-login-field:focus-within{border-color:var(--brand);box-shadow:none}
+#adminModal .admin-login-field input[type=password]{color:var(--text)}
+#adminModal .admin-login-field input[type=password]::placeholder{color:var(--faint)}
+#adminModal .admin-login-submit{background:var(--action);color:var(--on-action);font-weight:600;letter-spacing:0;text-transform:none;box-shadow:none}
+#adminModal .admin-login-submit:hover{background:var(--action-hover);filter:none;transform:none}
+#adminModal .admin-login-cancel:hover{color:var(--text)}
+#adminModal .nm-err{color:var(--danger);background:var(--surface2);border-color:var(--line)}
+:is(button,a,input,select,textarea):focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+@media(max-width:560px){.club-intro{padding:20px;gap:12px}.club-intro h1{font-size:22px}.club-crest{width:48px;height:56px}:root[data-theme] .page-banner{height:136px}.hf-title{font-size:27px}:root[data-theme] .action-panel{padding:16px}:root[data-theme] .ap-btn{font-size:12px;min-height:76px}}
+
 </style></head><body>
 
 <header class="appbar">
@@ -952,25 +1112,30 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện sáng" aria-label="Chuyển sang giao diện sáng">☀︎</button>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
+<div id="aiModeBanner" class="ai-banner" role="status"></div>
 
 <!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
 <button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức" aria-label="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
-  <div class="page-banner"><img src="assets/banner.jpg" alt="FC Haha" onerror="this.style.display='none'"><div class="pb-fade"></div></div>
+  <section class="club-intro" aria-label="FC Haha">
+    <div><p class="club-kicker">FC Haha</p><h1>Đội bóng của chúng ta</h1><p class="club-description">Đội hình, phong độ và lịch thi đấu — gọn trong một chỗ.</p></div>
+    <img class="ab-logo club-crest" src="assets/logo.png" alt="Logo FC Haha">
+  </section>
   <div class="dash-top">
     <section class="hero-feat" id="heroFeat" onclick="openHeroPlayer()"></section>
     <section class="action-panel">
-      <div class="ap-title">Tạo đội</div>
-      <div class="ap-sub">Chia 2 đội cân bằng & quản lý cầu thủ</div>
+      <div class="ap-title">Truy cập nhanh</div>
+      <div class="ap-sub">Các công cụ của đội bóng</div>
       <div class="ap-grid">
         <button class="ap-btn" onclick="show('screen-create')"><span class="ap-icon" data-ui-icon="lineup"></span><span>Tạo đội</span></button>
         <button class="ap-btn" onclick="show('screen-players')"><span class="ap-icon" data-ui-icon="squad"></span><span>Cầu thủ</span></button>
         <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="ranking"></span><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="match-history"></span><span>Lịch sử</span></button>
-        <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
+        <button class="ap-btn" onclick="show('screen-player-status')" title="Tình trạng cầu thủ" aria-label="Tình trạng cầu thủ"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng</span></button>
+        <button class="ap-btn" id="financeNavBtn" onclick="show('screen-finance')" hidden><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
+        <button class="ap-btn" onclick="show('screen-ai')"><span class="ap-icon" data-ui-icon="match-analysis"></span><span>Trợ lý AI</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="backup"></span><span>Backup</span></button>
       </div>
     </section>
@@ -1009,6 +1174,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="grid" id="roster"></div>
     <div class="bar">
       <button class="btn" id="go" title="Bấm lại để đổi sang cách chia cân khác"><span data-ui-icon="lineup"></span>Tạo đội (Thuật Toán)</button>
+      <button class="btn alt sm" onclick="openAITask('lineup')"><span data-ui-icon="match-analysis"></span>Tạo đội bằng AI</button>
       <button class="btn alt sm" id="all">Chọn tất cả</button>
       <button class="btn alt sm" id="none">Bỏ chọn</button>
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
@@ -1019,6 +1185,35 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div class="status" id="status"></div>
   <div style="text-align:center;margin:14px 0"><button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button></div>
   <div id="result"></div>
+</div>
+
+<!-- ====== AI WORKSPACE · server key only, preview before any write ====== -->
+<div id="screen-ai" class="screen">
+  <div class="ai-head"><div><h1><span data-ui-icon="match-analysis"></span>Trợ lý AI</h1><p class="ai-sub">Chia đội, nhận định trận và phân tích phong độ từ dữ liệu bóng đá thực tế. AI đề xuất — bạn kiểm tra và quyết định sử dụng.</p></div><span class="ai-pill">OpenRouter · server-side</span></div>
+  <div class="ai-panel">
+    <h2>Kết nối &amp; quyền sử dụng</h2><div id="aiServerStatus" class="ai-status" role="status">Đang kiểm tra kết nối…</div>
+    <form id="aiLoginForm" onsubmit="aiLogin(event)" hidden>
+      <div class="ai-actions"><label class="ai-field" for="aiPassword">Mật khẩu truy cập AI<input id="aiPassword" type="password" required maxlength="256" autocomplete="current-password" placeholder="AI_ACCESS_PASSWORD trên server"></label><button class="btn sm" id="aiLoginBtn" type="submit">Mở quyền AI</button></div>
+    </form>
+    <button class="btn alt sm" id="aiLogout" onclick="aiLogout()" hidden>Đóng quyền AI</button>
+  </div>
+  <div class="ai-panel">
+    <div class="ai-fields">
+      <label class="ai-field">Chức năng<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chia đội mới · 7 vs 7</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
+      <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
+      <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
+    </div>
+    <div id="aiRosterInfo" class="ai-status"></div>
+    <label class="ai-field" style="margin-top:14px">Ghi chú thêm (không bắt buộc)<textarea id="aiInstruction" maxlength="2000" placeholder="Ví dụ: Tuyên bắt gôn, tách hai cầu thủ mỗi bên, ưu tiên cân riêng công và thủ…"></textarea></label>
+    <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled>Tạo bằng AI</button><button class="btn alt sm" onclick="show('screen-create')">Chọn người có mặt</button><button class="btn alt sm" onclick="aiRefresh()">Kiểm tra kết nối</button></div>
+    <p class="ai-footer">Chỉ gửi tên, điểm, vị trí, đội hình và lịch sử kết quả/bàn thắng liên quan tới OpenRouter. Không gửi thu chi, tài khoản hay lượt chấm chi tiết. Mỗi lần bấm có thể tính phí; không tự gọi lại khi lỗi. Không tự sửa chỉ số cầu thủ.</p>
+    <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div id="aiOutput" class="ai-panel" hidden>
+    <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>
+    <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
+    <div id="aiLineupPreview"></div>
+  </div>
 </div>
 
 <!-- ====== CAP NHAT CAU THU ====== -->
@@ -1065,7 +1260,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </div>
 
 <!-- ====== QUAN LY THU CHI ====== -->
-<div id="screen-finance" class="screen">
+<div id="screen-finance" class="screen" hidden>
   <div class="fin-head">
     <div><div class="fin-title"><span data-ui-icon="finance"></span> Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
     <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')"><span data-ui-icon="income"></span>Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')"><span data-ui-icon="expense"></span>Ghi chi</button></div>
@@ -1851,6 +2046,100 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   if(typeof module!=="undefined"&&module.exports) module.exports=api;
   global.TeamSolver=api;
 })(typeof window!=="undefined"?window:globalThis);</script>
+<script>/* Shared, pure football context. No credentials, finance, Firebase or DOM. */
+(function(root){
+  'use strict';
+  const SLOTS=['GK','Thòng','HV','HV','TVtt','TV','TĐ'];
+  const KEYS=['KT','CH','DD','PN','TC','TL','DN','TD','OD','TM'];
+  const validSlot=v=>typeof v==='string'&&SLOTS.includes(v);
+  const WEIGHTS={GK:{TM:7,PN:1.5,TD:1,TL:.5},'Thòng':{PN:3,TD:2,DN:1.2,TL:1.2,CH:.8,KT:.6},HV:{PN:2.2,TC:2,TL:1.5,DN:1.2,KT:.9,CH:.9,TD:.9},TVtt:{CH:2.3,TD:2,KT:1.6,TL:1.1,DN:1,PN:1,DD:.7},TV:{TC:1.9,KT:1.9,DD:1.4,CH:1.3,TL:1.1,DN:1,TD:.8},'TĐ':{DD:3,KT:1.6,TC:1.5,DN:1.1,TD:.9,CH:.6}};
+  function fail(s){throw new Error(s);}
+  function text(v,max=160){if(typeof v!=='string'||!v.trim()||v.length>max)fail('Nội dung chữ không hợp lệ.');return v.trim();}
+  function num(v,min,max){if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)fail('Chỉ số ngoài phạm vi.');return v;}
+  function player(p){
+    if(!p||typeof p!=='object')fail('Thiếu dữ liệu cầu thủ.');
+    const out={n:text(p.n),pos:validSlot(p.pos)?p.pos:'',pos2:[],guest:p.guest===true};
+    out.pos2=Array.isArray(p.pos2)?[...new Set(p.pos2.filter(validSlot))]:[];
+    for(const k of KEYS)out[k]=num(p[k]===undefined?0:p[k],0,10);
+    if(p.likeOf)out.likeOf=text(p.likeOf);
+    return out;
+  }
+  function positionScore(p,slot){const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  function match(m){
+    if(!m||!m.teams)fail('Thiếu đội hình trận.');
+    const out={id:text(String(m.id),80),kickoff:num(m.kickoff||0,0,9e15),teams:{},score:null,goals:{},goalsLocked:m.goalsLocked===true};
+    const names=new Set();
+    for(const side of ['A','B']){
+      if(!Array.isArray(m.teams[side])||m.teams[side].length>30)fail('Đội hình trận không hợp lệ.');
+      out.teams[side]=m.teams[side].map(p=>{
+        const name=text(p.n);if(names.has(name))fail('Trùng cầu thủ trong trận.');names.add(name);
+        return {n:name,slot:validSlot(p.slot)?p.slot:'',bench:p.bench===true,rating:p.rating===undefined||p.rating===null?null:num(p.rating,0,10)};
+      });
+    }
+    if(m.score){out.score={a:num(m.score.a,0,100),b:num(m.score.b,0,100)};}
+    for(const n of names){const g=m.goals&&m.goals[n];if(typeof g==='number'&&g>0)out.goals[n]=num(g,0,100);}
+    return out;
+  }
+  function normalize(input){
+    if(!input||!Array.isArray(input.players)||input.players.length>80||!Array.isArray(input.history)||input.history.length>500)fail('Dữ liệu AI không hợp lệ (tối đa 80 cầu thủ, 500 trận).');
+    const players=input.players.map(player);if(new Set(players.map(p=>p.n)).size!==players.length)fail('Tên cầu thủ bị trùng.');
+    const history=input.history.map(match).sort((a,b)=>b.kickoff-a.kickoff);
+    if(new Set(history.map(m=>m.id)).size!==history.length)fail('Trùng mã trận.');
+    const selected=Array.isArray(input.rosterNames)?input.rosterNames.map(n=>text(n)):[];
+    if(selected.length>24||new Set(selected).size!==selected.length||selected.some(n=>!players.some(p=>p.n===n)))fail('Danh sách chọn không hợp lệ.');
+    return {players,history,rosterNames:selected,match:input.match?match(input.match):null,playerName:input.playerName?text(input.playerName):'',instruction:input.instruction?text(input.instruction,2000):''};
+  }
+  function form(name,history,now=Date.now()){
+    const done=history.filter(m=>m.score&&m.kickoff<=now),recent=done.slice(0,5);
+    const result=m=>{const s=m.teams.A.some(p=>p.n===name)?'A':m.teams.B.some(p=>p.n===name)?'B':null;if(!s)return null;return m.score.a===m.score.b?'D':((m.score.a>m.score.b)===(s==='A')?'W':'L');};
+    const results=done.map(result).filter(Boolean), streak=r=>{let c=0;for(const x of results){if(x!==r)break;c++;}return c;};
+    const recentResults=recent.map(result),played=recentResults.filter(Boolean).length;
+    const goals=ms=>ms.reduce((s,m)=>s+(result(m)?m.goals[name]||0:0),0);
+    return {played:results.length,wins:results.filter(x=>x==='W').length,draws:results.filter(x=>x==='D').length,losses:results.filter(x=>x==='L').length,goalsRecorded:goals(done),winStreak:streak('W'),lossStreak:streak('L'),recent:{teamMatches:recent.length,played,absent:recent.length-played,wins:recentResults.filter(x=>x==='W').length,draws:recentResults.filter(x=>x==='D').length,losses:recentResults.filter(x=>x==='L').length,goalsRecorded:goals(recent),resultsOldestFirst:recentResults.slice().reverse(),unlockedGoalRecords:recent.filter(m=>!m.goalsLocked).length}};
+  }
+  function compactLegacy(r){
+    const teams={A:[],B:[]},sub=r.subset||[];
+    for(const side of ['A','B']){
+      const e=r.result&&r.result['ev'+side];if(!e)continue;
+      (e.starters||[]).forEach((i,k)=>{if(sub[i]){
+        const slot=(e.starters.length===6?['GK','HV','Thòng','HV','TV','TĐ']:SLOTS)[k],p=player(sub[i]);
+        const rating=k===0&&e.gkRated===false?null:k===0&&e.gkRated===true?e.gkFit:positionScore(p,e.ratingsByRole?slot:p.pos);
+        teams[side].push({n:p.n,slot,bench:false,rating});
+      }});
+      (e.bench||[]).forEach(i=>{if(sub[i]){const p=player(sub[i]);teams[side].push({n:p.n,slot:'',bench:true,rating:positionScore(p,p.pos)});}});
+    }
+    return match({id:r.id,kickoff:r.kickoff||r.id,teams,score:r.score,goals:r.goals,goalsLocked:!!(r.goalsLocked||r.goalsFinalized)});
+  }
+  function lineup(players,teams){
+    if(!Array.isArray(players)||players.length<14||players.length>24)fail('Chia đội AI hiện hỗ trợ sân 7, từ 14–24 người.');
+    const used=[];
+    for(const side of ['A','B']){
+      const t=teams&&teams[side];if(!t||!Array.isArray(t.starters)||t.starters.length!==7||!Array.isArray(t.bench))fail('Mỗi đội phải có đúng 7 cầu thủ đá chính.');
+      for(const i of [...t.starters,...t.bench]){if(!Number.isInteger(i)||i<0||i>=players.length)fail('AI trả về cầu thủ ngoài danh sách.');used.push(i);}
+    }
+    if(used.length!==players.length||new Set(used).size!==players.length)fail('AI bỏ sót hoặc xếp trùng cầu thủ.');
+    if(Math.abs(teams.A.bench.length-teams.B.bench.length)>1)fail('Số dự bị hai đội chênh lệch quá nhiều.');
+    const members=players.filter(p=>!p.guest).length;
+    if(members>=14&&[...teams.A.starters,...teams.B.starters].some(i=>players[i].guest))fail('Khách phải dự bị khi đủ 14 thành viên. Hãy tạo lại.');
+    const guestCount=side=>[...teams[side].starters,...teams[side].bench].filter(i=>players[i].guest).length;
+    if(Math.abs(guestCount('A')-guestCount('B'))>1)fail('Cần chia khách đều hai bên. Hãy tạo lại.');
+    const evaluate=t=>{
+      const ps=idx=>idx.map(i=>players[i]),mean=(idx,f)=>idx.length?ps(idx).reduce((s,p)=>s+f(p),0)/idx.length:0;
+      const backs=t.starters.slice(1,4),fronts=t.starters.slice(4),scores=t.starters.map((i,k)=>positionScore(players[i],SLOTS[k]));
+      const startFit=scores.reduce((a,b)=>a+b,0),benchOv=ps(t.bench).reduce((s,p)=>s+positionScore(p,p.pos),0);
+      return {starters:t.starters.slice(),bench:t.bench.slice(),startFit,benchOv,total:startFit+benchOv,gkFit:scores[0],gkRated:true,ratingsByRole:true,pairedBenchComparison:true,frontFit:scores.slice(4).reduce((a,b)=>a+b,0),backFit:scores.slice(1,4).reduce((a,b)=>a+b,0),defPN:mean(backs,p=>p.PN),atk:mean(fronts,p=>p.DD),def7:mean(t.starters,p=>p.PN),atk7:mean(t.starters,p=>p.DD),defOv:mean(backs,p=>positionScore(p,p.pos)),atkOv:mean(fronts,p=>positionScore(p,p.pos)),benchDef:mean(t.bench,p=>p.PN),benchAtk:mean(t.bench,p=>p.DD),pace:mean(t.starters,p=>p.TC),heat:mean(t.starters,p=>p.DN),stars:ps([...t.starters,...t.bench]).filter(p=>positionScore(p,p.pos)>=8).length};
+    };
+    const evA=evaluate(teams.A),evB=evaluate(teams.B),warnings=[];
+    for(const [key,label] of [['frontFit','tuyến trên'],['backFit','hàng thủ']])if(Math.abs(evA[key]-evB[key])>1.5)warnings.push(`Chênh ${label} ${Math.abs(evA[key]-evB[key]).toFixed(1)} điểm; cần kiểm tra bảng so kè.`);
+    for(const side of ['A','B'])teams[side].starters.forEach((i,k)=>{const p=players[i];if(p.pos&&p.pos!==SLOTS[k]&&!p.pos2.includes(SLOTS[k]))warnings.push(`${p.n}: đang xếp ngoài vị trí đăng ký (${SLOTS[k]}).`);});
+    for(const side of ['A','B'])for(const i of teams[side].bench){const p=players[i];if(p.guest)continue;const weaker=teams[side].starters.find((j,k)=>k>0&&(p.pos===SLOTS[k]||p.pos2.includes(SLOTS[k]))&&positionScore(p,SLOTS[k])-positionScore(players[j],SLOTS[k])>=.5);if(weaker!==undefined)warnings.push(`${p.n}: dự bị dù điểm vị trí cao hơn ${players[weaker].n}; kiểm tra ưu tiên người mạnh đá chính.`);}
+    return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings};
+  }
+  const api={SLOTS,KEYS,player,match,normalize,form,compactLegacy,lineup,positionScore};
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;
+  root.GPAIContext=api;
+})(typeof window==='undefined'?globalThis:window);
+</script>
 <script>
 const DEFAULT_PLAYERS = [{"DD": 7, "DN": 5, "TD": 7, "n": "Doan Ha", "pos2": [], "OD": 6, "TL": 5, "TC": 6, "lp": false, "ratings": {"(khởi tạo)": {"PN": 0, "ts": null, "TM": 0, "TL": 0, "KT": 0, "CH": 0, "OD": 0, "TD": 0, "DN": 0, "DD": 0, "TC": 0}, "Admin": {"KT": 6, "TM": 0, "at": 1781406492376, "CH": 6, "PN": 5, "TC": 6, "byAdmin": true, "TL": 5, "ts": "14/6/2026 10:08", "TD": 7, "DD": 7, "DN": 5, "OD": 6}}, "pos": "TĐ", "CH": 6, "KT": 6, "TM": 0, "PN": 5, "desc": "Tiền đạo nhãn quan tốt, dứt điểm khá, biết chọn vị trí. Kỹ thuật và phối hợp ổn để lùi làm tường. Thể lực, độ máu lửa tầm trung.\n⚽ Kiểu Benzema 'lười mà sang' — chọn vị trí ngon, dứt điểm gọn; thiếu mỗi Quả bóng vàng thôi."}, {"OD": 6, "TD": 5, "DD": 7, "DN": 6, "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "TL": 6, "ratings": {"(khởi tạo)": {"OD": 0, "TD": 0, "TC": 0, "DD": 0, "DN": 0, "PN": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "CH": 0}, "Admin": {"ts": "24/7/2026 21:17", "TL": 6, "TD": 5, "DN": 6, "DD": 7, "OD": 6, "TM": 0, "KT": 6, "at": 1784902658512, "CH": 5, "PN": 6, "TC": 6, "byAdmin": true}}, "pos": "TV", "lp": true, "TC": 6, "n": "Duy Hùng", "PN": 6, "KT": 6, "TM": 0, "pos2": ["HV"], "CH": 5}, {"ratings": {"Admin": {"ts": "14/6/2026 09:15", "TL": 8, "TD": 5, "DN": 8, "DD": 5, "OD": 6, "byAdmin": true, "TM": 0, "KT": 6, "CH": 5, "at": 1781403342027, "PN": 7, "TC": 8}, "(khởi tạo)": {"TD": 0, "DD": 0, "TC": 0, "DN": 0, "OD": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "CH": 0, "PN": 0}}, "lp": false, "TC": 8, "desc": "Hậu vệ biên cực giàu thể lực — tốc độ, sức bền, máu lửa hàng đầu đội. Lên công về thủ không biết mệt, phòng ngự chắc. Hợp lối chơi tốc độ, áp sát liên tục.\n⚽ Sức chạy thì Roberto Carlos gọi bằng anh — thiếu mỗi cú sút 100km/h là thành quái vật cánh thật sự.", "PN": 7, "pos": "HV", "KT": 6, "TM": 0, "CH": 5, "OD": 6, "pos2": ["TV"], "TD": 5, "DD": 5, "DN": 8, "n": "Hoàng Duy", "TL": 8}, {"TC": 7, "lp": false, "pos2": ["GK"], "n": "Hoàng Thiên", "CH": 6, "TM": 9, "KT": 7, "PN": 7, "DN": 6, "DD": 8, "TD": 7, "OD": 7, "pos": "TĐ", "ratings": {"(khởi tạo)": {"OD": 0, "TD": 0, "DD": 0, "TC": 0, "DN": 0, "PN": 0, "KT": 0, "TL": 0, "TM": 0, "ts": null, "CH": 0}, "Admin": {"OD": 7, "TD": 7, "DN": 6, "DD": 8, "ts": "14/6/2026 10:11", "TL": 6, "byAdmin": true, "TC": 7, "PN": 7, "TM": 9, "KT": 7, "CH": 6, "at": 1781406662405}}, "TL": 6, "desc": "Tiền đạo toàn diện: dứt điểm sắc, kỹ thuật khéo, đọc trận tốt. Đặc biệt phản xạ bắt gôn xuất sắc — trấn giữ khung thành cực chắc khi cần. Quân bài đáng giá cả hai đầu sân.\n⚽ Tịt ngòi cái là nhảy vào gôn bắt như Neuer — tiền đạo kiêm thủ môn, phiên bản lỗi của FIFA."}, {"DN": 6, "DD": 4, "TD": 7, "OD": 6, "pos2": [], "TL": 6, "pos": "Thòng", "TC": 5, "desc": "Trung vệ thòng điềm tĩnh, giữ và phát động bóng tốt. Càn quét, bọc lót chắc, đọc tình huống hợp lý. Tốc độ vừa phải, mạnh ở cầm nhịp tuyến dưới.\n⚽ Phát động bóng kiểu Pirlo lùi về làm trung vệ — thiếu mỗi bộ râu nghệ sĩ với cú phạt 'nhết hồn'.", "lp": false, "n": "Hưng", "CH": 8, "TM": 0, "KT": 7, "PN": 7, "ratings": {"(khởi tạo)": {"CH": 0, "KT": 0, "TL": 0, "TM": 0, "ts": null, "PN": 0, "DD": 0, "TC": 0, "DN": 0, "TD": 0, "OD": 0}, "Admin": {"TL": 6, "ts": "14/6/2026 08:57", "OD": 6, "TD": 7, "DD": 4, "DN": 6, "PN": 7, "KT": 7, "byAdmin": true, "TM": 0, "CH": 8, "at": 1781402272379, "TC": 5}}}, {"TC": 8, "lp": false, "pos": "TVtt", "n": "Huy Hoàng", "CH": 8, "TM": 0, "KT": 9, "PN": 7, "pos2": ["TV"], "DN": 8, "DD": 8, "TD": 7, "OD": 7, "desc": "Nhạc trưởng tuyến giữa hàng đầu: kỹ thuật thượng thừa, chuyền và dứt điểm đều sắc. Đủ tốc độ và thể lực để xộc vào vòng cấm, dạt cánh càng lợi hại. Gánh cả sáng tạo lẫn ghi bàn.\n⚽ Gần De Bruyne nhất đội — chuyền, sút, chạy đủ cả; thiếu mỗi cái mác Ngoại hạng Anh thôi.", "ratings": {"(khởi tạo)": {"OD": 0, "DN": 0, "DD": 0, "TC": 0, "TD": 0, "PN": 0, "CH": 0, "TM": 0, "ts": null, "KT": 0, "TL": 0}, "Admin": {"TC": 8, "byAdmin": true, "TM": 0, "KT": 9, "CH": 8, "at": 1781406800217, "PN": 7, "TD": 7, "DN": 8, "DD": 8, "OD": 7, "ts": "14/6/2026 10:13", "TL": 8}}, "TL": 8}, {"CH": 7, "KT": 7, "TM": 0, "n": "Mạnh Khắc", "PN": 5, "TC": 7, "desc": "Tiền vệ cánh kỹ thuật, bám biên tốt: kỹ thuật, chuyền, dứt điểm, tốc độ đều khá. Lên biên hỗ trợ mượt, xử lý bóng gọn. Thể lực, máu lửa tầm trung, hợp lối phối hợp.\n⚽ Mahrez làng — rê dắt bám biên điệu nghệ, thiếu mỗi thể lực đua 90 phút (và lương Man City).", "lp": false, "ratings": {"Admin": {"CH": 7, "at": 1781403641326, "TM": 0, "KT": 7, "PN": 5, "TC": 7, "ts": "14/6/2026 09:20", "TL": 5, "DN": 5, "DD": 7, "byAdmin": true, "TD": 6, "OD": 5}, "(khởi tạo)": {"TD": 0, "DN": 0, "TC": 0, "DD": 0, "OD": 0, "TM": 0, "ts": null, "TL": 0, "KT": 0, "CH": 0, "PN": 0}}, "pos2": ["HV"], "TL": 5, "DD": 7, "DN": 5, "TD": 6, "pos": "TV", "OD": 5}, {"TL": 6, "pos2": ["HV"], "TD": 4, "DN": 6, "DD": 3, "OD": 4, "desc": "Thủ môn chắc chắn, chọn vị trí và phòng ngự hợp lý. Tốc độ, thể lực ổn nên trám hậu vệ biên được. Chơi chân còn hạn chế, mạnh ở vai trấn giữ khung gỗ.\n⚽ Thủ môn 'chắc cú' kiểu số 2 đội tuyển — không lung linh nhưng thiếu là vỡ trận; chơi chân thêm tí là lên Ederson làng.", "TM": 6, "KT": 4, "CH": 5, "ratings": {"(khởi tạo)": {"ts": null, "TM": 0, "TL": 0, "KT": 0, "CH": 0, "PN": 0, "TD": 0, "DN": 0, "DD": 0, "TC": 0, "OD": 0}, "Admin": {"TD": 4, "DD": 3, "DN": 6, "OD": 4, "TL": 6, "ts": "14/6/2026 08:47", "byAdmin": true, "TC": 6, "KT": 4, "TM": 6, "CH": 5, "at": 1781401672845, "PN": 7}}, "n": "Mạnh Tiến", "PN": 7, "lp": true, "pos": "GK", "TC": 6}, {"desc": "Trung vệ đọc trận nhạy và tốc độ hiếm có ở tuyến dưới. Chuyền phát động và phòng ngự đều tốt, càn quét chắc. Cơ động, sẵn sàng dạt biên dâng cao.\n⚽ Trung vệ nhanh + đọc bài như Van Dijk thu nhỏ — thiếu mỗi 1m93 với cái giá 75 triệu bảng.", "TC": 8, "lp": false, "ratings": {"Admin": {"PN": 7, "KT": 6, "TM": 0, "at": 1781402583973, "CH": 7, "TC": 8, "TL": 6, "ts": "14/6/2026 09:03", "byAdmin": true, "OD": 6, "TD": 8, "DD": 4, "DN": 6}, "(khởi tạo)": {"TD": 0, "TC": 0, "DD": 0, "DN": 0, "OD": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "CH": 0, "PN": 0}}, "PN": 7, "CH": 7, "pos": "Thòng", "n": "Nam Khắc", "KT": 6, "TM": 0, "OD": 6, "DD": 4, "DN": 6, "TD": 8, "pos2": ["HV"], "TL": 6}, {"pos2": ["TV"], "KT": 7, "TM": 0, "CH": 7, "PN": 6, "lp": false, "pos": "HV", "ratings": {"Admin": {"ts": "14/6/2026 09:26", "TL": 5, "OD": 6, "TD": 7, "byAdmin": true, "DN": 5, "DD": 4, "PN": 6, "TM": 0, "KT": 7, "at": 1781403997226, "CH": 7, "TC": 7}, "(khởi tạo)": {"PN": 0, "TM": 0, "ts": null, "KT": 0, "TL": 0, "CH": 0, "OD": 0, "TD": 0, "DN": 0, "DD": 0, "TC": 0}}, "TC": 7, "TL": 5, "n": "Nguyễn Danh Tuyên", "TD": 7, "desc": "Hậu vệ biên giàu tốc độ và kỹ thuật, đọc trận nhạy, chuyền chính xác. Phòng ngự ổn, lên hỗ trợ tấn công hiệu quả. Khả năng dứt điểm còn hạn chế.\n⚽ Gần giống Dani Alves đoạn lên công — kỹ thuật, chuyền, tốc độ đủ cả; thiếu mỗi cú dứt điểm với 42 cái cúp.", "DD": 4, "DN": 5, "OD": 6}, {"PN": 7, "CH": 7, "pos2": ["Thòng"], "TM": 8, "KT": 7, "TC": 5, "lp": false, "pos": "GK", "ratings": {"(khởi tạo)": {"TC": 0, "DD": 0, "DN": 0, "TD": 0, "OD": 0, "CH": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "PN": 0}, "Admin": {"at": 1781402009077, "CH": 7, "KT": 7, "TM": 8, "PN": 7, "TC": 5, "TL": 4, "ts": "14/6/2026 08:53", "DD": 3, "DN": 4, "byAdmin": true, "TD": 5, "OD": 6}}, "TL": 4, "OD": 6, "DN": 4, "DD": 3, "desc": "Thủ môn số một: phản xạ tốt, bắt bóng chắc tay, chơi chân khéo. Phòng ngự chắc nên lùi đá trung vệ được. Hạn chế ở tốc độ, thể lực, chơi thiên về chọn vị trí.\n⚽ Thủ môn chơi chân kiểu Ederson — thiếu mỗi tốc độ; lùi đá trung vệ thì ok, đua tốc thì gọi taxi.", "TD": 5, "n": "Nguyễn Khắc Trọng"}, {"TL": 7, "pos2": [], "TD": 8, "DN": 7, "DD": 7, "ratings": {"Admin": {"byAdmin": true, "TC": 7, "PN": 6, "TM": 0, "KT": 9, "CH": 8, "at": 1781406256326, "OD": 7, "TD": 8, "DN": 7, "DD": 7, "ts": "14/6/2026 10:04", "TL": 7}, "(khởi tạo)": {"DN": 0, "DD": 0, "TC": 0, "TD": 0, "OD": 0, "CH": 0, "TM": 0, "ts": null, "KT": 0, "TL": 0, "PN": 0}}, "OD": 7, "TM": 0, "desc": "Nhạc trưởng đúng nghĩa: kỹ thuật bậc nhất, chuyền và nhãn quan xuất sắc, điều tiết thế trận. Dứt điểm sắc, thể lực và năng nổ tốt. Mẫu tiền vệ trung tâm hoàn thiện.\n⚽ Iniesta của giải phủi — nhả nhịp làm cả đội sang hẳn ra; thiếu mỗi bàn ở chung kết World Cup thôi.", "KT": 9, "CH": 8, "n": "Nguyen Quy Bong", "PN": 6, "lp": false, "pos": "TVtt", "TC": 7}, {"TD": 6, "DN": 5, "n": "Nguyễn Văn Quyền", "DD": 6, "OD": 6, "TL": 5, "pos2": ["TĐ"], "ratings": {"(khởi tạo)": {"TM": 0, "ts": null, "TL": 0, "KT": 0, "CH": 0, "PN": 0, "TD": 0, "DN": 0, "TC": 0, "DD": 0, "OD": 0}, "Admin": {"ts": "14/6/2026 09:53", "TL": 5, "OD": 6, "TD": 6, "DN": 5, "DD": 6, "PN": 6, "TM": 0, "KT": 6, "at": 1781405605437, "CH": 5, "TC": 5, "byAdmin": true}}, "lp": false, "desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "TC": 5, "TM": 0, "KT": 6, "CH": 5, "pos": "HV", "PN": 6}, {"TL": 7, "n": "Quang Minh", "DN": 7, "desc": "Tiền vệ cánh giàu năng lượng: tốc độ, thể lực, máu lửa đều tốt, bám biên không ngơi nghỉ. Dứt điểm và phòng ngự khá, lại có phản xạ bắt gôn. Quân đa năng.\n⚽ Sức chạy cỡ Mané, bí quá nhảy vào gôn bắt luôn — bản 'all-in-one', thiếu mỗi sự chuyên một vị trí.", "DD": 6, "TD": 6, "OD": 6, "pos2": ["GK", "HV"], "CH": 5, "TM": 6, "KT": 5, "PN": 6, "ratings": {"Admin": {"OD": 6, "TD": 6, "DN": 7, "DD": 6, "ts": "14/6/2026 10:24", "TL": 7, "byAdmin": true, "TC": 7, "PN": 6, "TM": 6, "KT": 5, "CH": 5, "at": 1781407443297}, "(khởi tạo)": {"OD": 0, "TD": 0, "TC": 0, "DD": 0, "DN": 0, "PN": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "CH": 0}}, "TC": 7, "pos": "TV", "lp": true}, {"TL": 4, "TD": 4, "DD": 3, "DN": 4, "pos2": ["TĐ"], "OD": 4, "KT": 5, "TM": 0, "n": "Quý Tàu", "pos": "HV", "CH": 4, "desc": "Hậu vệ biên đang hoàn thiện, kỹ thuật nhỉnh hơn cả, các mặt còn lại cơ bản. Chịu khó lên công về thủ, cần cải thiện dứt điểm và tranh chấp. Hợp vai trò đơn giản, chắc sân nhà.\n⚽ Chưa kịp giống ai — 'tân binh học việc', cày vài mùa biết đâu thành ai đó; tinh thần thì 10 điểm!", "PN": 4, "lp": true, "TC": 4, "ratings": {"(khởi tạo)": {"OD": 0, "TD": 0, "DN": 0, "TC": 0, "DD": 0, "PN": 0, "TM": 0, "ts": null, "KT": 0, "TL": 0, "CH": 0}, "Admin": {"OD": 4, "TD": 4, "DN": 4, "DD": 3, "byAdmin": true, "ts": "14/6/2026 09:57", "TL": 4, "TC": 4, "PN": 4, "TM": 0, "KT": 5, "at": 1781405825971, "CH": 4}}}, {"TD": 6, "DD": 7, "DN": 5, "OD": 6, "TL": 5, "ratings": {"Admin": {"TC": 7, "PN": 7, "KT": 6, "TM": 0, "CH": 7, "at": 1781405992915, "OD": 6, "TD": 6, "DD": 7, "DN": 5, "byAdmin": true, "TL": 5, "ts": "14/6/2026 09:59"}, "(khởi tạo)": {"PN": 0, "CH": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "OD": 0, "DD": 0, "TC": 0, "DN": 0, "TD": 0}}, "pos2": ["TĐ"], "lp": false, "n": "Quyết Nguyễn", "TC": 7, "desc": "Hậu vệ biên toàn diện: chuyền, dứt điểm, phòng ngự, tốc độ đều tốt. Càn quét chắc, đủ sắc bén để dâng cao đá tiền đạo. Thể lực, năng nổ tầm trung.\n⚽ Cafu làng — lên công ghi bàn, về thủ chặn bóng, chạy cả trận; thiếu mỗi 2 cái World Cup thôi.", "pos": "HV", "KT": 6, "TM": 0, "CH": 7, "PN": 7}, {"ratings": {"Admin": {"PN": 7, "at": 1781407191794, "CH": 7, "TM": 0, "KT": 6, "TC": 6, "ts": "14/6/2026 10:19", "TL": 6, "byAdmin": true, "OD": 6, "DN": 6, "DD": 6, "TD": 7}, "(khởi tạo)": {"DD": 0, "TC": 0, "DN": 0, "TD": 0, "OD": 0, "CH": 0, "KT": 0, "TL": 0, "ts": null, "TM": 0, "PN": 0}}, "pos2": ["Thòng", "HV"], "TL": 6, "pos": "Thòng", "OD": 6, "n": "Trịnh Mạnh", "TD": 7, "DN": 6, "DD": 6, "PN": 7, "TM": 0, "KT": 6, "CH": 7, "desc": "Trung vệ chững chạc, phòng ngự chắc và đọc trận tốt. Chuyền phát động khá, triển khai bóng mượt. Dạt ra đá hậu vệ biên được; mạnh ở chỉ huy tuyến dưới.\n⚽ Chiellini phiên bản hiền — chỉ huy hàng thủ, đọc bài chắc; thiếu mỗi pha 'ôm người' tinh quái với cái mặt gắt.", "lp": true, "TC": 6}, {"lp": false, "n": "Văn Thanh", "pos2": ["TV"], "TC": 6, "KT": 7, "TM": 0, "CH": 7, "pos": "TVtt", "PN": 7, "TD": 7, "DD": 7, "DN": 6, "OD": 6, "TL": 6, "ratings": {"(khởi tạo)": {"PN": 0, "CH": 0, "ts": null, "TM": 0, "KT": 0, "TL": 0, "OD": 0, "DN": 0, "DD": 0, "TC": 0, "TD": 0}, "Admin": {"ts": "14/6/2026 10:17", "TL": 6, "DN": 6, "DD": 7, "TD": 7, "OD": 6, "at": 1781407022050, "CH": 7, "byAdmin": true, "TM": 0, "KT": 7, "PN": 7, "TC": 6}}, "desc": "Tiền vệ giữa cân bằng: kỹ thuật, chuyền, dứt điểm, phòng ngự đều tốt. Vừa cầm nhịp sáng tạo vừa lùi về càn quét. Đa năng, đẩy ra cánh được; tốc độ, thể lực mức ổn.\n⚽ Box-to-box kiểu Gerrard — công thủ gánh hết tuyến giữa; thiếu mỗi cú volley 30m với cái duyên trượt chân phút cuối."}, {"pos": "TV", "lp": false, "TC": 6, "PN": 6, "TM": 0, "KT": 6, "CH": 6, "desc": "Hậu vệ biên cần mẫn, các chỉ số đồng đều quanh mức khá. Đọc tình huống và bọc lót hợp lý, dâng cao đá tiền đạo khi cần. Chắc chắn, không điểm yếu rõ rệt.\n⚽ James Milner phố núi — đá đâu cũng tròn vai, HLV nào cũng mê; thiếu mỗi độ bền đá tới năm 38 tuổi.", "OD": 6, "TD": 6, "DN": 6, "DD": 7, "pos2": ["TĐ"], "n": "Nguyễn Việt Dũng", "TL": 6, "ratings": {"(khởi tạo)": {"TD": 0, "DD": 0, "TC": 0, "DN": 0, "OD": 0, "KT": 0, "TL": 0, "TM": 0, "ts": null, "CH": 0, "PN": 0}, "Admin": {"TC": 6, "byAdmin": true, "PN": 6, "at": 1784902810135, "CH": 6, "KT": 6, "TM": 0, "OD": 6, "DD": 7, "DN": 6, "TD": 6, "TL": 6, "ts": "24/7/2026 21:20"}}}, {"OD": 6, "TD": 5, "DD": 7, "DN": 6, "desc": "Hậu vệ biên cần mẫn, các mặt đồng đều quanh mức trung bình. Chịu khó lên công về thủ, tốc độ và thể lực đủ dùng. Cần trau dồi chuyền bóng và phòng ngự.\n⚽ Chưa giống ngôi sao nào — tạm phong 'hậu vệ quốc dân', đá đâu cũng được, nổi bật thì để mùa sau.", "TL": 6, "ratings": {"(khởi tạo)": {"OD": 0, "TD": 0, "TC": 0, "DD": 0, "DN": 0, "PN": 0, "TL": 0, "KT": 0, "ts": null, "TM": 0, "CH": 0}, "Admin": {"ts": "24/7/2026 21:17", "TL": 6, "TD": 5, "DN": 6, "DD": 7, "OD": 6, "TM": 0, "KT": 6, "at": 1784902658512, "CH": 5, "PN": 6, "TC": 6, "byAdmin": true}}, "pos": "TV", "lp": true, "TC": 6, "n": "Nguyen Quoc An", "PN": 6, "KT": 6, "TM": 0, "pos2": ["HV"], "CH": 5}];
 const FIREBASE_CONFIG = {
@@ -1862,6 +2151,7 @@ const FIREBASE_CONFIG = {
   "appId": "1:369243060469:web:15be646482a42c08d46dbc"
 };
 const LS={players:"gp_players",history:"gp_history",plog:"gp_plog",editor:"gp_editor",requests:"gp_requests",goalReqs:"gp_goalreqs",feedback:"gp_feedback",matchLog:"gp_matchlog",finance:"gp_finance"};
+if(window.GP_APP_CONFIG?.backend)for(const k of Object.keys(LS))LS[k]='gp_web_'+(aiIsPreview()?'preview_':'cloud_')+k;
 const TITLES={
   home:'<span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span>',
   "screen-create":GPIcons.render("lineup")+" Tạo đội",
@@ -1870,6 +2160,7 @@ const TITLES={
   "screen-week":GPIcons.render("lineup")+" Trận sắp tới",
   "screen-player-status":GPIcons.render("player-form")+" Tình trạng cầu thủ",
   "screen-finance":GPIcons.render("finance")+" Quản lý thu chi",
+  "screen-ai":GPIcons.render("match-analysis")+" Trợ lý AI",
   "screen-history":GPIcons.render("match-history")+" Lịch sử thi đấu",
   "screen-backup":GPIcons.render("backup")+" Backup đội hình"
 };
@@ -1945,6 +2236,7 @@ function _seedLastWritten(){const a=_fieldSnapshot(),o={};for(const k in a)o[k]=
 function persist(){
   try{localStorage.setItem(LS.players,JSON.stringify(STATE.players));localStorage.setItem(LS.history,JSON.stringify(STATE.history));localStorage.setItem(LS.plog,JSON.stringify(STATE.plog||[]));localStorage.setItem(LS.requests,JSON.stringify(STATE.requests||[]));localStorage.setItem(LS.goalReqs,JSON.stringify(STATE.goalReqs||[]));localStorage.setItem(LS.feedback,JSON.stringify(STATE.feedback||[]));localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog||[]));localStorage.setItem(LS.finance,JSON.stringify(STATE.finance||[]));}catch(e){}
   const allowShrink=STATE._allowShrink; STATE._allowShrink=false;   // cờ 1-lần: chỉ cho phép ghi cloud ngắn hơn khi vừa xoá/gộp có xác nhận
+  if(aiIsPreview())return true; // web-app preview: local drafts only, NEVER queue cloud writes
   if(!(STATE.cloud&&STATE.docRef)) return true;
   const all=_fieldSnapshot(), lw=STATE._lastWritten||(STATE._lastWritten={});
   const out={}, outJson={};
@@ -1972,6 +2264,7 @@ function setBackups(a){STATE.lineupBackups=a;persist();}
 // chỉ ghi field ta THỰC SỰ đổi trên nền tươi → không đè mất thay đổi thiết bị/tab khác vừa ghi.
 // Đọc cloud lỗi → HUỶ (không ghi đè bằng bản cũ). Không cloud → chạy cb luôn. Trả Promise để .finally.
 function freshDoc(cb){
+  if(aiIsPreview()){try{cb();}catch(e){console.warn(e);}return Promise.resolve();}
   if(!(STATE.cloud&&STATE.docRef)){ try{cb();}catch(e){console.warn(e);} return Promise.resolve(); }
   return STATE.docRef.get().then(snap=>{
     if(snap.exists){const d=snap.data();
@@ -2172,7 +2465,7 @@ function initCloud(){
     STATE.cloud=true;
     STATE.docRef.onSnapshot(snap=>{
       if(snap.exists){const d=snap.data();if(Array.isArray(d.players))STATE.players=d.players;if(Array.isArray(d.history))STATE.history=d.history;if(Array.isArray(d.plog))STATE.plog=d.plog;STATE.requests=Array.isArray(d.requests)?d.requests:[];STATE.goalReqs=Array.isArray(d.goalReqs)?d.goalReqs:[];STATE.feedback=Array.isArray(d.feedback)?d.feedback:[];STATE.lineupBackups=Array.isArray(d.lineupBackups)?d.lineupBackups:[];STATE.matchLog=Array.isArray(d.matchLog)?d.matchLog:[];STATE.finance=Array.isArray(d.finance)?d.finance:[];STATE.cloudHistoryLen=Array.isArray(d.history)?d.history.length:0;}
-      else STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]},{merge:true});
+      else if(!aiIsPreview())STATE.docRef.set({players:STATE.players,history:STATE.history,plog:STATE.plog||[],requests:STATE.requests||[],goalReqs:STATE.goalReqs||[],feedback:STATE.feedback||[],lineupBackups:STATE.lineupBackups||[],finance:STATE.finance||[]},{merge:true});
       _seedLastWritten();   // vừa đồng bộ với cloud → chốt mốc từng field để persist() sau chỉ ghi field THỰC SỰ đổi
       ensureRatings(STATE.players);
       onCloudUpdate();
@@ -2354,11 +2647,11 @@ function currentTheme(){return document.documentElement.dataset.theme==="light"?
 function applyThemeUI(){
   const light=currentTheme()==="light", b=$("themeBtn"), meta=document.querySelector('meta[name="theme-color"]');
   if(b){b.textContent=light?"☾":"☀︎";b.title=light?"Chuyển sang giao diện tối":"Chuyển sang giao diện sáng";b.setAttribute("aria-label",b.title);}
-  if(meta)meta.content=light?"#f5f7ff":"#0a0e1a";
+  if(meta)meta.content=light?"#f4f6f5":"#151d21";
 }
 function toggleTheme(){
   const next=currentTheme()==="light"?"dark":"light";
-  if(next==="light")document.documentElement.dataset.theme="light";else delete document.documentElement.dataset.theme;
+  document.documentElement.dataset.theme=next;
   try{localStorage.setItem(THEME_KEY,next);}catch(e){}
   applyThemeUI(); toast(next==="light"?"Đã bật giao diện sáng ☀︎":"Đã bật giao diện tối ☾");
 }
@@ -2377,6 +2670,7 @@ function keyLogoBackground(img){
 }
 function keyLogoBackgrounds(){document.querySelectorAll(".ab-logo").forEach(keyLogoBackground);}
 function show(id){
+  if($(id)?.hidden)id="home"; // temporarily hidden modules must not open through stale navigation
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
@@ -2391,6 +2685,7 @@ function show(id){
   if(id==="screen-week") showWeek();
   if(id==="screen-player-status") renderPlayerStatus();
   if(id==="screen-finance") renderFinance();
+  if(id==="screen-ai") renderAIWorkspace();
   if(id==="screen-history") showHistory();
   setTimeout(fitMatch,0);
 }
@@ -2475,7 +2770,7 @@ function logMatchAct(act,mid,mlabel,detail){
     ts:nowStamp(), at:Date.now() };
   STATE.matchLog=[entry,...(STATE.matchLog||[])].slice(0,500);   // bản sao cục bộ (mới → cũ)
   try{localStorage.setItem(LS.matchLog,JSON.stringify(STATE.matchLog));}catch(e){}
-  if(STATE.cloud&&STATE.docRef&&typeof firebase!=="undefined"&&firebase.firestore&&firebase.firestore.FieldValue){
+  if(!aiIsPreview()&&STATE.cloud&&STATE.docRef&&typeof firebase!=="undefined"&&firebase.firestore&&firebase.firestore.FieldValue){
     // set(...,{merge:true}) + arrayUnion: vừa TẠO field nếu chưa có, vừa append ATOMIC (chống đua ghi) — không cần fallback 2 bước.
     // Firebase offline sẽ tự xếp hàng chờ (không reject) nên chỉ toast khi lỗi thật (permission/quota).
     STATE.docRef.set({matchLog:firebase.firestore.FieldValue.arrayUnion(entry)},{merge:true})
@@ -3180,7 +3475,7 @@ const ATTR_HINT={
   TD:"Nhãn quan, đọc trận chọn vị trí · 1–2 kém · 3–4 chậm hiểu · 5–6 ổn · 7–8 tinh · 9–10 nhạy",
   OD:"Ổn định phong độ · 1–2 thất thường · 3–4 phập phù · 5–6 ổn · 7–8 đều · 9–10 rất đều mọi trận",
 };
-function attrColor(v){v=+v||0;return v>=8?"#22e07a":(v>=6?"#e8ecf6":(v>=4?"#f5c451":"#ff6b6b"));}
+function attrColor(v){v=+v||0;return v>=8?"var(--success)":(v>=6?"var(--text)":(v>=4?"var(--amber)":"var(--red)"));}
 function pmFind(){return getPlayers().find(x=>x.n===pmName);}
 function openPlayer(i){const p=pcards[i];if(!p)return;pmName=p.n;renderPlayerProfile();$("playerModal").classList.add("on");}
 function closePlayer(){$("playerModal").classList.remove("on");}
@@ -3728,7 +4023,7 @@ function renderScorer(boxId){
       </div>`).join("")+`</div>`;
 }
 // ---- đánh giá tự động từ chỉ số ----
-function evRate(v){return v>=8?["Xuất sắc","#22e07a"]:v>=6.5?["Tốt","#5fd38a"]:v>=5?["Khá","#e8ecf6"]:v>=3.5?["Trung bình","#f5c451"]:["Yếu","#ff6b6b"];}
+function evRate(v){return v>=8?["Xuất sắc","var(--success)"]:v>=6.5?["Tốt","var(--brand)"]:v>=5?["Khá","var(--faint)"]:v>=3.5?["Trung bình","var(--amber)"]:["Yếu","var(--red)"];}
 // Xếp loại 1 câu theo VỊ TRÍ ĐĂNG KÝ + trình độ (dùng cho hồ sơ, bảng xếp hạng, vua phá lưới) — 1 nguồn duy nhất
 // Vai trò chính BÁM vị trí (posCodeOf), không còn chọn theo năng lực cao nhất -> mô tả không mâu thuẫn vị trí.
 function evalTitle(p){
@@ -4351,8 +4646,129 @@ function delHistory(id){
   });
 }
 
-localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); show("home");
+// AI is opt-in; no provider key, password, or output is stored in localStorage.
+const AI_STATE={status:null,csrf:null,busy:false,output:null,request:null};
+function aiIsPreview(){return window.GP_APP_CONFIG?.backend&&window.GP_APP_CONFIG.dataMode!=='cloud';}
+function aiInit(){
+  if(!window.GP_APP_CONFIG?.backend)return;
+  const banner=$('aiModeBanner');banner.style.display='block';
+  banner.textContent=aiIsPreview()?'BẢN WEB APP · Xem thử an toàn — đọc dữ liệu cloud; thay đổi chỉ lưu trên máy này, không ghi lên web đang chạy.':'BẢN WEB APP · Đồng bộ cloud đang bật — thao tác lưu sẽ cập nhật dữ liệu chung.';
+}
+async function aiFetch(route,body){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),125000);
+  try{
+    const response=await fetch('/api/ai/'+route,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json','X-GP-CSRF':AI_STATE.csrf||''}:{},body:body?JSON.stringify(body):undefined});
+    if(!(response.headers.get('content-type')||'').includes('application/json'))throw new Error('Khu vực AI cần backend. Chạy npm start và mở APP_ORIGIN; GitHub Pages không chạy API.');
+    const data=await response.json();
+    if(!response.ok){if(response.status===401){AI_STATE.csrf=null;if(AI_STATE.status)AI_STATE.status.authenticated=false;aiRenderStatus();}throw new Error(data.error||'Không gọi được AI.');}
+    return data;
+  }catch(e){if(e.name==='AbortError')throw new Error('Đã hết thời gian chờ AI. Không tự gửi lại yêu cầu.');throw e;}
+  finally{clearTimeout(timer);}
+}
+function aiMessage(text,error=false){const el=$('aiMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
+function aiRenderStatus(){
+  const s=AI_STATE.status,box=$('aiServerStatus');
+  if(!s){box.textContent='Chưa kết nối backend AI.';return;}
+  box.textContent=`OpenRouter · ${s.model} · ${s.remainingRequests} lượt còn lại trong giờ · ${s.dataMode==='cloud'?'đồng bộ cloud':'xem thử, không ghi cloud'}. `+(s.configured?(s.authenticated?'Đã mở quyền AI (30 phút).':'Cần mở quyền AI để sử dụng.'):`Chưa cấu hình: ${s.missing.join(', ')}. Điền trong .env trên server rồi chạy lại npm start. Không nhập API key vào giao diện.`);
+  $('aiLoginForm').hidden=!s.configured||s.authenticated;$('aiLogout').hidden=!s.authenticated;
+  $('aiRun').disabled=AI_STATE.busy||!s.configured||!s.authenticated;
+}
+async function aiRefresh(){
+  if(!window.GP_APP_CONFIG?.backend){$('aiServerStatus').textContent='AI chỉ hoạt động ở bản web app có backend. Chạy npm start, sau đó mở http://localhost:3000 (hoặc APP_ORIGIN đã cấu hình). Bản GitHub Pages vẫn hoạt động như cũ.';$('aiRun').disabled=true;$('aiLoginForm').hidden=true;return;}
+  try{AI_STATE.status=await aiFetch('status');AI_STATE.csrf=AI_STATE.status.csrf;aiRenderStatus();}catch(e){aiMessage(e.message,true);}
+}
+async function aiLogin(event){
+  event.preventDefault();const input=$('aiPassword'),btn=$('aiLoginBtn');btn.disabled=true;
+  try{const data=await aiFetch('login',{password:input.value});AI_STATE.csrf=data.csrf;aiMessage('Đã mở quyền sử dụng AI.');await aiRefresh();}catch(e){aiMessage(e.message,true);}finally{input.value='';btn.disabled=false;}
+}
+async function aiLogout(){try{await aiFetch('logout',{});AI_STATE.csrf=null;await aiRefresh();}catch(e){aiMessage(e.message,true);}}
+function aiPopulateSources(){
+  const matchSelect=$('aiMatch'),playerSelect=$('aiPlayer'),oldMatch=matchSelect.value,oldPlayer=playerSelect.value;
+  matchSelect.innerHTML=getHistory().slice().sort((a,b)=>(b.kickoff||b.id)-(a.kickoff||a.id)).map(r=>`<option value="${esc(String(r.id))}">${esc(fmtKick(r.kickoff)||r.label||String(r.id))}${r.score?` · ${r.score.a}–${r.score.b}`:' · chưa có tỉ số'}</option>`).join('');
+  if([...matchSelect.options].some(o=>o.value===oldMatch))matchSelect.value=oldMatch;
+  playerSelect.innerHTML=getPlayers().slice().sort((a,b)=>a.n.localeCompare(b.n,'vi')).map(p=>`<option value="${esc(p.n)}">${esc(p.n)}</option>`).join('');
+  if([...playerSelect.options].some(o=>o.value===oldPlayer))playerSelect.value=oldPlayer;
+  aiTaskChanged();
+}
+function renderAIWorkspace(){aiPopulateSources();aiRefresh();}
+function aiTaskChanged(){
+  const task=$('aiTask').value;
+  $('aiMatchField').hidden=task!=='match-review';$('aiPlayerField').hidden=!['player-form','player-description'].includes(task);
+  const selected=selectedIdx().map(i=>curPlayers[i]).filter(Boolean);
+  $('aiRosterInfo').hidden=task!=='lineup';
+  $('aiRosterInfo').textContent=`Đang chọn ${selected.length} người ở màn Tạo đội. AI chia sân 7 (14–24 người), đọc 3 trận gần nhất để hạn chế lặp đồng đội/vị trí. Có thể ghi yêu cầu vị trí/dự bị bên dưới.`;
+}
+function openAITask(task,matchId){$('aiTask').value=task;show('screen-ai');if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();}
+function aiContextSnapshot(){
+  const all=getPlayers().concat(guestPlayers),names=new Set();
+  const players=all.map(p=>{names.add(p.n);return GPAIContext.player(p);});
+  const matchRecord=getHistory().find(r=>String(r.id)===$('aiMatch').value);
+  for(const p of matchRecord?.subset||[])if(p){
+    if(!names.has(p.n)){players.push(GPAIContext.player(p));names.add(p.n);}
+    else if($('aiTask').value==='match-review')players[players.findIndex(x=>x.n===p.n)]=GPAIContext.player(p);
+  }
+  const history=getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy);
+  return {players,history,rosterNames:selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean),match:matchRecord?GPAIContext.compactLegacy(matchRecord):null,playerName:$('aiPlayer').value,instruction:$('aiInstruction').value.trim()};
+}
+function aiMatchFingerprint(match,players){
+  if(!match)return null;const names=new Set([...match.teams.A,...match.teams.B].map(p=>p.n));
+  return JSON.stringify({match,profiles:players.filter(p=>names.has(p.n)).map(GPAIContext.player).sort((a,b)=>a.n.localeCompare(b.n,'vi'))});
+}
+async function aiRun(){
+  if(AI_STATE.busy)return;
+  let context;const task=$('aiTask').value;
+  try{context=aiContextSnapshot();if(task==='lineup'&&context.rosterNames.length<14)throw new Error('Vào Tạo đội, chọn ít nhất 14 người rồi bấm Tạo đội bằng AI.');}catch(e){aiMessage(e.message,true);return;}
+  if(!confirm('Gửi tên, chỉ số cầu thủ và lịch sử bóng đá liên quan tới OpenRouter/model để tạo nội dung? Mỗi lượt có thể tính phí. Không gửi tài khoản, thu chi hay API key.'))return;
+  AI_STATE.busy=true;aiRenderStatus();$('aiRun').textContent='Đang phân tích…';aiMessage('AI đang đọc chỉ số, chuỗi kết quả và bàn thắng. Không tự lưu đội hình hay thay đổi điểm.');
+  try{
+    const response=await aiFetch('run',{task,context});
+    AI_STATE.output=response.output;AI_STATE.request={task,context,matchId:context.match?.id,matchSnapshot:aiMatchFingerprint(context.match,context.players)};
+    aiRenderOutput();aiMessage('Đã có bản nháp AI. Kiểm tra nội dung/bảng so kè trước khi sử dụng.');
+  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;$('aiRun').textContent='Tạo bằng AI';await aiRefresh();}
+}
+function aiPlainOutput(){const o=AI_STATE.output;if(!o)return '';return o.title+'\n\n'+o.sections.map(s=>s.heading+'\n'+s.body).join('\n\n');}
+function aiReviewHTML(o){return '<p class="rv-lead"><b>'+esc(o.title)+'</b></p>'+o.sections.map(s=>'<p><b>'+esc(s.heading)+'</b><br>'+esc(s.body).replace(/\n/g,'<br>')+'</p>').join('');}
+function aiRenderOutput(){
+  const o=AI_STATE.output,task=AI_STATE.request.task;
+  $('aiOutput').hidden=false;$('aiOutputText').innerHTML='<h2>'+esc(o.title)+'</h2>'+o.sections.map(s=>'<section><h3>'+esc(s.heading)+'</h3><p>'+esc(s.body)+'</p></section>').join('');
+  if(task==='player-form'){
+    const labels={increase:'Cân nhắc tăng',decrease:'Cân nhắc giảm',keep:'Giữ điểm',insufficient:'Chưa đủ dữ liệu'};
+    $('aiOutputText').innerHTML+='<div class="ai-label">'+labels[o.verdict]+' · chỉ đề xuất, không tự sửa điểm</div>'+o.suggestions.map(s=>'<p>'+esc(s.attribute+' · '+({increase:'tăng',decrease:'giảm',keep:'giữ'}[s.direction])+': '+s.reason)+'</p>').join('');
+  }
+  $('aiOutputMeta').textContent=`${o.model} · ${new Date(o.createdAt).toLocaleString('vi-VN')} · ${o.usage?o.usage.promptTokens+' token vào / '+o.usage.completionTokens+' token ra':'chưa có số token'} · bản nháp, cần kiểm tra dữ kiện.`;
+  $('aiUseLineup').hidden=task!=='lineup';$('aiSaveReview').hidden=task!=='match-review';
+  $('aiLineupPreview').innerHTML='';$('aiWarnings').textContent=(o.warnings||[]).join('\n');
+  if(task==='lineup')render(o.result,o.subset,'aiLineupPreview','<p>Bản nháp AI chưa chốt. Kiểm tra riêng công, thủ và từng cặp trong bảng so kè; không mặc định cân chỉ vì tổng điểm gần nhau.</p>',false);
+  $('aiOutput').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function aiCopy(){try{await navigator.clipboard.writeText(aiPlainOutput());aiMessage('Đã sao chép nội dung AI.');}catch{aiMessage('Trình duyệt không cho sao chép. Bạn có thể chọn nội dung bên dưới để copy.',true);}}
+function aiUseLineup(){
+  if(AI_STATE.request?.task!=='lineup'||!AI_STATE.output)return;
+  const o=AI_STATE.output;show('screen-create');const chosen=new Set(o.subset.map(p=>p.n));
+  $('roster').querySelectorAll('input').forEach(c=>{c.checked=chosen.has(curPlayers[+c.dataset.i].n);c.closest('.pl-item').classList.toggle('on',c.checked);c.closest('.pl-item').classList.toggle('off',!c.checked);});updateCount();
+  cstate={key:'AI:'+Date.now(),results:[structuredClone(o.result)],idx:0,subset:structuredClone(o.subset)};
+  render(cstate.results[0],cstate.subset,'result','<p>Bản nháp AI chưa chốt. Kiểm tra từng tuyến và bảng so kè trước khi lưu trận.</p>',true);$('saveWeek').style.display='inline-block';
+  $('status').textContent='Bản nháp AI · Chưa lưu trận. Kiểm tra so kè rồi chọn Lưu làm đội tuần này nếu đồng ý.';
+}
+async function aiSaveReview(){
+  if(AI_STATE.request?.task!=='match-review'||!AI_STATE.output)return;
+  if(aiIsPreview()){aiMessage('Chế độ xem thử không ghi nhận định lên cloud. Dùng Sao chép; chỉ bật APP_DATA_MODE=cloud khi sẵn sàng.',true);return;}
+  if(!requireAdmin())return;
+  const request=AI_STATE.request,output=AI_STATE.output;
+  if(!confirm('Lưu nhận định vào đúng trận đã chọn? Chỉ thay phần nhận định, giữ đội hình, tỉ số và bàn thắng.'))return;
+  if(!(STATE.cloud&&STATE.docRef)){aiMessage('Chưa kết nối Firestore; không lưu để tránh ghi nhầm dữ liệu.',true);return;}
+  try{
+    await firebase.firestore().runTransaction(async tx=>{
+      const snap=await tx.get(STATE.docRef),history=snap.data()?.history;if(!Array.isArray(history))throw new Error('Không đọc được lịch sử.');
+      const r=history.find(m=>String(m.id)===String(request.matchId));if(!r)throw new Error('Trận đã bị xóa.');
+      if(aiMatchFingerprint(GPAIContext.compactLegacy(r),r.subset)!==request.matchSnapshot)throw new Error('Đội hình/kết quả đã thay đổi. Hãy tạo nhận định mới để không lưu bản cũ.');
+      r.review=aiReviewHTML(output);r.aiReview={model:output.model,createdAt:output.createdAt};tx.update(STATE.docRef,{history});
+    });aiMessage('Đã lưu nhận định vào đúng trận. Không thay đổi đội hình, tỉ số hay bàn thắng.');
+  }catch(e){aiMessage(e.message,true);}
+}
+
+localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"}));   // ép tải service worker mới khi giao diện được cập nhật
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.backend) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // backend sessions/API must never be cached
 </script>
 </body></html>

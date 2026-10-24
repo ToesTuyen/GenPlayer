@@ -100,3 +100,11 @@ test('built JavaScript parses; preview blocks every existing direct cloud write'
   require('node:child_process').execFileSync('python3',['build_web.py','--offline','--output-dir','dist'],{cwd:path.join(__dirname,'..')});
   assert.deepEqual([fs.readFileSync(rootIndex,'utf8'),fs.readFileSync(rootScore,'utf8')],before,'Offline web-app build must not modify deployed outputs');
 });
+test('finance is hidden in every local HTML entry, not just the backend build',()=>{
+  for(const file of ['index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    assert.match(html,/<button[^>]*id="financeNavBtn"[^>]*\bhidden\b/,file+' finance navigation');
+    assert.match(html,/<div[^>]*id="screen-finance"[^>]*\bhidden\b/,file+' finance screen');
+    assert.ok(html.includes('.screen[hidden],.ap-btn[hidden]{display:none!important}'),file+' explicit hidden styles');
+  }
+});
