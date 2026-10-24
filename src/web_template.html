@@ -26,6 +26,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 input,button,select{font-family:inherit}
 input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;height:16px}
 .screen{display:none;max-width:920px;margin:0 auto;padding:18px 16px 40px}
+.screen[hidden],.ap-btn[hidden]{display:none!important}
 .home-screen{max-width:1120px}
 /* app bar */
 .appbar{position:sticky;top:0;z-index:30;background:linear-gradient(100deg,rgba(83,28,104,.76),rgba(31,55,142,.78) 58%,rgba(78,111,202,.70)),rgba(8,10,30,.82);backdrop-filter:saturate(145%) blur(18px);
@@ -893,7 +894,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <button class="ap-btn" onclick="show('screen-rank')"><span class="ap-icon" data-ui-icon="ranking"></span><span>Xếp hạng</span></button>
         <button class="ap-btn" onclick="show('screen-history')"><span class="ap-icon" data-ui-icon="match-history"></span><span>Lịch sử</span></button>
         <button class="ap-btn" onclick="show('screen-player-status')"><span class="ap-icon" data-ui-icon="player-form"></span><span>Tình trạng cầu thủ</span></button>
-        <button class="ap-btn" onclick="show('screen-finance')"><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
+        <button class="ap-btn" id="financeNavBtn" onclick="show('screen-finance')" hidden><span class="ap-icon" data-ui-icon="finance"></span><span>Thu chi</span></button>
         <button class="ap-btn" onclick="show('screen-ai')"><span class="ap-icon" data-ui-icon="match-analysis"></span><span>Trợ lý AI</span></button>
         <button class="ap-btn" id="backupNavBtn" style="display:none" onclick="openBackup()"><span class="ap-icon" data-ui-icon="backup"></span><span>Backup</span></button>
       </div>
@@ -1019,7 +1020,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </div>
 
 <!-- ====== QUAN LY THU CHI ====== -->
-<div id="screen-finance" class="screen">
+<div id="screen-finance" class="screen" hidden>
   <div class="fin-head">
     <div><div class="fin-title"><span data-ui-icon="finance"></span> Quản lý thu chi</div><div class="fin-sub">Sổ quỹ chung của đội · thu, chi và số dư được đồng bộ theo thời gian thực.</div></div>
     <div id="finance-admin-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="openFinanceEntry('income')"><span data-ui-icon="income"></span>Ghi thu</button><button class="btn alt sm" onclick="openFinanceEntry('expense')"><span data-ui-icon="expense"></span>Ghi chi</button></div>
@@ -1823,6 +1824,7 @@ function keyLogoBackground(img){
 }
 function keyLogoBackgrounds(){document.querySelectorAll(".ab-logo").forEach(keyLogoBackground);}
 function show(id){
+  if($(id)?.hidden)id="home"; // temporarily hidden modules must not open through stale navigation
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   $(id).style.display="block"; window.scrollTo(0,0);
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;

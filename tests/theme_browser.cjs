@@ -17,14 +17,19 @@ async function main(){
       page.on('pageerror',e=>errors.push(e.message));
       await ctx.route('https://www.gstatic.com/firebasejs/**',r=>r.fulfill({contentType:'application/javascript',body:'/* disabled */'}));
       await ctx.route('**/firestore.googleapis.com/**',r=>{network.push(r.request().method());return r.abort();});
-      await ctx.addInitScript(({players,history})=>{localStorage.setItem('gp_web_preview_players',JSON.stringify(players));localStorage.setItem('gp_web_preview_history',JSON.stringify(history));},{players,history});
+      await ctx.addInitScript(({players,history})=>{localStorage.setItem('gp_web_preview_players',JSON.stringify(players));localStorage.setItem('gp_web_preview_history',JSON.stringify(history));localStorage.setItem('gp_web_preview_finance',JSON.stringify([{id:'hidden-ledger-fixture',amount:100000}]));},{players,history});
       await page.goto(config.origin);
       assert.equal(await page.evaluate(()=>currentTheme()),'light','First visit defaults to calm light theme');
       const original=await page.evaluate(()=>JSON.stringify(getHistory()));
+      const originalFinance=await page.evaluate(()=>JSON.stringify(getFinance()));
+      assert.equal(await page.locator('#financeNavBtn').isVisible(),false,'Finance navigation stays hidden');
+      await page.evaluate(()=>show('screen-finance'));
+      assert.equal(await page.locator('#screen-finance').isVisible(),false,'Stale navigation cannot reopen hidden finance screen');
+      assert.equal(await page.locator('#home').isVisible(),true);
       for(const theme of ['light','dark']){
         await page.evaluate(theme=>{if(currentTheme()!==theme)toggleTheme();show('home');},theme);
         await page.screenshot({path:path.join(screenshots,`${mobile?'mobile':'desktop'}-${theme}-home.png`),fullPage:true,animations:'disabled'});
-        for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-finance','screen-history','screen-ai']){
+        for(const id of ['home','screen-create','screen-players','screen-rank','screen-week','screen-player-status','screen-history','screen-ai']){
           await page.evaluate(id=>show(id),id);
           const state=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,body:getComputedStyle(document.body).backgroundImage,header:getComputedStyle(document.querySelector('.appbar')).backgroundImage}));
           assert.equal(state.overflow,false,`${id}/${theme} no horizontal overflow`);assert.equal(state.body,'none');assert.equal(state.header,'none');
@@ -43,9 +48,9 @@ async function main(){
         });assert.ok(contrast>=4.5,'Primary button text contrast >=4.5: '+contrast);
         await page.reload();assert.equal(await page.evaluate(()=>currentTheme()),theme,'Remember explicit theme preference');
       }
-      assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),original);assert.deepEqual(network,[]);assert.deepEqual(errors,[]);await ctx.close();
+      assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),original);assert.equal(await page.evaluate(()=>JSON.stringify(getFinance())),originalFinance,'Hiding finance must preserve its data');assert.deepEqual(network,[]);assert.deepEqual(errors,[]);await ctx.close();
     }
-    console.log(JSON.stringify({ok:true,screenshots,coverage:'9 screens + login/profile, desktop/mobile, light/dark, no gradients on chrome/panels, button contrast, saved preference, unchanged data'}));
+    console.log(JSON.stringify({ok:true,screenshots,coverage:'8 screens + login/profile, finance hidden with preserved data, desktop/mobile, light/dark, button contrast, saved preference, unchanged data'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
