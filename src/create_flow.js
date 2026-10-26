@@ -7,6 +7,8 @@ const CREATE_STEPS=[
   ['search','Tìm phương án chia đội'],
   ['partition','Đủ người, dự bị & chia khách'],
   ['balance','Cân riêng hàng công & hàng thủ'],
+  ['reserves','Cân sức mạnh dự bị'],
+  ['quality','Tổng lực, ngôi sao, tốc độ & thể lực'],
   ['positions','Đúng vị trí & ưu tiên người mạnh'],
   ['rotation','Đối chiếu đội hình gần nhất'],
   ['note','Yêu cầu riêng từ Note'],
@@ -88,7 +90,7 @@ $('createProcessClose').onclick=()=>{
   if(CREATE_STATE.success){$('result').scrollIntoView({behavior:'smooth',block:'start'});fitMatch();}
   else $('go').focus();
 };
-function createSolveInWorker(players){
+function createSolveInWorker(players,instruction='',history=[],now=Date.now()){
   return new Promise((resolve,reject)=>{
     let worker,url,timer;
     const finish=(error,data)=>{clearTimeout(timer);if(worker)worker.terminate();if(url)URL.revokeObjectURL(url);error?reject(error):resolve(data);};
@@ -98,23 +100,13 @@ function createSolveInWorker(players){
       worker.onmessage=event=>event.data.error?finish(new Error(event.data.error)):finish(null,event.data.results);
       worker.onerror=event=>{event.preventDefault();finish(new Error('Không chạy được thuật toán trong trình duyệt này. Hãy tải lại trang và thử lại.'));};
       timer=setTimeout(()=>finish(new Error('Thuật toán vượt quá 90 giây. Hãy giảm danh sách rồi thử lại. Chưa thay đổi trận.')),90000);
-      worker.postMessage({players});
+      worker.postMessage({players,instruction,history,now});
     }catch{finish(new Error('Trình duyệt không mở được bộ xử lý thuật toán. Hãy cho phép Web Worker rồi thử lại.'));}
   });
 }
-function createRotation(result,subset,history){
-  const recent=history.filter(m=>m.kickoff<=Date.now()).slice(0,3),last=recent[0];
-  if(!last)return {state:'warn',detail:'Chưa có trận trước để đối chiếu xoay tua.'};
-  const previous=new Map();
-  for(const side of ['A','B'])for(const p of last.teams[side])if(!p.bench)previous.set(p.n,{side,slot:p.slot});
-  let samePositions=0,maxTogether=0;
-  for(const side of ['A','B']){
-    const counts={A:0,B:0};
-    result['ev'+side].starters.forEach((i,k)=>{const old=previous.get(subset[i].n);if(old){counts[old.side]++;if(old.slot===GPAIContext.SLOTS[k])samePositions++;}});
-    maxTogether=Math.max(maxTogether,counts.A,counts.B);
-  }
-  const warn=samePositions>0||maxTogether>=4;
-  return {state:warn?'warn':'done',detail:`${samePositions} người giữ vị trí · Tối đa ${maxTogether} đồng đội cũ cùng bên.`+(warn?' Cần xem lại xoay tua.':'')};
+function createRotation(result,subset,history,now=Date.now()){
+  const r=GPAIContext.lineupRotation(subset,{A:result.evA,B:result.evB},history,now);
+  return {state:r.checked&&r.maxTogether<=r.limit?'done':'warn',detail:!r.checked?r.reason:`Tối đa ${r.maxTogether}/${r.limit} đồng đội cũ cùng bên, không phụ thuộc màu áo. ${r.samePositions} người giữ vai trò phù hợp; không ép đổi sai vị trí.`};
 }
 async function createTeams(){
   if(CREATE_STATE.busy||AI_STATE.busy)return;
@@ -126,6 +118,7 @@ async function createTeams(){
     await createCompleteStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
     createStep('ratings','active','Kiểm tra điểm và vị trí trước khi chia…');await createYield();
     context=GPAIContext.normalize(aiContextSnapshot('lineup'));
+    const lineupNow=Date.now();
     subset=context.rosterNames.map(n=>context.players.find(p=>p.n===n));
     // Lineup creation never needs an unrelated match/player selected for another AI task.
     context.match=null;context.playerName='';
@@ -151,12 +144,17 @@ async function createTeams(){
     }else await createCompleteStep('engine','warn',fallback+' Dùng thuật toán.');
     $('createProcessEngine').textContent=engine;
     createStep('search','active',engine==='AI'?'Chuẩn bị các phương án đủ người, đúng số vị trí…':'Thuật toán đang tìm cách chia và xếp vị trí…');await createYield();
-    const validCandidates=candidates=>(candidates||[]).flatMap(r=>{
-      try{return [GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}).result];}catch{return [];}
-    });
+    const lineupOptions=()=>({instruction:engine==='AI'?context.instruction:'',history:context.history,now:lineupNow});
+    const noCandidate='Không tìm được đội hình đạt tiêu chí bắt buộc về vị trí, người mạnh đá chính, công/thủ, dự bị, tổng lực, thể chất và xoay tua. Không tự nới tiêu chí; hãy kiểm tra danh sách và dữ liệu trận trước.';
+    const validCandidates=candidates=>{
+      if(candidates?.error)throw new Error(candidates.error);
+      return (Array.isArray(candidates)?candidates:[]).flatMap(r=>{
+        try{return [GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}},lineupOptions()).result];}catch{return [];}
+      });
+    };
     if(engine==='AI'){
-      localResults=validCandidates(await createSolveInWorker(subset));
-      if(!localResults.length)throw new Error('Không tìm được phương án nền hợp lệ. Chưa gọi AI; hãy kiểm tra danh sách và vị trí.');
+      localResults=validCandidates(await createSolveInWorker(subset,context.instruction,context.history,lineupNow));
+      if(!localResults.length)throw new Error(noCandidate+' Chưa gọi AI.');
       context.lineupCandidates=localResults.slice(0,4).map(r=>({teams:{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}}));
       createStep('search','active','AI đang chọn phương án và đề xuất đổi chỗ theo tiêu chí, lịch sử và Note…');await createYield();
     }
@@ -165,10 +163,13 @@ async function createTeams(){
       if(!output||!Array.isArray(output.subset)||output.subset.length!==subset.length||new Set(output.subset.map(p=>p.n)).size!==subset.length||output.subset.some(p=>!context.rosterNames.includes(p.n)))throw new Error('Kết quả AI không khớp danh sách đã chọn.');
       // Recalculate from our snapshot, not any ratings/evaluation supplied by a model.
       const ordered=output.subset.map(p=>subset.find(x=>x.n===p.n));
-      const checked=GPAIContext.lineup(ordered,output.teams);
+      const checked=GPAIContext.lineup(ordered,output.teams,lineupOptions());
       subset=ordered;results=[checked.result];output={...output,...checked,warnings:[...new Set([...checked.warnings,...(output.warnings||[])])],subset};key='AI:'+Date.now();
     }catch(e){
       fallback=e.message;engine='Thuật toán';output=null;
+      // A base using a Note-authorized role must not leak into a fallback that
+      // explicitly does not apply Note. Re-solve with registered roles only.
+      if(GPAIContext.lineupRoles(subset,context.instruction).overrides.length)localResults=null;
       // Metadata only, in memory: never persist keys, prompts or raw responses.
       AI_STATE.lastFailure={kind:e.kind||'unknown',message:e.message,...(e.aiMeta||{})};
       $('createProcessEngine').textContent=engine;
@@ -181,25 +182,30 @@ async function createTeams(){
       if(cstate.key===key&&cstate.results.length){results=cstate.results;idx=(cstate.idx+1)%results.length;}
       else if(localResults){results=localResults;}
       else{
-        const candidates=await createSolveInWorker(subset);
+        const candidates=await createSolveInWorker(subset,'',context.history,lineupNow);
         if(candidates?.error)throw new Error(candidates.error);
         results=validCandidates(candidates);
-        if(!results.length)throw new Error('Không tìm được phương án hợp lệ (gôn, đủ người, chia khách/dự bị). Hãy kiểm tra danh sách và vị trí.');
+        if(!results.length)throw new Error(noCandidate);
       }
     }
     await createCompleteStep('search','done',engine==='AI'?`AI chọn phương án hợp lệ · áp dụng ${output.plan.applied}/${output.plan.requested} đổi chỗ.`:`Đã tìm được ${results.length} phương án hợp lệ · đang xem cách ${idx+1}.`);
     createStep('partition','active','Kiểm tra lại số lượng, người trùng/thiếu và khách…');await createYield();
-    const r=results[idx],check=GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}});
+    const r=results[idx],check=GPAIContext.lineup(subset,{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}},lineupOptions());
     if(output?.warnings)check.warnings=[...new Set([...check.warnings,...output.warnings])];
     await createCompleteStep('partition','done',`Mỗi bên 7 đá chính · Dự bị A: ${r.evA.bench.length}, B: ${r.evB.bench.length}. Đủ người, không trùng; khách chia đều.`);
     createStep('balance','active','So điểm tuyến trên và tuyến dưới theo vị trí…');await createYield();
     const front=Math.abs(r.evA.frontFit-r.evB.frontFit),back=Math.abs(r.evA.backFit-r.evB.backFit);
-    await createCompleteStep('balance',front>1.5||back>1.5?'warn':'done',`Chênh tổng điểm 3 vị trí: công ${front.toFixed(1)}, thủ ${back.toFixed(1)}. `+(front>1.5||back>1.5?'Có tuyến chênh trên 1.5 điểm; cần kiểm tra so kè.':'Trong ngưỡng kiểm tra 1.5 điểm mỗi tuyến; không lấy gôn bù công/thủ.'));
+    await createCompleteStep('balance','done',`Chênh tổng điểm 3 vị trí: công ${front.toFixed(2)}, thủ ${back.toFixed(2)}. Đạt ngưỡng bắt buộc ${GPAIContext.LINEUP_LIMITS.lineDifference} điểm mỗi tuyến; không lấy gôn bù công/thủ.`);
+    const m=check.checks.metrics,d=m.difference,limits=GPAIContext.LINEUP_LIMITS;
+    createStep('reserves','active','So lần lượt các nhóm dự bị mạnh nhất mỗi bên…');await createYield();
+    await createCompleteStep('reserves','done',m.benchCount?`Nhóm mạnh nhất 1→${m.benchCount} người: chênh trung bình ${m.benchGroups.map(g=>g.gap.toFixed(2)).join(' / ')} (tối đa ${limits.benchMeanDifference} mỗi nhóm). Không lấy người yếu bù nhóm mạnh; không cộng người dư.`:'Không có cặp dự bị để so; người dư không cộng lợi thế.');
+    createStep('quality','active','Kiểm tra các ngưỡng tổng lực và thể chất…');await createYield();
+    await createCompleteStep('quality','done',`Chênh điểm chính ${d.start.toFixed(2)}, tổng lực ${d.total.toFixed(2)} (tối đa ${limits.strengthDifference}); ngôi sao chính/dự bị/tổng ${d.stars}/${d.benchStars}/${d.totalStars} (tối đa ${limits.starDifference}); tốc độ ${Math.max(d.pace,d.totalPace).toFixed(2)}/${limits.paceDifference}, thể lực ${Math.max(d.stamina,d.totalStamina).toFixed(2)}/${limits.staminaDifference}. Thể chất kiểm tra ngoài sân và ngoài sân cộng cùng số dự bị.`);
     createStep('positions','active','Đối chiếu vị trí và chất lượng người dự bị…');await createYield();
     const positionWarnings=check.warnings.filter(w=>!w.startsWith('Chênh '));
-    await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Không lệch vị trí; không có dự bị mạnh hơn người đá chính cùng vai trò từ 0.5 điểm.');
+    await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Đã chọn nhóm đá chính mạnh nhất có thể xếp đúng vị trí chính/phụ, xét cả chuỗi xoay vị trí trước khi cân hai đội. Không để thành viên mạnh dự bị để bù cân đội.');
     createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
-    const rotation=createRotation(r,subset,context.history);await createCompleteStep('rotation',rotation.state,rotation.detail);
+    const rotation=createRotation(r,subset,context.history,lineupNow);await createCompleteStep('rotation',rotation.state,rotation.detail);
     createStep('note','active','Đối chiếu với Note của lần tạo này…');await createYield();
     const hasNote=!!context.instruction;
     await createCompleteStep('note',hasNote?'warn':'done',!hasNote?'Note trống: không có yêu cầu riêng.':engine==='AI'?'Đã gửi Note hiện tại cho AI; cần đối chiếu trên đội hình.':'Chưa áp dụng Note: thuật toán không hỗ trợ.');

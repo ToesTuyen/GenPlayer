@@ -133,8 +133,10 @@ async function main(){
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn','Free-text Note must not be marked satisfied without verification');
       assert.match(await page.locator('[data-step="note"]').innerText(),/Đã gửi Note hiện tại/);
-      assert.equal(await page.locator('#createProcessProgress').getAttribute('max'),'11');
-      assert.equal(await page.locator('[data-step="rotation"]').getAttribute('data-state'),'warn','Repeated positions must not receive a green check');
+      assert.equal(await page.locator('#createProcessProgress').getAttribute('max'),String(await page.evaluate(()=>CREATE_STEPS.length)));
+      assert.equal(await page.locator('[data-step="reserves"]').getAttribute('data-state'),'done');assert.equal(await page.locator('[data-step="quality"]').getAttribute('data-state'),'done');
+      assert.equal(await page.locator('[data-step="rotation"]').getAttribute('data-state'),'done','Mandatory teammate mixing may keep registered roles');
+      assert.ok(await page.evaluate(()=>AI_STATE.output.checks.rotation.maxTogether<=GPAIContext.LINEUP_LIMITS.previousTeammates));
       assert.equal(await page.evaluate(()=>window.AI_XSS),undefined);assert.equal(await page.locator('#aiOutputText img').count(),0);
       assert.equal(await page.evaluate(()=>getHistory().length),5,'AI generation must not create a match');
       const durations=await page.evaluate(()=>{

@@ -6,10 +6,29 @@ const password='test-ai-password-private',secret='sk-or-test-key-not-real';
 const player=(i,guest=false)=>({n:'Cầu thủ '+i,pos:C.SLOTS[i%7],pos2:[],guest,...Object.fromEntries(C.KEYS.map(k=>[k,6]))});
 const players=Array.from({length:16},(_,i)=>player(i,i>=14));
 const teams={A:{starters:[0,1,2,3,4,5,6],bench:[14]},B:{starters:[7,8,9,10,11,12,13],bench:[15]}};
-const match=(i=1,score={a:3,b:1})=>({id:String(i),kickoff:Date.now()-i*86400000,score,teams:{A:players.slice(0,7).map(p=>({n:p.n,slot:p.pos,bench:false})),B:players.slice(7,14).map(p=>({n:p.n,slot:p.pos,bench:false}))},goals:{[players[0].n]:2},goalsLocked:true});
+const match=(i=1,score={a:3,b:1})=>({id:String(i),kickoff:Date.now()-i*86400000,score,teams:{A:[0,1,9,10,4,12,6].map(j=>({n:players[j].n,slot:players[j].pos,bench:false})),B:[7,8,2,3,11,5,13].map(j=>({n:players[j].n,slot:players[j].pos,bench:false}))},goals:{[players[0].n]:2},goalsLocked:true});
 const context=()=>({players:structuredClone(players),history:Array.from({length:5},(_,i)=>match(i+1)),rosterNames:players.map(p=>p.n),lineupCandidates:candidatesFor(teams),match:match(6,null),playerName:players[0].n,instruction:'Cân công và thủ riêng.'});
 const output=(task='lineup')=>({title:'Nhận định kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phần '+i,body:'Văn bản dựa trên dữ liệu bóng đá.'})),...(task==='lineup'?{candidateId:'c0',flipTeams:false,swaps:[]}:{}),...(task==='player-form'?{verdict:'keep',suggestions:[]}:{})});
 const provider=value=>async(url,init)=>new Response(JSON.stringify({model:'test/model',choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}],usage:{prompt_tokens:30,completion_tokens:50}}),{status:200,headers:{'Content-Type':'application/json'}});
+test('public release preserves legacy storage and Firebase, and only replaces GenPlayer service-worker caches',async()=>{
+  const root=path.join(__dirname,'..'),entries=['index.html','score-update.html','dist/index.html','dist/score-update.html'];
+  const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
+  for(const entry of entries){
+    const html=fs.readFileSync(path.join(root,entry),'utf8');
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-26">/);
+    assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
+    assert.ok(html.includes('sw.js?v=genplayer-v5'));
+    assert.deepEqual(JSON.parse(html.match(/const FIREBASE_CONFIG = ([\s\S]*?);\s*\n/)[1]),config);
+    assert.match(html,/history:"gp_history"/);assert.match(html,/players:"gp_players"/);
+  }
+  const events={},deleted=[],pending=[];
+  vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{
+    self:{addEventListener:(name,fn)=>events[name]=fn,clients:{claim:async()=>{}}},
+    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','another-app-data'],delete:async key=>deleted.push(key)}
+  });
+  events.activate({waitUntil:p=>pending.push(p)});await Promise.all(pending);
+  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4'],'Unrelated apps and the active release cache are untouched');
+});
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
   const app=createApp(config,options);await new Promise(r=>app.listen(0,'127.0.0.1',r));
@@ -120,7 +139,7 @@ test('lineup recomputes ratings locally, ignores model stats, covers each name o
 });
 test('AI can only select validated candidates and exchange fixed IDs, with all 12 criteria intact',()=>{
   for(let n=14;n<=24;n++){
-    const c=context();c.players=Array.from({length:n},(_,i)=>player(i,i>=14));c.rosterNames=c.players.map(p=>p.n).reverse();
+    const c=context();c.history=[];c.players=Array.from({length:n},(_,i)=>player(i,i>=14));c.rosterNames=c.players.map(p=>p.n).reverse();
     c.lineupCandidates=candidatesFor(teamsForPlayers(c.rosterNames.map(n=>c.players.find(p=>p.n===n))));
     const p=prepare({task:'lineup',context:c}),data=JSON.parse(p.messages[1].content),s=p.schema.properties;
     const ids=Array.from({length:n},(_,i)=>'p'+i);
@@ -139,7 +158,7 @@ test('AI can only select validated candidates and exchange fixed IDs, with all 1
   c.lineupCandidates=candidatesFor({...teams,A:{...teams.A,starters:[0,0,2,3,4,5,6]}});assert.throws(()=>prepare({task:'lineup',context:c}),/trùng/);
 });
 test('Nam Khắc / Trịnh Mạnh A_SW regression: swaps cannot duplicate either players or seats',()=>{
-  const c=context();c.players=Array.from({length:20},(_,i)=>player(i));c.players[1].n='Nam Khắc';c.players[8].n='Trịnh Mạnh';c.rosterNames=c.players.map(p=>p.n);
+  const c=context();c.history=[];c.players=Array.from({length:20},(_,i)=>player(i));c.players[1].n='Nam Khắc';c.players[8].n='Trịnh Mạnh';c.rosterNames=c.players.map(p=>p.n);
   const t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};c.lineupCandidates=candidatesFor(t);
   const p=prepare({task:'lineup',context:c}),raw={...output(),swaps:[{first:'p1',second:'p8'}]},before=JSON.stringify(c);
   const out=validateOutput(JSON.stringify(raw),p);
@@ -160,21 +179,19 @@ test('unsafe guest swaps are explicitly skipped, never discard the valid AI draf
   assert.deepEqual(out.teams,t);assert.equal(out.plan.skipped,2);assert.ok(out.warnings.some(w=>w.includes('chia khách đều')));assert.ok(out.warnings.some(w=>w.includes('Khách phải dự bị')));
   assert.equal(out.plan.applied,0);assert.equal(out.subset.length,20);
 });
-test('new AI contract preserves balance thresholds, position and strongest-player warnings',()=>{
+test('invalid quality and position candidates are rejected before AI',()=>{
   const strong=context();for(const i of [4,5,6])for(const k of C.KEYS)strong.players[i][k]=10;
-  strong.players[1].pos='TĐ';strong.players[14].guest=false;strong.players[14].pos='TV';
+  strong.players[14].guest=false;strong.players[14].pos='TV';
   for(const k of C.KEYS)strong.players[14][k]=10;strong.players[5].KT=1;
-  const prepared=prepare({task:'lineup',context:strong}),out=validateOutput(JSON.stringify(output()),prepared);
-  assert.ok(out.warnings.some(w=>w.startsWith('Chênh tuyến trên')));
-  assert.ok(out.warnings.some(w=>w.includes('ngoài vị trí đăng ký')));
-  assert.ok(out.warnings.some(w=>w.includes('dự bị dù điểm vị trí cao hơn')));
-  assert.deepEqual(out.teams,teams,'Warnings do not silently change AI choices, Note or ratings');
+  assert.throws(()=>prepare({task:'lineup',context:strong}),/không được dự bị/,'A stronger feasible starting group is rejected even before checking line balance');
+  const c=context();c.players[1].pos='TĐ';
+  assert.throws(()=>prepare({task:'lineup',context:c}),/không được xếp thòng/,'Wrong registered positions are now mandatory, not warnings');
 });
 test('1100 generated swap plans preserve one player per seat, all selected people and guest/bench constraints',()=>{
   let seed=918273;const random=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n;};
   let count=0;
   for(let n=14;n<=24;n++)for(let variant=0;variant<100;variant++){
-    const c=context(),guestStart=[n,14,10][variant%3];c.players=Array.from({length:n},(_,i)=>player(i,i>=guestStart));c.rosterNames=c.players.map(p=>p.n);
+    const c=context(),guestStart=[n,14,10][variant%3];c.history=[];c.players=Array.from({length:n},(_,i)=>player(i,i>=guestStart));c.rosterNames=c.players.map(p=>p.n);
     c.lineupCandidates=candidatesFor(teamsForPlayers(c.players));
     const p=prepare({task:'lineup',context:c}),swaps=Array.from({length:24},()=>({first:'p'+random(n),second:'p'+random(n)}));
     const out=validateOutput(JSON.stringify({...output(),flipTeams:variant%2===1,swaps}),p);

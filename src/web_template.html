@@ -1,5 +1,6 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="genplayer-release" content="web-app-2026-10-26">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -953,19 +954,19 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">12 tiêu chí</span></summary>
         <ol class="create-rule-list">
           <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
-          <li><b>Người mạnh đá chính.</b> Xét năng lực ở vị trí được xếp, không chỉ điểm tổng; ưu tiên thành viên.</li>
-          <li><b>Khách &amp; dự bị.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người.</li>
-          <li><b>Cân hàng công.</b> So riêng khả năng kiến tạo, tiền vệ và tiền đạo; tránh một bên vượt trội.</li>
-          <li><b>Cân hàng thủ.</b> So riêng thòng, hậu vệ và hỗ trợ phòng ngự; không chỉ cân tổng đội.</li>
+          <li><b>Người mạnh đá chính — bắt buộc.</b> Chọn nhóm 14 có tổng điểm hồ sơ cao nhất có thể xếp đúng vị trí chính/phụ, xét cả chuỗi xoay vị trí, rồi mới cân hai đội. Không để người mạnh dự bị để bù cân đội.</li>
+          <li><b>Khách &amp; dự bị — bắt buộc.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 0,5; không lấy người yếu bù nhóm mạnh.</li>
+          <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
+          <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
           <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
-          <li><b>Đúng vị trí.</b> Ưu tiên vị trí chính rồi vị trí phụ; hạn chế kéo người giỏi ngoài sân vào gôn.</li>
-          <li><b>Chia đều chất lượng.</b> Cân người nổi bật, tốc độ, thể lực và sức chạy giữa hai bên.</li>
-          <li><b>Xoay tua đội hình.</b> Hạn chế lặp nhóm đồng đội và vị trí trận trước; không chỉ đổi màu A/B.</li>
+          <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
+          <li><b>Chia đều chất lượng — bắt buộc.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; ngôi sao (từ 8 điểm) chênh tối đa 1 ở chính, dự bị và tổng đội. Tốc độ/thể lực trung bình ngoài sân và ngoài sân cộng cùng số dự bị chênh tối đa 0,5; không tính gôn hoặc người dư.</li>
+          <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
           <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
           <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
           <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
         </ol>
-        <p class="criteria-scope">Thuật toán dự phòng chưa tối ưu lịch sử, phong độ hoặc áp dụng Note. Xem so kè và cảnh báo trước khi lưu.</p>
+        <p class="criteria-scope">Thuật toán dự phòng đã kiểm tra xoay tua; chưa tối ưu phong độ hoặc áp dụng Note. Xem so kè và cảnh báo trước khi lưu.</p>
       </details>
       <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
         <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
@@ -1333,16 +1334,17 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>/*__UI_ICONS__*/</script>
+<script>/*__AI_CONTEXT__*/</script>
 <script>/*__OPTIMIZER__*/</script>
 <!-- Run the same offline solver in a worker so the progress view stays responsive. -->
 <script id="solverWorkerSource" type="text/plain">
+/*__AI_CONTEXT__*/
 /*__OPTIMIZER__*/
 self.onmessage=function(event){
-  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true})});}
+  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true,instruction:event.data.instruction||'',history:event.data.history||[],now:event.data.now})});}
   catch(e){self.postMessage({error:e.message||'Không chạy được thuật toán.'});}
 };
 </script>
-<script>/*__AI_CONTEXT__*/</script>
 <script>/*__AI_SERVICE__*/</script>
 <script>
 const DEFAULT_PLAYERS = /*__PLAYERS__*/;
@@ -2367,6 +2369,10 @@ function matchComparisonBasis(A,B,sel){
   const ba=bench(A),bb=bench(B),benchCount=Math.min(ba.length,bb.length);
   const benchA=ba.slice(0,benchCount).reduce((s,i)=>s+ov(sel[i]),0),benchB=bb.slice(0,benchCount).reduce((s,i)=>s+ov(sel[i]),0);
   const startA=A.startFit-(incompleteGk?A.gkFit:0),startB=B.startFit-(incompleteGk?B.gkFit:0);
+  if(A.ratingsByRole&&B.ratingsByRole&&typeof GPAIContext!=='undefined'){
+    const m=GPAIContext.lineupMetrics(sel,{A,B});
+    return {incompleteGk,pairedBench:true,startA,startB,totalA:startA+m.A.benchTotal,totalB:startB+m.B.benchTotal,benchA:m.A.benchTotal,benchB:m.B.benchTotal,benchCount:m.benchCount,outfieldCount:A.starters.length-1};
+  }
   return {incompleteGk,pairedBench:true,startA,startB,totalA:startA+benchA,totalB:startB+benchB,benchA,benchB,benchCount,outfieldCount:A.starters.length-1};
 }
 function sokeTable(A,B,sel){
@@ -2422,6 +2428,12 @@ function render(res,sel,target,review,showHeat,matchId){
   const pred=`Kèo cân (đội hình chính chênh ~${pct.toFixed(1)}%). Dự đoán tỉ số sít sao, cách biệt tối đa một bàn; ${gkAdvNm?`lợi thế khung gỗ có thể nghiêng nhẹ cán cân về phía <b>${gkAdvNm}</b>`:`đội nào kiểm soát nhịp độ và tận dụng cơ hội tốt hơn sẽ giành phần thắng`}.`;
   const intro=`Chênh lệch đội hình chính chỉ <b>~${pct.toFixed(1)}%</b> — một cặp đấu cân bằng, kết quả sẽ do <b>cách vận hành</b> quyết định chứ không phải đẳng cấp. ${styleLine}${gkLine} Một trận đấu hứa hẹn ngang ngửa và cởi mở.`;
   const rows=[[basis.incompleteGk?`Sức mạnh ngoài sân (${basis.outfieldCount} người)`:"Sức mạnh đội hình chính",basis.startA.toFixed(1),basis.startB.toFixed(1)],[totalLabel,basis.totalA.toFixed(1),basis.totalB.toFixed(1)],["Ngôi sao (điểm tổng ≥ "+STAR_MIN+")",A.stars,B.stars],["Thủ môn",A.gkRated===false?"Chưa chấm":A.gkFit.toFixed(1),B.gkRated===false?"Chưa chấm":B.gkFit.toFixed(1)],["Phòng ngự tuyến dưới",A.defPN.toFixed(1),B.defPN.toFixed(1)],["Dứt điểm tuyến trên",A.atk.toFixed(1),B.atk.toFixed(1)],["Tốc độ trung bình",A.pace.toFixed(1),B.pace.toFixed(1)],["Năng nổ (chịu chạy)",A.heat.toFixed(1),B.heat.toFixed(1)]];
+  if(A.physicalOutfield&&B.physicalOutfield){
+    rows[6][0]='Tốc độ ngoài sân';rows.splice(7,0,['Thể lực ngoài sân',A.stamina.toFixed(1),B.stamina.toFixed(1)]);
+    rows[2][0]+=' · cùng số người';
+    const metrics=GPAIContext.lineupMetrics(sel,{A,B});
+    rows.splice(2,0,...metrics.benchGroups.map(g=>[`Dự bị top ${g.count} · trung bình`,g.A.toFixed(2),g.B.toFixed(2)]));
+  }
   const predBlock=hasRev?"":`<div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>`;
   const narrative=hasRev
     ? `<div class="ai-review">${review}</div>`
@@ -3837,6 +3849,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v4",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v5",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>
