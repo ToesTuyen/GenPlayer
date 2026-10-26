@@ -119,7 +119,7 @@
     const overall=players.map(overallOf);
     // Use the same role scores and mandatory thresholds as the displayed draft.
     const guard=C.lineupGuard(players,options),fitT=guard.scores;
-    if(!guard.priority.best)return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc: không đủ nhóm 14 cầu thủ đá chính đúng vị trí. Không tự nới tiêu chí; chưa sửa trận.'};
+    if(!guard.priority.best)return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc: không đủ nhóm 14 cầu thủ đá chính đúng vị trí. Không tự nới tiêu chí; chưa sửa trận.',code:'no-valid-lineup',diagnostics:[{code:'position',count:1,message:'Không đủ nhóm 14 cầu thủ đá chính đúng vị trí.'}]};
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
     const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
     const isGK=players.map(p=>p.pos==="GK" && !p.guest);   // KHACH ko tinh la thu mon CO DINH -> uu tien du bi, nhuong gon cho GK that
@@ -143,9 +143,14 @@
     const ctx={players,overall,fitT,fitPen,bestOut,priority:guard.priority};
     const sizeA=Math.ceil(N/2), even=(N%2===0);
 
-    const K=12, top=[],rejections={};   // giu top-K cach chia can nhat (de nut "Tao lai" doi doi)
+    const K=12, top=[],rejections={},excluded=new Set(options.excludeGroups||[]);
     const reject=(code,message)=>{if(!rejections[code])rejections[code]={code,count:0,message};rejections[code].count++;};
     function consider(c){
+      const groupKey=C.lineupGroupKey(players,{A:c.evA,B:c.evB});
+      if(excluded.has(groupKey)){reject('duplicate','Các nhóm đá chính đã xuất hiện trong những lượt gen trước.');return;}
+      const duplicate=top.findIndex(r=>r.groupKey===groupKey);
+      if(duplicate>=0){if(c.J<top[duplicate].J){top[duplicate]={...c,groupKey};top.sort((a,b)=>a.J-b.J);}return;}
+      c.groupKey=groupKey;
       if(top.length<K){top.push(c);top.sort((a,b)=>a.J-b.J);}
       else if(c.J<top[K-1].J){top[K-1]=c;top.sort((a,b)=>a.J-b.J);}
     }
@@ -197,7 +202,8 @@
     if(!top.length){
       const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','stars','pace','stamina','rotation'];
       const diagnostics=Object.values(rejections).sort((a,b)=>order.indexOf(b.code)-order.indexOf(a.code));
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. Phương án gần đạt còn vướng: '+diagnostics.slice(0,3).map(x=>x.message).join(' ')+' Không tự nới tiêu chí; chưa sửa trận.',diagnostics};
+      if(rejections.duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước.',code:'no-new-lineup',diagnostics};
+      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. Phương án gần đạt còn vướng: '+diagnostics.slice(0,3).map(x=>x.message).join(' ')+' Không tự nới tiêu chí; chưa sửa trận.',code:'no-valid-lineup',diagnostics};
     }
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
   }

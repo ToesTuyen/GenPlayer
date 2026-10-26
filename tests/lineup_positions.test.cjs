@@ -12,8 +12,8 @@ test('balanced scores cannot turn a striker into a central midfielder',()=>{
   const p=roster(),t=teams(),wrong=exchange(t,4,6);
   assert.throws(()=>C.lineup(p,wrong),/Position 6.*không được xếp tiền vệ trung tâm/);
   assert.throws(()=>S.prepare({task:'lineup',context:context(p,wrong)}),/không được xếp/,'No paid call with an invalid base');
-  const prepared=S.prepare({task:'lineup',context:context(p,t)}),out=S.validateOutput(output([{first:'p4',second:'p6'}]),prepared);
-  assert.deepEqual(out.teams,t);assert.equal(out.plan.applied,0);assert.match(out.warnings.join(' '),/không được xếp tiền vệ trung tâm/);
+  const prepared=S.prepare({task:'lineup',context:context(p,t)});
+  assert.throws(()=>S.validateOutput(output([{first:'p4',second:'p6'}]),prepared),e=>e.kind==='lineup');
 });
 
 test('two natural central midfielders stay on opposite sides and occupy the two center slots',()=>{
@@ -51,10 +51,11 @@ test('only a clear current Note can authorize an extra role, not AI-supplied ove
   assert.doesNotThrow(()=>C.lineup(p,t,{instruction}));
   const prepared=S.prepare({task:'lineup',context:context(p,teams(),instruction)});
   const data=JSON.parse(prepared.messages[1].content);assert.deepEqual(data.lineupRequirements.positions.notePositionOverrides,[{playerId:'p6',slot:'TVtt'}]);
-  const out=S.validateOutput(output([{first:'p4',second:'p6'}]),prepared);assert.deepEqual(out.teams,t);assert.equal(out.plan.applied,1);
+  assert.throws(()=>S.validateOutput(output([{first:'p4',second:'p6'}]),prepared),e=>e.kind==='lineup');
+  const selected=S.prepare({task:'lineup',context:context(p,t,instruction)});
+  assert.deepEqual(S.validateOutput(output([]),selected).teams,t,'The Note-authorized candidate must be prepared before the model selects it');
   const fake=context(p);fake.roleOverrides=[{index:6,slot:'TVtt'}];
-  const denied=S.validateOutput(output([{first:'p4',second:'p6'}]),S.prepare({task:'lineup',context:fake}));
-  assert.deepEqual(denied.teams,teams());assert.equal(denied.plan.applied,0);
+  assert.throws(()=>S.validateOutput(output([{first:'p4',second:'p6'}]),S.prepare({task:'lineup',context:fake})),e=>e.kind==='lineup');
 });
 
 test('negative, ambiguous, conflicting and historical Notes cannot grant a role',()=>{

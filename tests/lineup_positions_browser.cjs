@@ -25,7 +25,7 @@ async function main(){
         const data=JSON.parse(JSON.parse(req.postData()).messages[1].content),cm=data.players.find(p=>p.n==='Position 4').id,st=data.players.find(p=>p.n==='Position 6').id;
         assert.equal(data.instruction,note);assert.ok(data.players.find(p=>p.id===st).allowedRoles.includes('TVtt'));
         const base=data.candidates.find(c=>['A','B'].some(side=>c.teams[side].starters[4]===cm&&c.teams[side].starters[6]===st));assert.ok(base);
-        const out={title:'Explicit position Note fixture',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake content.'})),candidateId:base.id,flipTeams:false,swaps:[{first:cm,second:st}]};
+        const out={title:'Explicit position Note fixture',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake content.'})),candidateId:base.id,flipTeams:false,swaps:[]};
         await route.fulfill({headers:{...cors,'Content-Type':'application/json'},body:JSON.stringify({model:'fake/position',choices:[{finish_reason:'stop',message:{content:JSON.stringify(out)}}]})});
       });
       await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.locator('#aiInstruction').fill(note);
@@ -33,19 +33,19 @@ async function main(){
       const before=calls,stored=await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()}));
       await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng AI/);assert.equal(calls,before+1);
-      assert.equal(await page.evaluate(()=>AI_STATE.output.plan.applied),1);
+      assert.equal(await page.evaluate(()=>AI_STATE.output.plan.applied),0);
       const withNote=await page.evaluate(()=>{const r=cstate.results[0];return {players:cstate.subset,teams:{A:r.evA,B:r.evB}};});
-      assert.doesNotThrow(()=>C.lineup(withNote.players,withNote.teams,{instruction:note}));assert.throws(()=>C.lineup(withNote.players,withNote.teams),/không được xếp/);
+      assert.doesNotThrow(()=>C.lineup(withNote.players,withNote.teams,{instruction:note}));
       assert.deepEqual(await page.evaluate(()=>window.qaWorkerNotes),[note]);await page.locator('#createProcessClose').click();
       failProvider=true;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);assert.equal(calls,before+2);
-      assert.deepEqual(await page.evaluate(()=>window.qaWorkerNotes),[note,note,''],'Fallback re-solves without Note-authorized roles');
+      assert.deepEqual(await page.evaluate(()=>window.qaWorkerNotes),[note,note],'Fallback reuses validated candidates with the same Note-authorized roles');
       const fallback=await page.evaluate(()=>{const r=cstate.results[cstate.idx];return {players:cstate.subset,teams:{A:r.evA,B:r.evB}};});
-      assert.doesNotThrow(()=>C.lineup(fallback.players,fallback.teams));assert.match(await page.locator('#createNoteStatus').innerText(),/Chưa áp dụng Note/);
+      assert.doesNotThrow(()=>C.lineup(fallback.players,fallback.teams,{instruction:note}));assert.match(await page.locator('#createNoteStatus').innerText(),/Note khác cần đối chiếu/);
       assert.equal(await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()})),stored);
       await page.screenshot({path:path.join(screenshots,'fallback-'+width+'.png'),animations:'disabled'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);await ctx.close();
     }
-    assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'explicit Note role exception, both positions validated, fallback re-solves with registered roles only, no retries/data changes, desktop/mobile'}));
+    assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'explicit Note role exception, both positions validated, fallback uses same validated candidates, no retries/data changes, desktop/mobile'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

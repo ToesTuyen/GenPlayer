@@ -32,19 +32,19 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-26">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-26-genfix">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
-    assert.ok(html.includes('sw.js?v=genplayer-v5'));
+    assert.ok(html.includes('sw.js?v=genplayer-v6'));
     assert.deepEqual(JSON.parse(html.match(/const FIREBASE_CONFIG = ([\s\S]*?);\s*\n/)[1]),config);
     assert.match(html,/history:"gp_history"/);assert.match(html,/players:"gp_players"/);
   }
   const events={},deleted=[],pending=[];
   vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{
     self:{addEventListener:(name,fn)=>events[name]=fn,clients:{claim:async()=>{}}},
-    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','another-app-data'],delete:async key=>deleted.push(key)}
+    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','another-app-data'],delete:async key=>deleted.push(key)}
   });
   events.activate({waitUntil:p=>pending.push(p)});await Promise.all(pending);
-  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4'],'Unrelated apps and the active release cache are untouched');
+  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4','genplayer-v5'],'Unrelated apps and the active release cache are untouched');
 });
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
@@ -154,7 +154,7 @@ test('lineup recomputes ratings locally, ignores model stats, covers each name o
   assert.throws(()=>C.lineup(players,{A:{starters:[14,1,2,3,4,5,6],bench:[0]},B:teams.B}),/Khách phải dự bị/);
   assert.throws(()=>C.lineup(players,{A:{...teams.A,bench:[99]},B:teams.B}),/ngoài danh sách/);
 });
-test('AI can only select validated candidates and exchange fixed IDs, with all 12 criteria intact',()=>{
+test('AI can only select validated candidates, with all 12 criteria intact',()=>{
   for(let n=14;n<=24;n++){
     const c=context();c.history=[];c.players=Array.from({length:n},(_,i)=>player(i,i>=14));c.rosterNames=c.players.map(p=>p.n).reverse();
     c.lineupCandidates=candidatesFor(teamsForPlayers(c.rosterNames.map(n=>c.players.find(p=>p.n===n))));
@@ -162,39 +162,39 @@ test('AI can only select validated candidates and exchange fixed IDs, with all 1
     const ids=Array.from({length:n},(_,i)=>'p'+i);
     assert.equal(p.schema.additionalProperties,false);assert.equal(s.teams,undefined);assert.equal(s.assignments,undefined);
     assert.deepEqual(s.candidateId.enum,['c0']);assert.deepEqual(s.swaps.items.properties.first.enum,ids);assert.deepEqual(s.swaps.items.properties.second.enum,ids);
-    assert.equal(s.swaps.items.additionalProperties,false);assert.equal(s.swaps.maxItems,24);
+    assert.equal(s.swaps.items.additionalProperties,false);assert.equal(s.swaps.maxItems,0);assert.deepEqual(s.flipTeams.enum,[false]);
     assert.deepEqual(data.players.map(p=>p.id),ids);assert.deepEqual(data.players.map(p=>p.n),c.rosterNames);
     assert.equal(data.lineupRequirements.requiredStarterSlots.length,14);
     assert.deepEqual(data.lineupRequirements.benchPerTeam,{min:Math.floor((n-14)/2),max:Math.ceil((n-14)/2)});
     assert.equal(data.candidates.length,1);assert.equal(new Set([...data.candidates[0].teams.A.starters,...data.candidates[0].teams.A.bench,...data.candidates[0].teams.B.starters,...data.candidates[0].teams.B.bench]).size,n);
     assert.equal(data.rules.length,12,'All 12 existing criteria reach the model');
     for(const term of ['hàng công','hàng thủ','Gôn','vị trí','tốc độ','phong độ','Xoay tua','instruction'])assert.ok(data.rules.join(' ').includes(term));
-    assert.match(p.messages[0].content,/đổi chỗ/);
+    assert.match(p.messages[0].content,/KHÔNG đề xuất đổi chỗ/);
   }
   const c=context();delete c.lineupCandidates;assert.throws(()=>prepare({task:'lineup',context:c}),/phương án hợp lệ trước khi gọi AI/);
   c.lineupCandidates=candidatesFor({...teams,A:{...teams.A,starters:[0,0,2,3,4,5,6]}});assert.throws(()=>prepare({task:'lineup',context:c}),/trùng/);
 });
-test('Nam Khắc / Trịnh Mạnh A_SW regression: swaps cannot duplicate either players or seats',()=>{
+test('Nam Khắc / Trịnh Mạnh A_SW regression: free swaps are rejected, never disguised as successful AI',()=>{
   const c=context();c.history=[];c.players=Array.from({length:20},(_,i)=>player(i));c.players[1].n='Nam Khắc';c.players[8].n='Trịnh Mạnh';c.rosterNames=c.players.map(p=>p.n);
   const t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};c.lineupCandidates=candidatesFor(t);
   const p=prepare({task:'lineup',context:c}),raw={...output(),swaps:[{first:'p1',second:'p8'}]},before=JSON.stringify(c);
-  const out=validateOutput(JSON.stringify(raw),p);
-  assert.equal(out.teams.A.starters[1],8);assert.equal(out.teams.B.starters[1],1);assert.equal(out.plan.applied,1);
+  assert.throws(()=>validateOutput(JSON.stringify(raw),p),e=>e.kind==='lineup'&&/chuyển sang thuật toán/.test(e.message));
+  const out=validateOutput(JSON.stringify(output()),p);
+  assert.equal(out.teams.A.starters[1],1);assert.equal(out.teams.B.starters[1],8);assert.equal(out.plan.applied,0);
   assert.equal(new Set([...out.result.A,...out.result.B]).size,20);assert.equal(out.result.evA.bench.length,3);assert.equal(out.result.evB.bench.length,3);
   assert.equal(JSON.stringify(c),before,'No profile, history, Note or rating mutations');
-  const cycle=validateOutput(JSON.stringify({...raw,swaps:[...raw.swaps,...raw.swaps,{first:'p1',second:'p1'}]}),p);assert.deepEqual(cycle.teams,t);
+  assert.throws(()=>validateOutput(JSON.stringify({...raw,swaps:[...raw.swaps,...raw.swaps,{first:'p1',second:'p1'}]}),p),/chuyển sang thuật toán/);
   const legacy={...output('player-description'),assignments:assignmentsFor(t)};legacy.assignments.p8='A_SW';
-  assert.throws(()=>validateOutput(JSON.stringify(legacy),p),/phương án và danh sách đổi chỗ/,'Old position assignment contract is no longer used');
-  assert.throws(()=>validateOutput(JSON.stringify({...raw,candidateId:'c99'}),p),/phương án và danh sách/);
-  assert.throws(()=>validateOutput(JSON.stringify({...raw,swaps:[{first:'p0',second:'p99'}]}),p),/ID đổi chỗ ngoài danh sách/);
+  assert.throws(()=>validateOutput(JSON.stringify(legacy),p),/mã phương án ngoài danh sách/,'Old position assignment contract is no longer used');
+  assert.throws(()=>validateOutput(JSON.stringify({...raw,candidateId:'c99'}),p),/mã phương án ngoài danh sách/);
+  assert.throws(()=>validateOutput(JSON.stringify({...raw,swaps:[{first:'p0',second:'p99'}]}),p),/chuyển sang thuật toán/);
 });
-test('unsafe guest swaps are explicitly skipped, never discard the valid AI draft or relax a criterion',()=>{
+test('unsafe guest swaps throw a lineup error for real algorithm fallback',()=>{
   const c=context();c.players=Array.from({length:20},(_,i)=>player(i,i>=16));c.rosterNames=c.players.map(p=>p.n);
   const t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};
   c.lineupCandidates=candidatesFor(t);const p=prepare({task:'lineup',context:c});
-  const out=validateOutput(JSON.stringify({...output(),swaps:[{first:'p15',second:'p18'},{first:'p0',second:'p16'}]}),p);
-  assert.deepEqual(out.teams,t);assert.equal(out.plan.skipped,2);assert.ok(out.warnings.some(w=>w.includes('chia khách đều')));assert.ok(out.warnings.some(w=>w.includes('Khách phải dự bị')));
-  assert.equal(out.plan.applied,0);assert.equal(out.subset.length,20);
+  assert.throws(()=>validateOutput(JSON.stringify({...output(),swaps:[{first:'p15',second:'p18'},{first:'p0',second:'p16'}]}),p),e=>e.kind==='lineup'&&e.aiProposal.swaps.length===2);
+  assert.deepEqual(p.context.lineupCandidates[0].teams,t);
 });
 test('invalid quality and position candidates are rejected before AI',()=>{
   const strong=context();for(const i of [4,5,6])for(const k of C.KEYS)strong.players[i][k]=10;
@@ -204,14 +204,15 @@ test('invalid quality and position candidates are rejected before AI',()=>{
   const c=context();c.players[1].pos='TĐ';
   assert.throws(()=>prepare({task:'lineup',context:c}),/không được xếp thòng/,'Wrong registered positions are now mandatory, not warnings');
 });
-test('1100 generated swap plans preserve one player per seat, all selected people and guest/bench constraints',()=>{
+test('1100 arbitrary swap/flip plans are rejected and untouched candidates still meet every guard',()=>{
   let seed=918273;const random=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n;};
   let count=0;
   for(let n=14;n<=24;n++)for(let variant=0;variant<100;variant++){
     const c=context(),guestStart=[n,14,10][variant%3];c.history=[];c.players=Array.from({length:n},(_,i)=>player(i,i>=guestStart));c.rosterNames=c.players.map(p=>p.n);
     c.lineupCandidates=candidatesFor(teamsForPlayers(c.players));
     const p=prepare({task:'lineup',context:c}),swaps=Array.from({length:24},()=>({first:'p'+random(n),second:'p'+random(n)}));
-    const out=validateOutput(JSON.stringify({...output(),flipTeams:variant%2===1,swaps}),p);
+    assert.throws(()=>validateOutput(JSON.stringify({...output(),flipTeams:variant%2===1,swaps}),p),e=>e.kind==='lineup');
+    const out=validateOutput(JSON.stringify(output()),p);
     assert.equal(new Set([...out.result.A,...out.result.B]).size,n);assert.equal(out.teams.A.starters.length,7);assert.equal(out.teams.B.starters.length,7);
     assert.doesNotThrow(()=>C.lineup(c.players,out.teams));count++;
   }
@@ -223,7 +224,7 @@ test('invalid paid-style response retains safe request metadata, identifies fail
   await assert.rejects(complete(p,{...DEFAULTS,apiKey:secret},async()=>{
     calls++;return new Response(JSON.stringify({id:'gen-fixture-rejected',model:'fake/model',private:'PRIVATE_ACCOUNT_CANARY',choices:[{finish_reason:'stop',message:{content:JSON.stringify(bad)}}],usage:{prompt_tokens:100,completion_tokens:50,cost:0.003},apiKey:secret}));
   }),e=>{
-    assert.equal(e.kind,'lineup');assert.match(e.message,/phương án và danh sách/);assert.equal(e.aiMeta.generationId,'gen-fixture-rejected');
+    assert.equal(e.kind,'lineup');assert.match(e.message,/mã phương án ngoài danh sách/);assert.equal(e.aiMeta.generationId,'gen-fixture-rejected');
     assert.deepEqual(e.aiMeta.usage,{promptTokens:100,completionTokens:50,cost:0.003});assert.equal(e.aiMeta.finishReason,'stop');
     assert.ok(!JSON.stringify(e.aiMeta).includes(secret));assert.ok(!JSON.stringify(e.aiMeta).includes('PRIVATE_ACCOUNT_CANARY'));assert.ok(!JSON.stringify(e.aiMeta).includes('assignments'));
     return true;
@@ -365,7 +366,7 @@ test('compact UI removes repeated explanations but keeps criteria, key safety an
   assert.ok(!html.includes('class="create-priorities"'));
   assert.ok(!html.includes('Các công cụ của đội bóng'));
   assert.ok(!html.includes('Thông tin kết nối'));
-  assert.match(html,/<p id="createNoteHelp"[^>]*>Chỉ áp dụng khi tạo bằng AI\.<\/p>/);
+  assert.match(html,/<p id="createNoteHelp"[^>]*>Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo\.<\/p>/);
   const privacy=html.match(/<p id="aiKeyHelp"[^>]*>(.*?)<\/p>/)[1];
   for(const term of ['trình duyệt','Git','Firebase','backup','OpenRouter','HTTPS','script độc hại'])assert.ok(privacy.includes(term));
   const x=deviceSandbox();x.init();

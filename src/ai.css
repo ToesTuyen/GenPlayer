@@ -48,6 +48,10 @@
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.create-log-dialog{width:calc(100% - 24px);max-width:900px;max-height:90dvh;margin:auto;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--text);overflow:auto}
+.create-log-dialog::backdrop{background:rgba(12,25,20,.5)}
+#createLogDetails{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55dvh;overflow:auto;font:12px/1.6 ui-monospace,SFMono-Regular,monospace;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
+#createRunLabel{overflow-wrap:anywhere}
 @keyframes process-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}

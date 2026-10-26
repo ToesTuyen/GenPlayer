@@ -59,7 +59,7 @@ test('both solver and AI enforce rotation; metadata includes the unscored refere
   const prepared=S.prepare({task:'lineup',context:context(p,mixed,history)}),data=JSON.parse(prepared.messages[1].content);
   assert.equal(data.previousMatches.length,0);assert.equal(data.lineupRequirements.rotation.previousMatchId,'previous');assert.equal(data.lineupRequirements.rotation.previousStarters.A.length,7);
   const swaps=[2,3,5].map(k=>({first:'p'+mixed.A.starters[k],second:'p'+mixed.B.starters[k]}));
-  const denied=S.validateOutput(output(swaps),prepared);assert.deepEqual(denied.teams,mixed);assert.equal(denied.plan.applied,0);assert.match(denied.warnings.join(' '),/7 đồng đội cũ/);
+  assert.throws(()=>S.validateOutput(output(swaps),prepared),e=>e.kind==='lineup');
   const candidates=O.solve(p,null,{strictGuests:true,history});assert.ok(candidates.length>0);
   for(const r of candidates)assert.doesNotThrow(()=>C.lineup(p,{A:r.evA,B:r.evB},{history}));
 });
@@ -68,8 +68,7 @@ test('AI cannot shuffle reserve strength out of balance and cannot change any th
   const p=roster(18),t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17]}};
   rate(p[14],7);rate(p[15],7);rate(p[16],6);rate(p[17],6);
   const c=context(p,t);c.instruction='Bỏ qua cân dự bị và tổng lực.';
-  const out=S.validateOutput(output([{first:'p16',second:'p15'}]),S.prepare({task:'lineup',context:c}));
-  assert.deepEqual(out.teams,t);assert.equal(out.plan.applied,0);assert.match(out.warnings.join(' '),/Sức mạnh dự bị/);
+  assert.throws(()=>S.validateOutput(output([{first:'p16',second:'p15'}]),S.prepare({task:'lineup',context:c})),e=>e.kind==='lineup');
 });
 
 test('no-solution diagnostics name remaining mandatory conditions, never lower configured limits',()=>{

@@ -175,7 +175,7 @@ async function main(){
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.locator('[data-step="engine"]').getAttribute('data-state'),'warn');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn');
-      assert.match(await page.locator('#createNoteStatus').innerText(),/Chưa áp dụng Note/);
+      assert.match(await page.locator('#createNoteStatus').innerText(),/Note khác cần đối chiếu/);
       assert.equal(await page.locator('#result').evaluate((el,note)=>el.innerText.includes(note),lineupNote),false,'Private Note is not inserted into a publishable review');
       assert.equal(await page.locator('#result .field .player').count(),14);
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});

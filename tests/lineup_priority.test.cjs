@@ -34,8 +34,8 @@ test('weakest reserve cannot hide two stronger reserves concentrated on one side
   assert.throws(()=>C.lineup(p,t),/nhóm 2 người mạnh nhất.*không lấy người yếu/);
   const good=structuredClone(t);[good.A.bench[1],good.B.bench[0]]=[good.B.bench[0],good.A.bench[1]];
   assert.doesNotThrow(()=>C.lineup(p,good));
-  const prepared=S.prepare({task:'lineup',context:context(p,good)}),out=S.validateOutput(output([{first:'p16',second:'p15'}]),prepared);
-  assert.equal(out.plan.applied,0);assert.match(out.warnings.join(' '),/nhóm 2 người mạnh nhất/);
+  const prepared=S.prepare({task:'lineup',context:context(p,good)});
+  assert.throws(()=>S.validateOutput(output([{first:'p16',second:'p15'}]),prepared),e=>e.kind==='lineup');
   const data=JSON.parse(prepared.messages[1].content);assert.equal(data.lineupRequirements.reserveStrength.strongestPrefixes,true);
 });
 
@@ -52,9 +52,7 @@ test('priority uses a legal chain, not a raw top-14 cut that leaves required pos
 test('AI cannot bench a member after selecting a strongest-starting base',()=>{
   const p=snapshot(),r=O.solve(p,null,{strictGuests:true})[0],t={A:r.evA,B:r.evB};
   const bench=[...t.A.bench,...t.B.bench].find(i=>p[i].n==='Nguyễn Văn Quyền'),starter=[...t.A.starters,...t.B.starters].find(i=>p[i].n==='Văn Thanh');
-  const out=S.validateOutput(output([{first:'p'+bench,second:'p'+starter}]),S.prepare({task:'lineup',context:context(p,t)}));
-  assert.equal(out.plan.applied,0);
-  for(const side of ['A','B'])for(const key of ['starters','bench'])assert.deepEqual(out.teams[side][key],t[side][key]);
+  assert.throws(()=>S.validateOutput(output([{first:'p'+bench,second:'p'+starter}]),S.prepare({task:'lineup',context:context(p,t)})),e=>e.kind==='lineup');
 });
 
 test('starting selection agrees with an independent role-count upper bound on a small flexible roster',()=>{

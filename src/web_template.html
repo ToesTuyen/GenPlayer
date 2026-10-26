@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-26">
+<meta name="genplayer-release" content="web-app-2026-10-26-genfix">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -931,6 +931,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+      <button class="btn alt sm" id="createLogsBtn" onclick="createOpenLogs()">Log gen</button>
       <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
@@ -966,12 +967,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
           <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
           <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
         </ol>
-        <p class="criteria-scope">Thuật toán dự phòng đã kiểm tra xoay tua; chưa tối ưu phong độ hoặc áp dụng Note. Xem so kè và cảnh báo trước khi lưu.</p>
+        <p class="criteria-scope">Cả hai cách đều kiểm tra các ngưỡng bắt buộc và ngoại lệ vị trí rõ ràng từ Note. Phong độ và yêu cầu Note khác cần đối chiếu trước khi lưu.</p>
       </details>
       <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
         <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
       </label>
-      <p id="createNoteHelp" class="create-note-help">Chỉ áp dụng khi tạo bằng AI.</p>
+      <p id="createNoteHelp" class="create-note-help">Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo.</p>
     </div>
     <div class="roster-selection">
       <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
@@ -1004,11 +1005,19 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <dialog id="createProcess" class="create-process" aria-labelledby="createProcessTitle" aria-describedby="createProcessNote">
   <div class="process-head"><h2 id="createProcessTitle">Đang tạo đội</h2><span id="createProcessEngine" class="process-engine">Chuẩn bị</span></div>
   <p id="createProcessNote">✓ Đã kiểm tra · ! Cần xem lại</p>
-  <progress id="createProcessProgress" max="11" value="0" aria-label="Tiến trình kiểm tra"></progress>
+  <progress id="createProcessProgress" max="13" value="0" aria-label="Tiến trình kiểm tra"></progress>
   <div id="createProcessCount" class="process-count" role="status" aria-live="polite"></div>
+  <div id="createRunLabel" class="process-count"></div>
   <ol id="createProcessSteps" class="process-steps" data-ui-no-icons></ol>
   <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
   <div class="process-actions"><button class="btn" id="createProcessClose" disabled>Đang xử lý…</button></div>
+</dialog>
+<dialog id="createLogDialog" class="create-log-dialog" aria-labelledby="createLogTitle">
+  <div class="ai-key-head"><h2 id="createLogTitle">Nhật ký tạo đội</h2><button class="btn alt sm" onclick="document.getElementById('createLogDialog').close()" aria-label="Đóng nhật ký gen">×</button></div>
+  <p id="createLogNotice" class="ai-footer">30 lượt gần nhất trên máy này. Không chứa key, không gửi cloud.</p>
+  <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>
+  <pre id="createLogDetails" data-ui-no-icons></pre>
+  <div class="ai-actions"><button class="btn alt sm" id="createLogExport" onclick="createExportLogs()">Xuất log JSON</button></div>
 </dialog>
 
 <!-- ====== CAP NHAT CAU THU ====== -->
@@ -1335,13 +1344,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>/*__UI_ICONS__*/</script>
 <script>/*__AI_CONTEXT__*/</script>
+<script>/*__CREATE_LOG__*/</script>
 <script>/*__OPTIMIZER__*/</script>
 <!-- Run the same offline solver in a worker so the progress view stays responsive. -->
 <script id="solverWorkerSource" type="text/plain">
 /*__AI_CONTEXT__*/
 /*__OPTIMIZER__*/
 self.onmessage=function(event){
-  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true,instruction:event.data.instruction||'',history:event.data.history||[],now:event.data.now})});}
+  try{self.postMessage({results:TeamSolver.solve(event.data.players,null,{strictGuests:true,instruction:event.data.instruction||'',history:event.data.history||[],now:event.data.now,excludeGroups:event.data.excludeGroups||[]})});}
   catch(e){self.postMessage({error:e.message||'Không chạy được thuật toán.'});}
 };
 </script>
@@ -3849,6 +3859,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v5",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v6",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>

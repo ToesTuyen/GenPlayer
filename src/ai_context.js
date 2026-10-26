@@ -145,6 +145,11 @@
     };
   }
   function lineupMetrics(players,teams){return metricReader(players)(teams);}
+  // Compare the actual starting groups, not colors, bench ordering or the two
+  // equivalent full-back seats. Used by BOTH candidate search and final checks.
+  function lineupGroupKey(players,teams){
+    return JSON.stringify(['A','B'].map(side=>teams[side].starters.map(i=>players[i].n).sort()).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))));
+  }
   function rotationReader(players,history=[],now=Date.now()){
     const last=(Array.isArray(history)?history:[]).filter(m=>m.kickoff>0&&m.kickoff<=now&&['A','B'].every(s=>Array.isArray(m.teams?.[s])&&m.teams[s].filter(p=>!p.bench).length>=6)).slice().sort((a,b)=>b.kickoff-a.kickoff)[0];
     const previous=new Map();
@@ -254,7 +259,7 @@
     const priority={strength:guard.priority.best.strength,members:guard.priority.best.members,optimal:true};
     return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority}};
   }
-  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,validateLineupRoster,positionScore,minimumAssignment};
+  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.GPAIContext=api;
 })(typeof window==='undefined'?globalThis:window);

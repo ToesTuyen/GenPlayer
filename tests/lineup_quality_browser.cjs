@@ -36,9 +36,9 @@ async function main(){
       await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       const before=calls;
       await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
-      assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng AI/);assert.equal(calls,before+1);
-      assert.equal(await page.evaluate(()=>AI_STATE.output.plan.applied),0);assert.equal(await page.evaluate(()=>AI_STATE.output.plan.skipped),1);
-      assert.match(await page.locator('#result').innerText(),/Không áp dụng chuỗi đổi chỗ/);
+      assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);assert.equal(calls,before+1);
+      assert.equal(await page.evaluate(()=>AI_STATE.output),null);assert.equal(await page.evaluate(()=>AI_STATE.lastFailure.kind),'lineup');
+      assert.match(await page.locator('#result').innerText(),/chuyển sang thuật toán/);
       assert.equal(await page.locator('[data-step="balance"]').getAttribute('data-state'),'done');
       const draft=await page.evaluate(()=>{const r=cstate.results[cstate.idx];GPAIContext.lineup(cstate.subset,{A:r.evA,B:r.evB});return JSON.stringify(cstate);});
       await page.locator('#createProcessClose').click();await page.locator('#toggleRoster').click();
@@ -66,7 +66,7 @@ async function main(){
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);await ctx.close();
     }
     assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);
-    console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'mandatory quality rollback, impossible roster with AI and algorithm, no paid call without valid base, old draft/storage preserved, desktop/mobile'}));
+    console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'mandatory quality fallback, impossible roster with AI and algorithm, no paid call without valid base, old draft/storage preserved, desktop/mobile'}));
   }finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
