@@ -10,6 +10,23 @@ const match=(i=1,score={a:3,b:1})=>({id:String(i),kickoff:Date.now()-i*86400000,
 const context=()=>({players:structuredClone(players),history:Array.from({length:5},(_,i)=>match(i+1)),rosterNames:players.map(p=>p.n),lineupCandidates:candidatesFor(teams),match:match(6,null),playerName:players[0].n,instruction:'Cân công và thủ riêng.'});
 const output=(task='lineup')=>({title:'Nhận định kiểm thử',sections:Array.from({length:task==='match-review'?6:3},(_,i)=>({heading:'Phần '+i,body:'Văn bản dựa trên dữ liệu bóng đá.'})),...(task==='lineup'?{candidateId:'c0',flipTeams:false,swaps:[]}:{}),...(task==='player-form'?{verdict:'keep',suggestions:[]}:{})});
 const provider=value=>async(url,init)=>new Response(JSON.stringify({model:'test/model',choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}],usage:{prompt_tokens:30,completion_tokens:50}}),{status:200,headers:{'Content-Type':'application/json'}});
+test('light is the HTML and runtime default, including blocked storage; an explicit saved dark choice remains available',()=>{
+  const root=path.join(__dirname,'..'),source=fs.readFileSync(path.join(root,'src/web_template.html'),'utf8');
+  const bootstrap=source.match(/<script>(try\{document\.documentElement\.dataset\.theme=[\s\S]*?)<\/script>/)[1];
+  const current=source.match(/function currentTheme\(\)\{[^}]*\}/)[0];
+  for(const saved of [null,'light','invalid','dark','blocked']){
+    const sandbox={document:{documentElement:{dataset:{}}},localStorage:{getItem:()=>{if(saved==='blocked')throw Error('blocked');return saved;}}};
+    vm.runInNewContext(bootstrap,sandbox);
+    assert.equal(sandbox.document.documentElement.dataset.theme,saved==='dark'?'dark':'light');
+    assert.equal(vm.runInNewContext(current+';currentTheme()',sandbox),saved==='dark'?'dark':'light');
+  }
+  assert.equal(vm.runInNewContext(current+';currentTheme()',{document:{documentElement:{dataset:{}}}}),'light');
+  for(const entry of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(root,entry),'utf8');
+    assert.ok(html.startsWith('<!doctype html><html lang="vi" data-theme="light">'));
+    assert.match(html,/id="themeBtn"[^>]+aria-label="Chuyển sang giao diện tối">☾<\/button>/);
+  }
+});
 test('public release preserves legacy storage and Firebase, and only replaces GenPlayer service-worker caches',async()=>{
   const root=path.join(__dirname,'..'),entries=['index.html','score-update.html','dist/index.html','dist/score-update.html'];
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));

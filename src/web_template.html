@@ -1,4 +1,4 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="genplayer-release" content="web-app-2026-10-26">
 <title>FC Haha — Chia đội bóng sân 7</title>
@@ -870,7 +870,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
   <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
-  <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện sáng" aria-label="Chuyển sang giao diện sáng">☀︎</button>
+  <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối">☾</button>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
 <div id="aiModeBanner" class="ai-banner" role="status"></div>
@@ -1841,7 +1841,7 @@ function quickScores(tier,positions,spd,wr){
 
 // ---- nav ----
 const THEME_KEY="gp_theme";
-function currentTheme(){return document.documentElement.dataset.theme==="light"?"light":"dark";}
+function currentTheme(){return document.documentElement.dataset.theme==="dark"?"dark":"light";}
 function applyThemeUI(){
   const light=currentTheme()==="light", b=$("themeBtn"), meta=document.querySelector('meta[name="theme-color"]');
   if(b){b.textContent=light?"☾":"☀︎";b.title=light?"Chuyển sang giao diện tối":"Chuyển sang giao diện sáng";b.setAttribute("aria-label",b.title);}
