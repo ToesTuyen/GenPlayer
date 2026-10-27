@@ -16,8 +16,8 @@ const ROLE_CODES=Object.freeze(['GK','SW','LB','RB','CM','WG','ST']);
 const SLOT_CODES=Object.freeze(['A','B'].flatMap(side=>[...ROLE_CODES,'BENCH'].map(role=>side+'_'+role)));
 const LINEUP_RULES=Object.freeze([
   'Đúng danh sách, sân 7: mỗi bên 7 đá chính; đủ mọi người được chọn, không trùng hoặc sót. Dự bị chênh tối đa 1 người.',
-  'Người mạnh đá chính BẮT BUỘC: chọn nhóm 14 có tổng điểm hồ sơ theo vị trí chính cao nhất có thể xếp đúng vị trí chính/phụ, rồi mới chia cân hai đội. Phải xét cả chuỗi xoay vị trí, không chỉ thay trực tiếp một người; không để người mạnh dự bị để bù cân đội hoặc lấy thưởng đúng vị trí chính. Ưu tiên thành viên, đủ hai thủ môn chính thì dùng thủ môn chính. Đồng thời không để thành viên dự bị hơn người đá chính ngoài sân tại vai trò được phép từ 0.5 điểm.',
-  'Khách và dự bị BẮT BUỘC: đủ 14 thành viên thì khách dự bị. Chia tổng số khách đều hai bên, chênh tối đa 1. Xếp dự bị theo điểm từ cao xuống và kiểm tra lần lượt nhóm mạnh nhất 1, 2, ... người, tới cùng số dự bị hai bên; từng nhóm chênh trung bình tối đa 0.5 điểm. Không lấy người yếu kéo trung bình xuống để che nhóm dự bị mạnh dồn một bên; không tính người dư thành lợi thế.',
+  'Top 14 đá chính BẮT BUỘC: trước tiên xếp điểm vị trí chính đang hiển thị (một chữ số thập phân) từ cao xuống thấp để lấy top 14 gốc. Sau đó mới áp dụng Note hiện tại: “ABC dự bị” loại ABC khỏi top 14 gốc và lấy dự bị có điểm cao nhất còn hợp lệ; “ABC bắt gôn/đá vị trí X” ép vai trò trong trận này. Không tự chọn một người thay thế khác. Đồng thời không để thành viên dự bị hơn người đá chính ngoài sân tại vai trò được phép từ 0.5 điểm.',
+  'Khách và dự bị BẮT BUỘC: nếu còn đủ 14 thành viên không bị Note chỉ định dự bị thì khách dự bị; nếu còn dưới 14, khách có điểm cao nhất được tham gia xếp top 14. Chia tổng số khách đều hai bên, chênh tối đa 1. Xếp dự bị theo điểm từ cao xuống và kiểm tra lần lượt nhóm mạnh nhất 1, 2, ... người, tới cùng số dự bị hai bên; từng nhóm chênh trung bình tối đa 0.5 điểm. Không lấy người yếu kéo trung bình xuống để che nhóm dự bị mạnh dồn một bên; không tính người dư thành lợi thế.',
   'Cân hàng công RIÊNG BẮT BUỘC: chênh tổng điểm 3 vị trí tuyến trên tối đa 1.5 điểm; xét kiến tạo, tiền vệ và tiền đạo.',
   'Cân hàng thủ RIÊNG BẮT BUỘC: chênh tổng điểm thòng và 2 hậu vệ tối đa 1.5 điểm; xét cả hỗ trợ phòng ngự, không chỉ cân tổng điểm.',
   'Gôn có thể chênh nhẹ; không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.',
@@ -26,7 +26,7 @@ const LINEUP_RULES=Object.freeze([
   'Xoay tua BẮT BUỘC khi có trận trước hợp lệ: mỗi đội mới tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua, kiểm tra cả hai màu cũ, không chỉ đổi màu A/B. Đổi nhóm đồng đội nhưng giữ đúng vị trí chính/phụ; không ép người chỉ có một vai trò sang sai vị trí. Thiếu lịch sử phải báo chưa đối chiếu được, không bịa.',
   'Xét phong độ: kết quả gần đây, chuỗi thắng/thua và bàn đã nhập; vắng mặt không tính thua, không tự đổi chỉ số.',
   'So kè đúng vai trò: so đội hình chính và từng tuyến; không cộng dự bị dư thành lợi thế.',
-  'instruction là Note hiện tại: nguồn duy nhất cho chỉ định riêng về gôn, vị trí, dự bị hoặc tách cặp. Nếu trống, không có yêu cầu riêng; không tự kế thừa chỉ định từ trận cũ. Note không được bỏ qua điều kiện bắt buộc về đủ người/không trùng, phân bổ khách, người mạnh đá chính và cân công/thủ; nếu mâu thuẫn, nêu rõ. Không nhắc lại Note trong các sections nhận định.'
+  'instruction là Note hiện tại: nguồn duy nhất cho chỉ định riêng về gôn, vị trí, dự bị hoặc tách cặp. Nếu trống, không có yêu cầu riêng; không tự kế thừa chỉ định từ trận cũ và không sửa hồ sơ/form cầu thủ. Trước tiên phải xác định top 14 gốc theo điểm; sau đó mới áp dụng “ABC dự bị” hoặc “ABC bắt gôn/đá vị trí X” cho riêng trận này. Note không được bỏ qua điều kiện đủ người/không trùng, chia khách và cân công/thủ còn lại. Nếu mâu thuẫn, nêu rõ. Không nhắc lại Note trong các sections nhận định.'
 ]);
 function schema(task,selected=[],candidates=[]){
   const properties={title:str,sections:{type:'array',items:section,minItems:task==='match-review'?6:3,maxItems:10}};
@@ -77,7 +77,7 @@ function prepare(body,now=Date.now()){
     data.assignmentSlots=Object.fromEntries(['A','B'].flatMap(side=>[...ROLE_CODES.map((code,k)=>[side+'_'+code,{team:side,position:C.SLOTS[k],bench:false}]),[side+'_BENCH',{team:side,position:'',bench:true}]]));
     data.lineupRequirements={playerIds:data.players.map(p=>p.id),requiredStarterSlots:SLOT_CODES.filter(code=>!code.endsWith('_BENCH')),startersPerTeam:7,benchPerTeam:{min:Math.floor((data.players.length-14)/2),max:Math.ceil((data.players.length-14)/2)},mandatoryQuality:{...C.LINEUP_LIMITS,compareBenchAcrossBothTeams:true,outfieldOnly:true}};
     const priority=guard.priority.best;
-    data.lineupRequirements.starterPriority={maximizePrimaryRatingTotal:true,roleChains:true,members:priority.members,primaryRatingTotal:+priority.strength.toFixed(6)};
+    data.lineupRequirements.starterPriority={fixedDisplayedTop14:true,displayedDecimals:1,lowerRatedReplacement:false,basePlayerIds:guard.priority.baseFixed.map(i=>'p'+i),noteBenchOverrides:guard.priority.forcedBench.map(i=>'p'+i),noteRoleOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),finalPlayerIds:guard.priority.fixed.map(i=>'p'+i),members:priority.members,primaryRatingTotal:+priority.strength.toFixed(1)};
     data.lineupRequirements.reserveStrength={strongestPrefixes:true,meanDifference:C.LINEUP_LIMITS.benchMeanDifference,ignoreWeakestUnpairedExtra:true};
     for(const p of data.players)p.roleScores=Object.fromEntries(C.SLOTS.map(slot=>[slot,+C.positionScore(p,slot).toFixed(6)]));
     data.players.forEach((p,i)=>p.allowedRoles=[...new Set(C.SLOTS.filter((slot,k)=>roles.allowed[i][k]))]);

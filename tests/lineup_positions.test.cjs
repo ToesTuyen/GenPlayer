@@ -49,13 +49,23 @@ test('only a clear current Note can authorize an extra role, not AI-supplied ove
   const p=roster();p[4].pos2=['TĐ'];const t=exchange(teams(),4,6),instruction='Position 6 đá giữa';
   assert.throws(()=>C.lineup(p,t),/không được xếp/);
   assert.doesNotThrow(()=>C.lineup(p,t,{instruction}));
-  const prepared=S.prepare({task:'lineup',context:context(p,teams(),instruction)});
+  const prepared=S.prepare({task:'lineup',context:context(p,t,instruction)});
   const data=JSON.parse(prepared.messages[1].content);assert.deepEqual(data.lineupRequirements.positions.notePositionOverrides,[{playerId:'p6',slot:'TVtt'}]);
   assert.throws(()=>S.validateOutput(output([{first:'p4',second:'p6'}]),prepared),e=>e.kind==='lineup');
-  const selected=S.prepare({task:'lineup',context:context(p,t,instruction)});
-  assert.deepEqual(S.validateOutput(output([]),selected).teams,t,'The Note-authorized candidate must be prepared before the model selects it');
+  assert.deepEqual(S.validateOutput(output([]),prepared).teams,t,'The Note-authorized candidate must be prepared before the model selects it');
   const fake=context(p);fake.roleOverrides=[{index:6,slot:'TVtt'}];
   assert.throws(()=>S.validateOutput(output([{first:'p4',second:'p6'}]),S.prepare({task:'lineup',context:fake})),e=>e.kind==='lineup');
+});
+
+test('a current Note can force an outfield player with TM 0 into goal without mutating the profile',()=>{
+  const p=roster();p[0].pos2=['TĐ'];p[6].TM=0;p[7].TM=0.0001;const before=JSON.stringify(p),options={strictGuests:true,instruction:'Position 6 bắt gôn'};
+  const guard=C.lineupGuard(p,options);assert.deepEqual(guard.roles.overrides,[{index:6,slot:'GK'}]);assert.deepEqual(guard.priority.forcedStart,[6]);assert.equal(guard.roles.allowed[6][0],true);assert.equal(guard.roles.allowed[6].filter(Boolean).length,1);
+  const results=O.solve(p,null,options);assert.ok(results.length>0);
+  for(const r of results){
+    const keepers=[r.evA.starters[0],r.evB.starters[0]];assert.ok(keepers.includes(6));
+    assert.doesNotThrow(()=>C.lineup(p,{A:r.evA,B:r.evB},options));
+  }
+  assert.equal(JSON.stringify(p),before,'A one-match Note must never rewrite player positions or ratings');
 });
 
 test('negative, ambiguous, conflicting and historical Notes cannot grant a role',()=>{

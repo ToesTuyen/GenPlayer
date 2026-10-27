@@ -74,5 +74,7 @@ test('AI cannot shuffle reserve strength out of balance and cannot change any th
 
 test('no-solution diagnostics name remaining mandatory conditions, never lower configured limits',()=>{
   const p=roster();rate(p[14],10);rate(p[15],0);const before=JSON.stringify(C.LINEUP_LIMITS);
-  const r=O.solve(p,null,{strictGuests:true});assert.match(r.error,/Không tìm được đội hình đạt tiêu chí bắt buộc/);assert.ok(r.diagnostics.some(x=>x.code==='reserve'));assert.equal(JSON.stringify(C.LINEUP_LIMITS),before);
+  const r=O.solve(p,null,{strictGuests:true});assert.match(r.error,/sau khi duyệt \d+ cách chia/);assert.ok(r.diagnostics.some(x=>x.code==='reserve'));
+  assert.ok(r.search.totalPartitions>1);assert.ok(r.search.hardChecked>0);assert.equal(r.search.validPartitions,0);assert.ok(r.search.nearest.violations.length>0);
+  assert.ok(r.diagnostics.every(x=>x.count>0));assert.equal(JSON.stringify(C.LINEUP_LIMITS),before);
 });

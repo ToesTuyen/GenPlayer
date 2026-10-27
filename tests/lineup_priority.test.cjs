@@ -1,26 +1,28 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const C=require('../src/ai_context.js'),O=require('../src/optimizer.js'),S=require('../src/ai_service.js');
-const {snapshot,reportedTeams}=require('./lineup_snapshot.cjs'),{candidatesFor}=require('./lineup_fixture.cjs');
+const {snapshot}=require('./lineup_snapshot.cjs'),{candidatesFor}=require('./lineup_fixture.cjs');
 const rate=(p,v)=>Object.assign(p,Object.fromEntries(C.KEYS.map(k=>[k,v])));
 const roster=n=>Array.from({length:n},(_,i)=>rate({n:'Priority '+i,pos:C.SLOTS[i%7],pos2:[],guest:i>=14},6));
 const context=(p,t)=>({players:p,history:[],rosterNames:p.map(x=>x.n),lineupCandidates:candidatesFor(t),instruction:''});
 const output=swaps=>JSON.stringify({title:'Priority regression',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake test content.'})),candidateId:'c0',flipTeams:false,swaps});
 
-test('reported Chrome lineup is rejected: Hưng and Văn Thanh cannot be sacrificed to balance teams',()=>{
-  const p=snapshot(),t=reportedTeams(),before=JSON.stringify(p);
-  assert.throws(()=>C.lineup(p,t),/không được dự bị.*chuỗi đổi vị trí/);
-  assert.throws(()=>S.prepare({task:'lineup',context:context(p,t)}),/không được dự bị/,'No paid call can start from the reported bad base');
-  const results=O.solve(p,null,{strictGuests:true});assert.equal(results.length,12);
-  const mustStart=['Hưng','Văn Thanh','Huy Hoàng','Nguyen Quy Bong','Nguyễn Khắc Trọng','Mạnh Tiến'];
-  const mustBench=['Nguyễn Văn Quyền','Quý Tàu','Quang Minh'];
+test('the displayed top 14 are fixed before team balancing',()=>{
+  const p=snapshot(),before=JSON.stringify(p),options={instruction:'Quang Minh bắt gôn'},results=O.solve(p,null,{strictGuests:true,...options});assert.equal(results.length,12);
+  const guard=C.lineupGuard(p,options),fixed=guard.priority.fixed,mustStart=fixed.map(i=>p[i].n),mustBench=p.filter((_,i)=>!fixed.includes(i)).map(x=>x.n);
+  const valid={A:structuredClone(results[0].evA),B:structuredClone(results[0].evB)};
+  let pair;
+  for(const side of ['A','B'])for(let k=1;k<7&&!pair;k++)for(const bench of [...valid.A.bench,...valid.B.bench])if(guard.roles.allowed[bench][k]){pair={starter:valid[side].starters[k],bench};break;}
+  assert.ok(pair);const invalid=structuredClone(valid);
+  for(const side of ['A','B'])for(const key of ['starters','bench'])invalid[side][key]=invalid[side][key].map(i=>i===pair.starter?pair.bench:i===pair.bench?pair.starter:i);
+  assert.throws(()=>C.lineup(p,invalid,options),/thuộc nhóm 14 sau khi áp dụng Note và xếp điểm/);
+  const invalidContext=context(p,invalid);invalidContext.instruction=options.instruction;
+  assert.throws(()=>S.prepare({task:'lineup',context:invalidContext}),/thuộc nhóm 14 sau khi áp dụng Note và xếp điểm/,'No paid call can start from a base that benches a top-14 player');
   for(const r of results){
-    const t={A:r.evA,B:r.evB},checked=C.lineup(p,t),names=[...t.A.starters,...t.B.starters].map(i=>p[i].n);
+    const t={A:r.evA,B:r.evB},checked=C.lineup(p,t,options),names=[...t.A.starters,...t.B.starters].map(i=>p[i].n);
     for(const name of mustStart)assert.ok(names.includes(name),name+' must start');
     for(const name of mustBench)assert.ok(!names.includes(name),name+' must bench');
-    // Independent upper bound: the two primary keepers plus the strongest 12
-    // outfield profiles. This snapshot has a legal assignment for that set.
-    const upper=p.filter(x=>x.pos==='GK').reduce((s,x)=>s+C.positionScore(x,x.pos),0)+p.filter(x=>x.pos!=='GK').map(x=>C.positionScore(x,x.pos)).sort((a,b)=>b-a).slice(0,12).reduce((s,x)=>s+x,0);
+    const upper=fixed.reduce((s,i)=>s+Number(C.positionScore(p[i],p[i].pos).toFixed(1)),0);
     assert.ok(Math.abs(checked.checks.priority.strength-upper)<1e-9);
     assert.ok(checked.checks.metrics.benchGroups.every(g=>g.gap<=0.5+1e-9));
   }
@@ -39,19 +41,30 @@ test('weakest reserve cannot hide two stronger reserves concentrated on one side
   const data=JSON.parse(prepared.messages[1].content);assert.equal(data.lineupRequirements.reserveStrength.strongestPrefixes,true);
 });
 
-test('priority uses a legal chain, not a raw top-14 cut that leaves required positions empty',()=>{
+test('a raw displayed top-14 cut is never replaced by lower-rated specialists',()=>{
   const p=roster(16);p.forEach(x=>x.guest=false);p[14].pos='Thòng';p[15].pos='Thòng';rate(p[14],8);rate(p[15],8);
-  // Only two sweeper seats exist; without a secondary role not all four
-  // sweepers can start, however strong they are.
+  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/Nhóm 14 cầu thủ sau khi áp dụng Note và xếp điểm/);
+  p[14].pos2=['TV'];p[15].pos2=['TĐ'];
   const r=O.solve(p,null,{strictGuests:true});assert.ok(r.length>0);
-  for(const x of r){const t={A:x.evA,B:x.evB};assert.doesNotThrow(()=>C.lineup(p,t));assert.ok(t.A.starters.includes(14)||t.B.starters.includes(14));assert.ok(t.A.starters.includes(15)||t.B.starters.includes(15));}
-  p[1].pos2=['HV'];p[8].pos2=['HV'];
-  const guard=C.lineupGuard(p);assert.equal(guard.priority.best.members,14);
+  const fixed=C.lineupGuard(p).priority.fixed;
+  for(const x of r){const starters=[...x.evA.starters,...x.evB.starters];assert.deepEqual(starters.slice().sort((a,b)=>a-b),fixed.slice().sort((a,b)=>a-b));}
 });
 
-test('AI cannot bench a member after selecting a strongest-starting base',()=>{
-  const p=snapshot(),r=O.solve(p,null,{strictGuests:true})[0],t={A:r.evA,B:r.evB};
-  const bench=[...t.A.bench,...t.B.bench].find(i=>p[i].n==='Nguyễn Văn Quyền'),starter=[...t.A.starters,...t.B.starters].find(i=>p[i].n==='Văn Thanh');
+test('an explicit current Note can bench a top-14 member and promotes the strongest remaining player',()=>{
+  const p=roster(16);p[14].pos='TĐ';rate(p[14],6.5);const options={strictGuests:true,instruction:'Priority 13 dự bị'};
+  const guard=C.lineupGuard(p,options);assert.ok(guard.priority.baseFixed.includes(13),'Original top 14 is computed before Note');assert.ok(!guard.priority.baseFixed.includes(14),'Guest starts outside the original member top 14');
+  assert.deepEqual(guard.priority.forcedBench,[13]);assert.ok(!guard.priority.fixed.includes(13));assert.ok(guard.priority.fixed.includes(14),'The strongest eligible reserve replaces the Note-benched player');
+  const results=O.solve(p,null,options);assert.ok(results.length>0);
+  for(const r of results){
+    const starters=[...r.evA.starters,...r.evB.starters];assert.ok(starters.includes(14));assert.ok(!starters.includes(13));
+    assert.doesNotThrow(()=>C.lineup(p,{A:r.evA,B:r.evB},options));
+  }
+  assert.equal(C.lineupGuard(p,{instruction:'Priority 13 không dự bị'}).priority.forcedBench.length,0,'A negative Note must not create an override');
+});
+
+test('AI cannot bench a top-14 member after selecting a valid base',()=>{
+  const p=roster(16),r=O.solve(p,null,{strictGuests:true})[0],t={A:r.evA,B:r.evB};
+  const bench=[...t.A.bench,...t.B.bench][0],starter=[...t.A.starters,...t.B.starters][0];
   assert.throws(()=>S.validateOutput(output([{first:'p'+bench,second:'p'+starter}]),S.prepare({task:'lineup',context:context(p,t)})),e=>e.kind==='lineup');
 });
 
@@ -62,6 +75,6 @@ test('starting selection agrees with an independent role-count upper bound on a 
   // both keepers/sweepers/CMs/wingers/strikers plus the top four HVs must start.
   const required=p.map((x,i)=>({x,i})).filter(({x})=>x.pos!=='HV').map(({i})=>i);
   const fullbacks=p.map((x,i)=>({x,i})).filter(({x})=>x.pos==='HV').sort((a,b)=>C.positionScore(b.x,b.x.pos)-C.positionScore(a.x,a.x.pos)).slice(0,4).map(({i})=>i);
-  const expected=[...required,...fullbacks].reduce((s,i)=>s+C.positionScore(p[i],p[i].pos),0);
+  const expected=[...required,...fullbacks].reduce((s,i)=>s+Number(C.positionScore(p[i],p[i].pos).toFixed(1)),0);
   assert.ok(Math.abs(C.lineupGuard(p).priority.best.strength-expected)<1e-9);
 });

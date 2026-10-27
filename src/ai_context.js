@@ -47,24 +47,31 @@
     const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
     const names=players.map(p=>norm(p.n)),escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const patterns={GK:'thu mon|gon|khung thanh','Thòng':'thong|trung ve',HV:'hau ve canh|hau ve bien|hau ve|hau canh|hau bien',TVtt:'tien ve trung tam|tien ve giua|tvtt|trung tam|giua',TV:'tien ve canh|tv canh|canh','TĐ':'tien dao|td|cam'};
-    const found=new Map(),clauses=typeof instruction==='string'?instruction.split(/[;,.!?\n]+/).map(norm).filter(Boolean):[];
+    const found=new Map(),benchOverrides=new Set(),clauses=typeof instruction==='string'?instruction.split(/[;,.!?\n]+/).map(norm).filter(Boolean):[];
     for(let i=0;i<players.length;i++){
       const words=names[i].split(' '),aliases=words.map((_,k)=>words.slice(k).join(' ')).filter(a=>names.filter(n=>n===a||n.endsWith(' '+a)).length===1);
       for(const [slot,pattern] of Object.entries(patterns))for(const clause of clauses){
         const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(clause.trim()));
         if(match){if(!found.has(i))found.set(i,new Set());found.get(i).add(slot);}
       }
+      for(const clause of clauses){
+        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?(?:cau thu )?'+escape(a)+' (?:uu tien )?(?:du bi|ngoi du bi)(?: nhe| di)?$').test(clause.trim()));
+        if(match)benchOverrides.add(i);
+      }
     }
     const overrides=[...found].filter(([,slots])=>slots.size===1).map(([index,slots])=>({index,slot:[...slots][0]}));
     const extra=new Map(overrides.map(x=>[x.index,x.slot])),centers=players.flatMap((p,i)=>!p.guest&&p.pos==='TVtt'?[i]:[]);
     const keeperCount=players.filter(p=>!p.guest&&p.pos==='GK').length;
     const allowed=players.map((p,i)=>SLOTS.map(slot=>{
+      // A clear Note is an instruction for this draft, not merely permission:
+      // the named player must use that role. It never mutates the profile.
+      if(extra.has(i))return slot===extra.get(i);
       const declared=p.pos===slot||(p.pos2||[]).includes(slot),explicit=extra.get(i)===slot;
-      if(slot==='GK')return (p.TM||0)>0&&(explicit||(keeperCount>=2?p.pos==='GK'&&!p.guest:declared||keeperCount<2));
+      if(slot==='GK')return (p.TM||0)>0&&(keeperCount>=2?p.pos==='GK'&&!p.guest:declared||keeperCount<2);
       if(slot==='TVtt'&&centers.length>=2)return p.pos==='TVtt'||explicit;
       return declared||explicit;
     }));
-    return {allowed,centers,overrides,historical:[]};
+    return {allowed,centers,overrides,benchOverrides:[...benchOverrides],historical:[]};
   }
   // Lịch sử chỉ mở thêm vai trò Thòng khi nhóm vị trí đăng ký/Note hiện tại
   // không thể lấp đủ 14 chỗ. Một lần đá Thòng ở trận đã có tỉ số hòa hoặc
@@ -85,19 +92,36 @@
     return [...evidence].map(([index,matches])=>({index,slot:'Thòng',matches:matches.length,draws:matches.filter(m=>m.score.a===m.score.b).length,samples:matches.slice(0,3)}));
   }
   function priorityReader(players,roles){
-    const primary=players.map(p=>positionScore(p,p.pos)),members=players.filter(p=>!p.guest).length;
-    // A member takes precedence over a guest when a role can be filled by
-    // either. 1000 exceeds the entire possible 14-player rating difference.
-    const values=players.map((p,i)=>primary[i]+(p.guest?0:1000));
-    function choose(team,slots){
-      if(team.length<slots.length)return null;
-      const cost=team.map(i=>team.map((_,k)=>k<slots.length?roles.allowed[i][slots[k]]&&!(members>=14&&players[i].guest)?-values[i]:1e6:0));
-      const ans=minimumAssignment(cost),starters=[];
-      for(let r=0;r<team.length;r++)if(ans[r]<slots.length){if(cost[r][ans[r]]>=1e6)return null;starters.push(team[r]);}
-      return {starters,value:starters.reduce((s,i)=>s+values[i],0),strength:starters.reduce((s,i)=>s+primary[i],0),members:starters.filter(i=>!players[i].guest).length};
+    // Ranking follows the one-decimal overall shown on player cards and the
+    // pitch; hidden floating-point fractions must never move someone across
+    // the 14th-place boundary.
+    const primary=players.map(p=>+positionScore(p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
+    // First establish the original top 14 from the displayed one-decimal
+    // rating. Only afterwards may the current Note alter that base: a forced
+    // reserve is removed, a forced role is inserted, and the strongest
+    // remaining eligible reserve fills any vacancy. This preserves an explicit
+    // before/after audit instead of silently applying Note before ranking.
+    const members=players.filter(p=>!p.guest).length;
+    const baseEligible=players.flatMap((p,i)=>members>=14&&p.guest?[]:[i]);
+    const baseRanked=baseEligible.slice().sort((a,b)=>primary[b]-primary[a]||a-b),baseFixed=baseRanked.slice(0,14);
+    const conflictingNote=[...forcedBench].filter(i=>forcedStart.has(i));
+    const availableMembers=players.filter((p,i)=>!p.guest&&!forcedBench.has(i)).length;
+    const eligible=players.flatMap((p,i)=>forcedBench.has(i)||(availableMembers>=14&&p.guest&&!forcedStart.has(i))?[]:[i]);
+    const ranked=eligible.slice().sort((a,b)=>primary[b]-primary[a]||a-b),required=ranked.filter(i=>forcedStart.has(i));
+    const fixed=[...required,...ranked.filter(i=>!forcedStart.has(i))].slice(0,14).sort((a,b)=>primary[b]-primary[a]||a-b),fixedSet=new Set(fixed);
+    function assign(selected,slots){
+      if(selected.length!==slots.length)return null;
+      const cost=selected.map(i=>slots.map(k=>roles.allowed[i][k]?-primary[i]:1e6));
+      const ans=minimumAssignment(cost);
+      for(let r=0;r<selected.length;r++)if(cost[r][ans[r]]>=1e6)return null;
+      return {starters:selected.slice(),value:selected.reduce((s,i)=>s+primary[i],0),strength:selected.reduce((s,i)=>s+primary[i],0),members:selected.filter(i=>!players[i].guest).length};
     }
-    const best=choose(players.map((_,i)=>i),[0,1,2,3,4,5,6,0,1,2,3,4,5,6]);
-    return {best,primary,value:idx=>idx.reduce((s,i)=>s+values[i],0),chooseTeam:team=>choose(team,[0,1,2,3,4,5,6])};
+    const best=conflictingNote.length||required.length>14?null:assign(fixed,[0,1,2,3,4,5,6,0,1,2,3,4,5,6]);
+    return {
+      best,primary,baseRanked,baseFixed,ranked,fixed,forcedBench:[...forcedBench],forcedStart:[...forcedStart],availableMembers,conflictingNote,
+      value:idx=>idx.reduce((s,i)=>s+primary[i],0),
+      chooseTeam:team=>assign(team.filter(i=>fixedSet.has(i)),[0,1,2,3,4,5,6])
+    };
   }
   function match(m){
     if(!m||!m.teams)fail('Thiếu đội hình trận.');
@@ -208,46 +232,47 @@
     }
     const stronger=players.map((p,i)=>SLOTS.map((slot,k)=>k===0?0:players.reduce((mask,q,j)=>
       !q.guest&&roles.allowed[j][k]&&scores[j][k]-scores[i][k]>=LINEUP_LIMITS.benchAdvantage-epsilon?mask|(1<<j):mask,0)));
-    function violation(teams){
+    function violations(teams){
+      const out=[];
       for(const side of ['A','B'])for(let k=0;k<7;k++){
         const i=teams[side].starters[k];
-        if(!roles.allowed[i][k])return {kind:'position',player:i,slot:SLOTS[k]};
+        if(!roles.allowed[i][k])out.push({kind:'position',player:i,slot:SLOTS[k]});
       }
       if(roles.centers.length>=2){
         const count=side=>[...teams[side].starters,...teams[side].bench].filter(i=>roles.centers.includes(i)).length;
-        if(Math.abs(count('A')-count('B'))>1)return {kind:'centers'};
+        if(Math.abs(count('A')-count('B'))>1)out.push({kind:'centers'});
       }
       const starting=[...teams.A.starters,...teams.B.starters],startingValue=priority.value(starting);
-      if(!priority.best)return {kind:'selection',unavailable:true};
-      if(startingValue+epsilon<priority.best.value){
+      if(!priority.best)out.push({kind:'selection',unavailable:true});
+      else if(startingValue+epsilon<priority.best.value||priority.best.starters.some(i=>!starting.includes(i))){
         const missed=priority.best.starters.filter(i=>!starting.includes(i)).sort((a,b)=>priority.primary[b]-priority.primary[a]);
-        return {kind:'selection',bench:missed[0],gap:priority.best.value-startingValue};
+        out.push({kind:'selection',bench:missed[0],gap:Math.max(0,priority.best.value-startingValue)});
       }
       for(const [from,to,label] of [[4,7,'hàng công'],[1,4,'hàng thủ']]){
         let a=0,b=0;
         for(let k=from;k<to;k++){a+=scores[teams.A.starters[k]][k];b+=scores[teams.B.starters[k]][k];}
         const gap=Math.abs(a-b);
-        if(gap>LINEUP_LIMITS.lineDifference+epsilon)return {kind:'balance',label,gap};
+        if(gap>LINEUP_LIMITS.lineDifference+epsilon)out.push({kind:'balance',label,gap,limit:LINEUP_LIMITS.lineDifference});
       }
       const bench=[...teams.A.bench,...teams.B.bench],mask=bench.reduce((m,i)=>m|(1<<i),0);
       for(const side of ['A','B'])for(let k=1;k<7;k++){
         const i=teams[side].starters[k],blocked=stronger[i][k]&mask;
-        if(blocked)return {kind:'bench',starter:i,bench:bench.find(j=>blocked&(1<<j)),slot:SLOTS[k]};
+        if(blocked)out.push({kind:'bench',starter:i,bench:bench.find(j=>blocked&(1<<j)),slot:SLOTS[k]});
       }
       const m=metrics(teams),d=m.difference;
-      const group=m.benchGroups.find(g=>g.gap>LINEUP_LIMITS.benchMeanDifference+epsilon);
-      if(group)return {kind:'reserve',gap:group.gap,count:group.count};
-      for(const key of ['start','total'])if(d[key]>LINEUP_LIMITS.strengthDifference+epsilon)return {kind:'strength',key,gap:d[key]};
-      for(const key of ['stars','benchStars','totalStars'])if(d[key]>LINEUP_LIMITS.starDifference)return {kind:'stars',key,gap:d[key]};
-      for(const [key,limit] of [['pace',LINEUP_LIMITS.paceDifference],['totalPace',LINEUP_LIMITS.paceDifference],['stamina',LINEUP_LIMITS.staminaDifference],['totalStamina',LINEUP_LIMITS.staminaDifference]])if(d[key]>limit+epsilon)return {kind:key.includes('Stamina')||key==='stamina'?'stamina':'pace',key,gap:d[key],limit};
+      for(const group of m.benchGroups)if(group.gap>LINEUP_LIMITS.benchMeanDifference+epsilon)out.push({kind:'reserve',gap:group.gap,count:group.count,limit:LINEUP_LIMITS.benchMeanDifference});
+      for(const key of ['start','total'])if(d[key]>LINEUP_LIMITS.strengthDifference+epsilon)out.push({kind:'strength',key,gap:d[key],limit:LINEUP_LIMITS.strengthDifference});
+      for(const key of ['stars','benchStars','totalStars'])if(d[key]>LINEUP_LIMITS.starDifference)out.push({kind:'stars',key,gap:d[key],limit:LINEUP_LIMITS.starDifference});
+      for(const [key,limit] of [['pace',LINEUP_LIMITS.paceDifference],['totalPace',LINEUP_LIMITS.paceDifference],['stamina',LINEUP_LIMITS.staminaDifference],['totalStamina',LINEUP_LIMITS.staminaDifference]])if(d[key]>limit+epsilon)out.push({kind:key.includes('Stamina')||key==='stamina'?'stamina':'pace',key,gap:d[key],limit});
       const r=rotation(teams);
-      if(r.checked&&r.maxTogether>LINEUP_LIMITS.previousTeammates)return {kind:'rotation',count:r.maxTogether};
-      return null;
+      if(r.checked&&r.maxTogether>LINEUP_LIMITS.previousTeammates)out.push({kind:'rotation',count:r.maxTogether,limit:LINEUP_LIMITS.previousTeammates});
+      return out;
     }
+    const violation=teams=>violations(teams)[0]||null;
     function describe(v){
       if(v.kind==='position')return `${players[v.player].n}: không được xếp ${ROLE_LABELS[v.slot]}; phải dùng vị trí chính/phụ phù hợp hoặc chỉ định vị trí rõ trong Note. Đủ tiền vệ trung tâm chính thì mỗi đội phải có một người đá giữa.`;
       if(v.kind==='centers')return 'Tiền vệ trung tâm chính đang dồn một bên; phải chia đều hai đội, chênh tối đa một người, kể cả dự bị.';
-      if(v.kind==='selection')return v.unavailable?'Không đủ nhóm 14 cầu thủ có thể đá chính đúng vị trí đăng ký.':`${players[v.bench].n}: không được dự bị khi có thể chọn nhóm đá chính mạnh hơn, vẫn đúng vị trí chính/phụ. Phải tối đa chất lượng nhóm đá chính trước khi cân hai đội; xét cả chuỗi đổi vị trí, không chỉ thay trực tiếp một người.`;
+      if(v.kind==='selection')return v.unavailable?'Nhóm 14 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ hai bộ vị trí. Không tự bỏ qua Note hoặc thay người khác.':`${players[v.bench]?.n||'Cầu thủ thuộc top 14'}: phải đá chính vì thuộc nhóm 14 sau khi áp dụng Note và xếp điểm; không đưa người khác vào thay để cân đội.`;
       if(v.kind==='balance')return `Chênh ${v.label} ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.lineDifference} điểm.`;
       if(v.kind==='bench')return `${players[v.bench].n}: không được dự bị khi điểm ${v.slot} cao hơn ${players[v.starter].n} từ ${LINEUP_LIMITS.benchAdvantage} điểm (đối chiếu cả hai đội).`;
       if(v.kind==='reserve')return `Sức mạnh dự bị: nhóm ${v.count} người mạnh nhất mỗi bên chênh trung bình ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.benchMeanDifference}; không lấy người yếu kéo trung bình xuống để bù nhóm mạnh.`;
@@ -256,11 +281,11 @@
       if(v.kind==='rotation')return `Có ${v.count} đồng đội cũ cùng bên, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.previousTeammates}; phải trộn đội, không chỉ đổi màu A/B.`;
       return `${v.kind==='pace'?'Tốc độ':'Thể lực'} trung bình chênh ${v.gap.toFixed(2)}, vượt ngưỡng bắt buộc ${v.limit} (${v.key.startsWith('bench')?'dự bị cùng số người':v.key.startsWith('total')?'ngoài sân và dự bị cùng số người':'6 cầu thủ ngoài sân'}).`;
     }
-    return {scores,roles,metrics,rotation,priority,violation,describe,accepts:teams=>!violation(teams),assert(teams){const v=violation(teams);if(v)fail(describe(v));}};
+    return {scores,roles,metrics,rotation,priority,violation,violations,describe,accepts:teams=>!violation(teams),assert(teams){const v=violation(teams);if(v)fail(describe(v));}};
   }
   // Only for intermediate swaps: a multi-swap plan may temporarily unbalance a
   // line. Its completed result must still pass lineup(), including quality.
-  function validateLineupRoster(players,teams){
+  function validateLineupRoster(players,teams,options={}){
     if(!Array.isArray(players)||players.length<14||players.length>24)fail('Chia đội AI hiện hỗ trợ sân 7, từ 14–24 người.');
     const used=[];
     for(const side of ['A','B']){
@@ -269,13 +294,15 @@
     }
     if(used.length!==players.length||new Set(used).size!==players.length)fail('AI bỏ sót hoặc xếp trùng cầu thủ.');
     if(Math.abs(teams.A.bench.length-teams.B.bench.length)>1)fail('Số dự bị hai đội chênh lệch quá nhiều.');
-    const members=players.filter(p=>!p.guest).length;
-    if(members>=14&&[...teams.A.starters,...teams.B.starters].some(i=>players[i].guest))fail('Khách phải dự bị khi đủ 14 thành viên. Hãy tạo lại.');
+    const roles=lineupRoles(players,options.instruction),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index)),starters=[...teams.A.starters,...teams.B.starters];
+    if(starters.some(i=>forcedBench.has(i)))fail(`${players[starters.find(i=>forcedBench.has(i))].n}: Note hiện tại yêu cầu dự bị.`);
+    const availableMembers=players.filter((p,i)=>!p.guest&&!forcedBench.has(i)).length;
+    if(availableMembers>=14&&starters.some(i=>players[i].guest&&!forcedStart.has(i)))fail('Khách phải dự bị khi còn đủ 14 thành viên không bị Note chỉ định dự bị, trừ người được Note yêu cầu đá vị trí cụ thể. Hãy tạo lại.');
     const guestCount=side=>[...teams[side].starters,...teams[side].bench].filter(i=>players[i].guest).length;
     if(Math.abs(guestCount('A')-guestCount('B'))>1)fail('Cần chia khách đều hai bên. Hãy tạo lại.');
   }
   function lineup(players,teams,options={}){
-    validateLineupRoster(players,teams);
+    validateLineupRoster(players,teams,options);
     const guard=lineupGuard(players,options);guard.assert(teams);
     const evaluate=t=>{
       const ps=idx=>idx.map(i=>players[i]),mean=(idx,f)=>idx.length?ps(idx).reduce((s,p)=>s+f(p),0)/idx.length:0;

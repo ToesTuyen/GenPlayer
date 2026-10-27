@@ -42,10 +42,10 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
 }
 
 test('solver supplies distinct starting groups, ignoring color flips, role-only changes and reserve order',()=>{
-  const p=snapshot(),before=JSON.stringify(p),seen=new Set();
+  const p=snapshot(),before=JSON.stringify(p),seen=new Set(),options={strictGuests:true,instruction:'Quang Minh bắt gôn'};
   for(let run=0;run<3;run++){
-    const choices=O.solve(p,null,{strictGuests:true,excludeGroups:[...seen]});assert.equal(choices.length,12);
-    for(const r of choices){assert.doesNotThrow(()=>C.lineup(p,{A:r.evA,B:r.evB}));const key=group(p,r);assert.ok(!seen.has(key));seen.add(key);}
+    const choices=O.solve(p,null,{...options,excludeGroups:[...seen]});assert.equal(choices.length,12);
+    for(const r of choices){assert.doesNotThrow(()=>C.lineup(p,{A:r.evA,B:r.evB},options));const key=group(p,r);assert.ok(!seen.has(key));seen.add(key);}
     const r=choices[0],t={A:structuredClone(r.evA),B:structuredClone(r.evB)};
     t.A.starters.reverse();t.A.bench.reverse();assert.equal(C.lineupGroupKey(p,t),group(p,r));
     assert.equal(C.lineupGroupKey(p,{A:r.evB,B:r.evA}),group(p,r));
@@ -106,7 +106,7 @@ test('no legal candidate stops before paid AI, keeps previous draft and records 
   const p=roster();p[4].pos='TĐ';p[11].pos='TĐ';
   const x=controller('valid',p),old={results:[{sentinel:true}],idx:0};x.scope.cstate=old;await x.run();
   assert.equal(x.state.success,false);assert.equal(x.requests.length,0);assert.equal(x.renders.length,0);assert.equal(x.scope.cstate,old);
-  const log=x.log.list()[0];assert.equal(log.status,'failed');assert.equal(log.error.kind,'solver');assert.ok(log.error.diagnostics.length);assert.ok(!log.output);
+  const log=x.log.list()[0];assert.equal(log.status,'failed');assert.equal(log.error.kind,'solver');assert.ok(log.error.diagnostics.length);assert.ok(log.error.search);assert.ok(!log.output);
 });
 
 test('exhausted group exclusions return an explicit stop instead of reusing an old team',()=>{

@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-stepper-number">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-top14-note-order">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -200,9 +200,9 @@ test('unsafe guest swaps throw a lineup error for real algorithm fallback',()=>{
 });
 test('invalid quality and position candidates are rejected before AI',()=>{
   const strong=context();for(const i of [4,5,6])for(const k of C.KEYS)strong.players[i][k]=10;
-  strong.players[14].guest=false;strong.players[14].pos='TV';
+  strong.players[14].guest=false;strong.players[14].pos='TĐ';
   for(const k of C.KEYS)strong.players[14][k]=10;strong.players[5].KT=1;
-  assert.throws(()=>prepare({task:'lineup',context:strong}),/không được dự bị/,'A stronger feasible starting group is rejected even before checking line balance');
+  assert.throws(()=>prepare({task:'lineup',context:strong}),/thuộc nhóm 14 sau khi áp dụng Note và xếp điểm/,'A top-14 player cannot be benched even before checking line balance');
   const c=context();c.players[1].pos='TĐ';
   assert.throws(()=>prepare({task:'lineup',context:c}),/không được xếp thòng/,'Wrong registered positions are now mandatory, not warnings');
 });

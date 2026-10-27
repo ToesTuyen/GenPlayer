@@ -1,0 +1,195 @@
+BÁO CÁO TIÊU CHÍ TẠO ĐỘI VÀ CÁC TRƯỜNG HỢP BỊ BLOCK
+Ngày cập nhật: 27/10/2026
+
+Quy ước
+---------
+- BẮT BUỘC: Chỉ cần vi phạm một điều kiện là phương án bị loại.
+- ƯU TIÊN: Chỉ dùng để xếp hạng các phương án đã vượt qua toàn bộ điều kiện bắt buộc.
+- KỸ THUẬT: Quy tắc vận hành, chống lặp hoặc bảo vệ dữ liệu; không phải đánh giá chuyên môn.
+
+I. BẢNG TIÊU CHÍ HIỆN TẠI
+==========================
+
+-------------------------------------------------------------------------------------------------------------------------------
+NHÓM                  | TRẠNG THÁI | NGƯỠNG / CÁCH TÍNH                              | KHI NÀO BỊ BLOCK
+-------------------------------------------------------------------------------------------------------------------------------
+Danh sách             | Bắt buộc   | Chọn từ 14 đến 24 người                        | Ít hơn 14 hoặc nhiều hơn 24
+Số người              | Bắt buộc   | Mỗi đội đúng 7 đá chính                        | Một bên không đủ hoặc thừa người
+Toàn vẹn dữ liệu      | Bắt buộc   | Mỗi người xuất hiện đúng một lần                | Trùng người, sót người hoặc index sai
+Dự bị                 | Bắt buộc   | Số dự bị hai bên lệch tối đa 1                  | Chênh số lượng dự bị lớn hơn 1
+Top 14 gốc            | Bắt buộc   | Xếp điểm vị trí chính trên UI (1 số lẻ) giảm dần | Người top 14 gốc bị loại khi Note không yêu cầu
+Điều chỉnh theo Note  | Bắt buộc   | Áp dụng sau khi đã có top 14 gốc                  | Không thay đúng người hoặc sai vai trò Note
+Khách mời             | Bắt buộc   | Còn đủ 14 thành viên sau Note thì khách dự bị    | Khách thường đá chính dù vẫn đủ 14 thành viên
+Chia khách            | Bắt buộc   | Tổng số khách hai bên lệch tối đa 1              | Khách bị dồn về một bên
+Thủ môn               | Bắt buộc   | Mỗi bên có 1 GK; Note có thể ép bất kỳ người nào  | Không chia được 2 GK sau khi áp dụng Note
+Vị trí                | Bắt buộc   | Vị trí chính, phụ hoặc Note cho phép rõ ràng      | Cầu thủ bị xếp trái vị trí hợp lệ
+Tiền vệ trung tâm     | Bắt buộc   | Khi có >=2 TVTT chính, số TVTT lệch tối đa 1      | TVTT chính bị dồn một bên
+Phủ hai bộ vị trí     | Bắt buộc   | Top 14 phải lấp được 2 x 7 vị trí                 | Top 14 thiếu GK/Thòng/HV/TVTT/TV/TĐ
+Cân hàng công         | Bắt buộc   | Tổng fit của TVTT + TV + TĐ lệch tối đa 1,5      | Không có cách chia nào đạt <=1,5
+Cân hàng thủ          | Bắt buộc   | Tổng fit của Thòng + 2 HV lệch tối đa 1,5        | Không có cách chia nào đạt <=1,5
+Người mạnh theo chỗ   | Bắt buộc   | Dự bị không hơn starter cùng slot từ 0,5 điểm    | Dự bị có điểm slot cao hơn >=0,5
+Cân dự bị             | Bắt buộc   | Mọi nhóm 1..N dự bị mạnh nhất lệch TB <=0,5      | Bất kỳ prefix dự bị nào vượt 0,5
+Sức mạnh đá chính     | Bắt buộc   | Chênh tổng điểm 7 người tối đa 2                  | Chênh lớn hơn 2
+Tổng sức mạnh         | Bắt buộc   | Đá chính + cùng số dự bị, chênh tối đa 2          | Chênh lớn hơn 2
+Ngôi sao              | Bắt buộc   | Điểm vị trí chính >=8; lệch tối đa 1              | Chính, dự bị hoặc tổng lệch >1 sao
+Tốc độ                | Bắt buộc   | TB ngoài sân và pool đối ứng lệch tối đa 0,5      | Một trong hai phép so vượt 0,5
+Thể lực               | Bắt buộc   | TB ngoài sân và pool đối ứng lệch tối đa 0,5      | Một trong hai phép so vượt 0,5
+Khác trận trước       | Bắt buộc   | Tối đa 4 đồng đội cũ tiếp tục cùng bên            | Có từ 5 đồng đội cũ cùng bên
+Không lặp lượt gen    | Kỹ thuật   | Không trả lại nhóm đá chính đã gen cùng input     | Đã dùng hết các nhóm hợp lệ chưa xem
+Điểm trung bình chính | Ưu tiên    | Hai đội càng gần nhau càng tốt                    | Không block
+Fit vị trí            | Ưu tiên    | Tổng mức phù hợp vị trí càng cân càng tốt          | Không block sau khi qua ngưỡng cứng
+Chất lượng công/thủ   | Ưu tiên    | Chia đều chất lượng từng tuyến                     | Không block sau khi qua ngưỡng cứng
+Sức chạy              | Ưu tiên    | Cân tốc độ + thể lực + năng nổ                     | Không block sau khi qua ngưỡng cứng
+Chênh thủ môn         | Ưu tiên    | Trọng số thấp                                      | Không có ngưỡng block riêng
+Ổn định               | Tạm tắt    | Trọng số hiện tại bằng 0                           | Không block
+Phong độ/bàn thắng    | AI tham khảo| Lịch sử, chuỗi thắng thua, bàn gần đây             | Không phải điều kiện cứng của solver
+-------------------------------------------------------------------------------------------------------------------------------
+
+Ghi chú về top 14
+-----------------
+1. Trước tiên, điểm vị trí chính hiển thị trên UI được làm tròn một chữ số và xếp từ cao xuống thấp.
+2. Mười bốn người đầu tiên tạo thành top 14 gốc; nếu bằng điểm thì giữ thứ tự trong danh sách đầu vào.
+3. Chỉ sau khi có top 14 gốc, Note mới được áp dụng.
+4. Note “ABC dự bị” loại ABC khỏi top 14 gốc; dự bị có điểm cao nhất còn hợp lệ được đưa vào thay.
+5. Note “ABC bắt gôn/đá vị trí X” ép ABC đá chính đúng vị trí đó; nếu đang ngoài top 14 gốc, ABC thay người có điểm thấp nhất không bị Note bắt buộc.
+6. Nếu còn ít nhất 14 thành viên sau các chỉ định Note, khách thường bị loại khỏi tập xét đá chính.
+7. Nếu Note làm số thành viên khả dụng còn dưới 14, khách có điểm cao nhất được tham gia danh sách thay thế.
+8. Khách được Note yêu cầu đá vị trí cụ thể được ưu tiên chỉ định đó ngay cả khi vẫn đủ 14 thành viên.
+9. Người ngoài nhóm cuối sau Note không được đưa vào thay chỉ để đủ vị trí hoặc giúp hai đội cân hơn.
+10. Mọi ngoại lệ từ Note chỉ tồn tại trong lượt tạo/trận hiện tại; không sửa vị trí, chỉ số hoặc form cầu thủ.
+
+II. CÁC TRƯỜNG HỢP CÓ THỂ KHIẾN KHÔNG GEN ĐƯỢC ĐỘI
+==================================================
+
+01. Top 14 thiếu hai thủ môn hợp lệ
+    - Có hai thủ môn trong toàn danh sách nhưng một người nằm ngoài top 14.
+    - Vì người ngoài top 14 không được thay vào nên lượt tạo bị block.
+
+02. Top 14 không phủ đủ hai bộ vị trí
+    - Ví dụ có quá nhiều Thòng nhưng thiếu TV hoặc TĐ.
+    - Bộ giải không được đẩy người top 14 ra để lấy chuyên gia vị trí điểm thấp hơn.
+
+03. Note chỉ định vị trí không được nhận diện
+    - Tên viết mơ hồ, trùng tên, câu phủ định hoặc một câu gán nhiều vị trí.
+    - Chỉ một yêu cầu rõ ràng cho đúng một cầu thủ và một vị trí mới mở thêm vai trò.
+    - Riêng Note rõ “ABC bắt gôn” có thể ép cầu thủ bắt gôn ngay cả khi TM bằng 0.
+    - Chỉ định chỉ áp dụng trận hiện tại, không cập nhật hồ sơ hoặc form cho các trận khác.
+
+04. Note ép một cầu thủ ngoài nhóm điểm cao đá chính
+    - Cầu thủ được Note yêu cầu bắt gôn/đá vị trí cụ thể được đưa vào nhóm 14 trước.
+    - Người có điểm thấp nhất không bị Note bắt buộc sẽ chuyển xuống dự bị.
+    - Sau đó mọi tiêu chí cân bằng khác vẫn được kiểm tra bình thường.
+
+05. Top 14 và quy tắc "người mạnh theo chỗ" xung đột
+    - Người dự bị có điểm tổng vị trí chính thấp hơn nên nằm ngoài top 14.
+    - Nhưng người đó lại có điểm tại một slot cụ thể cao hơn starter từ 0,5.
+    - Top 14 không cho đổi người, còn quy tắc slot không cho giữ nguyên; kết quả có thể không còn phương án.
+
+06. Top 14 và quy tắc khách mời xung đột
+    - Khi đủ 14 thành viên, khách luôn dự bị dù điểm cao.
+    - Top 14 thực tế được lấy trong nhóm thành viên, không lấy khách.
+
+07. Không thể chia top 14 thành đúng 7 người mỗi bên và vẫn đủ vị trí
+    - Có thể toàn top 14 phủ đủ 14 slot trên giấy nhưng không thể tách thành hai bộ 7 slot hợp lệ.
+
+08. Cân hàng công không đạt
+    - Bộ giải loại từng phương án có chênh công >1,5 rồi tiếp tục duyệt.
+    - Chỉ báo lỗi sau khi đã duyệt hết mà không có phương án nào <=1,5.
+
+09. Cân hàng thủ không đạt
+    - Tương tự hàng công, mọi phương án >1,5 đều bị loại và bộ giải tiếp tục tìm.
+
+10. Cân hàng công và hàng thủ kéo ngược nhau
+    - Đổi người để giảm lệch công có thể làm lệch thủ, hoặc ngược lại.
+    - Cả hai tuyến phải cùng đạt ngưỡng trên một phương án.
+
+11. Hàng dự bị không thể cân trong 0,5
+    - So lần lượt người mạnh nhất, hai người mạnh nhất, ba người mạnh nhất...
+    - Chỉ cần một nhóm đối ứng vượt 0,5 là phương án bị loại.
+    - Người yếu cuối danh sách không được dùng để kéo trung bình xuống.
+
+12. Người dư ở một bên
+    - Khi tổng người lẻ, người dự bị yếu nhất bị dư không tạo lợi thế điểm.
+    - Số lượng dự bị vẫn chỉ được lệch tối đa một người.
+
+13. Tổng lực đá chính vượt 2 điểm
+    - Dù công và thủ từng tuyến đạt, tổng điểm 7 người vẫn có thể lệch >2.
+
+14. Tổng lực gồm dự bị vượt 2 điểm
+    - Đội chính cân nhưng khi cộng cùng số dự bị đối ứng lại lệch >2.
+
+15. Ngôi sao bị dồn
+    - Số người từ 8 điểm trở lên lệch quá 1 ở đội chính, dự bị đối ứng hoặc tổng đối ứng.
+
+16. Tốc độ bị dồn
+    - Trung bình 6 cầu thủ ngoài sân hoặc pool ngoài sân + dự bị đối ứng lệch >0,5.
+    - Điểm tốc độ của thủ môn không được dùng để che chênh ngoài sân.
+
+17. Thể lực bị dồn
+    - Cách kiểm tra giống tốc độ; chỉ cần một phép so vượt 0,5 là block.
+
+18. Tiền vệ trung tâm chính bị dồn một bên
+    - Tính cả đá chính và dự bị; số TVTT chính hai đội lệch quá 1.
+
+19. Khách bị dồn một bên
+    - Tổng số khách ở hai đội lệch quá 1, kể cả khách dự bị.
+
+20. Không đạt yêu cầu xoay tua
+    - Có từ 5 cầu thủ từng cùng bên ở trận gần nhất tiếp tục cùng bên.
+    - Đổi màu Team A/Team B không được tính là một đội hình mới.
+
+21. Vai trò lịch sử không đủ điều kiện làm ngoại lệ
+    - Chỉ vai trò Thòng từng xuất hiện trong trận có tỉ số hòa hoặc lệch tối đa 1 bàn mới được tham khảo.
+    - Trận chưa có tỉ số hoặc thắng/thua đậm không mở ngoại lệ vị trí.
+
+22. Đã dùng hết nhóm đội hình hợp lệ
+    - Những nhóm đá chính giống lượt gen trước với cùng input bị loại.
+    - Khi không còn nhóm mới, hệ thống dừng thay vì trả lại đội cũ.
+
+23. Một phương án vi phạm nhiều điều kiện cùng lúc
+    - Ví dụ vừa lệch công, vừa lệch dự bị, vừa lệch tốc độ.
+    - Phương án chỉ được giữ khi vượt qua tất cả điều kiện bắt buộc đồng thời.
+
+24. Dữ liệu vị trí hoặc chỉ số không hợp lệ
+    - Thiếu vị trí, điểm ngoài 0..10, tên trùng hoặc dữ liệu cầu thủ lỗi có thể làm bước chuẩn hóa dừng trước solver.
+
+25. Web Worker hoặc giới hạn thời gian
+    - Bộ giải chạy quá 90 giây hoặc trình duyệt không mở được Worker thì dừng vì lỗi kỹ thuật.
+    - Đây không phải block chuyên môn nhưng kết quả vẫn không được tạo.
+
+III. LOG MỚI SAU KHI SỬA
+========================
+
+Khi không tìm được đội, log hiện lưu:
+
+- totalPartitions: tổng số cách chia đã duyệt.
+- roleAssignments: số cách đã xếp được vai trò cho hai đội.
+- hardChecked: số cách đã đi tới bước kiểm tra toàn bộ tiêu chí bắt buộc.
+- validPartitions: số cách vượt qua toàn bộ tiêu chí bắt buộc.
+- baseTop14: danh sách top 14 gốc trước khi đọc Note.
+- top14: danh sách 14 người cuối cùng sau khi áp dụng Note.
+- diagnostics[].count: số phương án bị tiêu chí đó loại.
+- diagnostics[].bestGap: mức chênh nhỏ nhất từng tìm thấy cho tiêu chí đó.
+- diagnostics[].limit: ngưỡng bắt buộc tương ứng.
+- nearest.violations: tất cả lỗi còn lại trên phương án gần đạt nhất thực sự.
+- nearest.teams: hai nhóm người của phương án gần đạt để phục vụ kiểm tra bug.
+
+Phương án gần đạt được chọn theo thứ tự:
+
+1. Ít nhóm tiêu chí bắt buộc bị vi phạm hơn.
+2. Nếu bằng số nhóm lỗi, tổng mức vượt ngưỡng chuẩn hóa nhỏ hơn.
+
+Con số chênh hiển thị trong lỗi không còn là phương án đầu tiên gặp phải. Bộ giải luôn tiếp tục duyệt
+cho tới khi tìm được phương án hợp lệ hoặc đã thử hết toàn bộ cách chia có thể.
+
+IV. CÁC ĐIỂM NÊN ĐÁNH GIÁ LẠI
+==============================
+
+1. Top 14 tuyệt đối và "dự bị hơn starter cùng slot 0,5" có thể tự xung đột.
+2. Ngưỡng dự bị 0,5 rất chặt khi top 14 đã bị khóa trước.
+3. Khóa đồng thời công 1,5, thủ 1,5, tổng lực 2, tốc độ 0,5, thể lực 0,5 và xoay tua có thể làm hết phương án.
+4. Nếu top 14 thiếu vị trí, cần quyết định rõ một trong hai hướng:
+   - Dừng và yêu cầu sửa Note/danh sách; hoặc
+   - Cho phép ngoại lệ lấy người thứ 15 trở xuống. Hiện tại hệ thống chọn hướng dừng.
+5. Cần quyết định cách xử lý người bằng điểm ở ranh giới 14/15. Hiện tại giữ thứ tự danh sách đầu vào.
+
