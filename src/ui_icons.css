@@ -79,6 +79,6 @@
 .gl-bt .ui-icon{width:15px;height:15px}
 :root[data-theme="light"] .fb-fab{background:linear-gradient(135deg,#b39bec,#91a9e9);box-shadow:0 8px 20px rgba(114,126,180,.22)}
 :root[data-theme="light"] .ui-icon-image{filter:drop-shadow(0 2px 3px rgba(78,89,132,.12))}
-@media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}#rankTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#rankTabs button{min-width:0}.pstat-kpi .lab{gap:5px;font-size:10px}#screen-create .grid{grid-template-columns:minmax(0,1fr)}#screen-create .pl-name{min-width:0;overflow:hidden;text-overflow:ellipsis}}
+@media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}#rankTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#rankTabs button{min-width:0}.pstat-kpi .lab{gap:5px;font-size:10px}#screen-create .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#screen-create .pl-name{min-width:0}}
 @media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:46px;height:46px;border-radius:13px}.ap-btn .ap-icon .ui-icon{width:21px;height:21px}.ap-btn .ap-icon .ui-icon-image{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.ap-icon{transition:none}.ap-btn:hover .ap-icon{transform:none}}

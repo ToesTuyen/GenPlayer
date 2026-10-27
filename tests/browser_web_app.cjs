@@ -60,6 +60,10 @@ async function main(){
       assert.equal(await page.locator('#aiKeyDialog').isVisible(),false,'Key prompt waits until the criteria step');
       assert.equal(await page.locator('#createRosterStep').isVisible(),true);assert.equal(await page.locator('#createRulesStep').isVisible(),false);
       assert.equal(await page.locator('#aiInstruction').isVisible(),false,'Lineup Note follows player selection');
+      const firstPlayer=page.locator('#roster .pl-item').first(),selectedBeforeTap=await page.evaluate(()=>selectedIdx().length);
+      assert.equal(await firstPlayer.locator('input[type="checkbox"]').isVisible(),false,'Player checkboxes are visually hidden');
+      await firstPlayer.click();assert.equal(await firstPlayer.getAttribute('aria-checked'),'false');assert.equal(await page.evaluate(()=>selectedIdx().length),selectedBeforeTap-1,'Tapping a card deselects it');
+      await firstPlayer.click();assert.equal(await firstPlayer.getAttribute('aria-checked'),'true');assert.equal(await page.evaluate(()=>selectedIdx().length),selectedBeforeTap,'Tapping again selects it');
       assert.deepEqual(await page.locator('.create-tabs button').allTextContents(),['Tạo đội','Lịch sử tạo đội']);
       await page.locator('#createHistoryTabBtn').click();assert.equal(await page.locator('#createHistoryTab').isVisible(),true);assert.equal(await page.locator('#createBuildTab').isVisible(),false);
       await page.locator('#createBuildTabBtn').click();assert.equal(await page.locator('#createBuildTab').isVisible(),true);assert.equal(await page.locator('#createHistoryTab').isVisible(),false);

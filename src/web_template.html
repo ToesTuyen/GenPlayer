@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-create-stepper">
+<meta name="genplayer-release" content="web-app-2026-10-27-roster-cards">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -380,15 +380,16 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
 /* roster */
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.pl-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--line);border-radius:12px;
+.pl-item{position:relative;display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--line);border-radius:12px;
   cursor:pointer;user-select:none;background:var(--surface2);transition:.12s}
 .pl-item:hover{border-color:rgba(255,255,255,.2)}
 .pl-item.on{border-color:var(--brand);background:rgba(22,163,74,.14)}
 .pl-item.off{opacity:.45}
+.pl-item:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .avatar{width:32px;height:32px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.pl-name{font-size:13.5px;font-weight:600;flex:1;display:flex;align-items:center;gap:5px;min-width:0}
-.pl-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ovb{font-size:11px;font-weight:800;color:var(--text);background:var(--surface3);border-radius:20px;padding:2px 8px;flex:0 0 auto}
-.pl-item input{margin-left:2px}
+.pl-name{font-size:13.5px;font-weight:600;flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.pl-title{display:-webkit-box;width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.22;overflow-wrap:anywhere}.ovb{font-size:11px;font-weight:800;color:var(--text);background:var(--surface3);border-radius:20px;padding:2px 8px;flex:0 0 auto}
+#roster .pl-item>input[type=checkbox]{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
 .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .count{color:var(--muted);font-size:13px;margin-left:auto}.count b{color:var(--text)}
 .status{text-align:center;color:var(--muted);font-size:13px;margin:14px 0 0}
@@ -2519,10 +2520,13 @@ function buildRoster(){
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");
-    const gtag=p.guest?` <span class="gst-badge">khách · giống ${esc(p.likeOf||"")}</span>`:"";
+    const gtag=p.guest?`<span class="gst-badge">khách · giống ${esc(p.likeOf||"")}</span>`:"";
     const grm=p.guest?`<span class="gst-rm" title="Bỏ người ngoài" onclick="event.preventDefault();event.stopPropagation();removeGuest('${encodeURIComponent(p.n)}')">✕</span>`:"";
-    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span>${esc(p.n)}${gtag}</span></span><span class="ovb">${ov(p).toFixed(1)}</span>${grm}<input type="checkbox" data-i="${i}" checked>`;
-    el.querySelector("input").addEventListener("change",e=>{el.classList.toggle("off",!e.target.checked);el.classList.toggle("on",e.target.checked);updateCount();});
+    el.tabIndex=0;el.setAttribute("role","checkbox");el.setAttribute("aria-checked","true");el.setAttribute("aria-label",`Chọn ${p.n}`);
+    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span class="pl-title">${esc(p.n)}</span>${gtag}</span><span class="ovb">${ov(p).toFixed(1)}</span>${grm}<input type="checkbox" data-i="${i}" tabindex="-1" aria-hidden="true" checked>`;
+    const box=el.querySelector("input");
+    box.addEventListener("change",e=>{el.classList.toggle("off",!e.target.checked);el.classList.toggle("on",e.target.checked);el.setAttribute("aria-checked",String(e.target.checked));updateCount();});
+    el.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;e.preventDefault();box.click();});
     roster.appendChild(el);
   });
   $("result").innerHTML=""; $("status").textContent=""; $("saveWeek").style.display="none"; updateCount();
@@ -2560,7 +2564,7 @@ function updateCount(){
   createSyncWizard(n);
   aiTaskChanged();
 }
-$("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
+$("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;const item=c.closest(".pl-item");item.classList.toggle("on",c.checked);item.classList.toggle("off",!c.checked);item.setAttribute("aria-checked",String(c.checked));});updateCount();};
 $("go").onclick=()=>createTeams();
 $("saveWeek").onclick=()=>{
   if(!cstate.results.length)return;
@@ -3891,6 +3895,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v12",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v13",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>
