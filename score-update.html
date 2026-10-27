@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-roster-cards">
+<meta name="genplayer-release" content="web-app-2026-10-27-guest-after-roster">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -989,6 +989,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-note-status[data-state="warn"]{border-color:var(--amber)}
 @media(max-width:600px){.create-stepper{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);margin-bottom:10px;padding:0}.create-stepper button{gap:6px;min-height:40px;padding:5px 6px;font-size:12px}.create-step-number{flex-basis:22px;width:22px;height:22px}.create-panel-head{align-items:flex-start}.create-step-actions .btn{width:100%}.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}}
 @media(max-width:560px){#screen-create #roster.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#roster .pl-item{gap:6px;min-width:0;min-height:50px;padding:6px}#roster .avatar{width:28px;height:28px;font-size:9px}#roster .pl-name{font-size:11.5px;line-height:1.2;overflow:visible}#roster .ovb{padding:2px 5px;font-size:9.5px}#roster .gst-badge{display:block;max-width:100%;margin:0;padding:1px 3px;overflow:hidden;text-overflow:ellipsis;font-size:8px}}
+.roster-guest-add{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:7px;border:1.5px dashed var(--line);border-radius:12px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:650;cursor:pointer}.roster-guest-add:hover,.roster-guest-add:focus-visible{border-color:var(--brand);color:var(--text);background:var(--brand-soft)}.roster-guest-add span:first-child{font-size:18px;line-height:1;color:var(--brand)}
 .roster-selection{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:8px}
 .roster-select-all{display:inline-flex;align-items:center;gap:8px;min-height:36px;font-size:13px;font-weight:600;cursor:pointer}
 .roster-select-all input{width:18px;height:18px;margin:0;accent-color:var(--action);cursor:pointer}
@@ -1330,10 +1331,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button id="createRulesStepBtn" type="button" role="tab" aria-selected="false" aria-controls="createRulesStep" onclick="createSetWizardStep('rules')" disabled><span class="create-step-number">2</span><span>Tiêu chí &amp; tạo đội</span></button>
     </div>
     <section id="createRosterStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createRosterStepBtn">
-      <div class="create-panel-head">
-        <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
-        <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
-      </div>
       <div class="roster-selection">
         <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
         <span class="count" id="count"></span>
@@ -4531,6 +4528,7 @@ function buildRoster(){
     el.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;e.preventDefault();box.click();});
     roster.appendChild(el);
   });
+  const addGuestButton=document.createElement("button");addGuestButton.type="button";addGuestButton.className="roster-guest-add";addGuestButton.innerHTML='<span aria-hidden="true">＋</span><span>Người ngoài</span>';addGuestButton.onclick=openGuestModal;roster.appendChild(addGuestButton);
   $("result").innerHTML=""; $("status").textContent=""; $("saveWeek").style.display="none"; updateCount();
   createSetWizardStep("roster");
 }
@@ -6479,6 +6477,6 @@ async function createTeams(){
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v13",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v14",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>
