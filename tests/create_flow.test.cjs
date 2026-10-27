@@ -36,7 +36,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog};
   `,scope);
   return {scope,elements,renders,requests,storage:shared,cloudDocs,...scope.flow};
 }
@@ -75,6 +75,16 @@ test('accepted AI only chooses a candidate and is labeled AI; three runs use dif
     assert.equal(r.ai.decision,'accepted');assert.equal(r.ai.candidateId,'c0');
   }
   assert.equal(x.requests.length,3);assert.equal(x.log.list().filter(r=>r.status==='success').length,3);
+});
+
+test('a successful generation log restores the exact two teams for scheduling',async()=>{
+  const x=controller('valid');await x.run();const record=x.log.list()[0],draft=x.draftFromLog(record);
+  const names=(side,kind)=>draft.result['ev'+side][kind].map(i=>draft.players[i].n);
+  for(const side of ['A','B']){
+    assert.equal(JSON.stringify(names(side,'starters')),JSON.stringify(record.output.teams[side].filter(p=>!p.bench).map(p=>p.n)));
+    assert.equal(JSON.stringify(names(side,'bench')),JSON.stringify(record.output.teams[side].filter(p=>p.bench).map(p=>p.n)));
+  }
+  assert.equal(record.ai.generationId,'gen-fixture');
 });
 
 test('algorithm generations remain different after reload using only sanitized own logs',async()=>{
@@ -124,7 +134,7 @@ test('cloud journal stores one sanitized compact document and can be read by ano
   assert.equal(cloudDocs.size,1);const [docId,payload]=[...cloudDocs.entries()][0];assert.match(docId,/^generation_run-/);
   assert.equal(payload.kind,'generationLog');assert.equal(payload.runId,payload.record.id);assert.equal(payload.status,'success');
   const json=JSON.stringify(payload);for(const text of ['inputKey','candidateGroups','apiKey','authorization','finance','account'])assert.ok(!json.includes(text));
-  assert.ok(payload.record.input.players.length);assert.ok(payload.record.input.forms.length);assert.ok(payload.record.output.groupKey);assert.ok(payload.record.events.length);
+  assert.ok(payload.record.input.players.length);assert.ok(payload.record.input.forms.length);assert.ok(payload.record.output.groupKey);assert.equal(payload.record.output.teams.A.length,8);assert.equal(payload.record.output.teams.B.length,8);assert.ok(payload.record.events.length);
   const second=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs}),remote=await second.cloudFetch();
   assert.equal(remote.length,1);assert.equal(remote[0].id,payload.runId);assert.equal(remote[0].status,'success');
 });

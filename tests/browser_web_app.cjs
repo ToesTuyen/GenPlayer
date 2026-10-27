@@ -156,6 +156,12 @@ async function main(){
       await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#createProcess').isVisible(),false,'View lineup closes the progress dialog');
       assert.equal(await page.locator('#result').isVisible(),true,'View lineup reveals the rendered draft');
+      await page.locator('#createHistoryTabBtn').click();
+      assert.ok(await page.locator('.create-log-card').count()>=2,'Successful and failed runs both remain diagnosable');
+      assert.deepEqual(await page.locator('.create-log-team-title').allTextContents(),['🔴 Team A','🟡 Team B']);
+      assert.equal(await page.locator('.create-log-player').count(),14);assert.ok((await page.locator('.create-log-code').allTextContents()).every(text=>/^Mã log: run-/.test(text)));
+      assert.equal(await page.getByRole('button',{name:'Đặt làm trận tuần này'}).count(),1);
+      await page.locator('#createBuildTabBtn').click();
       const draftBeforeReview=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeReview=providerCalls;
       await page.locator('#reviewProcess').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
       assert.equal(await page.locator('#createProcessSteps > li').first().getAttribute('data-step'),'draft','Reopened report preserves reverse order');

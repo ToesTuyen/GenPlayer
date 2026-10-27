@@ -55,11 +55,31 @@
 .create-tab-panel[hidden]{display:none!important}
 .create-log-page{max-width:900px;margin:0 auto}
 .create-log-page .ai-footer{font-size:11.5px;line-height:1.5;color:var(--muted)}
+.create-log-list{display:grid;gap:9px;margin:10px 0 12px}
+.create-log-card{border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:10px}
+.create-log-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:8px}
+.create-log-title{font-size:12.5px;font-weight:800;color:var(--text)}
+.create-log-meta,.create-log-code{font-size:10.5px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+.create-log-status{flex:0 0 auto;border-radius:999px;padding:3px 7px;background:var(--brand-soft);color:var(--brand);font-size:10px;font-weight:800}
+.create-log-status.failed,.create-log-status.interrupted,.create-log-status.cancelled{background:var(--loss-soft);color:var(--red)}
+.create-log-teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.create-log-team{min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:8px}
+.create-log-team-title{font-size:11px;font-weight:850;margin-bottom:5px}
+.create-log-player{display:flex;justify-content:space-between;gap:7px;padding:3px 0;border-bottom:1px solid var(--line2);font-size:10.5px;line-height:1.3}
+.create-log-player:last-of-type{border-bottom:0}
+.create-log-player span:first-child{min-width:0;color:var(--text);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.create-log-player span:last-child{flex:0 0 auto;color:var(--muted);font-size:9.5px}
+.create-log-bench{margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);font-size:10px;line-height:1.4;color:var(--muted)}
+.create-log-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.create-log-actions .btn{margin-left:auto}
+.create-log-empty{padding:18px 10px;text-align:center;color:var(--muted);font-size:12px}
+.create-log-debug{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;color:var(--muted);font-size:11.5px}
+.create-log-debug summary{cursor:pointer;min-height:34px;align-content:center;font-weight:750}
 #createLogDetails{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55dvh;overflow:auto;font:12px/1.6 ui-monospace,SFMono-Regular,monospace;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
 #createRunLabel{overflow-wrap:anywhere}
 @keyframes process-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
-@media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}}
+@media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}.create-log-card{padding:8px}.create-log-teams{gap:6px}.create-log-team{padding:6px}.create-log-player{display:block}.create-log-player span{display:block}.create-log-player span:last-child{margin-top:1px}.create-log-actions{align-items:flex-end;flex-wrap:wrap}}
 #createAI[hidden],#createAI [hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden]{display:none!important}
 .create-toolbar [hidden]{display:none!important}
 .create-ai{margin:10px 0;padding:8px 0;border-block:1px solid var(--line)}

@@ -57,14 +57,36 @@ function createMergeLogs(local,cloud){
   const records=new Map();for(const r of cloud||[])if(r?.id)records.set(r.id,r);for(const r of local||[])if(r?.id)records.set(r.id,r);
   return [...records.values()].sort((a,b)=>String(b.startedAt||'').localeCompare(String(a.startedAt||''))).slice(0,GPCreationLog.MAX_RUNS||30);
 }
+const CREATE_LOG_STATUS={running:'Đang xử lý',success:'Hoàn tất',failed:'Thất bại',cancelled:'Đã huỷ',interrupted:'Bị gián đoạn'};
+const CREATE_LOG_ROLE={GK:'Gôn',Thòng:'Thòng',HV:'Hậu vệ',TVtt:'Giữa',TV:'Cánh','TĐ':'Tiền đạo'};
+function createLogNode(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
+function createLogGenerationId(r){return typeof r?.ai?.generationId==='string'&&r.ai.generationId?r.ai.generationId:'';}
+function createLogUsable(r){return r?.status==='success'&&Array.isArray(r?.input?.players)&&r.input.players.length>=14&&['A','B'].every(side=>Array.isArray(r?.output?.teams?.[side])&&r.output.teams[side].filter(p=>!p.bench).length===7);}
+function createLogTeam(side,rows){
+  const box=createLogNode('section','create-log-team'),title=createLogNode('div','create-log-team-title',(side==='A'?'🔴':'🟡')+' Team '+side);box.appendChild(title);
+  const starters=rows.filter(p=>!p.bench),bench=rows.filter(p=>p.bench);
+  for(const p of starters){const row=createLogNode('div','create-log-player'),name=createLogNode('span','',p.n||'—'),meta=createLogNode('span','',`${CREATE_LOG_ROLE[p.slot]||p.slot||'Vị trí'}${Number.isFinite(+p.rating)?' · '+(+p.rating).toFixed(1):''}`);row.append(name,meta);box.appendChild(row);}
+  const reserve=createLogNode('div','create-log-bench','Dự bị: '+(bench.length?bench.map(p=>p.n+(Number.isFinite(+p.rating)?' '+(+p.rating).toFixed(1):'')).join(', '):'—'));box.appendChild(reserve);return box;
+}
+function createRenderLogCards(records){
+  const list=$('createLogList');list.replaceChildren();
+  if(!records.length){list.appendChild(createLogNode('div','create-log-empty','Chưa có lượt tạo đội nào.'));return;}
+  for(const r of records){
+    const card=createLogNode('article','create-log-card'),head=createLogNode('div','create-log-head'),headText=createLogNode('div',''),when=new Date(r.startedAt),title=createLogNode('div','create-log-title',Number.isNaN(when.getTime())?'Lượt tạo đội':when.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}));
+    const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta);head.append(headText,status);card.appendChild(head);
+    if(createLogUsable(r)){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
+    else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
+    const actions=createLogNode('div','create-log-actions'),codes=createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')),button=createLogNode('button','btn sm',createLogUsable(r)?'Đặt làm trận tuần này':'Không thể dùng');
+    button.type='button';button.disabled=!createLogUsable(r);if(!button.disabled)button.onclick=()=>createUseLog(r.id);actions.append(codes,button);card.appendChild(actions);list.appendChild(card);
+  }
+}
 function createRenderLogList(records){
   CREATE_LOG_VIEW=records;const select=$('createLogSelect'),selected=select.value;select.replaceChildren();
-  const labels={running:'Chưa kết thúc',success:'Hoàn tất',failed:'Thất bại',cancelled:'Đã huỷ',interrupted:'Trang đã đóng/tải lại'};
-  for(const r of records){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(labels[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
+  for(const r of records){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(CREATE_LOG_STATUS[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
   if(selected&&records.some(r=>r.id===selected))select.value=selected;
   const localOk=CREATE_LOG?.persisted();
   $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
-  $('createLogExport').disabled=!records.length;createShowLog();
+  $('createLogExport').disabled=!records.length;createRenderLogCards(records);createShowLog();
 }
 function createSetTab(tab='build'){
   CREATE_TAB=tab==='history'?'history':'build';const history=CREATE_TAB==='history';
@@ -81,6 +103,23 @@ async function createOpenLogs(){
   const cloud=await createCloudFetch();createRenderLogList(createMergeLogs(CREATE_LOG?.list()||[],cloud));
 }
 function createShowLog(){const r=CREATE_LOG_VIEW.find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
+function createDraftFromLog(r){
+  if(!createLogUsable(r))throw new Error('Lượt này không có đội hình hoàn tất để dùng lại.');
+  const players=r.input.players.map(GPAIContext.player),indices=new Map(players.map((p,i)=>[p.n,i])),teams={A:{starters:[],bench:[]},B:{starters:[],bench:[]}};
+  for(const side of ['A','B'])for(const p of r.output.teams[side]){const i=indices.get(p.n);if(i===undefined)throw new Error('Thiếu cầu thủ '+p.n+' trong dữ liệu lượt tạo.');teams[side][p.bench?'bench':'starters'].push(i);}
+  const history=Array.isArray(r.input.history)?r.input.history:(r.input.rotationReference?[r.input.rotationReference]:[]),now=Date.parse(r.startedAt)||Date.now();
+  const checked=GPAIContext.lineup(players,teams,{instruction:r.input.instruction||'',history,now});
+  return {players,result:checked.result};
+}
+function createUseLog(id){
+  const record=CREATE_LOG_VIEW.find(r=>r.id===id);let draft;
+  try{draft=createDraftFromLog(record);}catch(e){alert('Không nạp được đội hình: '+e.message);return;}
+  cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
+  AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
+  CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';createNoteChanged();
+  render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
+  createRevealDraft();$('saveWeek').click();
+}
 function createExportLogs(){
   if(!CREATE_LOG)return;const body=GPCreationLog.exportRecords?GPCreationLog.exportRecords(CREATE_LOG_VIEW):CREATE_LOG.export(),url=URL.createObjectURL(new Blob([body],{type:'application/json'})),a=document.createElement('a');
   a.href=url;a.download='genplayer-gen-log-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
