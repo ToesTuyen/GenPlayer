@@ -16,7 +16,7 @@ const CREATE_STEPS=[
 ];
 const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinished work as complete.
 const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null,cancelled:false};
-const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)});
+const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)},{device:()=>GPCreationLog.deviceLabel(typeof navigator==='undefined'?null:navigator)});
 const CREATE_CLOUD_PREFIX='generation_';
 const CREATE_CLOUD={state:'idle',records:[],error:'',cursor:null,cursorTime:null,exhausted:false};
 const CREATE_LOG_PAGE={size:10,limit:10,loading:false,generation:0,observer:null};
@@ -125,7 +125,7 @@ function createRenderLogCards(records){
   if(!records.length){list.appendChild(createLogNode('div','create-log-empty','Chưa có lượt tạo đội nào.'));return;}
   for(const r of records){
     const card=createLogNode('article','create-log-card'),head=createLogNode('div','create-log-head'),headText=createLogNode('div',''),when=new Date(r.startedAt),title=createLogNode('div','create-log-title',Number.isNaN(when.getTime())?'Lượt tạo đội':when.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}));
-    const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta);head.append(headText,status);card.appendChild(head);
+    const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),device=createLogNode('div','create-log-device',r.device||'Thiết bị không rõ (log cũ)'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta,device);head.append(headText,status);card.appendChild(head);
     const usable=createLogUsable(r);if(usable)card.appendChild(createLogActions(r));
     if(usable){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
@@ -278,6 +278,7 @@ function createNoteChanged(){
   heading.textContent=changed?'Note đã thay đổi — cần tạo đội lại':algorithm?'Thuật toán dùng quy tắc và ngoại lệ vị trí rõ ràng; Note khác cần đối chiếu':'Note đã gửi AI — chưa xác minh tự động';
   box.replaceChildren(heading);
   if(note){const quote=document.createElement('blockquote');quote.textContent=note;box.appendChild(quote);}
+  for(const p of cstate.subset||[])if(typeof p.matchGkRating==='number'){const detail=document.createElement('p');detail.textContent=`Chỉ trận này: ${p.n} bắt gôn ${p.matchGkRating.toFixed(1)} như ${p.matchGkSource}.`;box.appendChild(detail);}
 }
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 function createStep(id,state,detail=''){
@@ -383,6 +384,7 @@ async function createTeams(){
     await createCompleteStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
     createStep('ratings','active','Kiểm tra điểm và vị trí trước khi chia…');await createYield();
     context=GPAIContext.normalize(aiContextSnapshot('lineup'));
+    const keeperNote=GPAIContext.applyMatchKeeperNote(context.players,context.rosterNames,context.instruction);context.players=keeperNote.players;
     const lineupNow=Date.now();
     subset=context.rosterNames.map(n=>context.players.find(p=>p.n===n));
     // Lineup creation never needs an unrelated match/player selected for another AI task.
@@ -392,7 +394,8 @@ async function createTeams(){
     if(cstate.inputKey===inputKey&&cstate.results.length)seenGroups.add(GPAIContext.lineupGroupKey(cstate.subset,{A:cstate.results[cstate.idx].evA,B:cstate.results[cstate.idx].evB}));
     createLogPatch({input:logInput,inputKey,selection:{excludedCount:seenGroups.size},validation:{limits:GPAIContext.LINEUP_LIMITS}});
     const noPosition=subset.filter(p=>!p.pos).length;
-    await createCompleteStep('ratings',noPosition?'warn':'done',noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.');
+    const keeperDetail=keeperNote.applied.map(o=>`${o.name} bắt gôn ${o.rating.toFixed(1)} như ${o.source} (chỉ trận này).`).join(' ');
+    await createCompleteStep('ratings',noPosition?'warn':'done',(noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.')+(keeperDetail?' '+keeperDetail:''));
     createStep('history','active','Tổng hợp lịch sử bóng đá hiện có…');await createYield();
     const forms=subset.map(p=>GPAIContext.form(p.n,context.history)),done=context.history.filter(m=>m.score&&m.kickoff<=Date.now());
     const withData=forms.filter(f=>f.played>0).length;

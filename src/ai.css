@@ -79,6 +79,7 @@
 .create-log-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:8px}
 .create-log-title{font-size:12.5px;font-weight:800;color:var(--text)}
 .create-log-meta,.create-log-code{font-size:10.5px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+.create-log-device{font-size:10px;line-height:1.4;color:var(--muted)}
 .create-log-status{flex:0 0 auto;border-radius:999px;padding:3px 7px;background:var(--brand-soft);color:var(--brand);font-size:10px;font-weight:800}
 .create-log-status.failed,.create-log-status.interrupted,.create-log-status.cancelled{background:var(--loss-soft);color:var(--red)}
 .create-log-teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}

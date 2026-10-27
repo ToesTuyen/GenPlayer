@@ -68,6 +68,35 @@ test('a current Note can force an outfield player with TM 0 into goal without mu
   assert.equal(JSON.stringify(p),before,'A one-match Note must never rewrite player positions or ratings');
 });
 
+test('a keeper comparison in the current Note applies only to the match snapshot',()=>{
+  const p=roster();p[0].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;
+  const before=JSON.stringify(p),names=p.slice(0,14).map(x=>x.n),instruction='Tuyên bắt gôn, chỉ số thủ môn như Mạnh Tiên';
+  const applied=C.applyMatchKeeperNote(p,names,instruction),target=applied.players[6],score=C.positionScore(p[15],'GK');
+  assert.equal(target.matchGkRating,score);assert.equal(target.matchGkSource,'Mạnh Tiến');assert.equal(target.TM,0);assert.equal(JSON.stringify(p),before);
+  assert.equal(C.positionScore(target,'GK'),score);assert.equal(C.positionScore(target,'TĐ'),C.positionScore(p[6],'TĐ'));
+  assert.equal(C.player(target).matchGkRating,score);assert.deepEqual(C.applyMatchKeeperNote(p,names,'Tuyên bắt gôn').applied,[]);
+  for(const note of ['Tuyên bắt gôn như Mạnh Tiến','Tuyên bắt gôn; chỉ số như Mạnh Tiến'])assert.equal(C.applyMatchKeeperNote(p,names,note).applied[0].rating,score);
+  const selected=names.map(n=>applied.players.find(x=>x.n===n)),options={strictGuests:true,instruction},results=O.solve(selected,null,options);assert.ok(results.length>0);
+  for(const r of results){const ev=[r.evA,r.evB].find(e=>selected[e.starters[0]].n===target.n);assert.ok(ev);assert.equal(ev.gkFit,score);const checked=C.lineup(selected,{A:r.evA,B:r.evB},options);assert.equal([checked.result.evA,checked.result.evB].find(e=>selected[e.starters[0]].n===target.n).gkFit,score);}
+  const context={players:applied.players,rosterNames:names,history:[],instruction,lineupCandidates:candidatesFor({A:results[0].evA,B:results[0].evB})},prepared=S.prepare({task:'lineup',context});
+  assert.equal(prepared.context.players.find(x=>x.n===target.n).matchGkRating,score);const data=JSON.parse(prepared.messages[1].content);assert.equal(data.players.find(x=>x.n===target.n).roleScores.GK,score);assert.deepEqual(data.lineupRequirements.keeperRatingOverrides,[{playerId:'p6',source:'Mạnh Tiến',rating:score,scope:'trận này'}]);
+});
+
+test('an unclear keeper reference is reported instead of silently disregarded or guessed',()=>{
+  const p=roster();p[6].n='Nguyễn Danh Tuyên';p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;const names=p.map(x=>x.n);
+  assert.throws(()=>C.applyMatchKeeperNote(p,names,'Tuyên bắt gôn; chỉ số thủ môn như không rõ'),/Không xác định duy nhất/);
+  p[14].n='Khách (Mạnh Tiến)';p[14].pos='GK';p[14].TM=5;const updatedNames=p.map(x=>x.n);
+  assert.equal(C.applyMatchKeeperNote(p,updatedNames,'Tuyên bắt gôn; chỉ số thủ môn như Mạnh Tiến').applied[0].source,'Mạnh Tiến','Exact name wins over a guest suffix');
+  assert.throws(()=>C.applyMatchKeeperNote(p,updatedNames,'Tuyên bắt gôn; chỉ số thủ môn như Tiến'),/Không xác định duy nhất/);
+});
+
+test('temporary keeper ratings do not change the original top-14 baseline',()=>{
+  const p=roster();p.forEach(x=>x.guest=false);p[0].n='Thủ môn A';p[0].TM=1;p[7].n='Thủ môn B';p[7].TM=9;
+  const instruction='Thủ môn A bắt gôn; chỉ số thủ môn như Thủ môn B',names=p.map(x=>x.n),before=C.lineupGuard(p,{instruction}).priority.baseFixed;
+  const applied=C.applyMatchKeeperNote(p,names,instruction);assert.equal(applied.applied.length,1);
+  assert.deepEqual(C.lineupGuard(applied.players,{instruction}).priority.baseFixed,before);
+});
+
 test('negative, ambiguous, conflicting and historical Notes cannot grant a role',()=>{
   const p=roster();p[6].n='Nguyễn Danh Tuyên';p[14].n='Khách (Danh Tuyên)';
   for(const instruction of ['Không cho Nguyễn Danh Tuyên đá giữa','Tuyên đá giữa','Nguyễn Danh Tuyên đá giữa; Nguyễn Danh Tuyên đá cánh','Ví dụ Nguyễn Danh Tuyên đá giữa'])assert.deepEqual(C.lineupRoles(p,instruction).overrides,[]);

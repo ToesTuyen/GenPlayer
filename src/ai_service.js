@@ -84,6 +84,7 @@ function prepare(body,now=Date.now()){
     const priority=guard.priority.best;
     data.lineupRequirements.starterPriority={fixedDisplayedTop14:true,displayedDecimals:1,lowerRatedReplacement:false,basePlayerIds:guard.priority.baseFixed.map(i=>'p'+i),noteBenchOverrides:guard.priority.forcedBench.map(i=>'p'+i),noteRoleOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),finalPlayerIds:guard.priority.fixed.map(i=>'p'+i),members:priority.members,primaryRatingTotal:+priority.strength.toFixed(1)};
     data.lineupRequirements.reserveStrength={strongestPrefixes:true,meanDifference:C.LINEUP_LIMITS.benchMeanDifference,ignoreWeakestUnpairedExtra:true};
+    data.lineupRequirements.keeperRatingOverrides=data.players.filter(p=>typeof p.matchGkRating==='number').map(p=>({playerId:p.id,source:p.matchGkSource,rating:p.matchGkRating,scope:'trận này'}));
     for(const p of data.players)p.roleScores=Object.fromEntries(C.SLOTS.map(slot=>[slot,+C.positionScore(p,slot).toFixed(6)]));
     data.players.forEach((p,i)=>p.allowedRoles=[...new Set(C.SLOTS.filter((slot,k)=>roles.allowed[i][k]))]);
     data.lineupRequirements.positions={registeredOrVerifiedHistoryRolesOnly:true,primaryCenters:roles.centers.map(i=>'p'+i),primaryCenterPerSide:roles.centers.length>=2,centerCountDifference:1,notePositionOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),historyPositionOverrides:roles.historical.map(x=>({playerId:'p'+x.index,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}))};

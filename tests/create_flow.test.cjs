@@ -18,7 +18,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
     STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
     AI_STATE:{busy:false},AI_KEYS:{has:()=>mode!=='algorithm'},cstate:{results:[],idx:0},
     aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,structuredClone,getHistory:()=>[],GPIcons:{render:()=>''},TITLES:{'screen-create':'Tạo đội'},
-    selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',canEdit:!!options.canEdit,alert:message=>alerts.push(message),openAdminModal:()=>alerts.push('OPEN_ADMIN'),
+    selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>({...context(p),instruction:element('aiInstruction').value}),confirm:()=>mode!=='cancel',canEdit:!!options.canEdit,alert:message=>alerts.push(message),openAdminModal:()=>alerts.push('OPEN_ADMIN'),
     render:(r,players)=>renders.push({r,players}),
     aiFetch:async(action,request)=>{
       if(action==='status')return {};
@@ -97,6 +97,15 @@ test('a successful generation log restores the exact two teams for scheduling',a
     assert.equal(JSON.stringify(names(side,'bench')),JSON.stringify(record.output.teams[side].filter(p=>p.bench).map(p=>p.n)));
   }
   assert.equal(record.ai.generationId,'gen-fixture');
+});
+
+test('generation applies a keeper comparison before solving and retains it in the match log only',async()=>{
+  const p=roster();p[0].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;const original=JSON.stringify(p);
+  const x=controller('valid',p);x.scope.$('aiInstruction').value='Tuyên bắt gôn, chỉ số thủ môn như Mạnh Tiên';await x.run();
+  assert.equal(x.state.success,true);const target=x.scope.cstate.subset.find(y=>y.n==='Nguyễn Danh Tuyên'),score=C.positionScore(p[15],'GK');
+  assert.equal(target.matchGkRating,score);assert.equal(JSON.stringify(p),original);assert.equal(x.requests[0].context.players.find(y=>y.n===target.n).matchGkRating,score);
+  const saved=x.log.list()[0],restored=x.draftFromLog(saved);assert.equal(restored.players.find(y=>y.n===target.n).matchGkRating,score);assert.equal(L.cloudRecord(saved).input.players.find(y=>y.n===target.n).matchGkRating,score);
+  x.scope.$('aiInstruction').value='';await x.run();assert.equal(x.state.success,true);assert.equal(x.scope.cstate.subset.find(y=>y.n===target.n).matchGkRating,undefined,'A later match does not inherit the override');
 });
 
 test('each usable history lineup has one row of adjacent edit and schedule actions above the teams',async()=>{
@@ -199,6 +208,20 @@ test('local journal is bounded, sanitizes secrets and never reads unrelated stor
   const blocked=L.createStore({getItem(){throw Error('blocked');},setItem(){throw Error('quota');}}),id=blocked.begin();blocked.patch(id,{status:'failed',error:{message:'test'}});
   assert.equal(blocked.persisted(),false);assert.equal(blocked.list()[0].status,'failed');assert.ok(blocked.export().includes('test'));
   const malformed=L.createStore({getItem:()=>'{"runs":[{"id":"bad"}]}',setItem(){}});assert.doesNotThrow(()=>malformed.begin());
+});
+
+test('new logs record only a compact browser and device label, including cloud copies',()=>{
+  const examples=[
+    ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1','iPhone · Safari'],
+    ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 CriOS/127.0 Mobile/15E148 Safari/604.1','iPhone · Chrome'],
+    ['Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/127.0 Mobile Safari/537.36','Android · Chrome'],
+    ['Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 Chrome/127.0 Safari/537.36','Mac · Chrome'],
+    ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/127.0 Safari/537.36 Edg/127.0','Windows · Edge']
+  ];
+  for(const [userAgent,label] of examples)assert.equal(L.deviceLabel({userAgent}),label);
+  assert.equal(L.deviceLabel({userAgent:'Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Version/17 Safari/605.1',maxTouchPoints:5}),'iPad · Safari');assert.equal(L.deviceLabel(null),'');
+  const store=L.createStore(storage(),{device:()=>L.deviceLabel({userAgent:examples[0][0]})}),id=store.begin(),record=store.list().find(r=>r.id===id),cloud=L.cloudRecord(record);
+  assert.equal(record.device,'iPhone · Safari');assert.equal(cloud.device,record.device);assert.ok(!JSON.stringify(cloud).includes('Mozilla/5.0'),'Raw browser fingerprint is not stored');
 });
 
 test('cloud journal stores one sanitized compact document and can be read by another device',async()=>{

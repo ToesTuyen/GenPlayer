@@ -16,9 +16,11 @@
     out.pos2=Array.isArray(p.pos2)?[...new Set(p.pos2.filter(validSlot))]:[];
     for(const k of KEYS)out[k]=num(p[k]===undefined?0:p[k],0,10);
     if(p.likeOf)out.likeOf=text(p.likeOf);
+    if(p.matchGkRating!==undefined){out.matchGkRating=num(p.matchGkRating,0,10);out.matchGkSource=text(p.matchGkSource);}
     return out;
   }
-  function positionScore(p,slot){const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  function positionScore(p,slot){if(slot==='GK'&&typeof p.matchGkRating==='number')return p.matchGkRating;const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  const noteNorm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
   // Exact role matching is also used to choose WHO starts, before balancing
   // teams. Looking only for a direct bench -> starter replacement misses role
   // chains (e.g. stronger sweeper in, current sweeper to full-back).
@@ -44,14 +46,15 @@
   // Only a clear, positive position instruction for one unambiguous player can
   // authorize an extra role. Model-supplied role overrides are never trusted.
   function lineupRoles(players,instruction=''){
-    const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+    const norm=noteNorm;
     const names=players.map(p=>norm(p.n)),escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const patterns={GK:'thu mon|gon|khung thanh','Thòng':'thong|trung ve',HV:'hau ve canh|hau ve bien|hau ve|hau canh|hau bien',TVtt:'tien ve trung tam|tien ve giua|tvtt|trung tam|giua',TV:'tien ve canh|tv canh|canh','TĐ':'tien dao|td|cam'};
     const found=new Map(),benchOverrides=new Set(),clauses=typeof instruction==='string'?instruction.split(/[;,.!?\n]+/).map(norm).filter(Boolean):[];
     for(let i=0;i<players.length;i++){
       const words=names[i].split(' '),aliases=words.map((_,k)=>words.slice(k).join(' ')).filter(a=>names.filter(n=>n===a||n.endsWith(' '+a)).length===1);
       for(const [slot,pattern] of Object.entries(patterns))for(const clause of clauses){
-        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(clause.trim()));
+        const roleClause=slot==='GK'?clause.replace(/ (?:nhu|giong|ngang(?: voi)?) .+$/,''):clause;
+        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(roleClause.trim()));
         if(match){if(!found.has(i))found.set(i,new Set());found.get(i).add(slot);}
       }
       for(const clause of clauses){
@@ -72,6 +75,29 @@
       return declared||explicit;
     }));
     return {allowed,centers,overrides,benchOverrides:[...benchOverrides],historical:[]};
+  }
+  // Apply an explicit keeper comparison to a cloned match snapshot only. A
+  // short or ambiguous name must never silently pick a different player.
+  function applyMatchKeeperNote(players,rosterNames,instruction=''){
+    const copies=players.map(player),selected=rosterNames.map(n=>copies.find(p=>p.n===n));
+    if(selected.some(p=>!p))fail('Không tìm thấy cầu thủ được chọn để áp dụng Note.');
+    const clauses=instruction.split(/[;,.!?\n]+/).map(noteNorm).filter(Boolean),allKeepers=lineupRoles(selected,instruction).overrides.filter(o=>o.slot==='GK'),applied=[];
+    for(const clause of clauses){
+      const comparison=clause.match(/^(.*?)\s+(?:nhu|giong|ngang(?: voi)?)\s+(.+?)(?:\s+(?:nhe|di))?$/);if(!comparison)continue;
+      const left=comparison[1],referenceName=comparison[2].trim();
+      const implicitKeeper=/^(?:chi so|trinh do)$/.test(left)&&allKeepers.length>0;
+      if(!implicitKeeper&&(!/\b(?:gon|thu mon)\b/.test(left)||!/(?:chi so|trinh do|bat gon|thu mon| da gon)/.test(left)))continue;
+      let keepers=lineupRoles(selected,left).overrides.filter(o=>o.slot==='GK');
+      if(!keepers.length&&(implicitKeeper||/^(?:(?:chi so|trinh do) (?:bat )?(?:thu mon|gon)|(?:thu mon|gon))$/.test(left)))keepers=allKeepers;
+      if(keepers.length!==1)fail('Note chỉ số gôn chưa rõ áp dụng cho thủ môn nào. Hãy ghi rõ tên cầu thủ bắt gôn.');
+      const exact=copies.filter(p=>noteNorm(p.n)===referenceName),matches=exact.length?exact:copies.filter(p=>noteNorm(p.n).endsWith(' '+referenceName));
+      if(matches.length!==1)fail('Không xác định duy nhất cầu thủ tham chiếu “'+referenceName+'” trong Note chỉ số gôn; hãy ghi đầy đủ tên.');
+      const target=selected[keepers[0].index],source=matches[0];if(source.n===target.n)fail('Cầu thủ tham chiếu chỉ số gôn phải là người khác.');
+      if(!source.TM)fail('Cầu thủ tham chiếu '+source.n+' chưa có chỉ số bắt gôn để so sánh.');
+      if(applied.some(x=>x.name===target.n))fail('Note có nhiều chỉ số gôn cho '+target.n+'; hãy giữ một chỉ định.');
+      const base={...source};delete base.matchGkRating;delete base.matchGkSource;target.matchGkRating=positionScore(base,'GK');target.matchGkSource=source.n;applied.push({name:target.n,source:source.n,rating:target.matchGkRating});
+    }
+    return {players:copies,applied};
   }
   // Lịch sử chỉ mở thêm vai trò Thòng khi nhóm vị trí đăng ký/Note hiện tại
   // không thể lấp đủ 14 chỗ. Một lần đá Thòng ở trận đã có tỉ số hòa hoặc
@@ -95,7 +121,7 @@
     // Ranking follows the one-decimal overall shown on player cards and the
     // pitch; hidden floating-point fractions must never move someone across
     // the 14th-place boundary.
-    const primary=players.map(p=>+positionScore(p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
+    const primary=players.map(p=>+positionScore(p.pos==='GK'&&p.matchGkRating!==undefined?{...p,matchGkRating:undefined}:p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
     // First establish the original top 14 from the displayed one-decimal
     // rating. Only afterwards may the current Note alter that base: a forced
     // reserve is removed, a forced role is inserted, and the strongest
@@ -329,7 +355,7 @@
     const historyRoles=guard.roles.historical.map(x=>({player:players[x.index].n,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}));
     return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority,historyRoles}};
   }
-  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
+  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,applyMatchKeeperNote,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.GPAIContext=api;
 })(typeof window==='undefined'?globalThis:window);

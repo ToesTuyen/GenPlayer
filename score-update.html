@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-pages">
+<meta name="genplayer-release" content="web-app-2026-10-27-keeper-note-device">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1034,6 +1034,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-log-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:8px}
 .create-log-title{font-size:12.5px;font-weight:800;color:var(--text)}
 .create-log-meta,.create-log-code{font-size:10.5px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+.create-log-device{font-size:10px;line-height:1.4;color:var(--muted)}
 .create-log-status{flex:0 0 auto;border-radius:999px;padding:3px 7px;background:var(--brand-soft);color:var(--brand);font-size:10px;font-weight:800}
 .create-log-status.failed,.create-log-status.interrupted,.create-log-status.cancelled{background:var(--loss-soft);color:var(--red)}
 .create-log-teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -2102,9 +2103,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     out.pos2=Array.isArray(p.pos2)?[...new Set(p.pos2.filter(validSlot))]:[];
     for(const k of KEYS)out[k]=num(p[k]===undefined?0:p[k],0,10);
     if(p.likeOf)out.likeOf=text(p.likeOf);
+    if(p.matchGkRating!==undefined){out.matchGkRating=num(p.matchGkRating,0,10);out.matchGkSource=text(p.matchGkSource);}
     return out;
   }
-  function positionScore(p,slot){const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  function positionScore(p,slot){if(slot==='GK'&&typeof p.matchGkRating==='number')return p.matchGkRating;const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  const noteNorm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
   // Exact role matching is also used to choose WHO starts, before balancing
   // teams. Looking only for a direct bench -> starter replacement misses role
   // chains (e.g. stronger sweeper in, current sweeper to full-back).
@@ -2130,14 +2133,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   // Only a clear, positive position instruction for one unambiguous player can
   // authorize an extra role. Model-supplied role overrides are never trusted.
   function lineupRoles(players,instruction=''){
-    const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+    const norm=noteNorm;
     const names=players.map(p=>norm(p.n)),escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const patterns={GK:'thu mon|gon|khung thanh','Thòng':'thong|trung ve',HV:'hau ve canh|hau ve bien|hau ve|hau canh|hau bien',TVtt:'tien ve trung tam|tien ve giua|tvtt|trung tam|giua',TV:'tien ve canh|tv canh|canh','TĐ':'tien dao|td|cam'};
     const found=new Map(),benchOverrides=new Set(),clauses=typeof instruction==='string'?instruction.split(/[;,.!?\n]+/).map(norm).filter(Boolean):[];
     for(let i=0;i<players.length;i++){
       const words=names[i].split(' '),aliases=words.map((_,k)=>words.slice(k).join(' ')).filter(a=>names.filter(n=>n===a||n.endsWith(' '+a)).length===1);
       for(const [slot,pattern] of Object.entries(patterns))for(const clause of clauses){
-        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(clause.trim()));
+        const roleClause=slot==='GK'?clause.replace(/ (?:nhu|giong|ngang(?: voi)?) .+$/,''):clause;
+        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(roleClause.trim()));
         if(match){if(!found.has(i))found.set(i,new Set());found.get(i).add(slot);}
       }
       for(const clause of clauses){
@@ -2158,6 +2162,29 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       return declared||explicit;
     }));
     return {allowed,centers,overrides,benchOverrides:[...benchOverrides],historical:[]};
+  }
+  // Apply an explicit keeper comparison to a cloned match snapshot only. A
+  // short or ambiguous name must never silently pick a different player.
+  function applyMatchKeeperNote(players,rosterNames,instruction=''){
+    const copies=players.map(player),selected=rosterNames.map(n=>copies.find(p=>p.n===n));
+    if(selected.some(p=>!p))fail('Không tìm thấy cầu thủ được chọn để áp dụng Note.');
+    const clauses=instruction.split(/[;,.!?\n]+/).map(noteNorm).filter(Boolean),allKeepers=lineupRoles(selected,instruction).overrides.filter(o=>o.slot==='GK'),applied=[];
+    for(const clause of clauses){
+      const comparison=clause.match(/^(.*?)\s+(?:nhu|giong|ngang(?: voi)?)\s+(.+?)(?:\s+(?:nhe|di))?$/);if(!comparison)continue;
+      const left=comparison[1],referenceName=comparison[2].trim();
+      const implicitKeeper=/^(?:chi so|trinh do)$/.test(left)&&allKeepers.length>0;
+      if(!implicitKeeper&&(!/\b(?:gon|thu mon)\b/.test(left)||!/(?:chi so|trinh do|bat gon|thu mon| da gon)/.test(left)))continue;
+      let keepers=lineupRoles(selected,left).overrides.filter(o=>o.slot==='GK');
+      if(!keepers.length&&(implicitKeeper||/^(?:(?:chi so|trinh do) (?:bat )?(?:thu mon|gon)|(?:thu mon|gon))$/.test(left)))keepers=allKeepers;
+      if(keepers.length!==1)fail('Note chỉ số gôn chưa rõ áp dụng cho thủ môn nào. Hãy ghi rõ tên cầu thủ bắt gôn.');
+      const exact=copies.filter(p=>noteNorm(p.n)===referenceName),matches=exact.length?exact:copies.filter(p=>noteNorm(p.n).endsWith(' '+referenceName));
+      if(matches.length!==1)fail('Không xác định duy nhất cầu thủ tham chiếu “'+referenceName+'” trong Note chỉ số gôn; hãy ghi đầy đủ tên.');
+      const target=selected[keepers[0].index],source=matches[0];if(source.n===target.n)fail('Cầu thủ tham chiếu chỉ số gôn phải là người khác.');
+      if(!source.TM)fail('Cầu thủ tham chiếu '+source.n+' chưa có chỉ số bắt gôn để so sánh.');
+      if(applied.some(x=>x.name===target.n))fail('Note có nhiều chỉ số gôn cho '+target.n+'; hãy giữ một chỉ định.');
+      const base={...source};delete base.matchGkRating;delete base.matchGkSource;target.matchGkRating=positionScore(base,'GK');target.matchGkSource=source.n;applied.push({name:target.n,source:source.n,rating:target.matchGkRating});
+    }
+    return {players:copies,applied};
   }
   // Lịch sử chỉ mở thêm vai trò Thòng khi nhóm vị trí đăng ký/Note hiện tại
   // không thể lấp đủ 14 chỗ. Một lần đá Thòng ở trận đã có tỉ số hòa hoặc
@@ -2181,7 +2208,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     // Ranking follows the one-decimal overall shown on player cards and the
     // pitch; hidden floating-point fractions must never move someone across
     // the 14th-place boundary.
-    const primary=players.map(p=>+positionScore(p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
+    const primary=players.map(p=>+positionScore(p.pos==='GK'&&p.matchGkRating!==undefined?{...p,matchGkRating:undefined}:p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
     // First establish the original top 14 from the displayed one-decimal
     // rating. Only afterwards may the current Note alter that base: a forced
     // reserve is removed, a forced role is inserted, and the strongest
@@ -2415,7 +2442,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     const historyRoles=guard.roles.historical.map(x=>({player:players[x.index].n,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}));
     return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority,historyRoles}};
   }
-  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
+  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,applyMatchKeeperNote,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.GPAIContext=api;
 })(typeof window==='undefined'?globalThis:window);
@@ -2430,9 +2457,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 })(typeof window==='undefined'?globalThis:window,function(C){
   'use strict';
   const KEY='gp_create_runs_v1',MAX_RUNS=30,MAX_BYTES=1500000;
-  const fields=new Set(['id','startedAt','updatedAt','endedAt','status','engine','requestedEngine','input','inputKey','events','ai','validation','fallback','output','error','appRelease','selection']);
+  const fields=new Set(['id','startedAt','updatedAt','endedAt','status','engine','requestedEngine','input','inputKey','events','ai','validation','fallback','output','error','appRelease','selection','device']);
   const privateField=/^(?:api[_-]?key|authorization|password|cookie|credentials|account|finance|accessToken|refreshToken|token)$/i;
   function redact(value){return String(value).replace(/sk-(?:or-|proj-)?[A-Za-z0-9_-]{12,}/g,'[ẩn key]').replace(/Bearer\s+[A-Za-z0-9._~+\/-]+=*/gi,'Bearer [ẩn]').replace(/([?&](?:key|token|api_key)=)[^&\s]+/gi,'$1[ẩn]');}
+  function deviceLabel(nav){
+    if(!nav||typeof nav.userAgent!=='string'||!nav.userAgent)return '';
+    const ua=nav.userAgent,device=/iPhone|iPod/i.test(ua)?'iPhone':/iPad/i.test(ua)||(/Macintosh/i.test(ua)&&nav.maxTouchPoints>1)?'iPad':/Android/i.test(ua)?'Android':/Windows/i.test(ua)?'Windows':/Macintosh|Mac OS X/i.test(ua)?'Mac':/Linux/i.test(ua)?'Linux':'Thiết bị khác';
+    const browser=/EdgiOS|EdgA|Edg\//i.test(ua)?'Edge':/OPR\/|OPiOS/i.test(ua)?'Opera':/SamsungBrowser/i.test(ua)?'Samsung Internet':/CriOS|Chrome\/|Chromium\//i.test(ua)?'Chrome':/FxiOS|Firefox\//i.test(ua)?'Firefox':/Safari\//i.test(ua)?'Safari':'Trình duyệt khác';
+    return device+' · '+browser;
+  }
   function clean(value,depth=0,key=''){
     if(depth>12)return '[quá sâu]';
     if(typeof value==='string')return redact(value).slice(0,key==='inputKey'?50000:4000);
@@ -2472,7 +2505,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     return safeRecord({
       id:r.id,startedAt:r.startedAt,updatedAt:r.updatedAt,endedAt:r.endedAt,
       status:r.status,engine:r.engine,requestedEngine:r.requestedEngine,
-      appRelease:r.appRelease,events:r.events,input:compactInput,selection,
+      appRelease:r.appRelease,device:r.device,events:r.events,input:compactInput,selection,
       ai:r.ai,validation:r.validation,fallback:r.fallback,output:r.output,error:r.error
     });
   }
@@ -2504,7 +2537,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     }
     function begin(appRelease=''){
       list();const ts=now(),id='run-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
-      memory.unshift({id,startedAt:ts,updatedAt:ts,status:'running',engine:'Chuẩn bị',appRelease,events:[]});memory=memory.slice(0,limit);save();return id;
+      let device='';try{device=typeof options.device==='function'?options.device():options.device||'';}catch{}
+      memory.unshift({id,startedAt:ts,updatedAt:ts,status:'running',engine:'Chuẩn bị',appRelease,device:typeof device==='string'?device.slice(0,100):'',events:[]});memory=memory.slice(0,limit);save();return id;
     }
     function event(id,step,state,detail){
       const r=list().find(r=>r.id===id);if(!r)return;
@@ -2513,7 +2547,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     function seen(key){return list().filter(r=>r.status==='success'&&r.inputKey===key&&r.output?.groupKey).map(r=>r.output.groupKey);}
     return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>exportRecords(list()),key:KEY};
   }
-  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
+  return {KEY,MAX_RUNS,redact,deviceLabel,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
 });
 </script>
 <script>// Thuat toan chia 2 doi can bang (chay trong trinh duyet hoac node) - khong can server
@@ -2783,9 +2817,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     out.pos2=Array.isArray(p.pos2)?[...new Set(p.pos2.filter(validSlot))]:[];
     for(const k of KEYS)out[k]=num(p[k]===undefined?0:p[k],0,10);
     if(p.likeOf)out.likeOf=text(p.likeOf);
+    if(p.matchGkRating!==undefined){out.matchGkRating=num(p.matchGkRating,0,10);out.matchGkSource=text(p.matchGkSource);}
     return out;
   }
-  function positionScore(p,slot){const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  function positionScore(p,slot){if(slot==='GK'&&typeof p.matchGkRating==='number')return p.matchGkRating;const w=validSlot(slot)?WEIGHTS[slot]:{KT:1,CH:1,DD:1,PN:1,TC:1,TL:1,DN:1,TD:1};return Object.keys(w).reduce((s,k)=>s+p[k]*w[k],0)/Object.values(w).reduce((s,n)=>s+n,0);}
+  const noteNorm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
   // Exact role matching is also used to choose WHO starts, before balancing
   // teams. Looking only for a direct bench -> starter replacement misses role
   // chains (e.g. stronger sweeper in, current sweeper to full-back).
@@ -2811,14 +2847,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   // Only a clear, positive position instruction for one unambiguous player can
   // authorize an extra role. Model-supplied role overrides are never trusted.
   function lineupRoles(players,instruction=''){
-    const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+    const norm=noteNorm;
     const names=players.map(p=>norm(p.n)),escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const patterns={GK:'thu mon|gon|khung thanh','Thòng':'thong|trung ve',HV:'hau ve canh|hau ve bien|hau ve|hau canh|hau bien',TVtt:'tien ve trung tam|tien ve giua|tvtt|trung tam|giua',TV:'tien ve canh|tv canh|canh','TĐ':'tien dao|td|cam'};
     const found=new Map(),benchOverrides=new Set(),clauses=typeof instruction==='string'?instruction.split(/[;,.!?\n]+/).map(norm).filter(Boolean):[];
     for(let i=0;i<players.length;i++){
       const words=names[i].split(' '),aliases=words.map((_,k)=>words.slice(k).join(' ')).filter(a=>names.filter(n=>n===a||n.endsWith(' '+a)).length===1);
       for(const [slot,pattern] of Object.entries(patterns))for(const clause of clauses){
-        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(clause.trim()));
+        const roleClause=slot==='GK'?clause.replace(/ (?:nhu|giong|ngang(?: voi)?) .+$/,''):clause;
+        const match=aliases.some(a=>new RegExp('^(?:(?:cho|de|xep) )?'+escape(a)+' (?:uu tien )?(?:(?:sang da|xep o|da|choi|bat|giu|o) )?(?:'+pattern+')(?: (?:team|doi|ben) [ab])?(?: nhe| di)?$').test(roleClause.trim()));
         if(match){if(!found.has(i))found.set(i,new Set());found.get(i).add(slot);}
       }
       for(const clause of clauses){
@@ -2839,6 +2876,29 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       return declared||explicit;
     }));
     return {allowed,centers,overrides,benchOverrides:[...benchOverrides],historical:[]};
+  }
+  // Apply an explicit keeper comparison to a cloned match snapshot only. A
+  // short or ambiguous name must never silently pick a different player.
+  function applyMatchKeeperNote(players,rosterNames,instruction=''){
+    const copies=players.map(player),selected=rosterNames.map(n=>copies.find(p=>p.n===n));
+    if(selected.some(p=>!p))fail('Không tìm thấy cầu thủ được chọn để áp dụng Note.');
+    const clauses=instruction.split(/[;,.!?\n]+/).map(noteNorm).filter(Boolean),allKeepers=lineupRoles(selected,instruction).overrides.filter(o=>o.slot==='GK'),applied=[];
+    for(const clause of clauses){
+      const comparison=clause.match(/^(.*?)\s+(?:nhu|giong|ngang(?: voi)?)\s+(.+?)(?:\s+(?:nhe|di))?$/);if(!comparison)continue;
+      const left=comparison[1],referenceName=comparison[2].trim();
+      const implicitKeeper=/^(?:chi so|trinh do)$/.test(left)&&allKeepers.length>0;
+      if(!implicitKeeper&&(!/\b(?:gon|thu mon)\b/.test(left)||!/(?:chi so|trinh do|bat gon|thu mon| da gon)/.test(left)))continue;
+      let keepers=lineupRoles(selected,left).overrides.filter(o=>o.slot==='GK');
+      if(!keepers.length&&(implicitKeeper||/^(?:(?:chi so|trinh do) (?:bat )?(?:thu mon|gon)|(?:thu mon|gon))$/.test(left)))keepers=allKeepers;
+      if(keepers.length!==1)fail('Note chỉ số gôn chưa rõ áp dụng cho thủ môn nào. Hãy ghi rõ tên cầu thủ bắt gôn.');
+      const exact=copies.filter(p=>noteNorm(p.n)===referenceName),matches=exact.length?exact:copies.filter(p=>noteNorm(p.n).endsWith(' '+referenceName));
+      if(matches.length!==1)fail('Không xác định duy nhất cầu thủ tham chiếu “'+referenceName+'” trong Note chỉ số gôn; hãy ghi đầy đủ tên.');
+      const target=selected[keepers[0].index],source=matches[0];if(source.n===target.n)fail('Cầu thủ tham chiếu chỉ số gôn phải là người khác.');
+      if(!source.TM)fail('Cầu thủ tham chiếu '+source.n+' chưa có chỉ số bắt gôn để so sánh.');
+      if(applied.some(x=>x.name===target.n))fail('Note có nhiều chỉ số gôn cho '+target.n+'; hãy giữ một chỉ định.');
+      const base={...source};delete base.matchGkRating;delete base.matchGkSource;target.matchGkRating=positionScore(base,'GK');target.matchGkSource=source.n;applied.push({name:target.n,source:source.n,rating:target.matchGkRating});
+    }
+    return {players:copies,applied};
   }
   // Lịch sử chỉ mở thêm vai trò Thòng khi nhóm vị trí đăng ký/Note hiện tại
   // không thể lấp đủ 14 chỗ. Một lần đá Thòng ở trận đã có tỉ số hòa hoặc
@@ -2862,7 +2922,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     // Ranking follows the one-decimal overall shown on player cards and the
     // pitch; hidden floating-point fractions must never move someone across
     // the 14th-place boundary.
-    const primary=players.map(p=>+positionScore(p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
+    const primary=players.map(p=>+positionScore(p.pos==='GK'&&p.matchGkRating!==undefined?{...p,matchGkRating:undefined}:p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
     // First establish the original top 14 from the displayed one-decimal
     // rating. Only afterwards may the current Note alter that base: a forced
     // reserve is removed, a forced role is inserted, and the strongest
@@ -3096,7 +3156,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     const historyRoles=guard.roles.historical.map(x=>({player:players[x.index].n,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}));
     return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority,historyRoles}};
   }
-  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
+  const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,applyMatchKeeperNote,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.GPAIContext=api;
 })(typeof window==='undefined'?globalThis:window);
@@ -3439,6 +3499,7 @@ function prepare(body,now=Date.now()){
     const priority=guard.priority.best;
     data.lineupRequirements.starterPriority={fixedDisplayedTop14:true,displayedDecimals:1,lowerRatedReplacement:false,basePlayerIds:guard.priority.baseFixed.map(i=>'p'+i),noteBenchOverrides:guard.priority.forcedBench.map(i=>'p'+i),noteRoleOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),finalPlayerIds:guard.priority.fixed.map(i=>'p'+i),members:priority.members,primaryRatingTotal:+priority.strength.toFixed(1)};
     data.lineupRequirements.reserveStrength={strongestPrefixes:true,meanDifference:C.LINEUP_LIMITS.benchMeanDifference,ignoreWeakestUnpairedExtra:true};
+    data.lineupRequirements.keeperRatingOverrides=data.players.filter(p=>typeof p.matchGkRating==='number').map(p=>({playerId:p.id,source:p.matchGkSource,rating:p.matchGkRating,scope:'trận này'}));
     for(const p of data.players)p.roleScores=Object.fromEntries(C.SLOTS.map(slot=>[slot,+C.positionScore(p,slot).toFixed(6)]));
     data.players.forEach((p,i)=>p.allowedRoles=[...new Set(C.SLOTS.filter((slot,k)=>roles.allowed[i][k]))]);
     data.lineupRequirements.positions={registeredOrVerifiedHistoryRolesOnly:true,primaryCenters:roles.centers.map(i=>'p'+i),primaryCenterPerSide:roles.centers.length>=2,centerCountDifference:1,notePositionOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),historyPositionOverrides:roles.historical.map(x=>({playerId:'p'+x.index,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}))};
@@ -6306,7 +6367,7 @@ const CREATE_STEPS=[
 ];
 const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinished work as complete.
 const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null,cancelled:false};
-const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)});
+const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)},{device:()=>GPCreationLog.deviceLabel(typeof navigator==='undefined'?null:navigator)});
 const CREATE_CLOUD_PREFIX='generation_';
 const CREATE_CLOUD={state:'idle',records:[],error:'',cursor:null,cursorTime:null,exhausted:false};
 const CREATE_LOG_PAGE={size:10,limit:10,loading:false,generation:0,observer:null};
@@ -6415,7 +6476,7 @@ function createRenderLogCards(records){
   if(!records.length){list.appendChild(createLogNode('div','create-log-empty','Chưa có lượt tạo đội nào.'));return;}
   for(const r of records){
     const card=createLogNode('article','create-log-card'),head=createLogNode('div','create-log-head'),headText=createLogNode('div',''),when=new Date(r.startedAt),title=createLogNode('div','create-log-title',Number.isNaN(when.getTime())?'Lượt tạo đội':when.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}));
-    const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta);head.append(headText,status);card.appendChild(head);
+    const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),device=createLogNode('div','create-log-device',r.device||'Thiết bị không rõ (log cũ)'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta,device);head.append(headText,status);card.appendChild(head);
     const usable=createLogUsable(r);if(usable)card.appendChild(createLogActions(r));
     if(usable){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
@@ -6568,6 +6629,7 @@ function createNoteChanged(){
   heading.textContent=changed?'Note đã thay đổi — cần tạo đội lại':algorithm?'Thuật toán dùng quy tắc và ngoại lệ vị trí rõ ràng; Note khác cần đối chiếu':'Note đã gửi AI — chưa xác minh tự động';
   box.replaceChildren(heading);
   if(note){const quote=document.createElement('blockquote');quote.textContent=note;box.appendChild(quote);}
+  for(const p of cstate.subset||[])if(typeof p.matchGkRating==='number'){const detail=document.createElement('p');detail.textContent=`Chỉ trận này: ${p.n} bắt gôn ${p.matchGkRating.toFixed(1)} như ${p.matchGkSource}.`;box.appendChild(detail);}
 }
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 function createStep(id,state,detail=''){
@@ -6673,6 +6735,7 @@ async function createTeams(){
     await createCompleteStep('roster','done',selected.length+' người · 14 đá chính, '+(selected.length-14)+' dự bị.');
     createStep('ratings','active','Kiểm tra điểm và vị trí trước khi chia…');await createYield();
     context=GPAIContext.normalize(aiContextSnapshot('lineup'));
+    const keeperNote=GPAIContext.applyMatchKeeperNote(context.players,context.rosterNames,context.instruction);context.players=keeperNote.players;
     const lineupNow=Date.now();
     subset=context.rosterNames.map(n=>context.players.find(p=>p.n===n));
     // Lineup creation never needs an unrelated match/player selected for another AI task.
@@ -6682,7 +6745,8 @@ async function createTeams(){
     if(cstate.inputKey===inputKey&&cstate.results.length)seenGroups.add(GPAIContext.lineupGroupKey(cstate.subset,{A:cstate.results[cstate.idx].evA,B:cstate.results[cstate.idx].evB}));
     createLogPatch({input:logInput,inputKey,selection:{excludedCount:seenGroups.size},validation:{limits:GPAIContext.LINEUP_LIMITS}});
     const noPosition=subset.filter(p=>!p.pos).length;
-    await createCompleteStep('ratings',noPosition?'warn':'done',noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.');
+    const keeperDetail=keeperNote.applied.map(o=>`${o.name} bắt gôn ${o.rating.toFixed(1)} như ${o.source} (chỉ trận này).`).join(' ');
+    await createCompleteStep('ratings',noPosition?'warn':'done',(noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.')+(keeperDetail?' '+keeperDetail:''));
     createStep('history','active','Tổng hợp lịch sử bóng đá hiện có…');await createYield();
     const forms=subset.map(p=>GPAIContext.form(p.n,context.history)),done=context.history.filter(m=>m.score&&m.kickoff<=Date.now());
     const withData=forms.filter(f=>f.played>0).length;

@@ -8,9 +8,15 @@
 })(typeof window==='undefined'?globalThis:window,function(C){
   'use strict';
   const KEY='gp_create_runs_v1',MAX_RUNS=30,MAX_BYTES=1500000;
-  const fields=new Set(['id','startedAt','updatedAt','endedAt','status','engine','requestedEngine','input','inputKey','events','ai','validation','fallback','output','error','appRelease','selection']);
+  const fields=new Set(['id','startedAt','updatedAt','endedAt','status','engine','requestedEngine','input','inputKey','events','ai','validation','fallback','output','error','appRelease','selection','device']);
   const privateField=/^(?:api[_-]?key|authorization|password|cookie|credentials|account|finance|accessToken|refreshToken|token)$/i;
   function redact(value){return String(value).replace(/sk-(?:or-|proj-)?[A-Za-z0-9_-]{12,}/g,'[ẩn key]').replace(/Bearer\s+[A-Za-z0-9._~+\/-]+=*/gi,'Bearer [ẩn]').replace(/([?&](?:key|token|api_key)=)[^&\s]+/gi,'$1[ẩn]');}
+  function deviceLabel(nav){
+    if(!nav||typeof nav.userAgent!=='string'||!nav.userAgent)return '';
+    const ua=nav.userAgent,device=/iPhone|iPod/i.test(ua)?'iPhone':/iPad/i.test(ua)||(/Macintosh/i.test(ua)&&nav.maxTouchPoints>1)?'iPad':/Android/i.test(ua)?'Android':/Windows/i.test(ua)?'Windows':/Macintosh|Mac OS X/i.test(ua)?'Mac':/Linux/i.test(ua)?'Linux':'Thiết bị khác';
+    const browser=/EdgiOS|EdgA|Edg\//i.test(ua)?'Edge':/OPR\/|OPiOS/i.test(ua)?'Opera':/SamsungBrowser/i.test(ua)?'Samsung Internet':/CriOS|Chrome\/|Chromium\//i.test(ua)?'Chrome':/FxiOS|Firefox\//i.test(ua)?'Firefox':/Safari\//i.test(ua)?'Safari':'Trình duyệt khác';
+    return device+' · '+browser;
+  }
   function clean(value,depth=0,key=''){
     if(depth>12)return '[quá sâu]';
     if(typeof value==='string')return redact(value).slice(0,key==='inputKey'?50000:4000);
@@ -50,7 +56,7 @@
     return safeRecord({
       id:r.id,startedAt:r.startedAt,updatedAt:r.updatedAt,endedAt:r.endedAt,
       status:r.status,engine:r.engine,requestedEngine:r.requestedEngine,
-      appRelease:r.appRelease,events:r.events,input:compactInput,selection,
+      appRelease:r.appRelease,device:r.device,events:r.events,input:compactInput,selection,
       ai:r.ai,validation:r.validation,fallback:r.fallback,output:r.output,error:r.error
     });
   }
@@ -82,7 +88,8 @@
     }
     function begin(appRelease=''){
       list();const ts=now(),id='run-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
-      memory.unshift({id,startedAt:ts,updatedAt:ts,status:'running',engine:'Chuẩn bị',appRelease,events:[]});memory=memory.slice(0,limit);save();return id;
+      let device='';try{device=typeof options.device==='function'?options.device():options.device||'';}catch{}
+      memory.unshift({id,startedAt:ts,updatedAt:ts,status:'running',engine:'Chuẩn bị',appRelease,device:typeof device==='string'?device.slice(0,100):'',events:[]});memory=memory.slice(0,limit);save();return id;
     }
     function event(id,step,state,detail){
       const r=list().find(r=>r.id===id);if(!r)return;
@@ -91,5 +98,5 @@
     function seen(key){return list().filter(r=>r.status==='success'&&r.inputKey===key&&r.output?.groupKey).map(r=>r.output.groupKey);}
     return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>exportRecords(list()),key:KEY};
   }
-  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
+  return {KEY,MAX_RUNS,redact,deviceLabel,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
 });
