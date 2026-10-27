@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-floating-next">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-no-feedback-fab">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -300,6 +300,14 @@ test('home has no unsolicited introduction block in any local entry',()=>{
     assert.ok(!html.includes('Đội bóng của chúng ta'),file+' has no extra headline');
     assert.ok(!html.includes('gọn trong một chỗ'),file+' has no extra slogan');
     assert.ok(html.includes('class="ab-logo"'),file+' keeps existing header logo');
+  }
+});
+test('the floating feedback button is absent while existing feedback data code remains non-breaking',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    assert.ok(!html.includes('id="fbFab"'),file+' has no floating feedback button');
+    assert.ok(!html.includes('class="fb-fab"'),file+' has no floating feedback control');
+    assert.ok(html.includes('function updateFbBadge(){const n=fbNew().length,b=$("fbBadge");if(!b)return;'),file+' safely tolerates the removed badge');
   }
 });
 test('AI controls live inside Create instead of a separate navigation screen',()=>{

@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-floating-next">
+<meta name="genplayer-release" content="web-app-2026-10-27-no-feedback-fab">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -784,9 +784,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .bk-teams{font-size:12.5px;line-height:1.5;color:var(--text,#e8ecf6)}
 .bk-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
 /* ===== Góp ý / đánh giá ===== */
-.fb-fab{position:fixed;right:18px;bottom:20px;z-index:45;width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f4e47b,#e0a12e);color:#2a2300;font-size:25px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}
-.fb-fab:active{transform:scale(.94)}
-.fb-fab .req-badge{position:absolute;top:-3px;right:-3px;margin:0}
 .fb-stars{display:flex;gap:8px;font-size:30px;line-height:1;user-select:none}
 .fb-stars span{cursor:pointer;color:#cfd6e4;transition:color .12s}
 .fb-stars span.on{color:#f2b705}
@@ -932,8 +929,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .iconbtn .ui-icon,.fin-icon-btn .ui-icon,.rmod-del .ui-icon,.pm-close .ui-icon{width:17px;height:17px}
 .iconbtn:hover,.fin-icon-btn:hover,.rmod-del:hover{color:var(--text)}
 .iconbtn:has([data-icon="trash"]):hover,.fin-icon-btn:has([data-icon="trash"]):hover,.rmod-del:hover{color:var(--red);background:rgba(255,81,104,.10)}
-.fb-fab{background:linear-gradient(135deg,#bd9bfb,#7f9df6);color:#fff;box-shadow:0 8px 22px rgba(95,80,165,.28);border:1px solid rgba(255,255,255,.24)}
-.fb-fab>.ui-icon{width:24px;height:24px}
 .lg-ic .ui-icon{width:17px;height:17px;color:var(--ui-icon-color)}
 .lg-ic .ui-icon-image{width:24px;height:24px}
 .ap-btn{gap:12px;padding:12px;border-color:rgba(255,255,255,.17);background:rgba(255,255,255,.08)}
@@ -953,7 +948,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .fin-type .ui-icon-image{width:24px;height:24px}
 .hf-nav .ui-icon{width:30px;height:30px}
 .gl-bt .ui-icon{width:15px;height:15px}
-:root[data-theme="light"] .fb-fab{background:linear-gradient(135deg,#b39bec,#91a9e9);box-shadow:0 8px 20px rgba(114,126,180,.22)}
 :root[data-theme="light"] .ui-icon-image{filter:drop-shadow(0 2px 3px rgba(78,89,132,.12))}
 @media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}#rankTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#rankTabs button{min-width:0}.pstat-kpi .lab{gap:5px;font-size:10px}#screen-create .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#screen-create .pl-name{min-width:0}}
 @media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:46px;height:46px;border-radius:13px}.ap-btn .ap-icon .ui-icon{width:21px;height:21px}.ap-btn .ap-icon .ui-icon-image{width:44px;height:44px}}
@@ -1190,7 +1184,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme] :is(.seg.on,.req-tabs button.on,.pstat-filter.on,.pl-item.on){background:var(--brand-soft);color:var(--text);border-color:var(--brand)}
 :root[data-theme] .stat.accent{background:var(--brand-soft);color:var(--text);border:1px solid var(--line);box-shadow:none}
 :root[data-theme] .stat.accent .k{color:var(--muted)}
-:root[data-theme] .fb-fab{width:46px;height:46px;border-radius:14px;background:var(--surface);color:var(--brand);border:1px solid var(--line);box-shadow:var(--sh)}
 :root[data-theme] :is(.fin-empty,.ai-banner){background:var(--surface2);color:var(--muted)}
 :root[data-theme] .ai-pill{color:var(--muted);background:var(--surface2)}
 :root[data-theme] :is(.fin-kpi.in .fin-kpi-val,.fin-amt.in,.fin-type.in,.pstat-kpi.hot .val,.mc-sc.win,.rank-wr,.ulog-act.add,.ulog-badge.add){color:var(--success)}
@@ -1271,9 +1264,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
 <div id="aiModeBanner" class="ai-banner" role="status"></div>
-
-<!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
-<button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức" aria-label="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">

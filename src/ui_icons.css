@@ -56,8 +56,6 @@
 .iconbtn .ui-icon,.fin-icon-btn .ui-icon,.rmod-del .ui-icon,.pm-close .ui-icon{width:17px;height:17px}
 .iconbtn:hover,.fin-icon-btn:hover,.rmod-del:hover{color:var(--text)}
 .iconbtn:has([data-icon="trash"]):hover,.fin-icon-btn:has([data-icon="trash"]):hover,.rmod-del:hover{color:var(--red);background:rgba(255,81,104,.10)}
-.fb-fab{background:linear-gradient(135deg,#bd9bfb,#7f9df6);color:#fff;box-shadow:0 8px 22px rgba(95,80,165,.28);border:1px solid rgba(255,255,255,.24)}
-.fb-fab>.ui-icon{width:24px;height:24px}
 .lg-ic .ui-icon{width:17px;height:17px;color:var(--ui-icon-color)}
 .lg-ic .ui-icon-image{width:24px;height:24px}
 .ap-btn{gap:12px;padding:12px;border-color:rgba(255,255,255,.17);background:rgba(255,255,255,.08)}
@@ -77,7 +75,6 @@
 .fin-type .ui-icon-image{width:24px;height:24px}
 .hf-nav .ui-icon{width:30px;height:30px}
 .gl-bt .ui-icon{width:15px;height:15px}
-:root[data-theme="light"] .fb-fab{background:linear-gradient(135deg,#b39bec,#91a9e9);box-shadow:0 8px 20px rgba(114,126,180,.22)}
 :root[data-theme="light"] .ui-icon-image{filter:drop-shadow(0 2px 3px rgba(78,89,132,.12))}
 @media(max-width:560px){.ap-icon{width:48px;height:48px;border-radius:14px}.ap-btn .ap-icon .ui-icon-image{width:46px;height:46px}#rankTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#rankTabs button{min-width:0}.pstat-kpi .lab{gap:5px;font-size:10px}#screen-create .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#screen-create .pl-name{min-width:0}}
 @media(max-width:400px){.ap-btn{gap:8px;padding:10px;font-size:13px}.ap-icon{width:46px;height:46px;border-radius:13px}.ap-btn .ap-icon .ui-icon{width:21px;height:21px}.ap-btn .ap-icon .ui-icon-image{width:44px;height:44px}}

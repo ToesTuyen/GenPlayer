@@ -80,7 +80,6 @@
 :root[data-theme] :is(.seg.on,.req-tabs button.on,.pstat-filter.on,.pl-item.on){background:var(--brand-soft);color:var(--text);border-color:var(--brand)}
 :root[data-theme] .stat.accent{background:var(--brand-soft);color:var(--text);border:1px solid var(--line);box-shadow:none}
 :root[data-theme] .stat.accent .k{color:var(--muted)}
-:root[data-theme] .fb-fab{width:46px;height:46px;border-radius:14px;background:var(--surface);color:var(--brand);border:1px solid var(--line);box-shadow:var(--sh)}
 :root[data-theme] :is(.fin-empty,.ai-banner){background:var(--surface2);color:var(--muted)}
 :root[data-theme] .ai-pill{color:var(--muted);background:var(--surface2)}
 :root[data-theme] :is(.fin-kpi.in .fin-kpi-val,.fin-amt.in,.fin-type.in,.pstat-kpi.hot .val,.mc-sc.win,.rank-wr,.ulog-act.add,.ulog-badge.add){color:var(--success)}

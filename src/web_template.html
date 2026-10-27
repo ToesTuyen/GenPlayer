@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-floating-next">
+<meta name="genplayer-release" content="web-app-2026-10-27-no-feedback-fab">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -784,9 +784,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .bk-teams{font-size:12.5px;line-height:1.5;color:var(--text,#e8ecf6)}
 .bk-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
 /* ===== Góp ý / đánh giá ===== */
-.fb-fab{position:fixed;right:18px;bottom:20px;z-index:45;width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f4e47b,#e0a12e);color:#2a2300;font-size:25px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}
-.fb-fab:active{transform:scale(.94)}
-.fb-fab .req-badge{position:absolute;top:-3px;right:-3px;margin:0}
 .fb-stars{display:flex;gap:8px;font-size:30px;line-height:1;user-select:none}
 .fb-stars span{cursor:pointer;color:#cfd6e4;transition:color .12s}
 .fb-stars span.on{color:#f2b705}
@@ -887,9 +884,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
 <div id="aiModeBanner" class="ai-banner" role="status"></div>
-
-<!-- Nút nổi: góp ý cho ban tổ chức (ai cũng thấy; admin -> mở hòm góp ý) -->
-<button class="fb-fab" id="fbFab" onclick="openFeedback()" title="Góp ý cho ban tổ chức" aria-label="Góp ý cho ban tổ chức">💬<span class="req-badge" id="fbBadge" style="display:none">0</span></button>
 
 <!-- ====== MENU ====== -->
 <div id="home" class="screen home-screen">
