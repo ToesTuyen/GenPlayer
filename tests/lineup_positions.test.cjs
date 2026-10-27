@@ -58,7 +58,7 @@ test('only a clear current Note can authorize an extra role, not AI-supplied ove
 });
 
 test('a current Note can force an outfield player with TM 0 into goal without mutating the profile',()=>{
-  const p=roster();p[0].pos2=['TĐ'];p[6].TM=0;p[7].TM=0.0001;const before=JSON.stringify(p),options={strictGuests:true,instruction:'Position 6 bắt gôn'};
+  const p=roster();p[0].pos2=['TĐ'];p[7].pos2=['TĐ'];p[0].TM=0.0001;p[6].TM=0;p[7].TM=0.0001;const before=JSON.stringify(p),options={strictGuests:true,instruction:'Position 6 bắt gôn'};
   const guard=C.lineupGuard(p,options);assert.deepEqual(guard.roles.overrides,[{index:6,slot:'GK'}]);assert.deepEqual(guard.priority.forcedStart,[6]);assert.equal(guard.roles.allowed[6][0],true);assert.equal(guard.roles.allowed[6].filter(Boolean).length,1);
   const results=O.solve(p,null,options);assert.ok(results.length>0);
   for(const r of results){
@@ -69,7 +69,7 @@ test('a current Note can force an outfield player with TM 0 into goal without mu
 });
 
 test('a keeper comparison in the current Note applies only to the match snapshot',()=>{
-  const p=roster();p[0].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;
+  const p=roster();p[0].pos2=['TĐ'];p[7].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;
   const before=JSON.stringify(p),names=p.slice(0,14).map(x=>x.n),instruction='Tuyên bắt gôn, chỉ số thủ môn như Mạnh Tiên';
   const applied=C.applyMatchKeeperNote(p,names,instruction),target=applied.players[6],score=C.positionScore(p[15],'GK');
   assert.equal(target.matchGkRating,score);assert.equal(target.matchGkSource,'Mạnh Tiến');assert.equal(target.TM,0);assert.equal(JSON.stringify(p),before);

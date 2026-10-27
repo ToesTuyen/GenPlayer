@@ -7,10 +7,29 @@ const roster=n=>Array.from({length:n},(_,i)=>rate({n:'Priority '+i,pos:C.SLOTS[i
 const context=(p,t)=>({players:p,history:[],rosterNames:p.map(x=>x.n),lineupCandidates:candidatesFor(t),instruction:''});
 const output=swaps=>JSON.stringify({title:'Priority regression',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake test content.'})),candidateId:'c0',flipTeams:false,swaps});
 
+test('two highest-rated primary keepers start before the highest-rated remaining twelve',()=>{
+  const p=roster(17);p.forEach(x=>{x.guest=false;rate(x,7);});rate(p[0],9);rate(p[7],5);rate(p[14],6);
+  const guard=C.lineupGuard(p),keepers=guard.priority.keepers;assert.deepEqual(keepers,[0,14]);assert.ok(!guard.priority.fixed.includes(7));
+  const others=p.map((x,i)=>i).filter(i=>!keepers.includes(i)).sort((a,b)=>guard.priority.primary[b]-guard.priority.primary[a]||a-b).slice(0,12);
+  assert.deepEqual(guard.priority.fixed.slice().sort((a,b)=>a-b),[...keepers,...others].sort((a,b)=>a-b));
+  assert.equal(guard.roles.allowed[0][0],true);assert.equal(guard.roles.allowed[14][0],true);assert.equal(guard.roles.allowed[7][0],false);
+  const benched=C.lineupGuard(p,{instruction:'Priority 0 dự bị'});assert.deepEqual(benched.priority.keepers,[14,7]);assert.ok(!benched.priority.fixed.includes(0));
+  const forced=C.lineupGuard(p,{instruction:'Priority 6 bắt gôn'});assert.deepEqual(forced.priority.keepers,[6,0]);assert.ok(forced.priority.fixed.includes(6));
+});
+
+test('a secondary registered keeper can fill a shortage, otherwise the exact shortage is reported',()=>{
+  const p=roster(16);p.forEach(x=>{x.guest=false;});p[7].pos='TĐ';p[7].pos2=[];p[14].pos='HV';p[14].pos2=[];p[6].pos2=['GK'];
+  assert.deepEqual(C.lineupGuard(p).priority.keepers,[0,6]);p[6].pos2=[];
+  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.diagnostics[0].code,'keeper');assert.match(blocked.error,/Chưa đủ 2 thủ môn hợp lệ: hiện có 1 \(Priority 0\)/);
+  const forced=C.lineupGuard(p,{instruction:'Priority 6 bắt gôn'});assert.deepEqual(forced.priority.keepers,[6,0]);
+  p[0].TM=0;const none=O.solve(p,null,{strictGuests:true});assert.match(none.error,/hiện có 0/);
+});
+
 test('the displayed top 14 are fixed before team balancing',()=>{
   const p=snapshot(),before=JSON.stringify(p),options={instruction:'Quang Minh bắt gôn'},results=O.solve(p,null,{strictGuests:true,...options});assert.equal(results.length,12);
   const guard=C.lineupGuard(p,options),fixed=guard.priority.fixed,mustStart=fixed.map(i=>p[i].n),mustBench=p.filter((_,i)=>!fixed.includes(i)).map(x=>x.n);
   const valid={A:structuredClone(results[0].evA),B:structuredClone(results[0].evB)};
+  const promptContext=context(p,valid);promptContext.instruction=options.instruction;const prompt=JSON.parse(S.prepare({task:'lineup',context:promptContext}).messages[1].content);assert.equal(prompt.lineupRequirements.starterPriority.keepersFirst,true);assert.equal(prompt.lineupRequirements.starterPriority.remainingStarters,12);assert.deepEqual(prompt.lineupRequirements.starterPriority.keeperPlayerIds,guard.priority.keepers.map(i=>'p'+i));
   let pair;
   for(const side of ['A','B'])for(let k=1;k<7&&!pair;k++)for(const bench of [...valid.A.bench,...valid.B.bench])if(guard.roles.allowed[bench][k]){pair={starter:valid[side].starters[k],bench};break;}
   assert.ok(pair);const invalid=structuredClone(valid);
@@ -43,7 +62,7 @@ test('weakest reserve cannot hide two stronger reserves concentrated on one side
 
 test('a raw displayed top-14 cut is never replaced by lower-rated specialists',()=>{
   const p=roster(16);p.forEach(x=>x.guest=false);p[14].pos='Thòng';p[15].pos='Thòng';rate(p[14],8);rate(p[15],8);
-  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/Nhóm 14 cầu thủ sau khi áp dụng Note và xếp điểm/);
+  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm/);
   p[14].pos2=['TV'];p[15].pos2=['TĐ'];
   const r=O.solve(p,null,{strictGuests:true});assert.ok(r.length>0);
   const fixed=C.lineupGuard(p).priority.fixed;

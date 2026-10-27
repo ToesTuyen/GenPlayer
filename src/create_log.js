@@ -48,7 +48,8 @@
     }):null;
     const selection=r.selection&&typeof r.selection==='object'?clean({
       excludedCount:r.selection.excludedCount,
-      candidateCount:r.selection.candidateCount
+      candidateCount:r.selection.candidateCount,
+      starterPolicy:r.selection.starterPolicy
     }):null;
     // inputKey repeats almost the entire input snapshot and candidateGroups can
     // be very large. Neither is needed to diagnose a single run from another

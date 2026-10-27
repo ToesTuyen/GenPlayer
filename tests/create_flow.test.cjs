@@ -99,8 +99,16 @@ test('a successful generation log restores the exact two teams for scheduling',a
   assert.equal(record.ai.generationId,'gen-fixture');
 });
 
+test('legacy history can still restore its original lineup if keeper policy has changed',async()=>{
+  const x=controller('valid');await x.run();const record=structuredClone(x.log.list()[0]),a=record.output.teams.A,keeper=a.find(p=>p.slot==='GK'&&!p.bench),bench=a.find(p=>p.bench);assert.ok(keeper&&bench);
+  [keeper.n,bench.n]=[bench.n,keeper.n];delete record.selection;
+  const restored=x.draftFromLog(record),restoredName=restored.players[restored.result.evA.starters[0]].n;
+  assert.equal(restoredName,keeper.n);assert.ok(restored.warnings.length,'Legacy conflicts are surfaced rather than blocking or changing the saved lineup');
+  record.selection={starterPolicy:'keepers-first-v1'};assert.throws(()=>x.draftFromLog(record),'New-policy history remains strictly validated');
+});
+
 test('generation applies a keeper comparison before solving and retains it in the match log only',async()=>{
-  const p=roster();p[0].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;const original=JSON.stringify(p);
+  const p=roster();p[0].pos2=['TĐ'];p[7].pos2=['TĐ'];p[6].n='Nguyễn Danh Tuyên';p[6].TM=0;p[15].n='Mạnh Tiến';p[15].pos='GK';p[15].TM=6;const original=JSON.stringify(p);
   const x=controller('valid',p);x.scope.$('aiInstruction').value='Tuyên bắt gôn, chỉ số thủ môn như Mạnh Tiên';await x.run();
   assert.equal(x.state.success,true);const target=x.scope.cstate.subset.find(y=>y.n==='Nguyễn Danh Tuyên'),score=C.positionScore(p[15],'GK');
   assert.equal(target.matchGkRating,score);assert.equal(JSON.stringify(p),original);assert.equal(x.requests[0].context.players.find(y=>y.n===target.n).matchGkRating,score);
@@ -228,6 +236,7 @@ test('cloud journal stores one sanitized compact document and can be read by ano
   const cloudDocs=new Map(),first=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs});await first.run();
   assert.equal(cloudDocs.size,1);const [docId,payload]=[...cloudDocs.entries()][0];assert.match(docId,/^generation_run-/);
   assert.equal(payload.kind,'generationLog');assert.equal(payload.runId,payload.record.id);assert.equal(payload.status,'success');
+  assert.equal(payload.record.selection.starterPolicy,'keepers-first-v1','Cloud retains the policy used for this lineup');
   const json=JSON.stringify(payload);for(const text of ['inputKey','candidateGroups','apiKey','authorization','finance','account'])assert.ok(!json.includes(text));
   assert.ok(payload.record.input.players.length);assert.ok(payload.record.input.forms.length);assert.ok(payload.record.output.groupKey);assert.equal(payload.record.output.teams.A.length,8);assert.equal(payload.record.output.teams.B.length,8);assert.ok(payload.record.events.length);
   const second=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs}),remote=await second.cloudFetch();

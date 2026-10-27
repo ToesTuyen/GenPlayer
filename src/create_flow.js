@@ -183,8 +183,8 @@ function createDraftFromLog(r,manualEdit=false){
   const players=r.input.players.map(GPAIContext.player),indices=new Map(players.map((p,i)=>[p.n,i])),teams={A:{starters:[],bench:[]},B:{starters:[],bench:[]}};
   for(const side of ['A','B'])for(const p of r.output.teams[side]){const i=indices.get(p.n);if(i===undefined)throw new Error('Thiếu cầu thủ '+p.n+' trong dữ liệu lượt tạo.');teams[side][p.bench?'bench':'starters'].push(i);}
   const history=Array.isArray(r.input.history)?r.input.history:(r.input.rotationReference?[r.input.rotationReference]:[]),now=Date.parse(r.startedAt)||Date.now();
-  const checked=GPAIContext.lineup(players,teams,{instruction:r.input.instruction||'',history,now,manualEdit:manualEdit||r.engine==='AI · Sửa đội'});
-  return {players,result:checked.result};
+  const legacyPolicy=r.selection?.starterPolicy!=='keepers-first-v1',checked=GPAIContext.lineup(players,teams,{instruction:r.input.instruction||'',history,now,manualEdit:manualEdit||r.engine==='AI · Sửa đội'||legacyPolicy});
+  return {players,result:checked.result,warnings:legacyPolicy?checked.warnings:[]};
 }
 function createUseLog(id){
   if(!canEdit){alert('🔒 Đặt làm trận tuần này cần đăng nhập admin.');openAdminModal();return;}
@@ -193,7 +193,8 @@ function createUseLog(id){
   cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
   AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcessRules').style.display='none';createNoteChanged();
-  render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';
+  const warning=draft.warnings.length?'<p>Đội hình lịch sử dùng tiêu chí cũ. Cần đối chiếu tiêu chí hiện tại:</p><ul>'+draft.warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'';
+  render(draft.result,draft.players,'result',warning,true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';
   createRevealDraft();openMatchModal('create');
 }
 function createExportLogs(){
@@ -392,7 +393,7 @@ async function createTeams(){
     const logInput=GPCreationLog.snapshot(context,lineupNow);inputKey=GPCreationLog.inputKey(logInput);
     const seenGroups=new Set(CREATE_LOG?.seen(inputKey)||[]);
     if(cstate.inputKey===inputKey&&cstate.results.length)seenGroups.add(GPAIContext.lineupGroupKey(cstate.subset,{A:cstate.results[cstate.idx].evA,B:cstate.results[cstate.idx].evB}));
-    createLogPatch({input:logInput,inputKey,selection:{excludedCount:seenGroups.size},validation:{limits:GPAIContext.LINEUP_LIMITS}});
+    createLogPatch({input:logInput,inputKey,selection:{excludedCount:seenGroups.size,starterPolicy:'keepers-first-v1'},validation:{limits:GPAIContext.LINEUP_LIMITS}});
     const noPosition=subset.filter(p=>!p.pos).length;
     const keeperDetail=keeperNote.applied.map(o=>`${o.name} bắt gôn ${o.rating.toFixed(1)} như ${o.source} (chỉ trận này).`).join(' ');
     await createCompleteStep('ratings',noPosition?'warn':'done',(noPosition?noPosition+' người chưa đăng ký vị trí; cần kiểm tra khi xếp sân.':'Điểm hợp lệ; đã đọc vị trí chính/phụ của từng người.')+(keeperDetail?' '+keeperDetail:''));
@@ -423,7 +424,7 @@ async function createTeams(){
     localResults=validCandidates(await createSolveInWorker(subset,context.instruction,context.history,lineupNow,[...seenGroups]));
     if(!localResults.length)throw new Error(noCandidate+' Chưa gọi AI.');
     const allowedGroups=new Set(localResults.map(r=>GPAIContext.lineupGroupKey(subset,{A:r.evA,B:r.evB})));
-    createLogPatch({selection:{excludedCount:seenGroups.size,candidateCount:localResults.length,candidateGroups:[...allowedGroups]}});
+    createLogPatch({selection:{excludedCount:seenGroups.size,candidateCount:localResults.length,candidateGroups:[...allowedGroups],starterPolicy:'keepers-first-v1'}});
     if(engine==='AI'){
       context.lineupCandidates=localResults.slice(0,8).map(r=>({teams:{A:{starters:r.evA.starters,bench:r.evA.bench},B:{starters:r.evB.starters,bench:r.evB.bench}}}));
       createStep('search','active','AI đang chọn trong các phương án khác nhau đã đạt đủ tiêu chí…');await createYield();
@@ -467,7 +468,7 @@ async function createTeams(){
     await createCompleteStep('quality','done',`Chênh điểm chính ${d.start.toFixed(2)}, tổng lực ${d.total.toFixed(2)} (bắt buộc tối đa ${limits.strengthDifference}); tốc độ ${Math.max(d.pace,d.totalPace).toFixed(2)}/${limits.paceDifference}, thể lực ${Math.max(d.stamina,d.totalStamina).toFixed(2)}/${limits.staminaDifference}. Ngôi sao chính/dự bị/tổng lệch ${d.stars}/${d.benchStars}/${d.totalStars}: ưu tiên cao, không block.`);
     createStep('positions','active','Đối chiếu vị trí và chất lượng người dự bị…');await createYield();
     const positionWarnings=check.warnings.filter(w=>!w.startsWith('Chênh '));
-    await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Đã lấy top 14 gốc theo điểm hiển thị, áp dụng ngoại lệ Note cho trận này, rồi xếp vị trí chính/phụ và cân hai đội.');
+    await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Đã ưu tiên 2 thủ môn, chọn 12 người còn lại theo điểm hiển thị và áp dụng ngoại lệ Note cho trận này.');
     createStep('rotation','active','So với trận gần nhất, không phụ thuộc màu áo…');await createYield();
     const rotation=createRotation(r,subset,context.history,lineupNow);await createCompleteStep('rotation',rotation.state,rotation.detail);
     createStep('note','active','Đối chiếu với Note của lần tạo này…');await createYield();

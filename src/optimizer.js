@@ -121,8 +121,9 @@
     if(!guard.priority.best){
       const top14=guard.priority.fixed.map(i=>players[i].n);
       const conflicts=guard.priority.conflictingNote.map(i=>players[i].n);
-      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':'Nhóm 14 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ hai bộ vị trí. Không tự bỏ qua Note hoặc thay người khác.';
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message+' Chưa gọi AI; chưa sửa trận.',code:'no-valid-lineup',diagnostics:[{code:'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
+      const keepers=guard.priority.keeperCandidates.map(i=>players[i].n),shortage=keepers.length<2;
+      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Chưa đủ 2 thủ môn hợp lệ: hiện có ${keepers.length}${keepers.length?' ('+keepers.join(', ')+')':''}. Chọn thêm thủ môn đã đăng ký hoặc chỉ định rõ người bắt gôn trong Note.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
+      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message+' Chưa gọi AI; chưa sửa trận.',code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
     }
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
     const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
@@ -145,7 +146,6 @@
         if(!pr) return v - gp;                              // chua chon vi tri -> trung tinh
         return v + (sl===pr?PRI:(sec.indexOf(sl)>=0?SEC:-OFF)) - gp; });
     });
-    const TM=players.map(p=>p.TM);
     const ctx={players,overall,fitT,fitPen,bestOut,priority:guard.priority};
     const sizeA=Math.ceil(N/2), even=(N%2===0);
 
@@ -185,9 +185,9 @@
       const B=all.filter(i=>!inA[i]);
       if(options.strictGuests&&Math.abs(A.filter(i=>players[i].guest).length-B.filter(i=>players[i].guest).length)>1){reject('guests','Không chia đều được khách.');return;}
       const fixed=guard.priority.fixed;
-      if(A.filter(i=>fixed.includes(i)).length!==7){reject('selection','14 cầu thủ có chỉ số cao nhất chưa được chia đúng 7 người đá chính mỗi bên.');return;}
+      if(A.filter(i=>fixed.includes(i)).length!==7){reject('selection','Nhóm 2 thủ môn và 12 cầu thủ ưu tiên chưa được chia đúng 7 người đá chính mỗi bên.');return;}
       // moi doi can it nhat 1 thu mon (thu mon CO DINH neu da khoa; nguoc lai chi can co nguoi biet bat)
-      const okGK=i=>forcedGK.has(i)||(lockGK?isGK[i]:TM[i]>0);
+      const okGK=i=>guard.priority.keepers.includes(i);
       let okA=false,okB=false;
       for(const i of A) if(okGK(i)){okA=true;break;}
       for(const i of B) if(okGK(i)){okB=true;break;}
@@ -195,7 +195,7 @@
       const eA=evalTeam(A,ctx), eB=evalTeam(B,ctx);
       if(!eA||!eB){reject('position','Không đủ vị trí chính/phụ phù hợp ở một bên.');return;}
       stats.roleAssignments++;
-      if(eA.startPriority+eB.startPriority+1e-9<guard.priority.best.value){reject('selection','Chưa dùng đúng 14 cầu thủ có chỉ số vị trí chính cao nhất.');return;}
+      if(eA.startPriority+eB.startPriority+1e-9<guard.priority.best.value){reject('selection','Chưa dùng đúng 2 thủ môn và 12 cầu thủ được ưu tiên.');return;}
       if(options.strictGuests&&guard.priority.availableMembers>=14&&[...eA.starters,...eB.starters].some(i=>players[i].guest&&!forcedStart.has(i))){reject('guests','Khách phải dự bị khi còn đủ 14 thành viên không bị Note chỉ định dự bị, trừ người được Note yêu cầu đá vị trí cụ thể.');return;}
       // Filter BEFORE keeping the top 12, not afterwards: a highly ranked but
       // invalid partition must not crowd valid balanced/strongest-starting ones out.

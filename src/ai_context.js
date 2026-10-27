@@ -64,13 +64,12 @@
     }
     const overrides=[...found].filter(([,slots])=>slots.size===1).map(([index,slots])=>({index,slot:[...slots][0]}));
     const extra=new Map(overrides.map(x=>[x.index,x.slot])),centers=players.flatMap((p,i)=>!p.guest&&p.pos==='TVtt'?[i]:[]);
-    const keeperCount=players.filter(p=>!p.guest&&p.pos==='GK').length;
     const allowed=players.map((p,i)=>SLOTS.map(slot=>{
       // A clear Note is an instruction for this draft, not merely permission:
       // the named player must use that role. It never mutates the profile.
       if(extra.has(i))return slot===extra.get(i);
       const declared=p.pos===slot||(p.pos2||[]).includes(slot),explicit=extra.get(i)===slot;
-      if(slot==='GK')return (p.TM||0)>0&&(keeperCount>=2?p.pos==='GK'&&!p.guest:declared||keeperCount<2);
+      if(slot==='GK')return (p.TM||0)>0&&declared;
       if(slot==='TVtt'&&centers.length>=2)return p.pos==='TVtt'||explicit;
       return declared||explicit;
     }));
@@ -122,29 +121,34 @@
     // pitch; hidden floating-point fractions must never move someone across
     // the 14th-place boundary.
     const primary=players.map(p=>+positionScore(p.pos==='GK'&&p.matchGkRating!==undefined?{...p,matchGkRating:undefined}:p,p.pos).toFixed(1)),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index));
-    // First establish the original top 14 from the displayed one-decimal
-    // rating. Only afterwards may the current Note alter that base: a forced
-    // reserve is removed, a forced role is inserted, and the strongest
-    // remaining eligible reserve fills any vacancy. This preserves an explicit
-    // before/after audit instead of silently applying Note before ranking.
+    // Reserve two spots for keepers, then rank all remaining selected players
+    // by their displayed primary-position rating. The current Note can override
+    // either selection; the original base is computed without that Note.
     const members=players.filter(p=>!p.guest).length;
     const baseEligible=players.flatMap((p,i)=>members>=14&&p.guest?[]:[i]);
-    const baseRanked=baseEligible.slice().sort((a,b)=>primary[b]-primary[a]||a-b),baseFixed=baseRanked.slice(0,14);
     const conflictingNote=[...forcedBench].filter(i=>forcedStart.has(i));
     const availableMembers=players.filter((p,i)=>!p.guest&&!forcedBench.has(i)).length;
     const eligible=players.flatMap((p,i)=>forcedBench.has(i)||(availableMembers>=14&&p.guest&&!forcedStart.has(i))?[]:[i]);
-    const ranked=eligible.slice().sort((a,b)=>primary[b]-primary[a]||a-b),required=ranked.filter(i=>forcedStart.has(i));
-    const fixed=[...required,...ranked.filter(i=>!forcedStart.has(i))].slice(0,14).sort((a,b)=>primary[b]-primary[a]||a-b),fixedSet=new Set(fixed);
+    const rank=ids=>ids.slice().sort((a,b)=>primary[b]-primary[a]||a-b),baseRanked=rank(baseEligible),ranked=rank(eligible),required=ranked.filter(i=>forcedStart.has(i));
+    function pick(ids,rule,requiredPlayers=[],baseScores=false){
+      const forcedKeepers=rule.overrides.filter(x=>x.slot==='GK'&&ids.includes(x.index)).map(x=>x.index);
+      const keeperScore=i=>+positionScore(baseScores&&players[i].matchGkRating!==undefined?{...players[i],matchGkRating:undefined}:players[i],'GK').toFixed(1);
+      const candidates=ids.filter(i=>rule.allowed[i][0]).sort((a,b)=>(players[b].pos==='GK')-(players[a].pos==='GK')||keeperScore(b)-keeperScore(a)||a-b);
+      const keepers=[...forcedKeepers,...candidates.filter(i=>!forcedKeepers.includes(i))].slice(0,2);
+      const fixed=[...keepers,...requiredPlayers.filter(i=>!keepers.includes(i)),...rank(ids).filter(i=>!keepers.includes(i)&&!requiredPlayers.includes(i))].slice(0,14).sort((a,b)=>primary[b]-primary[a]||a-b);
+      return {keepers,candidates,fixed,forcedKeepers};
+    }
+    const base=pick(baseEligible,lineupRoles(players,''),[],true),baseFixed=base.fixed,selection=pick(eligible,roles,required),{keepers,forcedKeepers}=selection,fixed=selection.fixed,fixedSet=new Set(fixed),keeperSet=new Set(keepers);
     function assign(selected,slots){
       if(selected.length!==slots.length)return null;
-      const cost=selected.map(i=>slots.map(k=>roles.allowed[i][k]?-primary[i]:1e6));
+      const cost=selected.map(i=>slots.map(k=>roles.allowed[i][k]&&(k===0?keeperSet.has(i):!keeperSet.has(i))?-primary[i]:1e6));
       const ans=minimumAssignment(cost);
       for(let r=0;r<selected.length;r++)if(cost[r][ans[r]]>=1e6)return null;
       return {starters:selected.slice(),value:selected.reduce((s,i)=>s+primary[i],0),strength:selected.reduce((s,i)=>s+primary[i],0),members:selected.filter(i=>!players[i].guest).length};
     }
-    const best=conflictingNote.length||required.length>14?null:assign(fixed,[0,1,2,3,4,5,6,0,1,2,3,4,5,6]);
+    const best=conflictingNote.length||required.length>14||keepers.length<2||forcedKeepers.length>2?null:assign(fixed,[0,1,2,3,4,5,6,0,1,2,3,4,5,6]);
     return {
-      best,primary,baseRanked,baseFixed,ranked,fixed,forcedBench:[...forcedBench],forcedStart:[...forcedStart],availableMembers,conflictingNote,
+      best,primary,baseRanked,baseFixed,ranked,fixed,keepers,keeperCandidates:selection.candidates,forcedKeepers,forcedBench:[...forcedBench],forcedStart:[...forcedStart],availableMembers,conflictingNote,
       value:idx=>idx.reduce((s,i)=>s+primary[i],0),
       chooseTeam:team=>assign(team.filter(i=>fixedSet.has(i)),[0,1,2,3,4,5,6])
     };
@@ -256,6 +260,7 @@
         roles={...roles,allowed,historical};priority=priorityReader(players,roles);
       }
     }
+    const keeperSet=new Set(priority.keepers);roles={...roles,allowed:roles.allowed.map((row,i)=>row.map((allowed,k)=>k===0?allowed&&keeperSet.has(i):allowed&&!keeperSet.has(i)))};
     const stronger=players.map((p,i)=>SLOTS.map((slot,k)=>k===0?0:players.reduce((mask,q,j)=>
       !q.guest&&roles.allowed[j][k]&&scores[j][k]-scores[i][k]>=LINEUP_LIMITS.benchAdvantage-epsilon?mask|(1<<j):mask,0)));
     function violations(teams){
@@ -298,7 +303,7 @@
     function describe(v){
       if(v.kind==='position')return `${players[v.player].n}: không được xếp ${ROLE_LABELS[v.slot]}; phải dùng vị trí chính/phụ phù hợp hoặc chỉ định vị trí rõ trong Note. Đủ tiền vệ trung tâm chính thì mỗi đội phải có một người đá giữa.`;
       if(v.kind==='centers')return 'Tiền vệ trung tâm chính đang dồn một bên; phải chia đều hai đội, chênh tối đa một người, kể cả dự bị.';
-      if(v.kind==='selection')return v.unavailable?'Nhóm 14 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ hai bộ vị trí. Không tự bỏ qua Note hoặc thay người khác.':`${players[v.bench]?.n||'Cầu thủ thuộc top 14'}: phải đá chính vì thuộc nhóm 14 sau khi áp dụng Note và xếp điểm; không đưa người khác vào thay để cân đội.`;
+      if(v.kind==='selection')return v.unavailable?'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.':`${players[v.bench]?.n||'Cầu thủ thuộc nhóm ưu tiên'}: phải đá chính vì thuộc nhóm 14 sau khi áp dụng Note và xếp điểm, có ưu tiên 2 thủ môn; không đưa người khác vào thay để cân đội.`;
       if(v.kind==='balance')return `Chênh ${v.label} ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.lineDifference} điểm.`;
       if(v.kind==='bench')return `${players[v.bench].n}: không được dự bị khi điểm ${v.slot} cao hơn ${players[v.starter].n} từ ${LINEUP_LIMITS.benchAdvantage} điểm (đối chiếu cả hai đội).`;
       if(v.kind==='reserve')return `Sức mạnh dự bị: nhóm ${v.count} người mạnh nhất mỗi bên chênh trung bình ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.benchMeanDifference}; không lấy người yếu kéo trung bình xuống để bù nhóm mạnh.`;
