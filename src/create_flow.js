@@ -21,6 +21,7 @@ const CREATE_CLOUD_PREFIX='generation_';
 const CREATE_CLOUD={state:'idle',records:[],error:''};
 let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
+let CREATE_TAB='build';
 function createLogPatch(changes){try{CREATE_LOG?.patch(CREATE_RUN_ID,changes);}catch{}}
 function createCloudEnabled(){
   try{return !(typeof aiIsPreview==='function'&&aiIsPreview())&&typeof STATE!=='undefined'&&STATE.cloud&&STATE.docRef&&typeof firebase!=='undefined'&&firebase.firestore;}catch{return false;}
@@ -63,9 +64,17 @@ function createRenderLogList(records){
   if(selected&&records.some(r=>r.id===selected))select.value=selected;
   const localOk=CREATE_LOG?.persisted();
   $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
-  $('createLogExport').disabled=!records.length;createShowLog();const dialog=$('createLogDialog');if(!dialog.open)dialog.showModal();
+  $('createLogExport').disabled=!records.length;createShowLog();
+}
+function createSetTab(tab='build'){
+  CREATE_TAB=tab==='history'?'history':'build';const history=CREATE_TAB==='history';
+  $('createBuildTab').hidden=history;$('createHistoryTab').hidden=!history;
+  $('createBuildTabBtn').classList.toggle('on',!history);$('createHistoryTabBtn').classList.toggle('on',history);
+  $('createBuildTabBtn').setAttribute('aria-selected',String(!history));$('createHistoryTabBtn').setAttribute('aria-selected',String(history));
+  $('createBuildTabBtn').tabIndex=history?-1:0;$('createHistoryTabBtn').tabIndex=history?0:-1;
 }
 async function createOpenLogs(){
+  createSetTab('history');
   const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';
   createRenderLogList(createMergeLogs(local,CREATE_CLOUD.records));
   if(CREATE_CLOUD.state!=='loading')return;
@@ -151,10 +160,17 @@ function createReviewProcess(){
   $('createProcess').showModal();$('createProcessSteps').scrollTop=0;
 }
 $('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
+function createRevealDraft(){
+  createSetTab('build');const result=$('result');result.hidden=false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    try{fitMatch();}catch{}
+    try{result.scrollIntoView({behavior:'auto',block:'start'});}catch{window.scrollTo(0,result.offsetTop||0);}
+  }));
+}
 $('createProcessClose').onclick=()=>{
   if(CREATE_STATE.busy)return;
-  $('createProcess').close();
-  if(CREATE_STATE.success){$('result').scrollIntoView({behavior:'smooth',block:'start'});fitMatch();}
+  const dialog=$('createProcess');if(dialog.open)dialog.close();
+  if(CREATE_STATE.success)createRevealDraft();
   else $('go').focus();
 };
 function createSolveInWorker(players,instruction='',history=[],now=Date.now(),excludeGroups=[]){

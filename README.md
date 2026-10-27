@@ -55,7 +55,7 @@ Mặc định local `APP_DATA_MODE=preview`: giữ đọc Firebase, mọi thay �
 python3 build_web.py --offline --output-dir .
 ```
 
-GitHub Pages phục vụ root của `main`; chỉ build trên branch phát triển không tự cập nhật website. Để thay bản public, kiểm thử, build offline hai HTML root rồi đưa commit đã duyệt lên `main`. Không dùng `python3 build_web.py` thiếu cờ vì lệnh cũ đọc Firestore. `npm run build` tạo `dist/` offline, không sửa HTML root; các assets dùng chung thư mục `assets/`. Đổi domain/trình duyệt thì nhập key lại. Bản phát hành có meta `genplayer-release`; service worker v8 chỉ dọn cache `genplayer-*`, không xóa localStorage hoặc cache ứng dụng khác.
+GitHub Pages phục vụ root của `main`; chỉ build trên branch phát triển không tự cập nhật website. Để thay bản public, kiểm thử, build offline hai HTML root rồi đưa commit đã duyệt lên `main`. Không dùng `python3 build_web.py` thiếu cờ vì lệnh cũ đọc Firestore. `npm run build` tạo `dist/` offline, không sửa HTML root; các assets dùng chung thư mục `assets/`. Đổi domain/trình duyệt thì nhập key lại. Bản phát hành có meta `genplayer-release`; service worker v9 chỉ dọn cache `genplayer-*`, không xóa localStorage hoặc cache ứng dụng khác.
 
 Mã AI nằm ở `src/ai_service.js` (prompt/schema/HTTPS OpenRouter/output), `src/ai_context.js` (điểm/phong độ thuần), `src/ai_client.js` (popup/key/các tác vụ), `src/create_log.js` (whitelist/rút gọn log), `src/create_flow.js` (AI → thuật toán/checklist và đồng bộ log cloud). Đã bỏ thư mục backend AI `server/`.
 

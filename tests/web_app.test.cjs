@@ -32,9 +32,9 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-history-roles">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-create-tabs">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
-    assert.ok(html.includes('sw.js?v=genplayer-v8'));
+    assert.ok(html.includes('sw.js?v=genplayer-v9'));
     assert.ok(html.includes("kind:'generationLog'"));
     assert.ok(html.includes("CREATE_CLOUD_PREFIX='generation_'"));
     assert.deepEqual(JSON.parse(html.match(/const FIREBASE_CONFIG = ([\s\S]*?);\s*\n/)[1]),config);
@@ -43,10 +43,10 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const events={},deleted=[],pending=[];
   vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{
     self:{addEventListener:(name,fn)=>events[name]=fn,clients:{claim:async()=>{}}},
-    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','another-app-data'],delete:async key=>deleted.push(key)}
+    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','genplayer-v9','another-app-data'],delete:async key=>deleted.push(key)}
   });
   events.activate({waitUntil:p=>pending.push(p)});await Promise.all(pending);
-  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7'],'Unrelated apps and the active release cache are untouched');
+  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8'],'Unrelated apps and the active release cache are untouched');
 });
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
@@ -344,6 +344,18 @@ test('Create has one action, a top select-all checkbox and an embedded worker in
     assert.ok(!create.includes('Tạo đội bằng AI'));assert.ok(!create.includes('Tạo đội (Thuật Toán)'));
     assert.ok(create.includes('id="createProcess"'));assert.ok(create.includes('id="createProcessSteps"'));
     assert.ok(html.includes('id="solverWorkerSource" type="text/plain"'));
+  }
+});
+test('Create uses two in-page tabs for lineup work and cloud/local generation history',()=>{
+  for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
+    const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+    const start=html.indexOf('<div id="screen-create"'),end=html.indexOf('<div id="screen-players"'),create=html.slice(start,end);
+    assert.match(create,/id="createBuildTabBtn"[^>]*role="tab"[^>]*>.*Tạo đội/s,file+' has Create tab');
+    assert.match(create,/id="createHistoryTabBtn"[^>]*role="tab"[^>]*>.*Lịch sử tạo đội/s,file+' has history tab');
+    assert.ok(create.includes('id="createBuildTab"'));assert.ok(create.includes('id="createHistoryTab"'));
+    assert.ok(create.includes('id="createLogDetails"'),file+' renders logs inline');
+    assert.ok(!create.includes('id="createLogsBtn"'),file+' removes redundant log toolbar action');
+    assert.ok(!create.includes('id="createLogDialog"'),file+' removes old log dialog');
   }
 });
 test('offline strict solver respects guest benches and distribution',()=>{

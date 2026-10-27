@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-roles">
+<meta name="genplayer-release" content="web-app-2026-10-27-create-tabs">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -436,8 +436,8 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .benchcol.l{border-right:1px solid var(--line)}
 .subs-lbl{color:var(--muted);font-weight:700;margin-right:4px}
 .subchip{display:inline-block;background:var(--surface2);border:1px solid var(--line);padding:2px 8px;border-radius:20px;color:#cbd5e1;margin:2px 3px;font-size:11px}
-.report{max-width:832px;margin:22px auto 0}
-.report h2{font-size:15px;margin:20px 0 10px;letter-spacing:-.01em}
+.report{max-width:832px;margin:16px auto 0}
+.report h2{font-size:14px;margin:16px 0 7px;letter-spacing:-.01em}
 .persuade{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:12px 15px;margin:2px 0 12px;font-size:13.5px;line-height:1.6;color:#c7d0e0}
 .ai-review{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 17px;margin:2px 0 12px;font-size:13.5px;line-height:1.7;color:#d6deee}
 .ai-review p{margin:0 0 11px}
@@ -457,6 +457,13 @@ table.stat th,table.stat td{padding:9px 13px;border-bottom:1px solid var(--line2
 table.stat tr:last-child td{border-bottom:0}
 table.stat td:first-child{text-align:left;color:var(--muted)}table.stat th{background:var(--surface2);color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
 table.stat td:not(:first-child){font-weight:700}
+.report table.compare-stat{font-size:11.5px;table-layout:fixed}
+.report table.compare-stat th,.report table.compare-stat td{padding:6px 8px;line-height:1.3}
+.report table.compare-stat th{font-size:10.5px;letter-spacing:.02em}
+.report table.compare-stat th:first-child,.report table.compare-stat td:first-child{width:34%}
+.report table.compare-stat th:nth-child(2),.report table.compare-stat td:nth-child(2),.report table.compare-stat th:nth-child(3),.report table.compare-stat td:nth-child(3){width:22%}
+.compare-summary{margin-top:7px;padding:8px 9px;background:var(--surface2);border:1px solid var(--line);border-radius:9px;font-size:11.5px;line-height:1.5}
+@media(max-width:560px){.report{margin-top:13px}.report h2{font-size:13px;margin:13px 0 6px}.report table.compare-stat{font-size:10.5px}.report table.compare-stat th,.report table.compare-stat td{padding:5px 4px}.report table.compare-stat th{font-size:9.5px}.compare-summary{font-size:10.5px;line-height:1.45}}
 .foot{text-align:center;color:var(--faint);font-size:12px;margin-top:24px}
 /* editor */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
@@ -997,8 +1004,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
-.create-log-dialog{width:calc(100% - 24px);max-width:900px;max-height:90dvh;margin:auto;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--text);overflow:auto}
-.create-log-dialog::backdrop{background:rgba(12,25,20,.5)}
+.create-tabs{display:flex;gap:5px;margin:0 0 10px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
+.create-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-height:38px;padding:7px 10px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:12.5px;font-weight:750;cursor:pointer}
+.create-tabs button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+.create-tabs button .ui-icon{width:17px;height:17px}
+.create-tab-panel[hidden]{display:none!important}
+.create-log-page{max-width:900px;margin:0 auto}
+.create-log-page .ai-footer{font-size:11.5px;line-height:1.5;color:var(--muted)}
 #createLogDetails{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55dvh;overflow:auto;font:12px/1.6 ui-monospace,SFMono-Regular,monospace;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
 #createRunLabel{overflow-wrap:anywhere}
 @keyframes process-spin{to{transform:rotate(360deg)}}
@@ -1271,6 +1283,11 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <!-- ====== TAO DOI ====== -->
 <div id="screen-create" class="screen">
+  <div class="create-tabs" role="tablist" aria-label="Tạo đội">
+    <button id="createBuildTabBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createBuildTab" onclick="createSetTab('build')"><span data-ui-icon="lineup"></span>Tạo đội</button>
+    <button id="createHistoryTabBtn" type="button" role="tab" aria-selected="false" aria-controls="createHistoryTab" onclick="createOpenLogs()"><span data-ui-icon="match-history"></span>Lịch sử tạo đội</button>
+  </div>
+  <section id="createBuildTab" class="create-tab-panel" role="tabpanel" aria-labelledby="createBuildTabBtn">
   <div class="card-box">
     <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
     <div class="bar create-toolbar">
@@ -1278,7 +1295,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
       <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
-      <button class="btn alt sm" id="createLogsBtn" onclick="createOpenLogs()">Log gen</button>
       <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
@@ -1335,6 +1351,16 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
     <div id="aiLineupPreview"></div>
   </div>
+  </section>
+  <section id="createHistoryTab" class="create-tab-panel" role="tabpanel" aria-labelledby="createHistoryTabBtn" hidden>
+    <div class="card-box create-log-page">
+      <div class="section-title"><span data-ui-icon="match-history"></span> Lịch sử tạo đội</div>
+      <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
+      <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>
+      <pre id="createLogDetails" data-ui-no-icons></pre>
+      <div class="ai-actions"><button class="btn alt sm" id="createLogExport" onclick="createExportLogs()">Xuất log JSON</button></div>
+    </div>
+  </section>
 </div>
 <dialog id="aiKeyDialog" class="ai-key-dialog" aria-labelledby="aiKeyTitle" aria-describedby="aiKeyIntro">
   <div class="ai-key-head"><h2 id="aiKeyTitle">Kết nối OpenRouter</h2><button class="btn alt sm" type="button" onclick="aiSkipKeyDialog()" aria-label="Đóng cửa sổ nhập key">×</button></div>
@@ -1359,14 +1385,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div id="createProcessSummary" class="process-summary" role="status" aria-live="polite" hidden></div>
   <div class="process-actions"><button class="btn" id="createProcessClose" disabled>Đang xử lý…</button></div>
 </dialog>
-<dialog id="createLogDialog" class="create-log-dialog" aria-labelledby="createLogTitle">
-  <div class="ai-key-head"><h2 id="createLogTitle">Nhật ký tạo đội</h2><button class="btn alt sm" onclick="document.getElementById('createLogDialog').close()" aria-label="Đóng nhật ký gen">×</button></div>
-  <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
-  <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>
-  <pre id="createLogDetails" data-ui-no-icons></pre>
-  <div class="ai-actions"><button class="btn alt sm" id="createLogExport" onclick="createExportLogs()">Xuất log JSON</button></div>
-</dialog>
-
 <!-- ====== CAP NHAT CAU THU ====== -->
 <div id="screen-players" class="screen">
   <div class="pc-bar">
@@ -3852,7 +3870,7 @@ function show(id){
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
-  if(id==="screen-create"){buildRoster();renderAIWorkspace();aiEnterCreate();}
+  if(id==="screen-create"){createSetTab("build");buildRoster();renderAIWorkspace();aiEnterCreate();}
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
@@ -4377,12 +4395,12 @@ function sokeTable(A,B,sel){
   const ovA=qualityA.reduce((s,i)=>s+raw(sel[i]),0)/qualityA.length, ovB=qualityB.reduce((s,i)=>s+raw(sel[i]),0)/qualityB.length;
   const bcA=basis.pairedBench?basis.benchA:(A.bench||[]).reduce((s,i)=>s+ov(sel[i]),0), bcB=basis.pairedBench?basis.benchB:(B.bench||[]).reduce((s,i)=>s+ov(sel[i]),0);
   const lr=(lbl,a,b,dec)=>{const d=a-b,w=Math.abs(d)<0.05?"cân":(d>0?`🔴 Đỏ +${d.toFixed(dec)}`:`🟡 Vàng +${(-d).toFixed(dec)}`);return `<tr><td>${lbl}</td><td>${a.toFixed(dec)}</td><td>${b.toFixed(dec)}</td><td>${w}</td></tr>`;};
-  const lineTbl=`<table class="stat" style="margin-top:8px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr(`Tuyến trên (${six?2:3} mũi)`,upA,upB,1)}${lr(`Tuyến dưới (3 thủ)`,dnA,dnB,1)}${lr(basis.incompleteGk?"Overall ngoài sân":"Overall đội chính",ovA,ovB,2)}${lr(basis.pairedBench?`Dự bị đối chiếu (${basis.benchCount} mỗi bên)`:"Ghế dự bị",bcA,bcB,1)}</table>`;
+  const lineTbl=`<table class="stat compare-stat" style="margin-top:7px"><tr><th>Cộng theo tuyến</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${lr(`Tuyến trên (${six?2:3} mũi)`,upA,upB,1)}${lr(`Tuyến dưới (3 thủ)`,dnA,dnB,1)}${lr(basis.incompleteGk?"Overall ngoài sân":"Overall đội chính",ovA,ovB,2)}${lr(basis.pairedBench?`Dự bị đối chiếu (${basis.benchCount} mỗi bên)`:"Ghế dự bị",bcA,bcB,1)}</table>`;
   const gkA=matchKeeperRating(A,ovAt(sel[A.starters[0]],"GK")),gkB=matchKeeperRating(B,ovAt(sel[B.starters[0]],"GK")),aP=[],bP=[];
   const add=(d,lbl,th,dec)=>{if(d>th)aP.push(`${lbl} (+${d.toFixed(dec)})`);else if(-d>th)bP.push(`${lbl} (+${(-d).toFixed(dec)})`);};
   if(!basis.incompleteGk)add(gkA-gkB,"thủ môn",0.3,1);add(dnA-dnB,"hàng thủ",0.4,1);add(upA-upB,"tuyến trên",0.4,1);add(ovA-ovB,basis.incompleteGk?"overall ngoài sân":"overall đội chính",0.05,2);add(bcA-bcB,basis.pairedBench?"dự bị đối chiếu":"ghế dự bị",0.4,1);
   const sum=`🔴 <b>Đỏ</b> hơn: ${aP.length?aP.join(", "):"—"}.<br>🟡 <b>Vàng</b> hơn: ${bP.length?bP.join(", "):"—"}.`;
-  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7">${GPIcons.render("clipboard")} <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
+  return `<h2>${GPIcons.render("match-analysis")} So kè theo vị trí</h2><table class="stat compare-stat"><tr><th>Vị trí</th><th>🔴 Đỏ</th><th>🟡 Vàng</th><th>So kè</th></tr>${rows}</table>${lineTbl}<div class="compare-summary">${GPIcons.render("clipboard")} <b>Tóm gọn 2 chiều:</b><br>${sum}</div>`;
 }
 function render(res,sel,target,review,showHeat,matchId){
   target=target||"result"; const box=$(target);
@@ -4419,7 +4437,7 @@ function render(res,sel,target,review,showHeat,matchId){
     return `<tr><td>${r[0]}</td>${cell(r[1],aw,KIT_A.body)}${cell(r[2],bw,KIT_B.body)}<td style="text-align:center;font-weight:700">${!comparable?"—":aw?"🔴 A":bw?"🟡 B":"＝"}</td></tr>`;
   }).join("");
   const _vv=d=>Math.abs(d)<0.05?"hai đội <b>cân</b>":(d>0?"🔴 <b>Team A</b> nhỉnh hơn":"🟡 <b>Team B</b> nhỉnh hơn")+` (chênh ${Math.abs(d).toFixed(1)})`;
-  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.75">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• ${basis.incompleteGk?"Đội hình ngoài sân":"Đội hình ra sân (chính)"}: ${_vv(basis.startA-basis.startB)}<br>• ${totalSummary}: ${_vv(basis.totalA-basis.totalB)}${comparisonNote?`<br><span class="muted">${comparisonNote}</span>`:""}</div>`;
+  const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat compare-stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div class="compare-summary">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• ${basis.incompleteGk?"Đội hình ngoài sân":"Đội hình ra sân (chính)"}: ${_vv(basis.startA-basis.startB)}<br>• ${totalSummary}: ${_vv(basis.totalA-basis.totalB)}${comparisonNote?`<br><span class="muted">${comparisonNote}</span>`:""}</div>`;
   box.innerHTML=`
   ${predBlock}
   <div class="matchwrap"><div class="match">
@@ -6039,6 +6057,7 @@ const CREATE_CLOUD_PREFIX='generation_';
 const CREATE_CLOUD={state:'idle',records:[],error:''};
 let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
+let CREATE_TAB='build';
 function createLogPatch(changes){try{CREATE_LOG?.patch(CREATE_RUN_ID,changes);}catch{}}
 function createCloudEnabled(){
   try{return !(typeof aiIsPreview==='function'&&aiIsPreview())&&typeof STATE!=='undefined'&&STATE.cloud&&STATE.docRef&&typeof firebase!=='undefined'&&firebase.firestore;}catch{return false;}
@@ -6081,9 +6100,17 @@ function createRenderLogList(records){
   if(selected&&records.some(r=>r.id===selected))select.value=selected;
   const localOk=CREATE_LOG?.persisted();
   $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
-  $('createLogExport').disabled=!records.length;createShowLog();const dialog=$('createLogDialog');if(!dialog.open)dialog.showModal();
+  $('createLogExport').disabled=!records.length;createShowLog();
+}
+function createSetTab(tab='build'){
+  CREATE_TAB=tab==='history'?'history':'build';const history=CREATE_TAB==='history';
+  $('createBuildTab').hidden=history;$('createHistoryTab').hidden=!history;
+  $('createBuildTabBtn').classList.toggle('on',!history);$('createHistoryTabBtn').classList.toggle('on',history);
+  $('createBuildTabBtn').setAttribute('aria-selected',String(!history));$('createHistoryTabBtn').setAttribute('aria-selected',String(history));
+  $('createBuildTabBtn').tabIndex=history?-1:0;$('createHistoryTabBtn').tabIndex=history?0:-1;
 }
 async function createOpenLogs(){
+  createSetTab('history');
   const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';
   createRenderLogList(createMergeLogs(local,CREATE_CLOUD.records));
   if(CREATE_CLOUD.state!=='loading')return;
@@ -6169,10 +6196,17 @@ function createReviewProcess(){
   $('createProcess').showModal();$('createProcessSteps').scrollTop=0;
 }
 $('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
+function createRevealDraft(){
+  createSetTab('build');const result=$('result');result.hidden=false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    try{fitMatch();}catch{}
+    try{result.scrollIntoView({behavior:'auto',block:'start'});}catch{window.scrollTo(0,result.offsetTop||0);}
+  }));
+}
 $('createProcessClose').onclick=()=>{
   if(CREATE_STATE.busy)return;
-  $('createProcess').close();
-  if(CREATE_STATE.success){$('result').scrollIntoView({behavior:'smooth',block:'start'});fitMatch();}
+  const dialog=$('createProcess');if(dialog.open)dialog.close();
+  if(CREATE_STATE.success)createRevealDraft();
   else $('go').focus();
 };
 function createSolveInWorker(players,instruction='',history=[],now=Date.now(),excludeGroups=[]){
@@ -6325,6 +6359,6 @@ async function createTeams(){
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v8",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v9",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>
