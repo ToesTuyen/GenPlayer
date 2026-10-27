@@ -57,7 +57,7 @@
   function exportRecords(records){
     const runs=(Array.isArray(records)?records:[])
       .filter(r=>r&&typeof r.id==='string'&&typeof r.startedAt==='string')
-      .map(safeRecord).sort((a,b)=>b.startedAt.localeCompare(a.startedAt)).slice(0,MAX_RUNS);
+      .map(safeRecord).sort((a,b)=>b.startedAt.localeCompare(a.startedAt));
     return JSON.stringify({version:2,exportedAt:new Date().toISOString(),runs},null,2);
   }
   function createStore(storage,options={}){

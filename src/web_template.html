@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-actions-top">
+<meta name="genplayer-release" content="web-app-2026-10-27-history-pages">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1014,6 +1014,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="section-title"><span data-ui-icon="match-history"></span> Lịch sử tạo đội</div>
       <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
       <div id="createLogList" class="create-log-list" aria-live="polite"></div>
+      <div class="create-log-more"><button class="btn alt sm" id="createLogMore" type="button" onclick="createLoadMoreLogs()" hidden>Tải thêm</button></div>
       <details class="create-log-debug">
         <summary>Chi tiết kiểm tra bug</summary>
         <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>

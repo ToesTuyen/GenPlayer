@@ -18,7 +18,8 @@ const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinish
 const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null,cancelled:false};
 const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)});
 const CREATE_CLOUD_PREFIX='generation_';
-const CREATE_CLOUD={state:'idle',records:[],error:''};
+const CREATE_CLOUD={state:'idle',records:[],error:'',cursor:null,cursorTime:null,exhausted:false};
+const CREATE_LOG_PAGE={size:10,limit:10,loading:false,generation:0,observer:null};
 let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
 let CREATE_TAB='build';
@@ -67,19 +68,23 @@ async function createCloudPush(runId=CREATE_RUN_ID){
     CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không kết nối được nơi lưu log cloud.';return {state:'failed'};
   }
 }
-async function createCloudFetch(){
+async function createCloudFetch(generation=CREATE_LOG_PAGE.generation){
   if(!createCloudEnabled())return [];
   try{
-    const snap=await createCloudTimeout(createCloudCollection().orderBy('startedAt','desc').limit(30).get(),8000),records=[];
+    let query=createCloudCollection().orderBy('startedAt','desc');if(CREATE_CLOUD.cursor)query=query.startAfter(CREATE_CLOUD.cursor);
+    const snap=await createCloudTimeout(query.limit(CREATE_LOG_PAGE.size).get(),8000),records=[];
+    if(generation!==CREATE_LOG_PAGE.generation)return CREATE_CLOUD.records;
     for(const doc of snap.docs||[]){const d=doc.data();if(!doc.id.startsWith(CREATE_CLOUD_PREFIX)||d?.kind!=='generationLog'||!d.record)continue;const r=GPCreationLog.cloudRecord(d.record);if(r.id&&r.startedAt)records.push(r);}
-    CREATE_CLOUD.records=records;CREATE_CLOUD.state='loaded';CREATE_CLOUD.error='';return records;
+    const docs=snap.docs||[],last=docs[docs.length-1];if(last){CREATE_CLOUD.cursor=last;CREATE_CLOUD.cursorTime=typeof last.data()?.startedAt==='string'?last.data().startedAt:null;}
+    CREATE_CLOUD.exhausted=docs.length<CREATE_LOG_PAGE.size;CREATE_CLOUD.records=createMergeLogs(CREATE_CLOUD.records,records);CREATE_CLOUD.state='loaded';CREATE_CLOUD.error='';return CREATE_CLOUD.records;
   }catch{
+    if(generation!==CREATE_LOG_PAGE.generation)return CREATE_CLOUD.records;
     CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không đọc được log cloud.';return CREATE_CLOUD.records;
   }
 }
 function createMergeLogs(local,cloud){
   const records=new Map();for(const r of cloud||[])if(r?.id)records.set(r.id,r);for(const r of local||[])if(r?.id)records.set(r.id,r);
-  return [...records.values()].sort((a,b)=>String(b.startedAt||'').localeCompare(String(a.startedAt||''))).slice(0,GPCreationLog.MAX_RUNS||30);
+  return [...records.values()].sort((a,b)=>String(b.startedAt||'').localeCompare(String(a.startedAt||''))||String(b.id).localeCompare(String(a.id)));
 }
 const CREATE_LOG_STATUS={running:'Đang xử lý',success:'Hoàn tất',failed:'Thất bại',cancelled:'Đã huỷ',interrupted:'Bị gián đoạn'};
 const CREATE_LOG_ROLE={GK:'Gôn',Thòng:'Thòng',HV:'Hậu vệ',TVtt:'Giữa',TV:'Cánh','TĐ':'Tiền đạo'};
@@ -129,12 +134,13 @@ function createRenderLogCards(records){
   }
 }
 function createRenderLogList(records){
-  CREATE_LOG_VIEW=records;const select=$('createLogSelect'),selected=select.value;select.replaceChildren();
-  for(const r of records){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(CREATE_LOG_STATUS[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
-  if(selected&&records.some(r=>r.id===selected))select.value=selected;
+  CREATE_LOG_VIEW=records.slice(0,CREATE_LOG_PAGE.limit);const select=$('createLogSelect'),selected=select.value;select.replaceChildren();
+  for(const r of CREATE_LOG_VIEW){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(CREATE_LOG_STATUS[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
+  if(selected&&CREATE_LOG_VIEW.some(r=>r.id===selected))select.value=selected;
   const localOk=CREATE_LOG?.persisted();
-  $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
-  $('createLogExport').disabled=!records.length;createRenderLogCards(records);createShowLog();
+  $('createLogNotice').textContent=CREATE_LOG_PAGE.loading?'Đang tải lịch sử…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
+  const more=records.length>CREATE_LOG_VIEW.length||(createCloudEnabled()&&!CREATE_CLOUD.exhausted);$('createLogMore').hidden=!more;$('createLogMore').disabled=CREATE_LOG_PAGE.loading;$('createLogMore').textContent=CREATE_LOG_PAGE.loading?'Đang tải…':CREATE_CLOUD.state==='failed'?'Thử tải thêm':'Tải thêm';
+  $('createLogExport').disabled=!CREATE_LOG_VIEW.length;createRenderLogCards(CREATE_LOG_VIEW);createShowLog();
 }
 function createSetTab(tab='build'){
   CREATE_TAB=tab==='history'?'history':'build';const history=CREATE_TAB==='history';
@@ -142,15 +148,35 @@ function createSetTab(tab='build'){
   const button=$('createHistoryHeaderBtn'),label=$('createHistoryHeaderLabel');
   if(button){button.setAttribute('aria-label',history?'Quay lại tạo đội':'Mở lịch sử tạo đội');button.setAttribute('aria-pressed',String(history));}
   if(label)label.textContent=history?'Tạo đội':'Lịch sử';
+  $('appTitle').innerHTML=history?GPIcons.render('match-history')+' Lịch sử tạo đội':TITLES['screen-create'];
+  if(!history){CREATE_LOG_PAGE.generation++;CREATE_LOG_PAGE.observer?.disconnect();CREATE_LOG_PAGE.observer=null;CREATE_LOG_PAGE.loading=false;}
 }
 function createToggleHeaderView(){if(CREATE_TAB==='history')createSetTab('build');else createOpenLogs();}
 async function createOpenLogs(){
   createSetTab('history');
-  const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';
-  createRenderLogList(createMergeLogs(local,CREATE_CLOUD.records));
-  if(CREATE_CLOUD.state!=='loading')return;
-  const cloud=await createCloudFetch();createRenderLogList(createMergeLogs(CREATE_LOG?.list()||[],cloud));
+  const generation=++CREATE_LOG_PAGE.generation;CREATE_LOG_PAGE.limit=CREATE_LOG_PAGE.size;CREATE_LOG_PAGE.loading=false;
+  Object.assign(CREATE_CLOUD,{state:createCloudEnabled()?'loading':'off',records:[],error:'',cursor:null,cursorTime:null,exhausted:!createCloudEnabled()});
+  if(typeof window!=='undefined'){window.scrollTo(0,0);if(typeof IntersectionObserver!=='undefined'){CREATE_LOG_PAGE.observer?.disconnect();CREATE_LOG_PAGE.observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&CREATE_TAB==='history'&&CREATE_CLOUD.state!=='failed')createLoadMoreLogs();},{rootMargin:'300px 0px'});CREATE_LOG_PAGE.observer.observe($('createLogMore'));}}
+  await createLoadLogPage(generation);
 }
+async function createLoadLogPage(generation=CREATE_LOG_PAGE.generation){
+  if(CREATE_LOG_PAGE.loading||CREATE_TAB!=='history')return;CREATE_LOG_PAGE.loading=true;
+  const merged=()=>createMergeLogs(CREATE_LOG?.list()||[],CREATE_CLOUD.records);createRenderLogList(merged());
+  try{
+    while(createCloudEnabled()&&!CREATE_CLOUD.exhausted){
+      const all=merged(),cutoff=all[CREATE_LOG_PAGE.limit-1]?.startedAt;
+      if(CREATE_CLOUD.cursor&&cutoff&&CREATE_CLOUD.cursorTime&&CREATE_CLOUD.cursorTime<cutoff)break;
+      await createCloudFetch(generation);if(generation!==CREATE_LOG_PAGE.generation||CREATE_CLOUD.state==='failed')return;
+    }
+  }finally{if(generation===CREATE_LOG_PAGE.generation){CREATE_LOG_PAGE.loading=false;createRenderLogList(merged());}}
+}
+async function createLoadMoreLogs(){
+  if(CREATE_TAB!=='history'||CREATE_LOG_PAGE.loading)return;
+  const all=createMergeLogs(CREATE_LOG?.list()||[],CREATE_CLOUD.records);if(all.length<=CREATE_LOG_PAGE.limit&&(!createCloudEnabled()||CREATE_CLOUD.exhausted))return;
+  if(CREATE_CLOUD.state!=='failed'||all.length>CREATE_LOG_PAGE.limit)CREATE_LOG_PAGE.limit+=CREATE_LOG_PAGE.size;
+  await createLoadLogPage();
+}
+if(typeof window!=='undefined'&&typeof IntersectionObserver==='undefined')window.addEventListener('scroll',()=>{const more=$('createLogMore');if(CREATE_TAB==='history'&&CREATE_CLOUD.state!=='failed'&&!more.hidden&&more.getBoundingClientRect().top<=window.innerHeight+300)createLoadMoreLogs();},{passive:true});
 function createShowLog(){const r=CREATE_LOG_VIEW.find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
 function createDraftFromLog(r,manualEdit=false){
   if(!createLogUsable(r))throw new Error('Lượt này không có đội hình hoàn tất để dùng lại.');

@@ -73,6 +73,8 @@
 .create-log-page{max-width:900px;margin:0 auto}
 .create-log-page .ai-footer{font-size:11.5px;line-height:1.5;color:var(--muted)}
 .create-log-list{display:grid;gap:9px;margin:10px 0 12px}
+.create-log-more{text-align:center;margin:8px 0}
+#createLogMore[hidden]{display:none!important}
 .create-log-card{border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:10px}
 .create-log-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:8px}
 .create-log-title{font-size:12.5px;font-weight:800;color:var(--text)}

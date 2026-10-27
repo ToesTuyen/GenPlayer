@@ -8,17 +8,16 @@ const group=(p,r)=>C.lineupGroupKey(p,{A:r.evA,B:r.evB});
 function storage(){const data=new Map([['gp_history','PROTECTED_HISTORY'],['gp_openrouter_key','PRIVATE_DEVICE_KEY']]);return {data,getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};}
 function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   const elements=new Map(),steps=new Map(),renders=[],requests=[],alerts=[];
-  const cloudDocs=options.cloudDocs||new Map(),cloudCollection={
+  const cloudDocs=options.cloudDocs||new Map(),cloudReads=[],cloudCollection={
     doc:id=>({set:async payload=>{cloudDocs.set(id,structuredClone(payload));}}),
-    orderBy(){return this;},limit(){return this;},
-    get:async()=>({docs:[...cloudDocs.entries()].sort((a,b)=>String(b[1].startedAt).localeCompare(String(a[1].startedAt))).map(([id,data])=>({id,data:()=>structuredClone(data)}))})
+    orderBy(){let after=null,count=Infinity;return {startAfter(doc){after=doc;return this;},limit(n){count=n;return this;},async get(){if(options.failCloud?.())throw Error('offline');const entries=[...cloudDocs.entries()].sort((a,b)=>String(b[1].startedAt).localeCompare(String(a[1].startedAt))||b[0].localeCompare(a[0])),offset=after?entries.findIndex(([id])=>id===after.id)+1:0,docs=entries.slice(offset,offset+count).map(([id,data])=>({id,data:()=>structuredClone(data)}));cloudReads.push({after:after?.id||null,count,returned:docs.length});return {docs};}};}
   };
   function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},children:[],hidden:false,classList:{toggle(){}},addEventListener(){},setAttribute(){},focus(){},showModal(){this.open=true;},close(){this.open=false;},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(...children){this.children=children;},appendChild(child){this.children.push(child);},append(...children){this.children.push(...children);},prepend(child){this.children.unshift(child);},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
   const sandbox={GPAIContext:C,GPCreationLog:L,localStorage:shared,Date,performance:{now:()=>0},requestAnimationFrame:fn=>fn(),setTimeout,clearTimeout,
     $:element,document:{querySelector:()=>({content:'test-release'}),createElement:()=>element('node-'+Math.random())},
     STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
     AI_STATE:{busy:false},AI_KEYS:{has:()=>mode!=='algorithm'},cstate:{results:[],idx:0},
-    aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,structuredClone,getHistory:()=>[],
+    aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,structuredClone,getHistory:()=>[],GPIcons:{render:()=>''},TITLES:{'screen-create':'Tạo đội'},
     selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',canEdit:!!options.canEdit,alert:message=>alerts.push(message),openAdminModal:()=>alerts.push('OPEN_ADMIN'),
     render:(r,players)=>renders.push({r,players}),
     aiFetch:async(action,request)=>{
@@ -41,9 +40,9 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft,openEdit:createOpenEdit,runEdit:createRunEdit,applyEdit:createApplyEdit,setLogView:records=>{CREATE_LOG_VIEW=records;}};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft,openEdit:createOpenEdit,runEdit:createRunEdit,applyEdit:createApplyEdit,setLogView:records=>{CREATE_LOG_VIEW=records;},openLogs:createOpenLogs,loadMoreLogs:createLoadMoreLogs,setTab:createSetTab,visibleLogs:()=>CREATE_LOG_VIEW};
   `,scope);
-  return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,...scope.flow};
+  return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,cloudReads,...scope.flow};
 }
 
 test('solver supplies distinct starting groups, ignoring color flips, role-only changes and reserve order',()=>{
@@ -210,6 +209,34 @@ test('cloud journal stores one sanitized compact document and can be read by ano
   assert.ok(payload.record.input.players.length);assert.ok(payload.record.input.forms.length);assert.ok(payload.record.output.groupKey);assert.equal(payload.record.output.teams.A.length,8);assert.equal(payload.record.output.teams.B.length,8);assert.ok(payload.record.events.length);
   const second=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs}),remote=await second.cloudFetch();
   assert.equal(remote.length,1);assert.equal(remote[0].id,payload.runId);assert.equal(remote[0].status,'success');
+});
+
+test('history pages local and cloud logs in tens, deduplicates and restores the screen title',async()=>{
+  const cloudDocs=new Map(),shared=storage(),cloudRecords=[];
+  for(let i=0;i<42;i++){
+    const startedAt=new Date(Date.UTC(2026,9,27,0,0,i)).toISOString(),record={id:'run-cloud-'+String(i).padStart(2,'0'),startedAt,updatedAt:startedAt,status:'failed',input:{players:[]},error:{message:'test'}};
+    cloudRecords.push(record);cloudDocs.set('generation_'+record.id,{kind:'generationLog',startedAt,record});
+  }
+  const localExtra=Array.from({length:3},(_,i)=>{const startedAt=new Date(Date.UTC(2026,9,27,0,0,50+i)).toISOString();return {id:'run-local-'+i,startedAt,updatedAt:startedAt,status:'failed',input:{players:[]}};});
+  shared.setItem(L.KEY,JSON.stringify({version:1,runs:[...localExtra,cloudRecords[40],cloudRecords[10]]}));
+  cloudDocs.set('unrelated-doc',{kind:'other',startedAt:new Date(Date.UTC(2026,9,27,0,0,41,500)).toISOString()});
+  const x=controller('algorithm',roster(),shared,{cloud:true,cloudDocs});await x.openLogs();
+  const expected=[...cloudRecords,...localExtra].sort((a,b)=>b.startedAt.localeCompare(a.startedAt)||b.id.localeCompare(a.id));
+  const ids=()=>Array.from(x.visibleLogs(),r=>r.id);
+  assert.equal(x.elements.get('appTitle').innerHTML,' Lịch sử tạo đội');assert.deepEqual(ids(),expected.slice(0,10).map(r=>r.id));assert.equal(x.elements.get('createLogList').children.length,10);
+  for(const count of [20,30,40,45]){await x.loadMoreLogs();assert.deepEqual(ids(),expected.slice(0,count).map(r=>r.id));assert.equal(new Set(ids()).size,ids().length);}
+  assert.equal(x.elements.get('createLogMore').hidden,true);assert.ok(x.cloudReads.length>=5);assert.ok(x.cloudReads.every(r=>r.count===10&&r.returned<=10));
+  assert.equal(JSON.parse(L.exportRecords(x.visibleLogs())).runs.length,45,'Export includes all displayed records, not only the first 30');
+  const reads=x.cloudReads.length;await x.loadMoreLogs();assert.equal(x.cloudReads.length,reads);x.setTab('build');assert.equal(x.elements.get('appTitle').innerHTML,'Tạo đội');
+});
+
+test('history preserves local pages and allows retry when cloud reading fails',async()=>{
+  const shared=storage(),records=Array.from({length:16},(_,i)=>{const startedAt=new Date(Date.UTC(2026,9,27,0,0,i)).toISOString();return {id:'run-local-'+i,startedAt,updatedAt:startedAt,status:'failed',input:{players:[]}};});
+  shared.setItem(L.KEY,JSON.stringify({version:1,runs:records}));let offline=true;
+  const x=controller('algorithm',roster(),shared,{cloud:true,failCloud:()=>offline});await x.openLogs();
+  assert.equal(x.visibleLogs().length,10);assert.match(x.elements.get('createLogNotice').textContent,/Không đọc được log cloud/);assert.equal(x.elements.get('createLogMore').hidden,false);
+  await x.loadMoreLogs();assert.equal(x.visibleLogs().length,16,'Older local records remain accessible offline');
+  offline=false;await x.loadMoreLogs();assert.equal(x.visibleLogs().length,16);assert.match(x.elements.get('createLogNotice').textContent,/gộp log/);assert.equal(x.elements.get('createLogMore').hidden,true);
 });
 
 test('snapshot whitelists football context and input identity is stable under selected-player order',()=>{
