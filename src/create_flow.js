@@ -24,23 +24,25 @@ let CREATE_RUN_ID=null;
 let CREATE_TAB='build';
 let CREATE_WIZARD_STEP='roster';
 let CREATE_WIZARD_KEY_PROMPTED=false;
+function createHasDraft(){return typeof cstate!=='undefined'&&!!cstate.subset&&!!cstate.results?.[cstate.idx];}
 function createSyncWizard(count){
   const n=Number.isFinite(count)?count:(typeof selectedIdx==='function'?selectedIdx().length:0),valid=n>=14&&n<=24;
-  const next=$('createNextStep'),rules=$('createRulesStepBtn'),badge=$('createStepCount');
-  if(next)next.disabled=!valid;if(rules)rules.disabled=!valid;if(badge)badge.textContent=n+' người đã chọn';
+  const next=$('createNextStep'),rules=$('createRulesStepBtn'),result=$('createResultStepBtn'),badge=$('createStepCount');
+  if(next)next.disabled=!valid;if(rules)rules.disabled=!valid;if(result)result.disabled=!createHasDraft();if(badge)badge.textContent=n+' người đã chọn';
   return valid;
 }
 function createSetWizardStep(step='roster',force=false,promptForKey=true){
   const rules=step==='rules';
   if(rules&&!force&&!createSyncWizard())return false;
-  CREATE_WIZARD_STEP=rules?'rules':'roster';
-  const rosterPanel=$('createRosterStep'),rulesPanel=$('createRulesStep'),rosterButton=$('createRosterStepBtn'),rulesButton=$('createRulesStepBtn');
-  rosterPanel.hidden=rules;rulesPanel.hidden=!rules;
-  rosterButton.classList.toggle('on',!rules);rulesButton.classList.toggle('on',rules);
-  rosterButton.setAttribute('aria-selected',String(!rules));rulesButton.setAttribute('aria-selected',String(rules));
-  rosterButton.tabIndex=rules?-1:0;rulesButton.tabIndex=rules?0:-1;
+  if(step==='result'&&!createHasDraft())return false;
+  CREATE_WIZARD_STEP=['roster','rules','result'].includes(step)?step:'roster';
+  $('createBuildTab').dataset.createStep=CREATE_WIZARD_STEP;
+  for(const [name,panelId,buttonId] of [['roster','createRosterStep','createRosterStepBtn'],['rules','createRulesStep','createRulesStepBtn'],['result','createResultStep','createResultStepBtn']]){
+    const active=CREATE_WIZARD_STEP===name,panel=$(panelId),button=$(buttonId);panel.hidden=!active;button.classList.toggle('on',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
+  }
   createSyncWizard();
   if(rules&&promptForKey&&!CREATE_WIZARD_KEY_PROMPTED){CREATE_WIZARD_KEY_PROMPTED=true;aiEnterCreate();}
+  if(CREATE_WIZARD_STEP==='result')requestAnimationFrame(()=>{try{fitMatch();}catch{}});
   return true;
 }
 function createResetWizard(){CREATE_WIZARD_KEY_PROMPTED=false;createSetWizardStep('roster');}
@@ -156,7 +158,7 @@ function createUseLog(id){
   try{draft=createDraftFromLog(record);}catch(e){alert('Không nạp được đội hình: '+e.message);return;}
   cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
   AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
-  CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';createNoteChanged();
+  CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';$('reviewProcessRules').style.display='none';createNoteChanged();
   render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';
   createRevealDraft();openMatchModal('create');
 }
@@ -226,7 +228,7 @@ async function createFinish(success,message){
   const cloud=await createCloudPush();
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
   aiSyncDraftAction();
-  $('reviewProcess').style.display='';
+  $('reviewProcess').style.display='';$('reviewProcessRules').style.display='';createSyncWizard();
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
   $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;
@@ -240,10 +242,10 @@ function createReviewProcess(){
 }
 $('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
 function createRevealDraft(){
-  createSetTab('build');createSetWizardStep('rules',true,false);const result=$('result');result.hidden=false;
+  createSetTab('build');createSetWizardStep('result',true,false);const result=$('result');result.hidden=false;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     try{fitMatch();}catch{}
-    try{result.scrollIntoView({behavior:'auto',block:'start'});}catch{window.scrollTo(0,result.offsetTop||0);}
+    try{window.scrollTo({top:0,behavior:'auto'});}catch{}
   }));
 }
 $('createProcessClose').onclick=()=>{

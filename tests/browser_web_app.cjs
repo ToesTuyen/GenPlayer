@@ -137,7 +137,7 @@ async function main(){
       await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:60000});
       assert.equal(providerCalls,beforeProvider+1);
       assert.equal(await page.locator('#result .field .player').count(),14);
-      assert.equal(await page.locator('#reviewDraft').isVisible(),true,'A review action appears only after a lineup exists');
+      assert.equal(await page.locator('#reviewDraft').isVisible(),false,'The review action stays in the result step until the progress dialog is closed');
       assert.equal(await page.locator('#aiOutput').isVisible(),false,'Generation does not show a generic analysis panel');
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn','Free-text Note must not be marked satisfied without verification');
@@ -162,6 +162,7 @@ async function main(){
       await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#createProcess').isVisible(),false,'View lineup closes the progress dialog');
       assert.equal(await page.locator('#result').isVisible(),true,'View lineup reveals the rendered draft');
+      assert.equal(await page.locator('#createResultStep').isVisible(),true);assert.equal(await page.locator('#createRulesStep').isVisible(),false);assert.equal(await page.locator('#reviewDraft').isVisible(),true);
       await page.locator('#createHistoryHeaderBtn').click();
       assert.ok(await page.locator('.create-log-card').count()>=1,'Successful runs remain diagnosable');
       assert.deepEqual(await page.locator('.create-log-team-title').allTextContents(),['🔴 Team A','🟡 Team B']);
@@ -178,11 +179,12 @@ async function main(){
       if(progressOnly){assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);await ctx.close();continue;}
       assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã gửi AI/);
       assert.ok((await page.locator('#createNoteStatus').innerText()).includes(lineupNote));
+      await page.locator('#createRulesStepBtn').click();
       await page.locator('#aiInstruction').fill('Tuyên bắt gôn theo Note mới');
-      assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã thay đổi/);
+      assert.match(await page.locator('#createNoteStatus').textContent(),/Note đã thay đổi/);
       assert.equal(await page.evaluate(()=>CREATE_STATE.draftNote),lineupNote,'Displayed draft keeps its actual Note snapshot');
       await page.locator('#aiInstruction').fill(lineupNote);
-      assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.evaluate(()=>getHistory().length),5);
+      assert.equal(await page.locator('#saveWeek').isVisible(),false);assert.equal(await page.evaluate(()=>getHistory().length),5);
       assert.equal(await page.locator('#screen-create').isVisible(),true);
       assert.equal(await page.evaluate(()=>selectedIdx().length),15);assert.equal(await page.evaluate(()=>cstate.subset.length),15);
       // Invalid provider key: exactly one paid attempt, then a responsive worker fallback.
@@ -192,17 +194,19 @@ async function main(){
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.locator('[data-step="engine"]').getAttribute('data-state'),'warn');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn');
-      assert.match(await page.locator('#createNoteStatus').innerText(),/Note khác cần đối chiếu/);
+      assert.match(await page.locator('#createNoteStatus').textContent(),/Note khác cần đối chiếu/);
       assert.equal(await page.locator('#result').evaluate((el,note)=>el.innerText.includes(note),lineupNote),false,'Private Note is not inserted into a publishable review');
       assert.equal(await page.locator('#result .field .player').count(),14);
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
       await page.locator('#createProcessClose').click();
+      await page.locator('#createRulesStepBtn').click();
       // Removing the local key must not attempt a paid request at all.
       await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();
       const beforeMissing=providerCalls;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(providerCalls,beforeMissing);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
       await page.locator('#createProcessClose').click();
+      await page.locator('#createRulesStepBtn').click();
       await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       const callsBeforeNew=providerCalls;
       acceptDialogs=false;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);acceptDialogs=true;
@@ -239,8 +243,9 @@ async function main(){
       assert.equal(await page.locator('#createNoteStatus').isVisible(),false,'Empty Note does not add a redundant explanation box');
       assert.equal(await page.locator('#status').textContent(),'','Draft status is not repeated above the pitch');
       await page.locator('#createProcessClose').click();
+      await page.locator('#createRulesStepBtn').click();
       await page.locator('#aiInstruction').fill('Yêu cầu mới sau khi tạo đội');
-      assert.match(await page.locator('#createNoteStatus').innerText(),/Note đã thay đổi/);
+      assert.match(await page.locator('#createNoteStatus').textContent(),/Note đã thay đổi/);
       await page.locator('#aiInstruction').fill('');
       assert.equal(await page.locator('#createNoteStatus').isVisible(),false);
       assert.ok(providerInputs.filter(x=>x.task==='lineup').every(x=>x.instruction===lineupNote),'Provider receives the exact current lineup Note');

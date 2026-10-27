@@ -40,6 +40,7 @@ async function main(){
       await saveKey();await page.evaluate(()=>{$('aiMatch').value='100';$('aiAnalysisInstruction').value='PRIVATE_OTHER_ANALYSIS';});
       await page.locator('#createRosterStepBtn').click();await page.locator('#roster .pl-item.guest input').last().uncheck();await page.locator('#createNextStep').click();
       expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
+      await page.locator('#createResultStepBtn').click();
       await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);
       assert.equal(await page.locator('#reviewDraft').isDisabled(),true);assert.equal(await page.locator('#go').isDisabled(),true);assert.match(await page.locator('#reviewDraft').innerText(),/Đang đánh giá/);
       await page.evaluate(()=>aiReviewDraft());release();await page.waitForFunction(()=>!AI_STATE.busy);
@@ -50,7 +51,7 @@ async function main(){
       const pending=await page.evaluate(()=>{canEdit=true;openMatchModal('create');const data={review:mmDraft.review,subset:mmDraft.subset.length,meta:mmDraft.aiReview};closeMatchModal();return data;});
       assert.ok(pending.review.includes('&lt;img')&&!pending.review.includes('<img'));assert.equal(pending.subset,16);assert.equal(pending.meta.model,'fake/review');
       await page.screenshot({path:path.join(screenshots,'review-'+width+'.png'),fullPage:true,animations:'disabled'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
-      await removeKey();await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
+      await removeKey();await page.locator('#createRulesStepBtn').click();await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#aiOutput').isVisible(),false);assert.equal(await page.evaluate(()=>AI_STATE.draftReview),null);assert.deepEqual(await page.evaluate(()=>aiDraftReviewFields()),{});
       await saveKey();expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
       await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);await page.evaluate(()=>{cstate.key+=':changed-during-review';});release();await page.waitForFunction(()=>!AI_STATE.busy);

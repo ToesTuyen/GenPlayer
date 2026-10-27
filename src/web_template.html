@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-reserve-two-points">
+<meta name="genplayer-release" content="web-app-2026-10-27-result-step">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -931,12 +931,14 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <!-- ====== TAO DOI ====== -->
 <div id="screen-create" class="screen">
-  <section id="createBuildTab" class="create-tab-panel">
+  <section id="createBuildTab" class="create-tab-panel" data-create-step="roster">
   <div class="card-box">
     <div class="create-stepper" role="tablist" aria-label="Các bước tạo đội">
       <button id="createRosterStepBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createRosterStep" onclick="createSetWizardStep('roster')"><span class="create-step-number">1</span><span>Chọn cầu thủ</span></button>
       <span class="create-step-line" aria-hidden="true"></span>
       <button id="createRulesStepBtn" type="button" role="tab" aria-selected="false" aria-controls="createRulesStep" onclick="createSetWizardStep('rules')" disabled><span class="create-step-number">2</span><span>Tiêu chí &amp; tạo đội</span></button>
+      <span class="create-step-line" aria-hidden="true"></span>
+      <button id="createResultStepBtn" type="button" role="tab" aria-selected="false" aria-controls="createResultStep" onclick="createSetWizardStep('result')" disabled><span class="create-step-number">3</span><span>Kết quả</span></button>
     </div>
     <section id="createRosterStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createRosterStepBtn">
       <div class="roster-selection">
@@ -989,19 +991,22 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
             <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
           </div>
         </div>
-        <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
       </section>
       <div class="create-go-float"><button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button></div>
-      <div class="bar create-toolbar">
-        <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
-        <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
-        <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
-      </div>
+      <button class="btn alt sm" id="reviewProcessRules" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+      <div class="status" id="status"></div>
     </section>
   </div>
-  <div class="status" id="status"></div>
-  <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
-  <div id="result"></div>
+  <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+  <section id="createResultStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createResultStepBtn" hidden>
+    <div class="bar create-toolbar">
+      <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+      <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
+      <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
+    </div>
+    <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
+    <div id="result"></div>
+  </section>
   <div id="aiOutput" class="ai-panel" hidden>
     <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>
     <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
@@ -2509,7 +2514,7 @@ let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null}
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
   AI_STATE.draftReview=null;$("aiOutput").hidden=true;$("aiAnalysisTools").hidden=true;aiSyncDraftAction();
-  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";
+  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";$("reviewProcessRules").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");

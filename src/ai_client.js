@@ -157,7 +157,7 @@ function aiPlainOutput(){const o=AI_STATE.output;if(!o)return '';return o.title+
 function aiReviewHTML(o){return '<p class="rv-lead"><b>'+esc(o.title)+'</b></p>'+o.sections.map(s=>'<p><b>'+esc(s.heading)+'</b><br>'+esc(s.body).replace(/\n/g,'<br>')+'</p>').join('');}
 function aiRenderOutput(showLineupPreview=true){
   const o=AI_STATE.output,task=AI_STATE.request.task;
-  $('aiOutput').hidden=false;$('aiOutputText').innerHTML='<h2>'+esc(o.title)+'</h2>'+o.sections.map(s=>'<section><h3>'+esc(s.heading)+'</h3><p>'+esc(s.body)+'</p></section>').join('');
+  $('aiOutput').dataset.draftOutput=String(AI_STATE.request.source==='draft');$('aiOutput').hidden=false;$('aiOutputText').innerHTML='<h2>'+esc(o.title)+'</h2>'+o.sections.map(s=>'<section><h3>'+esc(s.heading)+'</h3><p>'+esc(s.body)+'</p></section>').join('');
   if(task==='player-form'){
     const labels={increase:'Cân nhắc tăng',decrease:'Cân nhắc giảm',keep:'Giữ điểm',insufficient:'Chưa đủ dữ liệu'};
     $('aiOutputText').innerHTML+='<div class="ai-label">'+labels[o.verdict]+' · chỉ đề xuất, không tự sửa điểm</div>'+o.suggestions.map(s=>'<p>'+esc(s.attribute+' · '+({increase:'tăng',decrease:'giảm',keep:'giữ'}[s.direction])+': '+s.reason)+'</p>').join('');

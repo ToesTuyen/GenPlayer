@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-reserve-two-points">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-result-step">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -344,7 +344,7 @@ test('Create has a contextual review button, not a generic analysis menu',()=>{
     assert.match(html,/<button[^>]*id="reviewDraft"[^>]*\bhidden\b/);assert.ok(html.includes('onclick="aiReviewDraft()"'));
   }
 });
-test('Create uses a gated two-step wizard, one action and an embedded worker in every entry',()=>{
+test('Create uses a gated three-step wizard, one action and an embedded worker in every entry',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     const start=html.indexOf('<div id="screen-create"'),end=html.indexOf('<div id="screen-players"'),create=html.slice(start,end);
@@ -352,7 +352,9 @@ test('Create uses a gated two-step wizard, one action and an embedded worker in 
     assert.ok(create.indexOf('id="roster"')<create.indexOf('id="saveWeek"'),file+' player selection precedes save action');
     assert.match(create,/id="createRosterStepBtn"[^>]*aria-controls="createRosterStep"/);
     assert.match(create,/id="createRulesStepBtn"[^>]*aria-controls="createRulesStep"[^>]*disabled/);
-    assert.ok(create.includes('id="createRosterStep"'));assert.ok(create.includes('id="createRulesStep"'));
+    assert.match(create,/id="createResultStepBtn"[^>]*aria-controls="createResultStep"[^>]*disabled/);
+    assert.ok(create.includes('id="createRosterStep"'));assert.ok(create.includes('id="createRulesStep"'));assert.ok(create.includes('id="createResultStep"'));
+    assert.ok(create.indexOf('id="createResultStep"')<create.indexOf('id="result"'),'Lineup is inside the result step');
     assert.ok(create.includes('id="createNextStep"'),file+' gates criteria behind a valid roster');
     assert.ok(!create.includes('id="toggleRoster"'),file+' criteria has no redundant edit-player button');
     assert.ok(!create.includes('Sửa cầu thủ'),file+' criteria has no redundant edit-player label');

@@ -13,7 +13,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
     orderBy(){return this;},limit(){return this;},
     get:async()=>({docs:[...cloudDocs.entries()].sort((a,b)=>String(b[1].startedAt).localeCompare(String(a[1].startedAt))).map(([id,data])=>({id,data:()=>structuredClone(data)}))})
   };
-  function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},hidden:false,addEventListener(){},setAttribute(){},focus(){},showModal(){},close(){},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(){},appendChild(){},prepend(){},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
+  function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},hidden:false,classList:{toggle(){}},addEventListener(){},setAttribute(){},focus(){},showModal(){},close(){},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(){},appendChild(){},prepend(){},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
   const sandbox={GPAIContext:C,GPCreationLog:L,localStorage:shared,Date,performance:{now:()=>0},requestAnimationFrame:fn=>fn(),setTimeout,clearTimeout,
     $:element,document:{querySelector:()=>({content:'test-release'}),createElement:()=>element('node-'+Math.random())},
     STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
@@ -36,7 +36,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft};
   `,scope);
   return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,...scope.flow};
 }
@@ -75,6 +75,14 @@ test('accepted AI only chooses a candidate and is labeled AI; three runs use dif
     assert.equal(r.ai.decision,'accepted');assert.equal(r.ai.candidateId,'c0');
   }
   assert.equal(x.requests.length,3);assert.equal(x.log.list().filter(r=>r.status==='success').length,3);
+});
+
+test('result is a separate step, locked until a draft and navigable back to criteria',async()=>{
+  const x=controller('algorithm');assert.equal(x.setStep('result'),false,'No result without a draft');
+  await x.run();assert.equal(x.state.success,true);x.reveal();
+  assert.equal(x.elements.get('createResultStep').hidden,false);assert.equal(x.elements.get('createRulesStep').hidden,true);assert.equal(x.elements.get('createRosterStep').hidden,true);assert.equal(x.elements.get('createResultStepBtn').disabled,false);
+  assert.equal(x.setStep('rules',false,false),true);assert.equal(x.elements.get('createRulesStep').hidden,false);assert.equal(x.elements.get('createResultStep').hidden,true);
+  assert.equal(x.setStep('result'),true);assert.equal(x.elements.get('createResultStep').hidden,false);
 });
 
 test('a successful generation log restores the exact two teams for scheduling',async()=>{

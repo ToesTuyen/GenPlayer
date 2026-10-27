@@ -22,7 +22,7 @@ async function main(){
       page.on('request',r=>{if(r.url().includes('/api/'))apiRequests.push({url:r.url(),headers:r.headers(),body:r.postData()||''});});
     });return ctx;
   }
-  async function open(ctx){const page=await ctx.newPage();await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();assert.equal(await page.locator('#aiCreateToggle').count(),0);assert.equal(await page.locator('#createAI').isVisible(),false);await page.locator('#createNextStep').click();assert.equal(await page.locator('#createAI').isVisible(),true);await page.waitForFunction(()=>AI_STATE.status?.keyMode==='device');return page;}
+  async function open(ctx){const page=await ctx.newPage();await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();assert.equal(await page.locator('#aiCreateToggle').count(),0);assert.equal(await page.locator('#createAI').isVisible(),false);await page.locator('#createNextStep').click();assert.equal(await page.locator('#createAI').isVisible(),!(await page.evaluate(()=>AI_KEYS.has())));await page.waitForFunction(()=>AI_STATE.status?.keyMode==='device');return page;}
   try{
     const ctx=await newContext(),page=await open(ctx);
     assert.equal(await page.locator('#aiKeyDialog').isVisible(),true,'No key prompts on entry');
@@ -47,6 +47,7 @@ async function main(){
     await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
     assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);assert.equal(await page.locator('#result .field .player').count(),14);assert.equal(await page.locator('#aiKeyDialog').isVisible(),false,'Create never re-prompts after skip');
     assert.equal(providerCalls,0,'Skip really uses the offline solver');await page.locator('#createProcessClose').click();
+    await page.locator('#createRulesStepBtn').click();
     await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill('unsaved-value');await page.keyboard.press('Escape');
     assert.equal(await page.locator('#aiKeyDialog').isVisible(),false);assert.equal(await page.locator('#aiKey').inputValue(),'');
     await page.evaluate(()=>{show('home');show('screen-create');});assert.equal(await page.locator('#aiKeyDialog').isVisible(),false);await page.locator('#createNextStep').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true,'A later criteria step with no key prompts again');

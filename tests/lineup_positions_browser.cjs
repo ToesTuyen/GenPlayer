@@ -37,11 +37,11 @@ async function main(){
       const withNote=await page.evaluate(()=>{const r=cstate.results[0];return {players:cstate.subset,teams:{A:r.evA,B:r.evB}};});
       assert.doesNotThrow(()=>C.lineup(withNote.players,withNote.teams,{instruction:note}));
       assert.deepEqual(await page.evaluate(()=>window.qaWorkerNotes),[note]);await page.locator('#createProcessClose').click();
-      failProvider=true;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
+      failProvider=true;await page.locator('#createRulesStepBtn').click();await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);assert.equal(calls,before+2);
       assert.deepEqual(await page.evaluate(()=>window.qaWorkerNotes),[note,note],'Fallback reuses validated candidates with the same Note-authorized roles');
       const fallback=await page.evaluate(()=>{const r=cstate.results[cstate.idx];return {players:cstate.subset,teams:{A:r.evA,B:r.evB}};});
-      assert.doesNotThrow(()=>C.lineup(fallback.players,fallback.teams,{instruction:note}));assert.match(await page.locator('#createNoteStatus').innerText(),/Note khác cần đối chiếu/);
+      assert.doesNotThrow(()=>C.lineup(fallback.players,fallback.teams,{instruction:note}));assert.match(await page.locator('#createNoteStatus').textContent(),/Note khác cần đối chiếu/);
       assert.equal(await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()})),stored);
       await page.screenshot({path:path.join(screenshots,'fallback-'+width+'.png'),animations:'disabled'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);await ctx.close();
     }
