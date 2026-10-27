@@ -1,7 +1,7 @@
 .ai-banner{display:none;padding:9px 16px;text-align:center;font-size:12px;line-height:1.5;background:var(--amber-soft);color:var(--text);border-bottom:1px solid var(--line)}
 .create-stepper{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:center;max-width:560px;margin:0 auto 14px;padding:4px}
 .create-stepper button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:6px 10px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
-.create-stepper button.on{background:var(--brand-soft);color:var(--text)}
+.create-stepper button.on{background:transparent;color:var(--text);font-weight:750}
 .create-stepper button:disabled{opacity:.45;cursor:not-allowed}
 .create-step-number{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border:1px solid var(--line);border-radius:50%;background:var(--surface2);font-size:12px;font-weight:750;color:var(--muted)}
 .create-stepper button.on .create-step-number{border-color:var(--action);background:var(--action);color:#fff}
