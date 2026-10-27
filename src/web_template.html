@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-login">
+<meta name="genplayer-release" content="web-app-2026-10-27-create-stepper">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -937,59 +937,74 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   <section id="createBuildTab" class="create-tab-panel" role="tabpanel" aria-labelledby="createBuildTabBtn">
   <div class="card-box">
-    <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
-    <div class="bar create-toolbar">
-      <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
-      <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
-      <button class="btn alt sm" id="toggleRoster" onclick="toggleRoster()" style="display:none">👥 Hiện danh sách</button>
-      <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
-      <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
-      <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
+    <div class="create-stepper" role="tablist" aria-label="Các bước tạo đội">
+      <button id="createRosterStepBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createRosterStep" onclick="createSetWizardStep('roster')"><span class="create-step-number">1</span><span>Chọn cầu thủ</span></button>
+      <span class="create-step-line" aria-hidden="true"></span>
+      <button id="createRulesStepBtn" type="button" role="tab" aria-selected="false" aria-controls="createRulesStep" onclick="createSetWizardStep('rules')" disabled><span class="create-step-number">2</span><span>Tiêu chí &amp; tạo đội</span></button>
     </div>
-    <section id="createAI" class="create-ai" aria-label="Key OpenRouter">
-      <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
-      <div id="aiAnalysisTools" hidden>
-        <div class="ai-analysis-body">
-          <div class="ai-fields">
-            <label class="ai-field">Nội dung<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chọn nội dung phân tích</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
-            <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
-            <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
-          </div>
-          <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú phân tích (tuỳ chọn)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Điểm cần tập trung đánh giá…"></textarea></label>
-          <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
-        </div>
+    <section id="createRosterStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createRosterStepBtn">
+      <div class="create-panel-head">
+        <div class="section-title"><span data-ui-icon="squad"></span> Người có mặt hôm nay</div>
+        <button class="btn alt sm" onclick="openGuestModal()">➕ Người ngoài</button>
       </div>
-      <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+      <div class="roster-selection">
+        <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="grid" id="roster"></div>
+      <div class="create-step-actions"><button class="btn" id="createNextStep" type="button" onclick="createSetWizardStep('rules')">Tiếp: Tiêu chí <span aria-hidden="true">→</span></button></div>
     </section>
-    <div class="create-setup">
-      <details id="createCriteria" class="create-criteria">
-        <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">12 tiêu chí</span></summary>
-        <ol class="create-rule-list">
-          <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
-          <li><b>Người mạnh đá chính — bắt buộc.</b> Chọn nhóm 14 có tổng điểm hồ sơ cao nhất có thể xếp đúng vị trí chính/phụ, xét cả chuỗi xoay vị trí, rồi mới cân hai đội. Không để người mạnh dự bị để bù cân đội.</li>
-          <li><b>Khách &amp; dự bị — bắt buộc.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 0,5; không lấy người yếu bù nhóm mạnh.</li>
-          <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
-          <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
-          <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
-          <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
-          <li><b>Chia đều chất lượng — bắt buộc.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; ngôi sao (từ 8 điểm) chênh tối đa 1 ở chính, dự bị và tổng đội. Tốc độ/thể lực trung bình ngoài sân và ngoài sân cộng cùng số dự bị chênh tối đa 0,5; không tính gôn hoặc người dư.</li>
-          <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
-          <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
-          <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
-          <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
-        </ol>
-        <p class="criteria-scope">Cả hai cách đều kiểm tra các ngưỡng bắt buộc và ngoại lệ vị trí rõ ràng từ Note. Phong độ và yêu cầu Note khác cần đối chiếu trước khi lưu.</p>
-      </details>
-      <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
-        <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
-      </label>
-      <p id="createNoteHelp" class="create-note-help">Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo.</p>
-    </div>
-    <div class="roster-selection">
-      <label class="roster-select-all"><input type="checkbox" id="selectAll" checked>Chọn tất cả</label>
-      <span class="count" id="count"></span>
-    </div>
-    <div class="grid" id="roster"></div>
+    <section id="createRulesStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createRulesStepBtn" hidden>
+      <div class="create-panel-head">
+        <div><div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div><span id="createStepCount" class="create-step-count"></span></div>
+        <button class="btn alt sm" id="toggleRoster" type="button" onclick="toggleRoster()">← Sửa cầu thủ</button>
+      </div>
+      <div class="create-setup">
+        <details id="createCriteria" class="create-criteria">
+          <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">12 tiêu chí</span></summary>
+          <ol class="create-rule-list">
+            <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
+            <li><b>Người mạnh đá chính — bắt buộc.</b> Chọn nhóm 14 có tổng điểm hồ sơ cao nhất có thể xếp đúng vị trí chính/phụ, xét cả chuỗi xoay vị trí, rồi mới cân hai đội. Không để người mạnh dự bị để bù cân đội.</li>
+            <li><b>Khách &amp; dự bị — bắt buộc.</b> Đủ 14 thành viên thì khách dự bị. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 0,5; không lấy người yếu bù nhóm mạnh.</li>
+            <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
+            <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
+            <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
+            <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
+            <li><b>Chia đều chất lượng — bắt buộc.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; ngôi sao (từ 8 điểm) chênh tối đa 1 ở chính, dự bị và tổng đội. Tốc độ/thể lực trung bình ngoài sân và ngoài sân cộng cùng số dự bị chênh tối đa 0,5; không tính gôn hoặc người dư.</li>
+            <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
+            <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
+            <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
+            <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
+          </ol>
+          <p class="criteria-scope">Cả hai cách đều kiểm tra các ngưỡng bắt buộc và ngoại lệ vị trí rõ ràng từ Note. Phong độ và yêu cầu Note khác cần đối chiếu trước khi lưu.</p>
+        </details>
+        <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
+          <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
+        </label>
+        <p id="createNoteHelp" class="create-note-help">Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo.</p>
+      </div>
+      <section id="createAI" class="create-ai" aria-label="Key OpenRouter">
+        <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
+        <div id="aiAnalysisTools" hidden>
+          <div class="ai-analysis-body">
+            <div class="ai-fields">
+              <label class="ai-field">Nội dung<select id="aiTask" onchange="aiTaskChanged()"><option value="lineup">Chọn nội dung phân tích</option><option value="match-review">Nhận định / đánh giá trận</option><option value="player-form">Phong độ &amp; đề xuất tăng / giảm điểm</option><option value="player-description">Viết lại mô tả Cầu thủ nổi bật</option></select></label>
+              <label class="ai-field" id="aiMatchField" hidden>Trận cần đánh giá<select id="aiMatch"></select></label>
+              <label class="ai-field" id="aiPlayerField" hidden>Cầu thủ<select id="aiPlayer"></select></label>
+            </div>
+            <label class="ai-field" id="aiAnalysisInstructionField" hidden>Ghi chú phân tích (tuỳ chọn)<textarea id="aiAnalysisInstruction" maxlength="2000" placeholder="Điểm cần tập trung đánh giá…"></textarea></label>
+            <div class="ai-actions"><button class="btn" id="aiRun" onclick="aiRun()" disabled hidden>Phân tích</button></div>
+          </div>
+        </div>
+        <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
+      </section>
+      <div class="bar create-toolbar">
+        <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
+        <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
+        <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
+        <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
+      </div>
+    </section>
   </div>
   <div class="status" id="status"></div>
   <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
@@ -1906,7 +1921,7 @@ function show(id){
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow
-  if(id==="screen-create"){createSetTab("build");buildRoster();renderAIWorkspace();aiEnterCreate();}
+  if(id==="screen-create"){createSetTab("build");buildRoster();createResetWizard();renderAIWorkspace();}
   if(id==="screen-players") showPlayers();
   if(id==="screen-rank") showRankScreen();
   if(id==="screen-week") showWeek();
@@ -2511,12 +2526,11 @@ function buildRoster(){
     roster.appendChild(el);
   });
   $("result").innerHTML=""; $("status").textContent=""; $("saveWeek").style.display="none"; updateCount();
-  $("roster").style.display=""; const tgr=$("toggleRoster"); if(tgr)tgr.style.display="none";   // về màn Tạo đội -> hiện lại danh sách
+  createSetWizardStep("roster");
 }
-function toggleRoster(){   // ẩn/hiện danh sách chọn người
-  const r=$("roster"), hidden=r.style.display==="none";
-  r.style.display=hidden?"":"none";
-  $("toggleRoster").textContent=hidden?"🙈 Ẩn danh sách":"👥 Hiện danh sách";
+function toggleRoster(){
+  createSetWizardStep("roster");
+  document.querySelector(".create-stepper")?.scrollIntoView({behavior:"auto",block:"start"});
 }
 // ---- Người ngoài (khách): chỉ dùng cho trận, sao chép điểm từ 1 cầu thủ có sẵn ----
 function openGuestModal(){
@@ -2543,6 +2557,7 @@ function updateCount(){
   const n=selectedIdx().length,all=$("selectAll");
   all.checked=curPlayers.length>0&&n===curPlayers.length;all.indeterminate=n>0&&n<curPlayers.length;all.disabled=!curPlayers.length;
   $("count").innerHTML=`Đã chọn <b>${n}/${curPlayers.length}</b>`+(n<14?` <span style="color:var(--red)">(cần ≥14)</span>`:(n%2?` <span style="color:var(--amber)">(lẻ)</span>`:""));
+  createSyncWizard(n);
   aiTaskChanged();
 }
 $("selectAll").onchange=e=>{$("roster").querySelectorAll("input").forEach(c=>{c.checked=e.target.checked;c.closest(".pl-item").classList.toggle("on",c.checked);c.closest(".pl-item").classList.toggle("off",!c.checked);});updateCount();};
@@ -3876,6 +3891,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v11",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v12",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>

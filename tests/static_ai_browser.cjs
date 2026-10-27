@@ -42,7 +42,7 @@ async function main(){
       });
       await page.goto(scenario.origin+'/GenPlayer/');assert.equal(await page.evaluate(()=>window.GP_APP_CONFIG),null,'No app runtime/backend config');assert.equal(await page.evaluate(()=>STATE.cloud),false);
       const before=await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()}));
-      await page.getByRole('button',{name:'Tạo đội',exact:true}).click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);assert.equal(await page.locator('#aiKey').isDisabled(),false);
+      await page.getByRole('button',{name:'Tạo đội',exact:true}).click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),false);await page.locator('#createNextStep').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);assert.equal(await page.locator('#aiKey').isDisabled(),false);
       await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();assert.equal(paidCalls,beforeCalls,'Saving a key is entirely local');
       await page.locator('#aiInstruction').fill('Cân công và thủ.');await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.equal(paidCalls,beforeCalls+1);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng AI/);assert.equal(await page.locator('#result .field .player').count(),14);

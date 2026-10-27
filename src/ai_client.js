@@ -77,13 +77,14 @@ function aiTaskChanged(){
 }
 function openAITask(task,matchId){
   if($('screen-create').style.display!=='block')show('screen-create');
+  createSetWizardStep('rules');
   $('aiTask').value=task;
   $('aiAnalysisTools').hidden=task==='lineup';
   renderAIWorkspace();if(matchId!==undefined)$('aiMatch').value=String(matchId);aiTaskChanged();
   $('createAI').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function aiShowRoster(){
-  $('roster').style.display='';const toggle=$('toggleRoster');if(toggle.style.display!=='none')toggle.textContent='🙈 Ẩn danh sách';
+  createSetWizardStep('roster');
   $('roster').closest('.card-box').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function aiContextSnapshot(task=$('aiTask').value){

@@ -28,7 +28,7 @@ async function main(){
         const out={title:'Explicit position Note fixture',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake content.'})),candidateId:base.id,flipTeams:false,swaps:[]};
         await route.fulfill({headers:{...cors,'Content-Type':'application/json'},body:JSON.stringify({model:'fake/position',choices:[{finish_reason:'stop',message:{content:JSON.stringify(out)}}]})});
       });
-      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.locator('#aiInstruction').fill(note);
+      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.locator('#aiInstruction').fill(note);
       await page.evaluate(()=>{window.qaWorkerNotes=[];const solve=createSolveInWorker;createSolveInWorker=(players,instruction='',...rest)=>{window.qaWorkerNotes.push(instruction);return solve(players,instruction,...rest);};});
       const before=calls,stored=await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()}));
       await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});

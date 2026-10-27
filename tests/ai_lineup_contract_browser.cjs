@@ -43,7 +43,7 @@ async function main(){
         const out={title:'Fixture đội hình 20 người',sections:[0,1,2].map(i=>({heading:'Phần '+i,body:'Nội dung kiểm thử, không phải nhận định thật.'})),candidateId:mode==='invalid'?'c99':base.id,flipTeams:false,swaps};
         await route.fulfill({headers:{...cors,'Content-Type':'application/json'},body:JSON.stringify({id:mode==='invalid'?'gen-contract-rejected':'gen-contract-valid',model:'fake/contract',choices:[{finish_reason:'stop',message:{content:JSON.stringify(out)}}],usage:{prompt_tokens:100,completion_tokens:50,cost:0.003}})});
       });
-      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.locator('#aiInstruction').fill(note);
+      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();await page.locator('#aiInstruction').fill(note);
       const snapshot=await page.evaluate(()=>JSON.stringify({players:getPlayers(),history:getHistory(),finance:getFinance()})),beforeCalls=calls;
       await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng AI/);assert.equal(calls,beforeCalls+1);

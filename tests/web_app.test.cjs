@@ -32,9 +32,9 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-history-login">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-create-stepper">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
-    assert.ok(html.includes('sw.js?v=genplayer-v11'));
+    assert.ok(html.includes('sw.js?v=genplayer-v12'));
     assert.ok(html.includes("kind:'generationLog'"));
     assert.ok(html.includes("CREATE_CLOUD_PREFIX='generation_'"));
     assert.deepEqual(JSON.parse(html.match(/const FIREBASE_CONFIG = ([\s\S]*?);\s*\n/)[1]),config);
@@ -43,10 +43,10 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const events={},deleted=[],pending=[];
   vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{
     self:{addEventListener:(name,fn)=>events[name]=fn,clients:{claim:async()=>{}}},
-    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','genplayer-v9','genplayer-v10','genplayer-v11','another-app-data'],delete:async key=>deleted.push(key)}
+    caches:{keys:async()=>['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','genplayer-v9','genplayer-v10','genplayer-v11','genplayer-v12','another-app-data'],delete:async key=>deleted.push(key)}
   });
   events.activate({waitUntil:p=>pending.push(p)});await Promise.all(pending);
-  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','genplayer-v9','genplayer-v10'],'Unrelated apps and the active release cache are untouched');
+  assert.deepEqual(deleted,['genplayer-v3','genplayer-v4','genplayer-v5','genplayer-v6','genplayer-v7','genplayer-v8','genplayer-v9','genplayer-v10','genplayer-v11'],'Unrelated apps and the active release cache are untouched');
 });
 async function withServer(fn,options={}){
   const config={...getConfig({OPENROUTER_API_KEY:secret,AI_ACCESS_PASSWORD:password,APP_ORIGIN:'http://localhost:3000'}),...options};
@@ -318,12 +318,13 @@ test('AI controls live inside Create instead of a separate navigation screen',()
     assert.ok(!menu.includes('Trợ lý AI'),file+' no extra AI menu item');
   }
 });
-test('key input lives in a dismissible dialog, not in the Create card, in every HTML entry',()=>{
+test('key input lives in a dismissible dialog reached from the criteria step, not in the Create card',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8'),start=html.indexOf('<section id="createAI"'),end=html.indexOf('</section>',start),inline=html.slice(start,end);
     assert.ok(!inline.includes('id="aiKeyForm"'),file+' no inline key form');assert.ok(inline.includes('id="aiKeySettings"'),file+' manual key management');
     assert.match(html,/<dialog id="aiKeyDialog"[^>]*aria-labelledby="aiKeyTitle"/);assert.ok(html.includes('id="aiKeySkip"'));assert.ok(html.includes('Bỏ qua, dùng thuật toán'));
-    assert.ok(html.includes('renderAIWorkspace();aiEnterCreate();'),file+' prompt on entry, not on each Create click');
+    const wizardSource=file==='src/web_template.html'?fs.readFileSync(path.join(__dirname,'../src/create_flow.js'),'utf8'):html;
+    assert.ok(wizardSource.includes("if(rules&&promptForKey&&!CREATE_WIZARD_KEY_PROMPTED){CREATE_WIZARD_KEY_PROMPTED=true;aiEnterCreate();}"),file+' prompt after a valid roster reaches criteria');
   }
 });
 test('Create has a contextual review button, not a generic analysis menu',()=>{
@@ -333,12 +334,16 @@ test('Create has a contextual review button, not a generic analysis menu',()=>{
     assert.match(html,/<button[^>]*id="reviewDraft"[^>]*\bhidden\b/);assert.ok(html.includes('onclick="aiReviewDraft()"'));
   }
 });
-test('Create has one action, a top select-all checkbox and an embedded worker in every entry',()=>{
+test('Create uses a gated two-step wizard, one action and an embedded worker in every entry',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     const start=html.indexOf('<div id="screen-create"'),end=html.indexOf('<div id="screen-players"'),create=html.slice(start,end);
-    assert.ok(create.indexOf('id="go"')<create.indexOf('id="roster"'),file+' toolbar precedes players');
-    assert.ok(create.indexOf('id="saveWeek"')<create.indexOf('id="roster"'),file+' save action at top');
+    assert.ok(create.indexOf('id="roster"')<create.indexOf('id="go"'),file+' player selection precedes Create action');
+    assert.ok(create.indexOf('id="roster"')<create.indexOf('id="saveWeek"'),file+' player selection precedes save action');
+    assert.match(create,/id="createRosterStepBtn"[^>]*aria-controls="createRosterStep"/);
+    assert.match(create,/id="createRulesStepBtn"[^>]*aria-controls="createRulesStep"[^>]*disabled/);
+    assert.ok(create.includes('id="createRosterStep"'));assert.ok(create.includes('id="createRulesStep"'));
+    assert.ok(create.includes('id="createNextStep"'),file+' gates criteria behind a valid roster');
     assert.match(create,/<input type="checkbox" id="selectAll"/);
     assert.ok(!/id="(?:all|none)"/.test(create));
     assert.ok(!create.includes('Tạo đội bằng AI'));assert.ok(!create.includes('Tạo đội (Thuật Toán)'));
@@ -368,9 +373,9 @@ test('offline strict solver respects guest benches and distribution',()=>{
 test('criteria and lineup Note are visible outside the optional AI panel in every entry',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
-    const start=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),end=html.indexOf('</section>',inline),setup=html.slice(start,html.indexOf('<div class="roster-selection"',start));
+    const start=html.indexOf('<div id="screen-create"'),inline=html.indexOf('<section id="createAI"'),end=html.indexOf('</section>',inline),setup=html.slice(html.indexOf('<section id="createRulesStep"',start),inline);
     assert.ok(setup.includes('id="createCriteria"'));assert.ok(setup.includes('id="aiInstruction"'));
-    assert.ok(html.indexOf('id="aiInstruction"',start)>end,'Lineup Note stays outside optional AI settings');
+    const noteIndex=html.indexOf('id="aiInstruction"',start);assert.ok(noteIndex<inline||noteIndex>end,'Lineup Note stays outside optional AI settings');
     assert.equal((html.match(/id="aiInstruction"/g)||[]).length,1);
     const rules=setup.slice(setup.indexOf('<ol class="create-rule-list">'),setup.indexOf('</ol>'));
     assert.equal((rules.match(/<li>/g)||[]).length,12);

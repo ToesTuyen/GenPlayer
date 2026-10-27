@@ -22,6 +22,28 @@ const CREATE_CLOUD={state:'idle',records:[],error:''};
 let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
 let CREATE_TAB='build';
+let CREATE_WIZARD_STEP='roster';
+let CREATE_WIZARD_KEY_PROMPTED=false;
+function createSyncWizard(count){
+  const n=Number.isFinite(count)?count:(typeof selectedIdx==='function'?selectedIdx().length:0),valid=n>=14&&n<=24;
+  const next=$('createNextStep'),rules=$('createRulesStepBtn'),badge=$('createStepCount');
+  if(next)next.disabled=!valid;if(rules)rules.disabled=!valid;if(badge)badge.textContent=n+' người đã chọn';
+  return valid;
+}
+function createSetWizardStep(step='roster',force=false,promptForKey=true){
+  const rules=step==='rules';
+  if(rules&&!force&&!createSyncWizard())return false;
+  CREATE_WIZARD_STEP=rules?'rules':'roster';
+  const rosterPanel=$('createRosterStep'),rulesPanel=$('createRulesStep'),rosterButton=$('createRosterStepBtn'),rulesButton=$('createRulesStepBtn');
+  rosterPanel.hidden=rules;rulesPanel.hidden=!rules;
+  rosterButton.classList.toggle('on',!rules);rulesButton.classList.toggle('on',rules);
+  rosterButton.setAttribute('aria-selected',String(!rules));rulesButton.setAttribute('aria-selected',String(rules));
+  rosterButton.tabIndex=rules?-1:0;rulesButton.tabIndex=rules?0:-1;
+  createSyncWizard();
+  if(rules&&promptForKey&&!CREATE_WIZARD_KEY_PROMPTED){CREATE_WIZARD_KEY_PROMPTED=true;aiEnterCreate();}
+  return true;
+}
+function createResetWizard(){CREATE_WIZARD_KEY_PROMPTED=false;createSetWizardStep('roster');}
 function createLogPatch(changes){try{CREATE_LOG?.patch(CREATE_RUN_ID,changes);}catch{}}
 function createCloudEnabled(){
   try{return !(typeof aiIsPreview==='function'&&aiIsPreview())&&typeof STATE!=='undefined'&&STATE.cloud&&STATE.docRef&&typeof firebase!=='undefined'&&firebase.firestore;}catch{return false;}
@@ -118,7 +140,7 @@ function createUseLog(id){
   cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
   AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';createNoteChanged();
-  render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
+  render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';
   createRevealDraft();openMatchModal('create');
 }
 function createExportLogs(){
@@ -201,7 +223,7 @@ function createReviewProcess(){
 }
 $('createProcess').addEventListener('cancel',event=>{if(CREATE_STATE.busy)event.preventDefault();});
 function createRevealDraft(){
-  createSetTab('build');const result=$('result');result.hidden=false;
+  createSetTab('build');createSetWizardStep('rules',true,false);const result=$('result');result.hidden=false;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     try{fitMatch();}catch{}
     try{result.scrollIntoView({behavior:'auto',block:'start'});}catch{window.scrollTo(0,result.offsetTop||0);}
@@ -347,7 +369,7 @@ async function createTeams(){
     if(output){
       AI_STATE.output=output;AI_STATE.request={task:'lineup',context};
     }else{$('aiOutput').hidden=true;AI_STATE.output=null;AI_STATE.request=null;}
-    $('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
+    $('saveWeek').style.display='inline-block';
     $('status').textContent='';
     await createCompleteStep('draft','done','Đã hiển thị đội hình và bảng so kè. Chưa lưu trận.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;

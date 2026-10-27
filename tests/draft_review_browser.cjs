@@ -31,14 +31,14 @@ async function main(){
       });
       async function saveKey(){await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();}
       async function removeKey(){await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();}
-      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKeySkip').click();
+      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKeySkip').click();
       assert.equal(await page.locator('#reviewDraft').isVisible(),false);assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false);assert.equal(await page.getByText('Công cụ phân tích',{exact:true}).count(),0);
       await page.locator('#aiInstruction').fill(note);await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#reviewDraft').isVisible(),true);assert.equal(await page.locator('#aiOutput').isVisible(),false);
       const original=await page.evaluate(()=>JSON.stringify(cstate)),originalHistory=await page.evaluate(()=>JSON.stringify(getHistory())),beforeCalls=calls;
       await page.locator('#reviewDraft').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();assert.equal(calls,beforeCalls);assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original);
       await saveKey();await page.evaluate(()=>{$('aiMatch').value='100';$('aiAnalysisInstruction').value='PRIVATE_OTHER_ANALYSIS';});
-      await page.locator('#toggleRoster').click();await page.locator('#roster .pl-item.guest input').last().uncheck();
+      await page.locator('#toggleRoster').click();await page.locator('#roster .pl-item.guest input').last().uncheck();await page.locator('#createNextStep').click();
       expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
       await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);
       assert.equal(await page.locator('#reviewDraft').isDisabled(),true);assert.equal(await page.locator('#go').isDisabled(),true);assert.match(await page.locator('#reviewDraft').innerText(),/Đang đánh giá/);

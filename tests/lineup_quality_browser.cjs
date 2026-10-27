@@ -33,7 +33,7 @@ async function main(){
         const out={title:'Fake unbalanced AI plan',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Fake content.'})),candidateId:base.id,flipTeams:false,swaps:[bad]};
         await route.fulfill({headers:{...cors,'Content-Type':'application/json'},body:JSON.stringify({id:'gen-quality-fixture',model:'fake/quality',choices:[{finish_reason:'stop',message:{content:JSON.stringify(out)}}]})});
       });
-      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
+      await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
       const before=calls;
       await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
       assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);assert.equal(calls,before+1);
@@ -51,6 +51,7 @@ async function main(){
         members.forEach(p=>GPAIContext.KEYS.forEach(k=>p[k]=strong.has(p.n)?10:1));
       });
       for(const box of await page.locator('#roster .pl-item.guest input').all())await box.uncheck();
+      await page.locator('#createNextStep').click();
       const stored=await page.evaluate(()=>JSON.stringify({players:localStorage.getItem(LS.players),history:localStorage.getItem(LS.history)}));
       for(const engine of ['AI','algorithm']){
         if(engine==='algorithm')await page.evaluate(()=>AI_KEYS.clear());
