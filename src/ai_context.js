@@ -64,7 +64,25 @@
       if(slot==='TVtt'&&centers.length>=2)return p.pos==='TVtt'||explicit;
       return declared||explicit;
     }));
-    return {allowed,centers,overrides};
+    return {allowed,centers,overrides,historical:[]};
+  }
+  // Lịch sử chỉ mở thêm vai trò Thòng khi nhóm vị trí đăng ký/Note hiện tại
+  // không thể lấp đủ 14 chỗ. Một lần đá Thòng ở trận đã có tỉ số hòa hoặc
+  // chênh tối đa một bàn là bằng chứng tham khảo; trận thắng/thua đậm không
+  // được dùng để hợp thức hóa vị trí. Hồ sơ cầu thủ tuyệt đối không bị sửa.
+  function historicalSweeperRoles(players,history=[],now=Date.now()){
+    const byName=new Map(players.map((p,i)=>[p.n,i])),evidence=new Map();
+    for(const m of Array.isArray(history)?history:[]){
+      if(!m?.score||!(m.kickoff>0)||m.kickoff>now||Math.abs(m.score.a-m.score.b)>1)continue;
+      for(const side of ['A','B'])for(const entry of m.teams?.[side]||[]){
+        if(entry?.bench||entry?.slot!=='Thòng')continue;
+        const index=byName.get(entry.n);if(index===undefined||players[index].guest)continue;
+        if(players[index].pos==='Thòng'||players[index].pos2?.includes('Thòng'))continue;
+        if(!evidence.has(index))evidence.set(index,[]);
+        evidence.get(index).push({id:m.id,kickoff:m.kickoff,score:{a:m.score.a,b:m.score.b}});
+      }
+    }
+    return [...evidence].map(([index,matches])=>({index,slot:'Thòng',matches:matches.length,draws:matches.filter(m=>m.score.a===m.score.b).length,samples:matches.slice(0,3)}));
   }
   function priorityReader(players,roles){
     const primary=players.map(p=>positionScore(p,p.pos)),members=players.filter(p=>!p.guest).length;
@@ -128,17 +146,21 @@
   }
   function metricReader(players,scores=players.map(p=>SLOTS.map(slot=>positionScore(p,slot)))){
     const primary=players.map(p=>positionScore(p,p.pos));
+    // Dự bị được hiển thị và người dùng so theo một chữ số thập phân. Dùng
+    // đúng mức điểm nhìn thấy để 5.9 so với 5.4 được hiểu là chênh 0.5, không
+    // âm thầm loại vì phần lẻ ẩn 0.508865...
+    const benchRating=players.map((p,i)=>+primary[i].toFixed(1));
     const sum=(a,f)=>a.reduce((s,i)=>s+f(i),0),mean=(a,f)=>a.length?sum(a,f)/a.length:0;
     return teams=>{
       const benchCount=Math.min(teams.A.bench.length,teams.B.bench.length),out={benchCount};
       for(const side of ['A','B']){
         const t=teams[side],bench=t.bench.slice().sort((a,b)=>primary[b]-primary[a]||players[a].n.localeCompare(players[b].n)).slice(0,benchCount);
         const field=t.starters.slice(1),pool=[...field,...bench],star=i=>primary[i]>=LINEUP_LIMITS.starThreshold?1:0;
-        const start=t.starters.reduce((s,i,k)=>s+scores[i][k],0),benchTotal=sum(bench,i=>primary[i]);
+        const start=t.starters.reduce((s,i,k)=>s+scores[i][k],0),benchTotal=sum(bench,i=>benchRating[i]);
         out[side]={bench,benchTotal,benchMean:benchCount?benchTotal/benchCount:0,benchAttack:mean(bench,i=>players[i].DD),benchDefense:mean(bench,i=>players[i].PN),start,total:start+benchTotal,stars:sum(t.starters,star),benchStars:sum(bench,star),totalStars:sum([...t.starters,...bench],star),pace:mean(field,i=>players[i].TC),stamina:mean(field,i=>players[i].TL),benchPace:mean(bench,i=>players[i].TC),benchStamina:mean(bench,i=>players[i].TL),totalPace:mean(pool,i=>players[i].TC),totalStamina:mean(pool,i=>players[i].TL)};
       }
       let a=0,b=0;
-      out.benchGroups=Array.from({length:benchCount},(_,k)=>{a+=primary[out.A.bench[k]];b+=primary[out.B.bench[k]];return {count:k+1,A:a/(k+1),B:b/(k+1),gap:Math.abs(a-b)/(k+1)};});
+      out.benchGroups=Array.from({length:benchCount},(_,k)=>{a+=benchRating[out.A.bench[k]];b+=benchRating[out.B.bench[k]];return {count:k+1,A:a/(k+1),B:b/(k+1),gap:Math.abs(a-b)/(k+1)};});
       out.benchMaxGroupDifference=Math.max(0,...out.benchGroups.map(g=>g.gap));
       out.difference=Object.fromEntries(['benchMean','start','total','stars','benchStars','totalStars','pace','stamina','benchPace','benchStamina','totalPace','totalStamina'].map(k=>[k,Math.abs(out.A[k]-out.B[k])]));
       return out;
@@ -170,8 +192,20 @@
   // not once per partition; masks cover the supported maximum of 24 people.
   function lineupGuard(players,options={}){
     const scores=players.map(p=>SLOTS.map(slot=>positionScore(p,slot))),epsilon=1e-9;
-    const roles=lineupRoles(players,options.instruction);
-    const metrics=metricReader(players,scores),rotation=rotationReader(players,options.history,options.now),priority=priorityReader(players,roles);
+    let roles=lineupRoles(players,options.instruction);
+    const metrics=metricReader(players,scores),rotation=rotationReader(players,options.history,options.now);
+    let priority=priorityReader(players,roles);
+    // Chỉ viện tới lịch sử khi bộ vị trí đăng ký + Note không tạo nổi hai đội
+    // đúng vai trò. Vì vậy lịch sử không tranh chỗ với vị trí chính/phụ trong
+    // những danh sách vốn đã hợp lệ.
+    if(!priority.best){
+      const historical=historicalSweeperRoles(players,options.history,options.now??Date.now());
+      if(historical.length){
+        const allowed=roles.allowed.map(row=>row.slice());
+        for(const item of historical)allowed[item.index][SLOTS.indexOf(item.slot)]=true;
+        roles={...roles,allowed,historical};priority=priorityReader(players,roles);
+      }
+    }
     const stronger=players.map((p,i)=>SLOTS.map((slot,k)=>k===0?0:players.reduce((mask,q,j)=>
       !q.guest&&roles.allowed[j][k]&&scores[j][k]-scores[i][k]>=LINEUP_LIMITS.benchAdvantage-epsilon?mask|(1<<j):mask,0)));
     function violation(teams){
@@ -256,8 +290,13 @@
       const i=teams[side].starters[0],p=players[i];
       if(p.pos!=='GK'&&!(p.pos2||[]).includes('GK')&&!guard.roles.overrides.some(x=>x.index===i&&x.slot==='GK'))warnings.push(`${p.n}: bắt gôn dự phòng do thiếu thủ môn đăng ký; cần xác nhận.`);
     }
+    for(const side of ['A','B'])for(let k=0;k<7;k++){
+      const i=teams[side].starters[k],historical=guard.roles.historical.find(x=>x.index===i&&x.slot===SLOTS[k]);
+      if(historical)warnings.push(`${players[i].n}: đá Thòng theo ${historical.matches} trận tham khảo có tỉ số hòa hoặc chênh tối đa 1 bàn.`);
+    }
     const priority={strength:guard.priority.best.strength,members:guard.priority.best.members,optimal:true};
-    return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority}};
+    const historyRoles=guard.roles.historical.map(x=>({player:players[x.index].n,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}));
+    return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority,historyRoles}};
   }
   const api={SLOTS,KEYS,LINEUP_LIMITS,player,match,normalize,form,compactLegacy,lineup,lineupGuard,lineupRoles,lineupMetrics,lineupRotation,lineupGroupKey,validateLineupRoster,positionScore,minimumAssignment};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

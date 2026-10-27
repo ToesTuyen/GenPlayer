@@ -12,7 +12,8 @@ const mix=t=>{const out=structuredClone(t);for(const k of [2,3,5])[out.A.starter
 
 test('reserve strength is mandatory at 0.5 and ignores only the weakest unpaired extra',()=>{
   const p=roster(),t=teams();rate(p[14],6.5);assert.doesNotThrow(()=>C.lineup(p,t));
-  rate(p[14],6.5001);assert.throws(()=>C.lineup(p,t),/Sức mạnh dự bị/);
+  rate(p[14],6.5001);assert.doesNotThrow(()=>C.lineup(p,t),'Hidden precision must not contradict the one-decimal UI');
+  rate(p[14],6.56);assert.throws(()=>C.lineup(p,t),/Sức mạnh dự bị/);
   const q=roster(17),u=teams();u.A.bench.push(16);rate(q[16],0);
   const before=C.lineup(q,u).checks.metrics;assert.equal(before.benchCount,1);assert.equal(before.A.benchMean,6);assert.deepEqual(before.A.bench,[14]);
   rate(q[16],1);assert.deepEqual(C.lineup(q,u).checks.metrics.difference,before.difference);

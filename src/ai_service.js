@@ -21,7 +21,7 @@ const LINEUP_RULES=Object.freeze([
   'Cân hàng công RIÊNG BẮT BUỘC: chênh tổng điểm 3 vị trí tuyến trên tối đa 1.5 điểm; xét kiến tạo, tiền vệ và tiền đạo.',
   'Cân hàng thủ RIÊNG BẮT BUỘC: chênh tổng điểm thòng và 2 hậu vệ tối đa 1.5 điểm; xét cả hỗ trợ phòng ngự, không chỉ cân tổng điểm.',
   'Gôn có thể chênh nhẹ; không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.',
-  'Đúng vị trí BẮT BUỘC: chỉ xếp vai trò trong allowedRoles, không tự đổi tiền đạo thành tiền vệ trung tâm. Đủ hai tiền vệ trung tâm chính thì mỗi bên có một người ở giữa; chia đều tổng số tiền vệ trung tâm chính cả đá chính và dự bị, chênh tối đa một người. Vị trí khác hồ sơ chỉ được phép khi có chỉ định vị trí rõ ràng từ Note hiện tại đã được code xác nhận; không kéo người giỏi ngoài sân vào gôn.',
+  'Đúng vị trí BẮT BUỘC: chỉ xếp vai trò trong allowedRoles, không tự đổi tiền đạo thành tiền vệ trung tâm. Đủ hai tiền vệ trung tâm chính thì mỗi bên có một người ở giữa; chia đều tổng số tiền vệ trung tâm chính cả đá chính và dự bị, chênh tối đa một người. Vị trí khác hồ sơ chỉ được phép khi có chỉ định rõ trong Note hiện tại, hoặc riêng vị trí Thòng có lịch sử đã đá Thòng ở trận hòa/chênh tối đa 1 bàn và code chỉ mở khi hồ sơ hiện tại không lấp đủ đội hình; không kéo người giỏi ngoài sân vào gôn.',
   'Chia đều chất lượng BẮT BUỘC: đội hình chính và tổng sức mạnh cộng cùng số dự bị đều chênh tối đa 2 điểm; ngôi sao (điểm tổng từ 8) chênh tối đa 1 trong đội hình chính, dự bị ghép bằng số và tổng đội; tốc độ và thể lực trung bình đều chênh tối đa 0.5 ở 6 người ngoài sân và nhóm ngoài sân cộng cùng số dự bị. Sức mạnh dự bị có kiểm tra riêng; thể chất của họ tính khi ghép tổng đội. Không dùng gôn để bù thể chất ngoài sân.',
   'Xoay tua BẮT BUỘC khi có trận trước hợp lệ: mỗi đội mới tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua, kiểm tra cả hai màu cũ, không chỉ đổi màu A/B. Đổi nhóm đồng đội nhưng giữ đúng vị trí chính/phụ; không ép người chỉ có một vai trò sang sai vị trí. Thiếu lịch sử phải báo chưa đối chiếu được, không bịa.',
   'Xét phong độ: kết quả gần đây, chuỗi thắng/thua và bàn đã nhập; vắng mặt không tính thua, không tự đổi chỉ số.',
@@ -66,7 +66,7 @@ function prepare(body,now=Date.now()){
     if(c.rosterNames.length<14)throw new AppError(400,'Chọn ít nhất 14 cầu thủ ở màn Tạo đội trước.');
     c.lineupTime=now;
     data.players=c.rosterNames.map((n,index)=>({index,id:'p'+index,...players.find(p=>p.n===n)}));
-    const options={instruction:c.instruction,history:c.history,now},roles=C.lineupRoles(data.players,c.instruction);
+    const options={instruction:c.instruction,history:c.history,now},guard=C.lineupGuard(data.players,options),roles=guard.roles;
     c.lineupCandidates=normalizeCandidates(body.context.lineupCandidates,data.players,options);
     data.candidates=c.lineupCandidates.map(candidate=>{
       const evaluated=C.lineup(data.players,candidate.teams,options),a=evaluated.result.evA,b=evaluated.result.evB;
@@ -76,12 +76,12 @@ function prepare(body,now=Date.now()){
     data.rules=LINEUP_RULES.slice();
     data.assignmentSlots=Object.fromEntries(['A','B'].flatMap(side=>[...ROLE_CODES.map((code,k)=>[side+'_'+code,{team:side,position:C.SLOTS[k],bench:false}]),[side+'_BENCH',{team:side,position:'',bench:true}]]));
     data.lineupRequirements={playerIds:data.players.map(p=>p.id),requiredStarterSlots:SLOT_CODES.filter(code=>!code.endsWith('_BENCH')),startersPerTeam:7,benchPerTeam:{min:Math.floor((data.players.length-14)/2),max:Math.ceil((data.players.length-14)/2)},mandatoryQuality:{...C.LINEUP_LIMITS,compareBenchAcrossBothTeams:true,outfieldOnly:true}};
-    const priority=C.lineupGuard(data.players,options).priority.best;
+    const priority=guard.priority.best;
     data.lineupRequirements.starterPriority={maximizePrimaryRatingTotal:true,roleChains:true,members:priority.members,primaryRatingTotal:+priority.strength.toFixed(6)};
     data.lineupRequirements.reserveStrength={strongestPrefixes:true,meanDifference:C.LINEUP_LIMITS.benchMeanDifference,ignoreWeakestUnpairedExtra:true};
     for(const p of data.players)p.roleScores=Object.fromEntries(C.SLOTS.map(slot=>[slot,+C.positionScore(p,slot).toFixed(6)]));
     data.players.forEach((p,i)=>p.allowedRoles=[...new Set(C.SLOTS.filter((slot,k)=>roles.allowed[i][k]))]);
-    data.lineupRequirements.positions={registeredRolesOnly:true,primaryCenters:roles.centers.map(i=>'p'+i),primaryCenterPerSide:roles.centers.length>=2,centerCountDifference:1,notePositionOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot}))};
+    data.lineupRequirements.positions={registeredOrVerifiedHistoryRolesOnly:true,primaryCenters:roles.centers.map(i=>'p'+i),primaryCenterPerSide:roles.centers.length>=2,centerCountDifference:1,notePositionOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),historyPositionOverrides:roles.historical.map(x=>({playerId:'p'+x.index,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}))};
     const rotation=C.lineupRotation(data.players,c.lineupCandidates[0].teams,c.history,now),previous=c.history.find(m=>m.id===rotation.previousMatchId);
     data.lineupRequirements.rotation={...rotation,previousStarters:previous?Object.fromEntries(['A','B'].map(side=>[side,previous.teams[side].filter(p=>!p.bench).flatMap(p=>{const i=data.players.findIndex(q=>q.n===p.n);return i<0?[]:['p'+i];})])):null};
   }else if(task==='match-review'){

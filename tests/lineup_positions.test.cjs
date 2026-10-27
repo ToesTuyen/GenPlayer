@@ -69,3 +69,33 @@ test('no suitable center means no lineup instead of a high-scoring striker assig
   const p=roster();p[4].pos='TĐ';p[11].pos='TĐ';
   assert.match(O.solve(p,null,{strictGuests:true}).error,/Không tìm được đội hình đạt tiêu chí bắt buộc/);
 });
+
+test('a close scored match can supply a missing sweeper role without rewriting the profile',()=>{
+  const p=roster();p[8].pos='HV';p[8].pos2=[];const before=JSON.stringify(p),now=2_000;
+  const match=score=>({id:'history-sweeper',kickoff:1_000,score,goals:{},goalsLocked:true,teams:{
+    A:[{n:p[8].n,slot:'Thòng',bench:false}],B:[]
+  }});
+  assert.match(O.solve(p,null,{strictGuests:true,history:[match({a:4,b:1})],now}).error,/Không tìm được đội hình/,'A clear result is not role evidence');
+  const results=O.solve(p,null,{strictGuests:true,history:[match({a:2,b:2})],now});assert.ok(results.length>0);
+  const guard=C.lineupGuard(p,{history:[match({a:2,b:2})],now});
+  assert.deepEqual(guard.roles.historical.map(x=>({index:x.index,slot:x.slot,matches:x.matches,draws:x.draws})),[{index:8,slot:'Thòng',matches:1,draws:1}]);
+  const chosen=results.find(r=>[r.evA.starters[1],r.evB.starters[1]].includes(8));assert.ok(chosen);
+  const checked=C.lineup(p,{A:chosen.evA,B:chosen.evB},{history:[match({a:2,b:2})],now});
+  assert.ok(checked.warnings.some(x=>x.includes(p[8].n)&&x.includes('đá Thòng theo 1 trận tham khảo')));
+  assert.equal(checked.checks.historyRoles[0].player,p[8].n);assert.equal(JSON.stringify(p),before);
+});
+
+test('AI receives only the same verified historical role already accepted by code',()=>{
+  const p=roster();p[8].pos='HV';p[8].pos2=[];const t=teams();
+  const history=[{id:'history-sweeper',kickoff:1_000,score:{a:3,b:2},goals:{},goalsLocked:true,teams:{A:[{n:p[8].n,slot:'Thòng',bench:false}],B:[]}}];
+  const prepared=S.prepare({task:'lineup',context:{players:p,history,rosterNames:p.map(x=>x.n),lineupCandidates:candidatesFor(t),instruction:''}},2_000);
+  const data=JSON.parse(prepared.messages[1].content),rule=data.lineupRequirements.positions;
+  assert.deepEqual(rule.historyPositionOverrides.map(x=>({playerId:x.playerId,slot:x.slot,matches:x.matches})),[{playerId:'p8',slot:'Thòng',matches:1}]);
+  assert.ok(data.players[8].allowedRoles.includes('Thòng'));
+});
+
+test('reserve strength uses the same one-decimal ratings shown in the UI',()=>{
+  const p=roster(),t=teams();
+  p[14].pos='TV';p[14].KT=5;p[14].CH=6;p[14].DD=6;p[14].PN=5;p[14].TC=6;p[14].TL=6;p[14].DN=6;p[14].TD=6;
+  const metrics=C.lineupMetrics(p,t);assert.equal(metrics.A.benchTotal,+C.positionScore(p[14],p[14].pos).toFixed(1));
+});
