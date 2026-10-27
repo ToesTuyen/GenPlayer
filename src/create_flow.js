@@ -17,21 +17,66 @@ const CREATE_STEPS=[
 const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinished work as complete.
 const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null,cancelled:false};
 const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)});
+const CREATE_CLOUD_PREFIX='generation_';
+const CREATE_CLOUD={state:'idle',records:[],error:''};
+let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
 function createLogPatch(changes){try{CREATE_LOG?.patch(CREATE_RUN_ID,changes);}catch{}}
-function createOpenLogs(){
-  const records=CREATE_LOG?.list()||[],select=$('createLogSelect');select.replaceChildren();
+function createCloudEnabled(){
+  try{return !(typeof aiIsPreview==='function'&&aiIsPreview())&&typeof STATE!=='undefined'&&STATE.cloud&&STATE.docRef&&typeof firebase!=='undefined'&&firebase.firestore;}catch{return false;}
+}
+function createCloudCollection(){return createCloudEnabled()?STATE.docRef.parent:null;}
+function createCloudDocId(id){return CREATE_CLOUD_PREFIX+String(id||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,120);}
+function createCloudTimeout(promise,ms=8000){
+  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('cloud-timeout')),ms);Promise.resolve(promise).then(v=>{clearTimeout(timer);resolve(v);},e=>{clearTimeout(timer);reject(e);});});
+}
+async function createCloudPush(runId=CREATE_RUN_ID){
+  if(!createCloudEnabled()||!runId)return {state:'off'};
+  const run=(CREATE_LOG?.list()||[]).find(r=>r.id===runId);if(!run)return {state:'missing'};
+  const record=GPCreationLog.cloudRecord(run),startedAt=record.startedAt||new Date().toISOString();
+  const payload={kind:'generationLog',schemaVersion:1,runId:record.id,startedAt,updatedAt:record.updatedAt||startedAt,endedAt:record.endedAt||null,status:record.status||'unknown',engine:record.engine||'',appRelease:record.appRelease||'',expiresAt:new Date(Date.parse(startedAt)+30*86400000).toISOString(),record};
+  try{
+    await createCloudTimeout(createCloudCollection().doc(createCloudDocId(runId)).set(payload),8000);
+    CREATE_CLOUD.state='saved';CREATE_CLOUD.error='';return {state:'saved'};
+  }catch{
+    CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không kết nối được nơi lưu log cloud.';return {state:'failed'};
+  }
+}
+async function createCloudFetch(){
+  if(!createCloudEnabled())return [];
+  try{
+    const snap=await createCloudTimeout(createCloudCollection().orderBy('startedAt','desc').limit(30).get(),8000),records=[];
+    for(const doc of snap.docs||[]){const d=doc.data();if(!doc.id.startsWith(CREATE_CLOUD_PREFIX)||d?.kind!=='generationLog'||!d.record)continue;const r=GPCreationLog.cloudRecord(d.record);if(r.id&&r.startedAt)records.push(r);}
+    CREATE_CLOUD.records=records;CREATE_CLOUD.state='loaded';CREATE_CLOUD.error='';return records;
+  }catch{
+    CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không đọc được log cloud.';return CREATE_CLOUD.records;
+  }
+}
+function createMergeLogs(local,cloud){
+  const records=new Map();for(const r of cloud||[])if(r?.id)records.set(r.id,r);for(const r of local||[])if(r?.id)records.set(r.id,r);
+  return [...records.values()].sort((a,b)=>String(b.startedAt||'').localeCompare(String(a.startedAt||''))).slice(0,GPCreationLog.MAX_RUNS||30);
+}
+function createRenderLogList(records){
+  CREATE_LOG_VIEW=records;const select=$('createLogSelect'),selected=select.value;select.replaceChildren();
   const labels={running:'Chưa kết thúc',success:'Hoàn tất',failed:'Thất bại',cancelled:'Đã huỷ',interrupted:'Trang đã đóng/tải lại'};
   for(const r of records){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(labels[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
-  $('createLogNotice').textContent=CREATE_LOG?.persisted()?'30 lượt gần nhất trên máy này. Không chứa key, không gửi cloud.':'Trình duyệt chặn lưu log; log chỉ còn trong phiên này. Xuất JSON để giữ lại.';
-  $('createLogExport').disabled=!records.length;createShowLog();$('createLogDialog').showModal();
+  if(selected&&records.some(r=>r.id===selected))select.value=selected;
+  const localOk=CREATE_LOG?.persisted();
+  $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
+  $('createLogExport').disabled=!records.length;createShowLog();const dialog=$('createLogDialog');if(!dialog.open)dialog.showModal();
 }
-function createShowLog(){const r=CREATE_LOG?.list().find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
+async function createOpenLogs(){
+  const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';
+  createRenderLogList(createMergeLogs(local,CREATE_CLOUD.records));
+  if(CREATE_CLOUD.state!=='loading')return;
+  const cloud=await createCloudFetch();createRenderLogList(createMergeLogs(CREATE_LOG?.list()||[],cloud));
+}
+function createShowLog(){const r=CREATE_LOG_VIEW.find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
 function createExportLogs(){
-  if(!CREATE_LOG)return;const url=URL.createObjectURL(new Blob([CREATE_LOG.export()],{type:'application/json'})),a=document.createElement('a');
+  if(!CREATE_LOG)return;const body=GPCreationLog.exportRecords?GPCreationLog.exportRecords(CREATE_LOG_VIEW):CREATE_LOG.export(),url=URL.createObjectURL(new Blob([body],{type:'application/json'})),a=document.createElement('a');
   a.href=url;a.download='genplayer-gen-log-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-if(typeof window!=='undefined')window.addEventListener('pagehide',()=>{if(CREATE_STATE.busy)createLogPatch({status:'interrupted',error:{message:'Trang đã đóng hoặc tải lại khi đang xử lý; yêu cầu provider có thể vẫn đang chạy.'}});});
+if(typeof window!=='undefined')window.addEventListener('pagehide',()=>{if(CREATE_STATE.busy){createLogPatch({status:'interrupted',error:{message:'Trang đã đóng hoặc tải lại khi đang xử lý; yêu cầu provider có thể vẫn đang chạy.'}});createCloudPush().catch(()=>{});}});
 function createNoteChanged(){
   const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;
   if(note===null){box.hidden=true;return;}
@@ -88,14 +133,15 @@ function createBegin(){
   $('createProcessProgress').max=CREATE_STEPS.length;
   $('createProcess').showModal();
 }
-function createFinish(success,message){
+async function createFinish(success,message){
   createLogPatch({status:success?'success':CREATE_STATE.cancelled?'cancelled':'failed',endedAt:new Date().toISOString(),...(success?{error:null}:{})});
+  const cloud=await createCloudPush();
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
   aiSyncDraftAction();
   $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
-  $('createProcessSummary').textContent=message;$('createProcessSummary').hidden=false;
+  $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
   $('createProcessSteps').scrollTop=0;
@@ -165,7 +211,7 @@ async function createTeams(){
         CREATE_STATE.cancelled=true;
         createStep('engine','skip','Đã huỷ, không gọi AI.');
         for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
-        createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
+        await createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
       }
       await createCompleteStep('engine','done','Dùng key cá nhân, gọi trực tiếp OpenRouter qua HTTPS.');
     }else{createLogPatch({requestedEngine:'Thuật toán',fallback:{reason:fallback,from:'AI',to:'Thuật toán'}});await createCompleteStep('engine','warn',fallback+' Dùng thuật toán.');}
@@ -249,12 +295,12 @@ async function createTeams(){
     $('status').textContent='';
     await createCompleteStep('draft','done','Đã hiển thị đội hình và bảng so kè. Chưa lưu trận.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
-    createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý.':'Đã kiểm tra xong.'}`);
+    await createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý.':'Đã kiểm tra xong.'}`);
   }catch(e){
     createLogPatch({error:{kind:e.kind||'unknown',code:e.code,message:e.message,diagnostics:e.diagnostics},engine});
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
     $('status').textContent=e.message+' Giữ nguyên bản nháp trước đó (nếu có).';
-    createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
+    await createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
   }
 }

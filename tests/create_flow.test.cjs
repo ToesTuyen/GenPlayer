@@ -6,11 +6,17 @@ const roster=(n=16)=>Array.from({length:n},(_,i)=>({n:'Flow '+i,pos:C.SLOTS[i%7]
 const context=p=>({players:p,rosterNames:p.map(p=>p.n),history:[],instruction:''});
 const group=(p,r)=>C.lineupGroupKey(p,{A:r.evA,B:r.evB});
 function storage(){const data=new Map([['gp_history','PROTECTED_HISTORY'],['gp_openrouter_key','PRIVATE_DEVICE_KEY']]);return {data,getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};}
-function controller(mode='algorithm',p=roster(),shared=storage()){
+function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   const elements=new Map(),steps=new Map(),renders=[],requests=[];
+  const cloudDocs=options.cloudDocs||new Map(),cloudCollection={
+    doc:id=>({set:async payload=>{cloudDocs.set(id,structuredClone(payload));}}),
+    orderBy(){return this;},limit(){return this;},
+    get:async()=>({docs:[...cloudDocs.entries()].sort((a,b)=>String(b[1].startedAt).localeCompare(String(a[1].startedAt))).map(([id,data])=>({id,data:()=>structuredClone(data)}))})
+  };
   function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},hidden:false,addEventListener(){},setAttribute(){},focus(){},showModal(){},close(){},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(){},appendChild(){},prepend(){},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
   const sandbox={GPAIContext:C,GPCreationLog:L,localStorage:shared,Date,performance:{now:()=>0},requestAnimationFrame:fn=>fn(),setTimeout,clearTimeout,
     $:element,document:{querySelector:()=>({content:'test-release'}),createElement:()=>element('node-'+Math.random())},
+    STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
     AI_STATE:{busy:false},AI_KEYS:{has:()=>mode!=='algorithm'},cstate:{results:[],idx:0},
     aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,
     selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',
@@ -30,9 +36,9 @@ function controller(mode='algorithm',p=roster(),shared=storage()){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch};
   `,scope);
-  return {scope,elements,renders,requests,storage:shared,...scope.flow};
+  return {scope,elements,renders,requests,storage:shared,cloudDocs,...scope.flow};
 }
 
 test('solver supplies distinct starting groups, ignoring color flips, role-only changes and reserve order',()=>{
@@ -111,6 +117,16 @@ test('local journal is bounded, sanitizes secrets and never reads unrelated stor
   const blocked=L.createStore({getItem(){throw Error('blocked');},setItem(){throw Error('quota');}}),id=blocked.begin();blocked.patch(id,{status:'failed',error:{message:'test'}});
   assert.equal(blocked.persisted(),false);assert.equal(blocked.list()[0].status,'failed');assert.ok(blocked.export().includes('test'));
   const malformed=L.createStore({getItem:()=>'{"runs":[{"id":"bad"}]}',setItem(){}});assert.doesNotThrow(()=>malformed.begin());
+});
+
+test('cloud journal stores one sanitized compact document and can be read by another device',async()=>{
+  const cloudDocs=new Map(),first=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs});await first.run();
+  assert.equal(cloudDocs.size,1);const [docId,payload]=[...cloudDocs.entries()][0];assert.match(docId,/^generation_run-/);
+  assert.equal(payload.kind,'generationLog');assert.equal(payload.runId,payload.record.id);assert.equal(payload.status,'success');
+  const json=JSON.stringify(payload);for(const text of ['inputKey','candidateGroups','apiKey','authorization','finance','account'])assert.ok(!json.includes(text));
+  assert.ok(payload.record.input.players.length);assert.ok(payload.record.input.forms.length);assert.ok(payload.record.output.groupKey);assert.ok(payload.record.events.length);
+  const second=controller('algorithm',roster(),storage(),{cloud:true,cloudDocs}),remote=await second.cloudFetch();
+  assert.equal(remote.length,1);assert.equal(remote[0].id,payload.runId);assert.equal(remote[0].status,'success');
 });
 
 test('snapshot whitelists football context and input identity is stable under selected-player order',()=>{

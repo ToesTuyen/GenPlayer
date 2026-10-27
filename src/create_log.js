@@ -1,5 +1,6 @@
-// Local, bounded football diagnostics. Never read credential/app storage keys,
-// send telemetry, or write Firebase. Export uses this same sanitized whitelist.
+// Bounded football diagnostics. The store itself only touches its own local key.
+// Cloud transport lives in create_flow.js and may only receive cloudRecord(),
+// which removes bulky/redundant fields and applies this same secret whitelist.
 (function(root,factory){
   const api=factory(typeof module!=='undefined'&&module.exports?require('./ai_context.js'):root.GPAIContext);
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
@@ -29,6 +30,36 @@
     return JSON.stringify({players:sorted(input.players),instruction:input.instruction,forms:sorted(input.forms),reference:input.rotationReference});
   }
   const safeRecord=r=>Object.fromEntries(Object.entries(r||{}).filter(([k])=>fields.has(k)).map(([k,v])=>[k,clean(v,0,k)]));
+  function cloudRecord(record){
+    const r=safeRecord(record),input=r.input&&typeof r.input==='object'?r.input:null;
+    const compactInput=input?clean({
+      rosterNames:input.rosterNames,
+      players:input.players,
+      instruction:input.instruction,
+      historyCount:input.historyCount,
+      rotationReference:input.rotationReference,
+      forms:input.forms
+    }):null;
+    const selection=r.selection&&typeof r.selection==='object'?clean({
+      excludedCount:r.selection.excludedCount,
+      candidateCount:r.selection.candidateCount
+    }):null;
+    // inputKey repeats almost the entire input snapshot and candidateGroups can
+    // be very large. Neither is needed to diagnose a single run from another
+    // device, so they intentionally never leave the browser.
+    return safeRecord({
+      id:r.id,startedAt:r.startedAt,updatedAt:r.updatedAt,endedAt:r.endedAt,
+      status:r.status,engine:r.engine,requestedEngine:r.requestedEngine,
+      appRelease:r.appRelease,events:r.events,input:compactInput,selection,
+      ai:r.ai,validation:r.validation,fallback:r.fallback,output:r.output,error:r.error
+    });
+  }
+  function exportRecords(records){
+    const runs=(Array.isArray(records)?records:[])
+      .filter(r=>r&&typeof r.id==='string'&&typeof r.startedAt==='string')
+      .map(safeRecord).sort((a,b)=>b.startedAt.localeCompare(a.startedAt)).slice(0,MAX_RUNS);
+    return JSON.stringify({version:2,exportedAt:new Date().toISOString(),runs},null,2);
+  }
   function createStore(storage,options={}){
     let memory=[],persisted=true;
     const limit=options.limit||MAX_RUNS,bytes=options.maxBytes||MAX_BYTES,now=options.now||(()=>new Date().toISOString());
@@ -58,7 +89,7 @@
       patch(id,{events:[...(r.events||[]),{at:now(),step,state,detail}].slice(-80)});
     }
     function seen(key){return list().filter(r=>r.status==='success'&&r.inputKey===key&&r.output?.groupKey).map(r=>r.output.groupKey);}
-    return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>JSON.stringify({version:1,exportedAt:now(),runs:list()},null,2),key:KEY};
+    return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>exportRecords(list()),key:KEY};
   }
-  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,createStore};
+  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
 });

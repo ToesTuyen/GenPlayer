@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-26-genfix">
+<meta name="genplayer-release" content="web-app-2026-10-27-cloudlogs">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1361,7 +1361,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </dialog>
 <dialog id="createLogDialog" class="create-log-dialog" aria-labelledby="createLogTitle">
   <div class="ai-key-head"><h2 id="createLogTitle">Nhật ký tạo đội</h2><button class="btn alt sm" onclick="document.getElementById('createLogDialog').close()" aria-label="Đóng nhật ký gen">×</button></div>
-  <p id="createLogNotice" class="ai-footer">30 lượt gần nhất trên máy này. Không chứa key, không gửi cloud.</p>
+  <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
   <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>
   <pre id="createLogDetails" data-ui-no-icons></pre>
   <div class="ai-actions"><button class="btn alt sm" id="createLogExport" onclick="createExportLogs()">Xuất log JSON</button></div>
@@ -2257,8 +2257,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   root.GPAIContext=api;
 })(typeof window==='undefined'?globalThis:window);
 </script>
-<script>// Local, bounded football diagnostics. Never read credential/app storage keys,
-// send telemetry, or write Firebase. Export uses this same sanitized whitelist.
+<script>// Bounded football diagnostics. The store itself only touches its own local key.
+// Cloud transport lives in create_flow.js and may only receive cloudRecord(),
+// which removes bulky/redundant fields and applies this same secret whitelist.
 (function(root,factory){
   const api=factory(typeof module!=='undefined'&&module.exports?require('./ai_context.js'):root.GPAIContext);
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
@@ -2288,6 +2289,36 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     return JSON.stringify({players:sorted(input.players),instruction:input.instruction,forms:sorted(input.forms),reference:input.rotationReference});
   }
   const safeRecord=r=>Object.fromEntries(Object.entries(r||{}).filter(([k])=>fields.has(k)).map(([k,v])=>[k,clean(v,0,k)]));
+  function cloudRecord(record){
+    const r=safeRecord(record),input=r.input&&typeof r.input==='object'?r.input:null;
+    const compactInput=input?clean({
+      rosterNames:input.rosterNames,
+      players:input.players,
+      instruction:input.instruction,
+      historyCount:input.historyCount,
+      rotationReference:input.rotationReference,
+      forms:input.forms
+    }):null;
+    const selection=r.selection&&typeof r.selection==='object'?clean({
+      excludedCount:r.selection.excludedCount,
+      candidateCount:r.selection.candidateCount
+    }):null;
+    // inputKey repeats almost the entire input snapshot and candidateGroups can
+    // be very large. Neither is needed to diagnose a single run from another
+    // device, so they intentionally never leave the browser.
+    return safeRecord({
+      id:r.id,startedAt:r.startedAt,updatedAt:r.updatedAt,endedAt:r.endedAt,
+      status:r.status,engine:r.engine,requestedEngine:r.requestedEngine,
+      appRelease:r.appRelease,events:r.events,input:compactInput,selection,
+      ai:r.ai,validation:r.validation,fallback:r.fallback,output:r.output,error:r.error
+    });
+  }
+  function exportRecords(records){
+    const runs=(Array.isArray(records)?records:[])
+      .filter(r=>r&&typeof r.id==='string'&&typeof r.startedAt==='string')
+      .map(safeRecord).sort((a,b)=>b.startedAt.localeCompare(a.startedAt)).slice(0,MAX_RUNS);
+    return JSON.stringify({version:2,exportedAt:new Date().toISOString(),runs},null,2);
+  }
   function createStore(storage,options={}){
     let memory=[],persisted=true;
     const limit=options.limit||MAX_RUNS,bytes=options.maxBytes||MAX_BYTES,now=options.now||(()=>new Date().toISOString());
@@ -2317,9 +2348,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       patch(id,{events:[...(r.events||[]),{at:now(),step,state,detail}].slice(-80)});
     }
     function seen(key){return list().filter(r=>r.status==='success'&&r.inputKey===key&&r.output?.groupKey).map(r=>r.output.groupKey);}
-    return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>JSON.stringify({version:1,exportedAt:now(),runs:list()},null,2),key:KEY};
+    return {begin,patch,event,list,seen,persisted:()=>persisted,export:()=>exportRecords(list()),key:KEY};
   }
-  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,createStore};
+  return {KEY,MAX_RUNS,redact,clean,snapshot,inputKey,safeRecord,cloudRecord,exportRecords,createStore};
 });
 </script>
 <script>// Thuat toan chia 2 doi can bang (chay trong trinh duyet hoac node) - khong can server
@@ -5926,21 +5957,66 @@ const CREATE_STEPS=[
 const CREATE_STEP_READ_MS=1000; // Presentation dwell only; never marks unfinished work as complete.
 const CREATE_STATE={busy:false,steps:new Map(),startedAt:new Map(),success:false,hasReport:false,draftNote:null,draftEngine:null,cancelled:false};
 const CREATE_LOG=typeof GPCreationLog==='undefined'?null:GPCreationLog.createStore({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)});
+const CREATE_CLOUD_PREFIX='generation_';
+const CREATE_CLOUD={state:'idle',records:[],error:''};
+let CREATE_LOG_VIEW=[];
 let CREATE_RUN_ID=null;
 function createLogPatch(changes){try{CREATE_LOG?.patch(CREATE_RUN_ID,changes);}catch{}}
-function createOpenLogs(){
-  const records=CREATE_LOG?.list()||[],select=$('createLogSelect');select.replaceChildren();
+function createCloudEnabled(){
+  try{return !(typeof aiIsPreview==='function'&&aiIsPreview())&&typeof STATE!=='undefined'&&STATE.cloud&&STATE.docRef&&typeof firebase!=='undefined'&&firebase.firestore;}catch{return false;}
+}
+function createCloudCollection(){return createCloudEnabled()?STATE.docRef.parent:null;}
+function createCloudDocId(id){return CREATE_CLOUD_PREFIX+String(id||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,120);}
+function createCloudTimeout(promise,ms=8000){
+  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('cloud-timeout')),ms);Promise.resolve(promise).then(v=>{clearTimeout(timer);resolve(v);},e=>{clearTimeout(timer);reject(e);});});
+}
+async function createCloudPush(runId=CREATE_RUN_ID){
+  if(!createCloudEnabled()||!runId)return {state:'off'};
+  const run=(CREATE_LOG?.list()||[]).find(r=>r.id===runId);if(!run)return {state:'missing'};
+  const record=GPCreationLog.cloudRecord(run),startedAt=record.startedAt||new Date().toISOString();
+  const payload={kind:'generationLog',schemaVersion:1,runId:record.id,startedAt,updatedAt:record.updatedAt||startedAt,endedAt:record.endedAt||null,status:record.status||'unknown',engine:record.engine||'',appRelease:record.appRelease||'',expiresAt:new Date(Date.parse(startedAt)+30*86400000).toISOString(),record};
+  try{
+    await createCloudTimeout(createCloudCollection().doc(createCloudDocId(runId)).set(payload),8000);
+    CREATE_CLOUD.state='saved';CREATE_CLOUD.error='';return {state:'saved'};
+  }catch{
+    CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không kết nối được nơi lưu log cloud.';return {state:'failed'};
+  }
+}
+async function createCloudFetch(){
+  if(!createCloudEnabled())return [];
+  try{
+    const snap=await createCloudTimeout(createCloudCollection().orderBy('startedAt','desc').limit(30).get(),8000),records=[];
+    for(const doc of snap.docs||[]){const d=doc.data();if(!doc.id.startsWith(CREATE_CLOUD_PREFIX)||d?.kind!=='generationLog'||!d.record)continue;const r=GPCreationLog.cloudRecord(d.record);if(r.id&&r.startedAt)records.push(r);}
+    CREATE_CLOUD.records=records;CREATE_CLOUD.state='loaded';CREATE_CLOUD.error='';return records;
+  }catch{
+    CREATE_CLOUD.state='failed';CREATE_CLOUD.error='Không đọc được log cloud.';return CREATE_CLOUD.records;
+  }
+}
+function createMergeLogs(local,cloud){
+  const records=new Map();for(const r of cloud||[])if(r?.id)records.set(r.id,r);for(const r of local||[])if(r?.id)records.set(r.id,r);
+  return [...records.values()].sort((a,b)=>String(b.startedAt||'').localeCompare(String(a.startedAt||''))).slice(0,GPCreationLog.MAX_RUNS||30);
+}
+function createRenderLogList(records){
+  CREATE_LOG_VIEW=records;const select=$('createLogSelect'),selected=select.value;select.replaceChildren();
   const labels={running:'Chưa kết thúc',success:'Hoàn tất',failed:'Thất bại',cancelled:'Đã huỷ',interrupted:'Trang đã đóng/tải lại'};
   for(const r of records){const option=document.createElement('option');option.value=r.id;option.textContent=new Date(r.startedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' · '+(labels[r.status]||r.status)+' · '+(r.engine||'')+' · '+r.id;select.appendChild(option);}
-  $('createLogNotice').textContent=CREATE_LOG?.persisted()?'30 lượt gần nhất trên máy này. Không chứa key, không gửi cloud.':'Trình duyệt chặn lưu log; log chỉ còn trong phiên này. Xuất JSON để giữ lại.';
-  $('createLogExport').disabled=!records.length;createShowLog();$('createLogDialog').showModal();
+  if(selected&&records.some(r=>r.id===selected))select.value=selected;
+  const localOk=CREATE_LOG?.persisted();
+  $('createLogNotice').textContent=CREATE_CLOUD.state==='loading'?'Đang đọc 30 lượt gần nhất từ cloud…':CREATE_CLOUD.state==='loaded'||CREATE_CLOUD.state==='saved'?'Đã gộp log trên máy và cloud. Không lưu key OpenRouter.':CREATE_CLOUD.state==='failed'?(CREATE_CLOUD.error+' Log trên máy vẫn dùng được.'):(localOk?'Log đang lưu trên máy; cloud chưa kết nối.':'Trình duyệt chặn lưu local; cloud chưa kết nối.');
+  $('createLogExport').disabled=!records.length;createShowLog();const dialog=$('createLogDialog');if(!dialog.open)dialog.showModal();
 }
-function createShowLog(){const r=CREATE_LOG?.list().find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
+async function createOpenLogs(){
+  const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';
+  createRenderLogList(createMergeLogs(local,CREATE_CLOUD.records));
+  if(CREATE_CLOUD.state!=='loading')return;
+  const cloud=await createCloudFetch();createRenderLogList(createMergeLogs(CREATE_LOG?.list()||[],cloud));
+}
+function createShowLog(){const r=CREATE_LOG_VIEW.find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
 function createExportLogs(){
-  if(!CREATE_LOG)return;const url=URL.createObjectURL(new Blob([CREATE_LOG.export()],{type:'application/json'})),a=document.createElement('a');
+  if(!CREATE_LOG)return;const body=GPCreationLog.exportRecords?GPCreationLog.exportRecords(CREATE_LOG_VIEW):CREATE_LOG.export(),url=URL.createObjectURL(new Blob([body],{type:'application/json'})),a=document.createElement('a');
   a.href=url;a.download='genplayer-gen-log-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-if(typeof window!=='undefined')window.addEventListener('pagehide',()=>{if(CREATE_STATE.busy)createLogPatch({status:'interrupted',error:{message:'Trang đã đóng hoặc tải lại khi đang xử lý; yêu cầu provider có thể vẫn đang chạy.'}});});
+if(typeof window!=='undefined')window.addEventListener('pagehide',()=>{if(CREATE_STATE.busy){createLogPatch({status:'interrupted',error:{message:'Trang đã đóng hoặc tải lại khi đang xử lý; yêu cầu provider có thể vẫn đang chạy.'}});createCloudPush().catch(()=>{});}});
 function createNoteChanged(){
   const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;
   if(note===null){box.hidden=true;return;}
@@ -5997,14 +6073,15 @@ function createBegin(){
   $('createProcessProgress').max=CREATE_STEPS.length;
   $('createProcess').showModal();
 }
-function createFinish(success,message){
+async function createFinish(success,message){
   createLogPatch({status:success?'success':CREATE_STATE.cancelled?'cancelled':'failed',endedAt:new Date().toISOString(),...(success?{error:null}:{})});
+  const cloud=await createCloudPush();
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
   aiSyncDraftAction();
   $('reviewProcess').style.display='';
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
-  $('createProcessSummary').textContent=message;$('createProcessSummary').hidden=false;
+  $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
   $('createProcessSteps').scrollTop=0;
@@ -6074,7 +6151,7 @@ async function createTeams(){
         CREATE_STATE.cancelled=true;
         createStep('engine','skip','Đã huỷ, không gọi AI.');
         for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
-        createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
+        await createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
       }
       await createCompleteStep('engine','done','Dùng key cá nhân, gọi trực tiếp OpenRouter qua HTTPS.');
     }else{createLogPatch({requestedEngine:'Thuật toán',fallback:{reason:fallback,from:'AI',to:'Thuật toán'}});await createCompleteStep('engine','warn',fallback+' Dùng thuật toán.');}
@@ -6158,18 +6235,18 @@ async function createTeams(){
     $('status').textContent='';
     await createCompleteStep('draft','done','Đã hiển thị đội hình và bảng so kè. Chưa lưu trận.');
     const warnings=[...CREATE_STATE.steps.values()].filter(s=>s==='warn').length;
-    createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý.':'Đã kiểm tra xong.'}`);
+    await createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý.':'Đã kiểm tra xong.'}`);
   }catch(e){
     createLogPatch({error:{kind:e.kind||'unknown',code:e.code,message:e.message,diagnostics:e.diagnostics},engine});
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
     $('status').textContent=e.message+' Giữ nguyên bản nháp trước đó (nếu có).';
-    createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
+    await createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
   }
 }
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v6",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v7",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>

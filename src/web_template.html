@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-26-genfix">
+<meta name="genplayer-release" content="web-app-2026-10-27-cloudlogs">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1014,7 +1014,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 </dialog>
 <dialog id="createLogDialog" class="create-log-dialog" aria-labelledby="createLogTitle">
   <div class="ai-key-head"><h2 id="createLogTitle">Nhật ký tạo đội</h2><button class="btn alt sm" onclick="document.getElementById('createLogDialog').close()" aria-label="Đóng nhật ký gen">×</button></div>
-  <p id="createLogNotice" class="ai-footer">30 lượt gần nhất trên máy này. Không chứa key, không gửi cloud.</p>
+  <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
   <label class="ai-field">Lượt tạo<select id="createLogSelect" onchange="createShowLog()"></select></label>
   <pre id="createLogDetails" data-ui-no-icons></pre>
   <div class="ai-actions"><button class="btn alt sm" id="createLogExport" onclick="createExportLogs()">Xuất log JSON</button></div>
@@ -3859,6 +3859,6 @@ function delHistory(id){
 /*__CREATE_FLOW__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v6",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v7",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>
