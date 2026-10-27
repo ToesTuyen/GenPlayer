@@ -107,19 +107,25 @@ function createLogTeam(side,rows){
   for(const p of starters){const row=createLogNode('div','create-log-player'),name=createLogNode('span','',p.n||'—'),meta=createLogNode('span','',`${CREATE_LOG_ROLE[p.slot]||p.slot||'Vị trí'}${Number.isFinite(+p.rating)?' · '+(+p.rating).toFixed(1):''}`);row.append(name,meta);box.appendChild(row);}
   const reserve=createLogNode('div','create-log-bench','Dự bị: '+(bench.length?bench.map(p=>p.n+(Number.isFinite(+p.rating)?' '+(+p.rating).toFixed(1):'')).join(', '):'—'));box.appendChild(reserve);return box;
 }
+function createLogActions(r){
+  const actions=createLogNode('div','create-log-actions');
+  if(createLogUsable(r)){
+    const edit=createLogNode('button','btn alt sm','Sửa đội hình'),save=createLogNode('button','btn sm','Đặt làm trận tuần này');
+    edit.type=save.type='button';edit.onclick=()=>createOpenEdit(r.id);save.onclick=()=>createUseLog(r.id);actions.append(edit,save);
+  }else{const button=createLogNode('button','btn sm','Không thể dùng');button.type='button';button.disabled=true;actions.appendChild(button);}
+  return actions;
+}
 function createRenderLogCards(records){
   const list=$('createLogList');list.replaceChildren();
   if(!records.length){list.appendChild(createLogNode('div','create-log-empty','Chưa có lượt tạo đội nào.'));return;}
   for(const r of records){
     const card=createLogNode('article','create-log-card'),head=createLogNode('div','create-log-head'),headText=createLogNode('div',''),when=new Date(r.startedAt),title=createLogNode('div','create-log-title',Number.isNaN(when.getTime())?'Lượt tạo đội':when.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}));
     const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta);head.append(headText,status);card.appendChild(head);
-    if(createLogUsable(r)){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
+    const usable=createLogUsable(r);if(usable)card.appendChild(createLogActions(r));
+    if(usable){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
     const issue=createLogIssue(r);if(issue){const box=createLogNode('div','create-log-issue '+(r.status==='success'?'fallback':'error'));box.appendChild(createLogNode('strong','',issue.title));if(issue.hint)box.appendChild(createLogNode('p','',issue.hint));box.appendChild(createLogNode('p','',issue.detail));card.appendChild(box);}
-    const actions=createLogNode('div','create-log-actions'),codes=createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')),button=createLogNode('button','btn sm',createLogUsable(r)?'Đặt làm trận tuần này':'Không thể dùng');
-    button.type='button';button.disabled=!createLogUsable(r);if(!button.disabled)button.onclick=()=>createUseLog(r.id);actions.appendChild(codes);
-    if(createLogUsable(r)){const edit=createLogNode('button','btn alt sm','Sửa đội hình');edit.type='button';edit.onclick=()=>createOpenEdit(r.id);actions.appendChild(edit);}
-    actions.appendChild(button);card.appendChild(actions);list.appendChild(card);
+    card.appendChild(createLogActions(r));card.appendChild(createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')));list.appendChild(card);
   }
 }
 function createRenderLogList(records){

@@ -87,8 +87,8 @@
 .create-log-player span:first-child{min-width:0;color:var(--text);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .create-log-player span:last-child{flex:0 0 auto;color:var(--muted);font-size:9.5px}
 .create-log-bench{margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);font-size:10px;line-height:1.4;color:var(--muted)}
-.create-log-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
-.create-log-actions .btn{margin-left:auto}
+.create-log-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:8px 0}
+.create-log-code{margin-top:6px}
 .create-log-empty{padding:18px 10px;text-align:center;color:var(--muted);font-size:12px}
 .create-log-issue{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:11.5px;line-height:1.55;overflow-wrap:anywhere}
 .create-log-issue.error{border-color:var(--red);background:var(--loss-soft)}
@@ -101,7 +101,7 @@
 #createRunLabel{overflow-wrap:anywhere}
 @keyframes process-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
-@media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}.create-log-card{padding:8px}.create-log-teams{gap:6px}.create-log-team{padding:6px}.create-log-player{display:block}.create-log-player span{display:block}.create-log-player span:last-child{margin-top:1px}.create-log-actions{align-items:flex-end;flex-wrap:wrap}}
+@media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}.create-log-card{padding:8px}.create-log-teams{gap:6px}.create-log-team{padding:6px}.create-log-player{display:block}.create-log-player span{display:block}.create-log-player span:last-child{margin-top:1px}.create-log-actions .btn{flex:1;min-width:0;padding-inline:7px}}
 #createAI[hidden],#createAI [hidden],#aiMessage[hidden],#mm-review-info[hidden],#mm-review-status[hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden],#createBuildTab[data-create-step="roster"] #aiOutput,#createBuildTab[data-create-step="rules"] #aiOutput[data-draft-output="true"]{display:none!important}
 #lineupEditDialog [hidden]{display:none!important}
 .lineup-edit-dialog textarea{min-height:86px}
