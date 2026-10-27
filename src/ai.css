@@ -9,7 +9,8 @@
 .create-wizard-panel[hidden]{display:none!important}
 .create-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .create-panel-head .section-title{margin:0}
-.create-step-actions{display:flex;justify-content:flex-end;margin-top:12px}
+#createRosterStep{padding-bottom:78px}
+.create-step-actions{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
 .create-step-actions .btn{min-width:156px}
 .create-step-count{display:block;margin-top:3px;font-size:11px;color:var(--muted)}
 .create-toolbar{margin:0 0 8px;gap:6px}
