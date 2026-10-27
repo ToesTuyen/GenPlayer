@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit-names">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -181,7 +181,7 @@ test('AI can only select validated candidates, with all 12 criteria intact',()=>
 test('AI lineup editing applies only explicit swap operations to the supplied draft, without generating',()=>{
   const original=structuredClone(teams),ctx={players:structuredClone(players),history:[],rosterNames:players.map(p=>p.n),instruction:'Đổi Cầu thủ 1 và Cầu thủ 8',editTeams:original};
   const prepared=S.prepare({task:'lineup-edit',context:ctx}),data=JSON.parse(prepared.messages[1].content);
-  assert.equal(prepared.schema.properties.swaps.maxItems,12);assert.equal(data.teams.A.starters[1].id,'p1');assert.equal(data.teams.B.starters[1].id,'p8');assert.equal(data.candidates,undefined);
+  assert.equal(prepared.schema.properties.swaps.maxItems,12);assert.equal(data.teams.A.starters[1].id,'p1');assert.equal(data.teams.A.starters[1].name,players[1].n);assert.equal(data.teams.B.starters[1].id,'p8');assert.equal(data.teams.A.bench[0].name,players[14].n);assert.equal(data.candidates,undefined);assert.match(data.rules,/không tạo lại/i);assert.match(data.rules,/tên đầy đủ/i);
   const answer=JSON.stringify({status:'ready',message:'Đổi hai người.',swaps:[{first:'p1',second:'p8'}]}),out=S.validateOutput(answer,prepared);
   assert.equal(out.teams.A.starters[1],8);assert.equal(out.teams.B.starters[1],1);assert.equal(out.teams.A.starters[2],2);assert.equal(out.teams.B.starters[2],9);assert.deepEqual(ctx.editTeams,teams,'Original snapshot is never mutated');
   const bench=S.validateOutput(JSON.stringify({status:'ready',message:'Cho dự bị.',swaps:[{first:'p1',second:'p14'}]}),prepared);

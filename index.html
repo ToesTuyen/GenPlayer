@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit">
+<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit-names">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -3449,8 +3449,8 @@ function prepare(body,now=Date.now()){
     try{C.validateLineupRoster(selected,teams,{manualEdit:true});}catch(e){throw new AppError(400,e.message);}
     c.editTeams=teams;c.lineupTime=now;
     data.players=selected.map((p,i)=>({id:'p'+i,n:p.n,pos:p.pos,pos2:p.pos2,guest:p.guest,roleScores:Object.fromEntries([...new Set(C.SLOTS)].map(slot=>[slot,+C.positionScore(p,slot).toFixed(1)]))}));
-    data.teams=Object.fromEntries(['A','B'].map(side=>[side,{starters:teams[side].starters.map((i,k)=>({id:'p'+i,slot:C.SLOTS[k]})),bench:teams[side].bench.map(i=>'p'+i)}]));
-    data.rules='Chỉ đổi chỗ những người cần thiết cho yêu cầu hiện tại; không tạo lại hoặc đổi các cầu thủ không liên quan. Nếu yêu cầu mơ hồ, tên trùng hoặc không thể thực hiện, trả status=clarify và swaps=[]. Giữ đủ người, 7 đá chính mỗi bên; mỗi thao tác đổi chỗ hai playerId, kể cả đổi người đá chính với dự bị. Không tự thêm, xóa hoặc sửa hồ sơ cầu thủ.';
+    data.teams=Object.fromEntries(['A','B'].map(side=>[side,{starters:teams[side].starters.map((i,k)=>({id:'p'+i,name:selected[i].n,slot:C.SLOTS[k]})),bench:teams[side].bench.map(i=>({id:'p'+i,name:selected[i].n}))}]));
+    data.rules='Làm đúng yêu cầu sửa trên đội hình được cung cấp, không tạo lại, không tự đổi thêm để cân đội. Nếu yêu cầu cho một người dự bị mà không chỉ định người vào thay, chọn người dự bị cùng đội phù hợp vị trí, nói rõ tên người thay; nếu không xác định được người thay hợp lý thì hỏi lại. Nếu yêu cầu mơ hồ, tên trùng hoặc không thể thực hiện, trả status=clarify và swaps=[]. Giữ đủ người, 7 đá chính mỗi bên; mỗi thao tác đổi chỗ hai playerId, kể cả đổi người đá chính với dự bị. Không tự thêm, xóa hoặc sửa hồ sơ cầu thủ. Trong message luôn dùng tên đầy đủ, không dùng mã p0, p1... hay mã nội bộ.';
   }else if(task==='match-review'){
     if(!c.match)throw new AppError(400,'Chọn một trận để nhận định.');
     const names=new Set([...c.match.teams.A,...c.match.teams.B].map(p=>p.n));
@@ -3467,7 +3467,7 @@ function prepare(body,now=Date.now()){
   }
   const guidance={
     lineup:'Chọn một candidateId từ data.candidates theo đủ 12 rules, phong độ, lịch sử và Note. Mọi phương án đã được code kiểm tra đủ người, người mạnh đá chính, vị trí, công/thủ, dự bị, tổng lực, thể chất và xoay tua. Bạn chỉ chọn phương án, KHÔNG tự thay người hoặc vị trí, KHÔNG gán assignments/teams, KHÔNG đề xuất đổi chỗ. Bắt buộc flipTeams=false và swaps=[]. Thứ tự 7 starters tương ứng data.slots. Không tự sửa chỉ số hoặc nới tiêu chí. Nếu Note chưa thể thỏa mãn trong danh sách, nêu giới hạn thay vì bịa rằng đã đáp ứng. Ba phần ngắn: cán cân hai đội, đối đầu đáng chú ý, mức khác trận cũ; không nhắc lại yêu cầu riêng trong nhận định.',
-    'lineup-edit':'Thực hiện yêu cầu sửa data.instruction trên đúng đội hình data.teams hiện tại. Trả một danh sách swaps tối thiểu theo playerId; mỗi swap hoán đổi nguyên chỗ của hai người, không thay hồ sơ hay tạo đội hình mới. Chỉ chọn người khác để thay nếu yêu cầu cần người vào vị trí trống; không tự ý đổi thêm để cân đội. Nếu không xác định được người hoặc yêu cầu mơ hồ, status=clarify, swaps=[], message hỏi ngắn gọn. Nếu thực hiện được, status=ready, message mô tả ngắn, swaps gồm các cặp đổi chỗ. Không có HTML.',
+    'lineup-edit':'Thực hiện đúng data.instruction trên đúng đội hình data.teams hiện tại, không chia lại hay tự đổi thêm người để cân đội. Mỗi swap hoán đổi nguyên chỗ của hai người, kể cả đổi chính và dự bị; swaps dùng playerId chỉ để máy xử lý. Nếu cần người thế chỗ chưa được chỉ định, ưu tiên dự bị cùng đội phù hợp và nêu rõ tên; nếu không thể xác định hợp lý thì hỏi lại. Nếu không xác định được người hoặc yêu cầu mơ hồ, status=clarify, swaps=[], message hỏi ngắn gọn. Nếu thực hiện được, status=ready, message giải thích thay đổi bằng tên đầy đủ, swaps gồm các cặp đổi chỗ tối thiểu. Tuyệt đối không dùng mã nội bộ như p15 trong message. Không có HTML.',
     'match-review':'Viết nhận định bóng đá chi tiết bằng tiếng Việt, ít nhất 6 phần, khoảng 600–900 từ: tổng quan, công/thủ mỗi đội, đối đầu then chốt, phong độ/chuỗi kết quả và bàn thắng, vai trò dự bị, kết luận. Chỉ tập trung trận đấu; không kể yêu cầu riêng, quy trình chia đội hay bảo người dùng sửa đội hình. Nếu trận có tỉ số, phân tích kết quả đã biết, không dự đoán lại. Nếu isDraft=true, đây là đội hình nháp chưa chốt ngày giờ: đánh giá đúng hai đội được cung cấp, không bịa lịch thi đấu hoặc kết quả.',
     'player-form':'Đánh giá phong độ THỜI GIAN GẦN ĐÂY, diễn biến so với nền chỉ số, kết luận tăng/giữ/giảm hoặc chưa đủ dữ liệu. Dùng cửa sổ 5 TRẬN ĐỘI, tính cả vắng mặt. Dưới 3 lần có mặt trong 5 trận: verdict=insufficient, suggestions=[]; không quy vắng mặt thành thua hay tự giảm kỹ thuật. Không suy diễn kỹ thuật/phòng ngự từ bàn thắng và thắng thua. Chỉ gợi ý để admin quan sát, không chốt điểm. Không viết dự báo sắp tới, không meme.',
     'player-description':'Viết lại mô tả Cầu thủ nổi bật theo phong cách bình luận bóng đá tự nhiên, mới lời, dựa vào chỉ số và phong độ tháng/cửa sổ gần đây. Không nói vừa có màn thể hiện nếu không có bằng chứng. Không meme. 3 đoạn ngắn, không dự báo sắp tới.'
@@ -6475,6 +6475,10 @@ function createEditChanged(){if(!CREATE_EDIT)return;CREATE_EDIT.proposal=null;$(
 function createEditPositions(teams,players){
   const positions=new Map();for(const side of ['A','B']){teams[side].starters.forEach((i,k)=>positions.set(i,'Team '+side+' · '+(CREATE_LOG_ROLE[GPAIContext.SLOTS[k]]||GPAIContext.SLOTS[k])));teams[side].bench.forEach(i=>positions.set(i,'Team '+side+' · dự bị'));}return positions;
 }
+function createEditHumanText(text,edit){
+  const positions=createEditPositions(edit.teams,edit.players);
+  return String(text||'').replace(/\bp\d+\b/gi,code=>{const index=Number(code.slice(1)),player=edit.players[index];return player?`${player.n} (${positions.get(index)||'không rõ vị trí'})`:'cầu thủ chưa xác định';});
+}
 async function createRunEdit(){
   const edit=CREATE_EDIT,instruction=$('lineupEditInstruction').value.trim();if(!edit||edit.busy||AI_STATE.busy||CREATE_STATE.busy)return;
   const status=$('lineupEditStatus');status.hidden=false;status.className='ai-message';
@@ -6485,16 +6489,17 @@ async function createRunEdit(){
     const context={players:edit.players,rosterNames:edit.players.map(p=>p.n),history:edit.history,instruction,editBaseInstruction:edit.note.slice(0,Math.max(0,1998-instruction.length)),editTeams:edit.teams};
     const response=await aiFetch('run',{task:'lineup-edit',context}),out=response.output;
     if(CREATE_EDIT!==edit||$('lineupEditInstruction').value.trim()!==instruction)return;
-    if(out.status==='clarify'){status.textContent=out.message;return;}
+    if(out.status==='clarify'){status.textContent=createEditHumanText(out.message,edit);return;}
     if(out.status!=='ready'||!out.result||!out.teams)throw new Error('AI chưa trả được phương án sửa hợp lệ.');
     const before=createEditPositions(edit.teams,edit.players),after=createEditPositions(out.teams,edit.players),preview=$('lineupEditPreview');preview.replaceChildren();
+    preview.appendChild(createLogNode('strong','','AI hiểu yêu cầu'));preview.appendChild(createLogNode('p','',createEditHumanText(out.message,edit)));
     preview.appendChild(createLogNode('strong','','Thay đổi đề xuất'));
     const changes=edit.players.flatMap((p,i)=>before.get(i)!==after.get(i)?[`${p.n}: ${before.get(i)} → ${after.get(i)}`]:[]);
     if(!changes.length)throw new Error('Đề xuất không thay đổi đội hình.');
     const list=createLogNode('ul');for(const text of changes)list.appendChild(createLogNode('li','',text));preview.appendChild(list);
-    if(out.warnings?.length){const box=createLogNode('div','lineup-edit-warning');box.appendChild(createLogNode('strong','','Cần xem lại tiêu chí'));for(const warning of out.warnings)box.appendChild(createLogNode('p','',warning));preview.appendChild(box);}
+    if(out.warnings?.length){const box=createLogNode('div','lineup-edit-warning');box.appendChild(createLogNode('strong','','Cần xem lại tiêu chí'));for(const warning of out.warnings)box.appendChild(createLogNode('p','',createEditHumanText(warning,edit)));preview.appendChild(box);}
     edit.proposal={output:out,instruction,context};preview.hidden=false;$('lineupEditApply').hidden=false;status.textContent='Kiểm tra thay đổi rồi bấm Áp dụng.';
-  }catch(e){if(CREATE_EDIT===edit){status.className='ai-message error';status.textContent=e.message+' Chưa áp dụng thay đổi.';}}
+  }catch(e){if(CREATE_EDIT===edit){status.className='ai-message error';status.textContent=createEditHumanText(e.message,edit)+' Chưa áp dụng thay đổi.';}}
   finally{edit.busy=false;AI_STATE.busy=false;aiRenderStatus();if(CREATE_EDIT===edit)$('lineupEditRun').disabled=false;}
 }
 function createApplyEdit(){

@@ -27,7 +27,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
       if(mode==='network')throw Object.assign(new Error('Fixture network unavailable'),{kind:'network'});
       const prepared=S.prepare(request);
       if(request.task==='lineup-edit'){
-        const raw={status:'ready',message:'Đổi hai người.',swaps:[{first:'p1',second:options.invalidEdit?'p99':'p8'}]};
+        const raw=options.clarifyEdit?{status:'clarify',message:'Bạn muốn p15 đổi với P8 hay p99?',swaps:[]}:{status:'ready',message:'Đổi p1 với p8.',swaps:[{first:'p1',second:options.invalidEdit?'p99':'p8'}]};
         return {output:{...S.validateOutput(JSON.stringify(raw),prepared),generationId:'gen-edit-fixture',model:'fake/model',usage:{cost:0}}};
       }
       const raw={title:'Fixture',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Controlled test, not real analysis.'})),candidateId:mode==='invalid'?'c99':'c0',flipTeams:false,swaps:mode==='swaps'?[{first:'p1',second:'p8'}]:[]};
@@ -104,6 +104,7 @@ test('AI editing previews explicit swaps and preserves the source history withou
   const x=controller('valid');await x.run();const source=x.log.list()[0],before=JSON.stringify(x.scope.cstate),sourceBefore=JSON.stringify(source);
   x.openEdit();assert.equal(x.elements.get('lineupEditDialog').open,true);x.elements.get('lineupEditInstruction').value='Đổi Flow 0 và Flow 7';await x.runEdit();
   assert.equal(JSON.stringify(x.scope.cstate),before,'Preview does not mutate the draft');assert.equal(x.elements.get('lineupEditApply').hidden,false);
+  const previewText=x.elements.get('lineupEditPreview').children.map(n=>n.textContent).join(' ');assert.match(previewText,/Flow 1/);assert.match(previewText,/Flow 8/);assert.doesNotMatch(previewText,/\bp\d+\b/i);
   assert.equal(x.requests.at(-1).task,'lineup-edit');assert.equal(x.requests.length,2,'One edit call, no regeneration');
   x.applyEdit();assert.notEqual(JSON.stringify(x.scope.cstate),before);assert.equal(x.elements.get('lineupEditDialog').open,false);
   const latest=x.log.list(),original=latest.find(r=>r.id===source.id);assert.equal(JSON.stringify(original),sourceBefore);assert.equal(latest.length,2);assert.equal(latest[0].engine,'AI · Sửa đội');
@@ -111,6 +112,13 @@ test('AI editing previews explicit swaps and preserves the source history withou
   const teams=latest[0].output.teams;assert.ok(teams.A.length&&teams.B.length);
   x.setLogView([source]);x.openEdit(source.id);x.elements.get('lineupEditInstruction').value='Đổi Flow 0 và Flow 7';await x.runEdit();x.applyEdit();
   assert.equal(JSON.stringify(x.log.list().find(r=>r.id===source.id)),sourceBefore,'Editing a history item does not overwrite it');
+});
+
+test('AI clarification shows real names and team locations instead of internal player IDs',async()=>{
+  const x=controller('valid',roster(),storage(),{clarifyEdit:true});await x.run();const before=JSON.stringify(x.scope.cstate);x.openEdit();
+  x.elements.get('lineupEditInstruction').value='Cho Flow 15 dự bị';await x.runEdit();const message=x.elements.get('lineupEditStatus').textContent;
+  assert.match(message,/Flow 15 \(Team [AB] ·/);assert.match(message,/Flow 8 \(Team [AB] ·/);assert.match(message,/cầu thủ chưa xác định/);assert.doesNotMatch(message,/\bp\d+\b/i);
+  assert.equal(x.elements.get('lineupEditApply').hidden,true);assert.equal(JSON.stringify(x.scope.cstate),before);
 });
 
 test('invalid AI edit leaves the existing draft untouched',async()=>{

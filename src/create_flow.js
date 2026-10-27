@@ -189,6 +189,10 @@ function createEditChanged(){if(!CREATE_EDIT)return;CREATE_EDIT.proposal=null;$(
 function createEditPositions(teams,players){
   const positions=new Map();for(const side of ['A','B']){teams[side].starters.forEach((i,k)=>positions.set(i,'Team '+side+' · '+(CREATE_LOG_ROLE[GPAIContext.SLOTS[k]]||GPAIContext.SLOTS[k])));teams[side].bench.forEach(i=>positions.set(i,'Team '+side+' · dự bị'));}return positions;
 }
+function createEditHumanText(text,edit){
+  const positions=createEditPositions(edit.teams,edit.players);
+  return String(text||'').replace(/\bp\d+\b/gi,code=>{const index=Number(code.slice(1)),player=edit.players[index];return player?`${player.n} (${positions.get(index)||'không rõ vị trí'})`:'cầu thủ chưa xác định';});
+}
 async function createRunEdit(){
   const edit=CREATE_EDIT,instruction=$('lineupEditInstruction').value.trim();if(!edit||edit.busy||AI_STATE.busy||CREATE_STATE.busy)return;
   const status=$('lineupEditStatus');status.hidden=false;status.className='ai-message';
@@ -199,16 +203,17 @@ async function createRunEdit(){
     const context={players:edit.players,rosterNames:edit.players.map(p=>p.n),history:edit.history,instruction,editBaseInstruction:edit.note.slice(0,Math.max(0,1998-instruction.length)),editTeams:edit.teams};
     const response=await aiFetch('run',{task:'lineup-edit',context}),out=response.output;
     if(CREATE_EDIT!==edit||$('lineupEditInstruction').value.trim()!==instruction)return;
-    if(out.status==='clarify'){status.textContent=out.message;return;}
+    if(out.status==='clarify'){status.textContent=createEditHumanText(out.message,edit);return;}
     if(out.status!=='ready'||!out.result||!out.teams)throw new Error('AI chưa trả được phương án sửa hợp lệ.');
     const before=createEditPositions(edit.teams,edit.players),after=createEditPositions(out.teams,edit.players),preview=$('lineupEditPreview');preview.replaceChildren();
+    preview.appendChild(createLogNode('strong','','AI hiểu yêu cầu'));preview.appendChild(createLogNode('p','',createEditHumanText(out.message,edit)));
     preview.appendChild(createLogNode('strong','','Thay đổi đề xuất'));
     const changes=edit.players.flatMap((p,i)=>before.get(i)!==after.get(i)?[`${p.n}: ${before.get(i)} → ${after.get(i)}`]:[]);
     if(!changes.length)throw new Error('Đề xuất không thay đổi đội hình.');
     const list=createLogNode('ul');for(const text of changes)list.appendChild(createLogNode('li','',text));preview.appendChild(list);
-    if(out.warnings?.length){const box=createLogNode('div','lineup-edit-warning');box.appendChild(createLogNode('strong','','Cần xem lại tiêu chí'));for(const warning of out.warnings)box.appendChild(createLogNode('p','',warning));preview.appendChild(box);}
+    if(out.warnings?.length){const box=createLogNode('div','lineup-edit-warning');box.appendChild(createLogNode('strong','','Cần xem lại tiêu chí'));for(const warning of out.warnings)box.appendChild(createLogNode('p','',createEditHumanText(warning,edit)));preview.appendChild(box);}
     edit.proposal={output:out,instruction,context};preview.hidden=false;$('lineupEditApply').hidden=false;status.textContent='Kiểm tra thay đổi rồi bấm Áp dụng.';
-  }catch(e){if(CREATE_EDIT===edit){status.className='ai-message error';status.textContent=e.message+' Chưa áp dụng thay đổi.';}}
+  }catch(e){if(CREATE_EDIT===edit){status.className='ai-message error';status.textContent=createEditHumanText(e.message,edit)+' Chưa áp dụng thay đổi.';}}
   finally{edit.busy=false;AI_STATE.busy=false;aiRenderStatus();if(CREATE_EDIT===edit)$('lineupEditRun').disabled=false;}
 }
 function createApplyEdit(){
