@@ -17,9 +17,10 @@
 .create-criteria summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;cursor:pointer;font-size:13px;font-weight:600}
 .create-criteria summary>span:first-child{display:inline-flex;align-items:center;gap:7px}
 .create-criteria summary .ui-icon-image{width:27px;height:27px;vertical-align:0}
-.create-criteria summary::before{content:'›';color:var(--muted);font-size:20px}
-.create-criteria[open] summary::before{content:'⌄'}
 .criteria-summary-hint{margin-left:auto;color:var(--muted);font-size:11px;font-weight:400}
+.criteria-chevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;color:var(--muted);transform:rotate(0);transition:transform .16s ease}
+.criteria-chevron .ui-icon{width:16px;height:16px;vertical-align:0}
+.create-criteria[open] .criteria-chevron{transform:rotate(180deg)}
 .create-criteria-scroll{max-height:220px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 10px 8px 2px;border-top:1px solid var(--line2)}
 .create-rule-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;padding-left:20px;margin:8px 0;font-size:12px;line-height:1.65;color:var(--muted)}
 .create-rule-list li{padding-left:2px;min-width:0}

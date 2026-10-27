@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-criteria-icon">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-criteria-chevron">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -385,6 +385,8 @@ test('Create stepper highlights only the active number and bold label',()=>{
   assert.match(css,/\.create-note-wrap\{[^}]*padding:10px 12px;[^}]*border-inline:2px solid/,'Note has inset spacing and a distinct boundary');
   assert.ok(!template.includes('<div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div>'),'Criteria step does not repeat its title inside the panel');
   assert.match(template,/<summary><span><span data-ui-icon="lineup-criteria"><\/span>Tiêu chí tạo đội<\/span>/,'Criteria summary uses its dedicated football checklist icon');
+  assert.match(template,/class="criteria-summary-hint">12 tiêu chí<\/span><span class="criteria-chevron" data-ui-icon="chevron-down"><\/span><\/summary>/,'Dropdown chevron is the rightmost summary item');
+  assert.match(css,/\.criteria-chevron\{[^}]*align-items:center;[^}]*justify-content:center;[^}]*transform:rotate\(0\)/,'Dropdown chevron is centered and upright');
 });
 test('Create moves history to one header action and removes the space-consuming tab row',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
