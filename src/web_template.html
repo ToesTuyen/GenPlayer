@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-result-step">
+<meta name="genplayer-release" content="web-app-2026-10-27-result-actions">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1000,7 +1000,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   <section id="createResultStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createResultStepBtn" hidden>
     <div class="bar create-toolbar">
-      <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
       <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
     </div>
@@ -2514,7 +2513,7 @@ let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null}
 function buildRoster(){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
   AI_STATE.draftReview=null;$("aiOutput").hidden=true;$("aiAnalysisTools").hidden=true;aiSyncDraftAction();
-  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcess").style.display="none";$("reviewProcessRules").style.display="none";
+  CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcessRules").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
     const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");

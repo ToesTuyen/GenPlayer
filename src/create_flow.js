@@ -158,7 +158,7 @@ function createUseLog(id){
   try{draft=createDraftFromLog(record);}catch(e){alert('Không nạp được đội hình: '+e.message);return;}
   cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
   AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
-  CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';$('reviewProcessRules').style.display='none';createNoteChanged();
+  CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcessRules').style.display='none';createNoteChanged();
   render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';
   createRevealDraft();openMatchModal('create');
 }
@@ -211,7 +211,7 @@ function createBegin(){
   if($('createRunLabel'))$('createRunLabel').textContent=CREATE_RUN_ID?'Log: '+CREATE_RUN_ID:'';
   CREATE_STATE.busy=true;CREATE_STATE.success=false;CREATE_STATE.hasReport=false;CREATE_STATE.steps.clear();CREATE_STATE.startedAt.clear();
   aiMessage('');AI_STATE.lastFailure=null;
-  $('reviewProcess').style.display='none';
+  $('reviewProcessRules').style.display='none';
   $('aiTask').value='lineup';$('aiAnalysisTools').hidden=true;aiTaskChanged();aiSyncDraftAction();
   $('go').disabled=true;$('selectAll').disabled=true;
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=true);
@@ -228,7 +228,7 @@ async function createFinish(success,message){
   const cloud=await createCloudPush();
   CREATE_STATE.busy=false;CREATE_STATE.success=success;CREATE_STATE.hasReport=true;$('go').disabled=false;
   aiSyncDraftAction();
-  $('reviewProcess').style.display='';$('reviewProcessRules').style.display='';createSyncWizard();
+  $('reviewProcessRules').style.display='';createSyncWizard();
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
   $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;

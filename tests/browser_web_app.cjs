@@ -170,7 +170,8 @@ async function main(){
       assert.equal(await page.getByRole('button',{name:'Đặt làm trận tuần này'}).count(),1);
       await page.locator('#createHistoryHeaderBtn').click();
       const draftBeforeReview=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeReview=providerCalls;
-      await page.locator('#reviewProcess').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
+      assert.equal(await page.locator('#createResultStep').getByRole('button',{name:'Xem tiêu chí'}).count(),0);
+      await page.locator('#createRulesStepBtn').click();await page.locator('#reviewProcessRules').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
       assert.equal(await page.locator('#createProcessSteps > li').first().getAttribute('data-step'),'draft','Reopened report preserves reverse order');
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(providerCalls,callsBeforeReview,'Reopening the checklist cannot call AI');
