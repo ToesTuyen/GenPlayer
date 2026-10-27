@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-edit-actions">
+<meta name="genplayer-release" content="web-app-2026-10-27-history-actions-top">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -6412,7 +6412,7 @@ function createRenderLogCards(records){
     if(usable){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
     const issue=createLogIssue(r);if(issue){const box=createLogNode('div','create-log-issue '+(r.status==='success'?'fallback':'error'));box.appendChild(createLogNode('strong','',issue.title));if(issue.hint)box.appendChild(createLogNode('p','',issue.hint));box.appendChild(createLogNode('p','',issue.detail));card.appendChild(box);}
-    card.appendChild(createLogActions(r));card.appendChild(createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')));list.appendChild(card);
+    if(!usable)card.appendChild(createLogActions(r));card.appendChild(createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')));list.appendChild(card);
   }
 }
 function createRenderLogList(records){

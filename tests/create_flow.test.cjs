@@ -100,10 +100,10 @@ test('a successful generation log restores the exact two teams for scheduling',a
   assert.equal(record.ai.generationId,'gen-fixture');
 });
 
-test('each usable history lineup has adjacent edit and schedule actions above and below the teams',async()=>{
+test('each usable history lineup has one row of adjacent edit and schedule actions above the teams',async()=>{
   const x=controller('valid');await x.run();const record=x.log.list()[0];x.setLogView([record]);x.renderLogCards([record]);
   const card=x.elements.get('createLogList').children[0],actions=card.children.filter(n=>n.className==='create-log-actions'),teamsIndex=card.children.findIndex(n=>n.className==='create-log-teams');
-  assert.equal(actions.length,2);assert.ok(card.children.indexOf(actions[0])<teamsIndex&&card.children.indexOf(actions[1])>teamsIndex);
+  assert.equal(actions.length,1);assert.ok(card.children.indexOf(actions[0])<teamsIndex);
   for(const row of actions){assert.deepEqual(row.children.map(n=>n.textContent),['Sửa đội hình','Đặt làm trận tuần này']);row.children[0].onclick();assert.equal(x.elements.get('lineupEditDialog').open,true);assert.match(x.elements.get('lineupEditSource').textContent,new RegExp(record.id));x.scope.createCloseEdit();}
   assert.match(card.children.at(-1).textContent,/Mã log:/);
 });
