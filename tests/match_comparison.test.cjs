@@ -55,4 +55,15 @@ assert.equal(display.matchLineupRating({ratingsByRole:true,gkRated:false,gkFit:0
 assert.match(display.chip({n:'Thanh'},'TV',{},0,false,display.matchLineupRating({ratingsByRole:true},{},'TV')),/Tiền vệ cánh · 6\.6/);
 assert.ok(source.includes('matchLineupRating(ev,sel[ev.starters[c]],slots[c])'));
 assert.ok(source.includes('matchKeeperRating(A,basis.incompleteGk?A.gkFit:ovAt(pa,SL[c]))'));
+const pitchStart=source.indexOf('const PITCH_VIEW='),pitchEnd=source.indexOf('// ============ TAO DOI ============',pitchStart);
+assert.ok(pitchStart>=0&&pitchEnd>pitchStart);assert.ok(source.includes('id="pitchViewDialog"'));assert.ok(source.includes("openPitchView(this,'horizontal')"));assert.ok(source.includes("openPitchView(this,'vertical')"));
+const classes=new Set(),viewport={clientWidth:400,clientHeight:650,scrollLeft:0,scrollTop:0},canvas={style:{},children:[],replaceChildren(...nodes){this.children=nodes;}},label={textContent:''};
+const dialog={open:false,events:{},showModal(){this.open=true;},close(){this.open=false;this.events.close();},addEventListener(n,fn){this.events[n]=fn;}};
+const makeNode=(width=832,height=460)=>({style:{},offsetWidth:width,offsetHeight:height,classList:{add(){}},children:[],appendChild(n){this.children.push(n);},cloneNode(){return makeNode(width,height);}});
+const original=makeNode();original.style.transform='scale(.45)';const button={closest(){return {nextElementSibling:{querySelector(){return original;}}};}};
+const els={pitchViewDialog:dialog,pitchViewCanvas:canvas,pitchViewViewport:viewport,pitchViewZoomLabel:label},pitchContext={$:id=>els[id],document:{documentElement:{classList:{add:c=>classes.add(c),remove:c=>classes.delete(c)}},createElement:()=>makeNode(440,600)},window:{addEventListener(){}}};
+vm.runInNewContext(source.slice(pitchStart,pitchEnd)+'\nglobalThis.testPitch={openPitchView,pitchViewZoom,pitchViewFit,closePitchView};',pitchContext);
+pitchContext.testPitch.openPitchView(button,'horizontal');assert.equal(dialog.open,true);assert.ok(classes.has('pitch-view-open'));assert.equal(label.textContent,'100%');assert.equal(original.style.transform,'scale(.45)','Original pitch is not mutated');assert.notEqual(canvas.children[0],original);
+pitchContext.testPitch.pitchViewZoom(1);assert.equal(label.textContent,'125%');assert.equal(canvas.style.width,'1040px');pitchContext.testPitch.pitchViewFit();assert.equal(label.textContent,'46%');assert.ok(parseFloat(canvas.style.width)<=viewport.clientWidth);pitchContext.testPitch.closePitchView();assert.equal(dialog.open,false);assert.equal(classes.has('pitch-view-open'),false);assert.equal(canvas.children.length,0);
+const verticalPart=makeNode(420,500),verticalSource={querySelector:selector=>selector==='.vpitch'?verticalPart:null},verticalButton={closest:()=>verticalSource};pitchContext.testPitch.openPitchView(verticalButton,'vertical');assert.equal(dialog.open,true);assert.equal(canvas.children[0].children.length,1);pitchContext.testPitch.closePitchView();
 console.log('Legacy comparisons preserved; known/unrated keepers, opt-in paired bench and role ratings: OK');
