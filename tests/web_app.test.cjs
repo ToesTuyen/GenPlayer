@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-compact-criteria">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-history-header">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -370,12 +370,14 @@ test('Create stepper highlights only the active number and bold label',()=>{
   assert.match(css,/\.create-stepper button\.on\{background:transparent;color:var\(--text\);font-weight:750\}/);
   assert.match(css,/\.create-stepper button\.on \.create-step-number\{border-color:var\(--action\);background:var\(--action\);color:#fff\}/);
 });
-test('Create uses two in-page tabs for lineup work and cloud/local generation history',()=>{
+test('Create moves history to one header action and removes the space-consuming tab row',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     const start=html.indexOf('<div id="screen-create"'),end=html.indexOf('<div id="screen-players"'),create=html.slice(start,end);
-    assert.match(create,/id="createBuildTabBtn"[^>]*role="tab"[^>]*>.*Tạo đội/s,file+' has Create tab');
-    assert.match(create,/id="createHistoryTabBtn"[^>]*role="tab"[^>]*>.*Lịch sử tạo đội/s,file+' has history tab');
+    assert.ok(!create.includes('class="create-tabs"'),file+' removes the two-tab row');
+    assert.ok(!html.includes('id="createBuildTabBtn"'),file+' removes Create tab button');
+    assert.ok(!html.includes('id="createHistoryTabBtn"'),file+' removes history tab button');
+    assert.match(html,/id="createHistoryHeaderBtn"[^>]*onclick="createToggleHeaderView\(\)"[^>]*hidden/,file+' exposes history in the header');
     assert.ok(create.includes('id="createBuildTab"'));assert.ok(create.includes('id="createHistoryTab"'));
     assert.ok(create.includes('id="createLogList"'),file+' renders lineup cards inline');
     assert.ok(create.includes('id="createLogDetails"'),file+' keeps technical diagnostics');

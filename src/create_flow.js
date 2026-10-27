@@ -113,10 +113,11 @@ function createRenderLogList(records){
 function createSetTab(tab='build'){
   CREATE_TAB=tab==='history'?'history':'build';const history=CREATE_TAB==='history';
   $('createBuildTab').hidden=history;$('createHistoryTab').hidden=!history;
-  $('createBuildTabBtn').classList.toggle('on',!history);$('createHistoryTabBtn').classList.toggle('on',history);
-  $('createBuildTabBtn').setAttribute('aria-selected',String(!history));$('createHistoryTabBtn').setAttribute('aria-selected',String(history));
-  $('createBuildTabBtn').tabIndex=history?-1:0;$('createHistoryTabBtn').tabIndex=history?0:-1;
+  const button=$('createHistoryHeaderBtn'),label=$('createHistoryHeaderLabel');
+  if(button){button.setAttribute('aria-label',history?'Quay lại tạo đội':'Mở lịch sử tạo đội');button.setAttribute('aria-pressed',String(history));}
+  if(label)label.textContent=history?'Tạo đội':'Lịch sử';
 }
+function createToggleHeaderView(){if(CREATE_TAB==='history')createSetTab('build');else createOpenLogs();}
 async function createOpenLogs(){
   createSetTab('history');
   const local=CREATE_LOG?.list()||[];CREATE_CLOUD.state=createCloudEnabled()?'loading':'off';

@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-compact-criteria">
+<meta name="genplayer-release" content="web-app-2026-10-27-history-header">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -36,6 +36,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--blue);width:16px;heigh
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .ab-back:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 .ab-title{font-weight:800;font-size:17px;letter-spacing:-.01em}
+.ab-history{flex:0 0 auto;margin-left:auto;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.12);color:var(--text);border-radius:9px;padding:7px 10px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.ab-history:hover{background:var(--surface3);border-color:rgba(255,255,255,.28)}
+.ab-history[hidden]{display:none}
+.ab-history .ui-icon{width:17px;height:17px}
 .ab-admin{flex:0 0 auto;margin-left:auto;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.12);color:#eef0ff;border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
 .ab-admin:hover{background:var(--surface3);border-color:rgba(255,255,255,.18)}
 body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);background:rgba(34,224,122,.12)}
@@ -878,6 +882,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <header class="appbar">
   <button class="ab-back" id="backBtn" onclick="show('home')" aria-label="Quay lại">←</button>
   <div class="ab-title" id="appTitle"><span class="ab-brand"><img src="assets/logo.png" class="ab-logo" alt="">FC Haha</span></div>
+  <button id="createHistoryHeaderBtn" class="ab-history" type="button" onclick="createToggleHeaderView()" aria-label="Mở lịch sử tạo đội" hidden><span data-ui-icon="match-history"></span><span id="createHistoryHeaderLabel">Lịch sử</span></button>
   <button id="themeBtn" class="ab-theme" onclick="toggleTheme()" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối">☾</button>
   <button id="adminBtn" class="ab-admin" onclick="toggleAdmin()" data-ui-no-icons>Admin</button>
 </header>
@@ -932,11 +937,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 
 <!-- ====== TAO DOI ====== -->
 <div id="screen-create" class="screen">
-  <div class="create-tabs" role="tablist" aria-label="Tạo đội">
-    <button id="createBuildTabBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createBuildTab" onclick="createSetTab('build')"><span data-ui-icon="lineup"></span>Tạo đội</button>
-    <button id="createHistoryTabBtn" type="button" role="tab" aria-selected="false" aria-controls="createHistoryTab" onclick="createOpenLogs()"><span data-ui-icon="match-history"></span>Lịch sử tạo đội</button>
-  </div>
-  <section id="createBuildTab" class="create-tab-panel" role="tabpanel" aria-labelledby="createBuildTabBtn">
+  <section id="createBuildTab" class="create-tab-panel">
   <div class="card-box">
     <div class="create-stepper" role="tablist" aria-label="Các bước tạo đội">
       <button id="createRosterStepBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createRosterStep" onclick="createSetWizardStep('roster')"><span class="create-step-number">1</span><span>Chọn cầu thủ</span></button>
@@ -1011,7 +1012,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div id="aiLineupPreview"></div>
   </div>
   </section>
-  <section id="createHistoryTab" class="create-tab-panel" role="tabpanel" aria-labelledby="createHistoryTabBtn" hidden>
+  <section id="createHistoryTab" class="create-tab-panel" hidden>
     <div class="card-box create-log-page">
       <div class="section-title"><span data-ui-icon="match-history"></span> Lịch sử tạo đội</div>
       <p id="createLogNotice" class="ai-footer">Đang đọc log trên máy và cloud…</p>
@@ -1914,6 +1915,7 @@ function show(id){
   $("appTitle").innerHTML=TITLES[id]||TITLES.home;
   keyLogoBackgrounds();
   $("backBtn").style.display=id==="home"?"none":"flex";
+  $("createHistoryHeaderBtn").hidden=id!=="screen-create";
   $("adminBtn").style.display=id==="home"?"":"none";   // nút đăng nhập chỉ hiện ở dashboard
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.s===id));
   if(id==="home") renderHome(); else stopHeroShow();   // rời trang chủ → dừng slideshow

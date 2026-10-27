@@ -64,9 +64,9 @@ async function main(){
       assert.equal(await firstPlayer.locator('input[type="checkbox"]').isVisible(),false,'Player checkboxes are visually hidden');
       await firstPlayer.click();assert.equal(await firstPlayer.getAttribute('aria-checked'),'false');assert.equal(await page.evaluate(()=>selectedIdx().length),selectedBeforeTap-1,'Tapping a card deselects it');
       await firstPlayer.click();assert.equal(await firstPlayer.getAttribute('aria-checked'),'true');assert.equal(await page.evaluate(()=>selectedIdx().length),selectedBeforeTap,'Tapping again selects it');
-      assert.deepEqual(await page.locator('.create-tabs button').allTextContents(),['Tạo đội','Lịch sử tạo đội']);
-      await page.locator('#createHistoryTabBtn').click();assert.equal(await page.locator('#createHistoryTab').isVisible(),true);assert.equal(await page.locator('#createBuildTab').isVisible(),false);
-      await page.locator('#createBuildTabBtn').click();assert.equal(await page.locator('#createBuildTab').isVisible(),true);assert.equal(await page.locator('#createHistoryTab').isVisible(),false);
+      assert.equal(await page.locator('.create-tabs').count(),0);assert.equal(await page.locator('#createHistoryHeaderBtn').isVisible(),true);
+      await page.locator('#createHistoryHeaderBtn').click();assert.equal(await page.locator('#createHistoryTab').isVisible(),true);assert.equal(await page.locator('#createBuildTab').isVisible(),false);assert.equal(await page.locator('#createHistoryHeaderLabel').innerText(),'Tạo đội');
+      await page.locator('#createHistoryHeaderBtn').click();assert.equal(await page.locator('#createBuildTab').isVisible(),true);assert.equal(await page.locator('#createHistoryTab').isVisible(),false);assert.equal(await page.locator('#createHistoryHeaderLabel').innerText(),'Lịch sử');
       await page.locator('#selectAll').uncheck();
       assert.equal(await page.locator('#all,#none').count(),0);
       assert.equal(await page.locator('#createNextStep').isDisabled(),true,'Cannot proceed without 14 players');
@@ -161,12 +161,12 @@ async function main(){
       await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#createProcess').isVisible(),false,'View lineup closes the progress dialog');
       assert.equal(await page.locator('#result').isVisible(),true,'View lineup reveals the rendered draft');
-      await page.locator('#createHistoryTabBtn').click();
+      await page.locator('#createHistoryHeaderBtn').click();
       assert.ok(await page.locator('.create-log-card').count()>=1,'Successful runs remain diagnosable');
       assert.deepEqual(await page.locator('.create-log-team-title').allTextContents(),['🔴 Team A','🟡 Team B']);
       assert.equal(await page.locator('.create-log-player').count(),14);assert.ok((await page.locator('.create-log-code').allTextContents()).every(text=>/^Mã log: run-/.test(text)));
       assert.equal(await page.getByRole('button',{name:'Đặt làm trận tuần này'}).count(),1);
-      await page.locator('#createBuildTabBtn').click();
+      await page.locator('#createHistoryHeaderBtn').click();
       const draftBeforeReview=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeReview=providerCalls;
       await page.locator('#reviewProcess').click();assert.equal(await page.locator('#createProcess').isVisible(),true);
       assert.equal(await page.locator('#createProcessSteps > li').first().getAttribute('data-step'),'draft','Reopened report preserves reverse order');
