@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit-names">
+<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit-actions">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -999,10 +999,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   <section id="createResultStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createResultStepBtn" hidden>
-    <div class="bar create-toolbar"><button class="btn alt sm" id="editLineup" type="button" onclick="createOpenEdit()"><span data-ui-icon="edit"></span>Sửa đội hình</button></div>
     <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
     <div id="result"></div>
-    <div class="create-save-float"><button class="btn" id="saveWeek" style="display:none"><span data-ui-icon="save"></span><span id="saveWeekLabel">Lưu làm đội tuần này</span></button></div>
+    <div class="create-save-float"><button class="btn alt" id="editLineup" type="button" onclick="createOpenEdit()"><span data-ui-icon="edit"></span>Sửa đội hình</button><button class="btn" id="saveWeek" style="display:none"><span data-ui-icon="save"></span><span id="saveWeekLabel">Lưu làm đội tuần này</span></button></div>
   </section>
   <div id="aiOutput" class="ai-panel" hidden>
     <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>

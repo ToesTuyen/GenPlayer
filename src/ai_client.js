@@ -111,6 +111,7 @@ function aiDraftFingerprint(){
 function aiSyncDraftAction(){
   const button=$('saveWeek');if(!button)return;
   button.disabled=AI_STATE.busy||(typeof CREATE_STATE!=='undefined'&&CREATE_STATE.busy);
+  const edit=$('editLineup');if(edit)edit.disabled=button.disabled;
   const label=$('saveWeekLabel');if(label)label.textContent=AI_STATE.reviewingDraft?'Đang đánh giá…':'Lưu làm đội tuần này';
 }
 function aiDraftContext(){
