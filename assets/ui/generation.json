@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "date": "2026-10-10",
+  "version": 5,
+  "date": "2026-10-27",
   "tool": "OpenAI built-in imagegen",
   "mode": "generate",
   "transparent_background": true,
@@ -21,7 +21,8 @@
     "player-rating": "Assessing a player's skills, ratings and AI Form",
     "match-analysis": "Neutral comparison and analysis of both football teams",
     "finance-ledger": "Club ledger, balance and recording income or expenses",
-    "activity-log": "Edit history and administrative action logs, not match schedules"
+    "activity-log": "Edit history and administrative action logs, not match schedules",
+    "lineup-criteria": "Checklist of rules used to create a balanced football lineup"
   },
   "small_controls": {
     "source": "src/ui_icons_solid.js",
@@ -109,6 +110,10 @@
       "path": "activity-log-3d-v1.png",
       "prompt_set": "v3",
       "prompt_subject": "Subject: A rounded midnight-blue and violet clipboard with three short colored horizontal entry bars and a small round blue clock overlay. Convey a history of edits or administrative actions. No football, no calendar grid, no archive box."
+    },
+    {
+      "path": "lineup-criteria-3d-v1.png",
+      "prompt": "Use case: stylized-concept. Asset type: small UI icon for a Vietnamese amateur football team web app. Primary request: a compact 3D icon that clearly represents football lineup criteria: a small white clipboard with three clean green checkmarks, paired with a tiny classic black-and-white football at the lower corner. Style/medium: polished friendly 3D app icon, soft rounded shapes, crisp silhouette, similar to modern casual sports app icons. Composition/framing: centered single icon, square composition, readable at 24–30 px, no surrounding frame. Lighting/mood: gentle studio light, calm and trustworthy, not gambling-like. Color palette: white clipboard, deep forest green checks, small black-and-white football, subtle warm highlight. Constraints: transparent background, no text, no letters, no numbers, no watermark, no betting symbols, no money, no trophy, no scales, no extra objects."
     },
     {
       "path": "football-3d-v1.png",

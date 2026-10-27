@@ -43,7 +43,7 @@ const menuIcons = Array.from(template.matchAll(/class="ap-icon" data-ui-icon="([
 assert.deepEqual(menuIcons, ['lineup', 'squad', 'ranking', 'match-history', 'player-form', 'finance', 'backup']);
 assert.ok(template.includes('class="rank-goals">${GPIcons.render("goal")}'));
 assert.ok(!template.includes('class="pm-arch-name">🏅'), 'position badges should use position icons');
-for (const name of ['match-score', 'goal-record', 'player-rating', 'match-analysis', 'finance-ledger', 'activity-log']) {
+for (const name of ['match-score', 'goal-record', 'player-rating', 'match-analysis', 'finance-ledger', 'activity-log', 'lineup-criteria']) {
   assert.ok(icons.images[name], 'inner screen illustration: ' + name);
   assert.ok(template.includes('GPIcons.render("' + name + '")') || template.includes('data-ui-icon="' + name + '"'), 'inner screen usage: ' + name);
 }

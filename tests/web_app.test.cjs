@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-compact-rules-actions">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-criteria-icon">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -376,13 +376,15 @@ test('Create roster uses compact two-column tappable cards without visible per-p
   assert.match(template,/-webkit-line-clamp:2/);
 });
 test('Create stepper highlights only the active number and bold label',()=>{
-  const css=fs.readFileSync(path.join(__dirname,'../src/ai.css'),'utf8');
+  const template=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../src/ai.css'),'utf8');
   assert.match(css,/\.create-stepper button\.on\{background:transparent;color:var\(--text\);font-weight:750\}/);
   assert.match(css,/\.create-stepper button\.on \.create-step-number\{border-color:var\(--action\);background:var\(--action\);color:#fff\}/);
   assert.match(css,/\.create-step-actions,\.create-go-float\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next and Create actions float at the viewport bottom without exceeding the content width');
   assert.match(css,/#createRosterStep,#createRulesStep\{padding-bottom:78px\}/,'Both wizard steps reserve space behind their floating action');
   assert.match(css,/\.create-criteria-scroll\{max-height:220px;overflow:auto/,'Criteria use a compact independently scrollable viewport');
   assert.match(css,/\.create-note-wrap\{[^}]*padding:10px 12px;[^}]*border-inline:2px solid/,'Note has inset spacing and a distinct boundary');
+  assert.ok(!template.includes('<div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div>'),'Criteria step does not repeat its title inside the panel');
+  assert.match(template,/<summary><span><span data-ui-icon="lineup-criteria"><\/span>Tiêu chí tạo đội<\/span>/,'Criteria summary uses its dedicated football checklist icon');
 });
 test('Create moves history to one header action and removes the space-consuming tab row',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){

@@ -29,7 +29,8 @@
     squad: 'users', ranking: 'trophy', 'match-history': 'calendar',
     'player-form': 'activity', finance: 'wallet', scorer: 'football', goal: 'football',
     'match-score': 'clipboard', 'goal-record': 'football', 'player-rating': 'clipboard',
-    'match-analysis': 'scales', 'finance-ledger': 'wallet', 'activity-log': 'history'
+    'match-analysis': 'scales', 'finance-ledger': 'wallet', 'activity-log': 'history',
+    'lineup-criteria': 'clipboard'
   });
   const images = Object.freeze({
     football: 'assets/ui/football-3d-v1.webp',
@@ -48,7 +49,8 @@
     'player-rating': 'assets/ui/player-rating-3d-v1.webp',
     'match-analysis': 'assets/ui/match-analysis-3d-v1.webp',
     'finance-ledger': 'assets/ui/finance-ledger-3d-v1.webp',
-    'activity-log': 'assets/ui/activity-log-3d-v1.webp'
+    'activity-log': 'assets/ui/activity-log-3d-v1.webp',
+    'lineup-criteria': 'assets/ui/lineup-criteria-3d-v1.webp'
   });
 
   function escapeAttribute(value) {

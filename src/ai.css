@@ -7,8 +7,6 @@
 .create-stepper button.on .create-step-number{border-color:var(--action);background:var(--action);color:#fff}
 .create-step-line{height:2px;border-radius:2px;background:var(--line)}
 .create-wizard-panel[hidden]{display:none!important}
-.create-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
-.create-panel-head .section-title{margin:0}
 #screen-create{padding-bottom:100px}
 #createRosterStep,#createRulesStep{padding-bottom:78px}
 .create-step-actions,.create-go-float{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
@@ -17,6 +15,8 @@
 .create-toolbar{margin:0 0 8px;gap:6px}
 .create-setup{border-block:1px solid var(--line);margin:10px 0;padding:10px 0}
 .create-criteria summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;cursor:pointer;font-size:13px;font-weight:600}
+.create-criteria summary>span:first-child{display:inline-flex;align-items:center;gap:7px}
+.create-criteria summary .ui-icon-image{width:27px;height:27px;vertical-align:0}
 .create-criteria summary::before{content:'›';color:var(--muted);font-size:20px}
 .create-criteria[open] summary::before{content:'⌄'}
 .criteria-summary-hint{margin-left:auto;color:var(--muted);font-size:11px;font-weight:400}
@@ -34,7 +34,7 @@
 .create-note-status p{margin:4px 0 0}
 .create-note-status blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;padding-left:10px;border-left:2px solid var(--amber);color:var(--text)}
 .create-note-status[data-state="warn"]{border-color:var(--amber)}
-@media(max-width:600px){.create-stepper{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);margin-bottom:10px;padding:0}.create-stepper button{gap:6px;min-height:40px;padding:5px 6px;font-size:12px}.create-step-number{flex-basis:22px;width:22px;height:22px}.create-panel-head{align-items:flex-start}.create-step-actions .btn,.create-go-float .btn{width:100%}.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}.create-criteria-scroll{max-height:190px}.create-note-wrap{padding-inline:10px}}
+@media(max-width:600px){.create-stepper{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);margin-bottom:10px;padding:0}.create-stepper button{gap:6px;min-height:40px;padding:5px 6px;font-size:12px}.create-step-number{flex-basis:22px;width:22px;height:22px}.create-step-actions .btn,.create-go-float .btn{width:100%}.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}.create-criteria-scroll{max-height:190px}.create-note-wrap{padding-inline:10px}}
 @media(max-width:560px){#screen-create #roster.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#roster .pl-item{gap:6px;min-width:0;min-height:50px;padding:6px}#roster .avatar{width:28px;height:28px;font-size:9px}#roster .pl-name{font-size:11.5px;line-height:1.2;overflow:visible}#roster .ovb{padding:2px 5px;font-size:9.5px}#roster .gst-badge{display:block;max-width:100%;margin:0;padding:1px 3px;overflow:hidden;text-overflow:ellipsis;font-size:8px}}
 .roster-guest-add{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:7px;border:1.5px dashed var(--line);border-radius:12px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:650;cursor:pointer}.roster-guest-add:hover,.roster-guest-add:focus-visible{border-color:var(--brand);color:var(--text);background:var(--brand-soft)}.roster-guest-add span:first-child{font-size:18px;line-height:1;color:var(--brand)}
 .roster-selection{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:8px}
