@@ -3,7 +3,7 @@
   'use strict';
   const SLOTS=['GK','Thòng','HV','HV','TVtt','TV','TĐ'];
   const KEYS=['KT','CH','DD','PN','TC','TL','DN','TD','OD','TM'];
-  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:1,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
+  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:2,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
   const ROLE_LABELS={GK:'thủ môn','Thòng':'thòng',HV:'hậu vệ',TVtt:'tiền vệ trung tâm',TV:'tiền vệ cánh','TĐ':'tiền đạo'};
   const validSlot=v=>typeof v==='string'&&SLOTS.includes(v);
   const WEIGHTS={GK:{TM:7,PN:1.5,TD:1,TL:.5},'Thòng':{PN:3,TD:2,DN:1.2,TL:1.2,CH:.8,KT:.6},HV:{PN:2.2,TC:2,TL:1.5,DN:1.2,KT:.9,CH:.9,TD:.9},TVtt:{CH:2.3,TD:2,KT:1.6,TL:1.1,DN:1,PN:1,DD:.7},TV:{TC:1.9,KT:1.9,DD:1.4,CH:1.3,TL:1.1,DN:1,TD:.8},'TĐ':{DD:3,KT:1.6,TC:1.5,DN:1.1,TD:.9,CH:.6}};

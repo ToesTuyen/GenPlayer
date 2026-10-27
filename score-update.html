@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-reasons">
+<meta name="genplayer-release" content="web-app-2026-10-27-reserve-two-points">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1344,7 +1344,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
             <ol class="create-rule-list">
               <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
               <li><b>Top 14 đá chính — bắt buộc.</b> Trước tiên xếp điểm vị trí chính đang hiển thị từ cao xuống thấp để lấy top 14 gốc. Sau đó mới áp dụng Note: người được ghi “dự bị” ra ghế và dự bị có điểm cao nhất còn hợp lệ vào thay.</li>
-              <li><b>Khách &amp; dự bị — bắt buộc.</b> Còn đủ 14 thành viên không bị Note chỉ định dự bị thì khách dự bị; nếu thiếu, khách mạnh nhất có thể được lấy vào top 14. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 1 điểm.</li>
+              <li><b>Khách &amp; dự bị — bắt buộc.</b> Còn đủ 14 thành viên không bị Note chỉ định dự bị thì khách dự bị; nếu thiếu, khách mạnh nhất có thể được lấy vào top 14. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 2 điểm.</li>
               <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
               <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
               <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
@@ -2065,7 +2065,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   'use strict';
   const SLOTS=['GK','Thòng','HV','HV','TVtt','TV','TĐ'];
   const KEYS=['KT','CH','DD','PN','TC','TL','DN','TD','OD','TM'];
-  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:1,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
+  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:2,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
   const ROLE_LABELS={GK:'thủ môn','Thòng':'thòng',HV:'hậu vệ',TVtt:'tiền vệ trung tâm',TV:'tiền vệ cánh','TĐ':'tiền đạo'};
   const validSlot=v=>typeof v==='string'&&SLOTS.includes(v);
   const WEIGHTS={GK:{TM:7,PN:1.5,TD:1,TL:.5},'Thòng':{PN:3,TD:2,DN:1.2,TL:1.2,CH:.8,KT:.6},HV:{PN:2.2,TC:2,TL:1.5,DN:1.2,KT:.9,CH:.9,TD:.9},TVtt:{CH:2.3,TD:2,KT:1.6,TL:1.1,DN:1,PN:1,DD:.7},TV:{TC:1.9,KT:1.9,DD:1.4,CH:1.3,TL:1.1,DN:1,TD:.8},'TĐ':{DD:3,KT:1.6,TC:1.5,DN:1.1,TD:.9,CH:.6}};
@@ -2741,7 +2741,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   'use strict';
   const SLOTS=['GK','Thòng','HV','HV','TVtt','TV','TĐ'];
   const KEYS=['KT','CH','DD','PN','TC','TL','DN','TD','OD','TM'];
-  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:1,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
+  const LINEUP_LIMITS=Object.freeze({lineDifference:1.5,benchAdvantage:0.5,benchMeanDifference:2,strengthDifference:2,starThreshold:8,starDifference:1,paceDifference:0.5,staminaDifference:0.5,previousTeammates:4});
   const ROLE_LABELS={GK:'thủ môn','Thòng':'thòng',HV:'hậu vệ',TVtt:'tiền vệ trung tâm',TV:'tiền vệ cánh','TĐ':'tiền đạo'};
   const validSlot=v=>typeof v==='string'&&SLOTS.includes(v);
   const WEIGHTS={GK:{TM:7,PN:1.5,TD:1,TL:.5},'Thòng':{PN:3,TD:2,DN:1.2,TL:1.2,CH:.8,KT:.6},HV:{PN:2.2,TC:2,TL:1.5,DN:1.2,KT:.9,CH:.9,TD:.9},TVtt:{CH:2.3,TD:2,KT:1.6,TL:1.1,DN:1,PN:1,DD:.7},TV:{TC:1.9,KT:1.9,DD:1.4,CH:1.3,TL:1.1,DN:1,TD:.8},'TĐ':{DD:3,KT:1.6,TC:1.5,DN:1.1,TD:.9,CH:.6}};

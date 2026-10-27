@@ -31,14 +31,14 @@ test('the displayed top 14 are fixed before team balancing',()=>{
 
 test('weakest reserve cannot hide two stronger reserves concentrated on one side',()=>{
   const p=roster(20),t={A:{starters:[0,1,2,3,4,5,6],bench:[14,16,18]},B:{starters:[7,8,9,10,11,12,13],bench:[15,17,19]}};
-  [14,16].forEach(i=>rate(p[i],7.6));rate(p[18],4.1);rate(p[15],6.7);[17,19].forEach(i=>rate(p[i],6));
-  const m=C.lineupMetrics(p,t);assert.ok(m.difference.benchMean<1);assert.ok(m.benchGroups[0].gap<=1);assert.ok(m.benchGroups[1].gap>1);
+  [14,16].forEach(i=>rate(p[i],8.8));rate(p[18],3);rate(p[15],7);[17,19].forEach(i=>rate(p[i],6));
+  const m=C.lineupMetrics(p,t);assert.ok(m.difference.benchMean<2);assert.ok(m.benchGroups[0].gap<=2);assert.ok(m.benchGroups[1].gap>2);
   assert.throws(()=>C.lineup(p,t),/nhóm 2 người mạnh nhất.*không lấy người yếu/);
   const good=structuredClone(t);[good.A.bench[1],good.B.bench[0]]=[good.B.bench[0],good.A.bench[1]];
   assert.doesNotThrow(()=>C.lineup(p,good));
   const prepared=S.prepare({task:'lineup',context:context(p,good)});
   assert.throws(()=>S.validateOutput(output([{first:'p16',second:'p15'}]),prepared),e=>e.kind==='lineup');
-  const data=JSON.parse(prepared.messages[1].content);assert.equal(data.lineupRequirements.reserveStrength.strongestPrefixes,true);assert.equal(data.lineupRequirements.reserveStrength.meanDifference,1);
+  const data=JSON.parse(prepared.messages[1].content);assert.equal(data.lineupRequirements.reserveStrength.strongestPrefixes,true);assert.equal(data.lineupRequirements.reserveStrength.meanDifference,2);
 });
 
 test('a raw displayed top-14 cut is never replaced by lower-rated specialists',()=>{
