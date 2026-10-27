@@ -36,7 +36,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards};
   `,scope);
   return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,...scope.flow};
 }
@@ -107,6 +107,24 @@ test('no legal candidate stops before paid AI, keeps previous draft and records 
   const x=controller('valid',p),old={results:[{sentinel:true}],idx:0};x.scope.cstate=old;await x.run();
   assert.equal(x.state.success,false);assert.equal(x.requests.length,0);assert.equal(x.renders.length,0);assert.equal(x.scope.cstate,old);
   const log=x.log.list()[0];assert.equal(log.status,'failed');assert.equal(log.error.kind,'solver');assert.ok(log.error.diagnostics.length);assert.ok(log.error.search);assert.ok(!log.output);
+});
+
+test('history explains missing keepers from the recorded snapshot and preserves the logged reason',()=>{
+  const x=controller(),p=roster(16);for(const player of p)player.TM=0;p[0].TM=6;p[7].pos='HV';p[7].pos2=[];
+  const record={status:'failed',input:{players:p,instruction:''},error:{kind:'solver',message:'Không phủ đủ hai bộ vị trí.',search:{totalPartitions:0,top14:p.slice(0,14).map(y=>y.n)}}};
+  const issue=x.logIssue(record);assert.match(issue.title,/Lý do/);assert.match(issue.detail,/Không phủ đủ/);assert.match(issue.hint,/chỉ có 1 người.*Flow 0.*cần 2/);
+  record.input.instruction='Flow 7 bắt gôn';assert.equal(x.logIssue(record).hint,'','Current Note authorizes the second keeper');
+  const old=x.logIssue({status:'failed',events:[{state:'error',detail:'Hàng công chênh 2 điểm.'}]});assert.match(old.detail,/Hàng công/);assert.equal(old.hint,'');
+  const fallback=x.logIssue({status:'success',fallback:{reason:'Kết nối AI không thành công.'}});assert.match(fallback.title,/dùng thuật toán/);assert.match(fallback.detail,/Kết nối AI/);
+  assert.equal(x.logIssue({status:'running'}),null);
+});
+
+test('history card displays the exact failure and log id for a reserve imbalance',()=>{
+  const x=controller(),node=()=>({textContent:'',className:'',children:[],appendChild(child){this.children.push(child);},append(...children){this.children.push(...children);},replaceChildren(){this.children=[];}});
+  x.scope.document.createElement=node;const list=node();x.elements.set('createLogList',list);
+  x.renderLogCards([{id:'run-test-8lju2om1',startedAt:'2026-10-27T09:31:45.147Z',status:'failed',engine:'AI',input:{players:[]},error:{kind:'solver',message:'Sức mạnh dự bị chênh 1.30 điểm, vượt ngưỡng 1.',search:{totalPartitions:6435}}}]);
+  const findText=n=>[n.textContent,...n.children.flatMap(findText)].join(' '),text=findText(list);
+  assert.match(text,/Lý do không tạo được đội/);assert.match(text,/dự bị chênh 1\.30/);assert.match(text,/run-test-8lju2om1/);assert.doesNotMatch(text,/chỉ có 1 người đủ điều kiện bắt gôn/);
 });
 
 test('exhausted group exclusions return an explicit stop instead of reusing an old team',()=>{

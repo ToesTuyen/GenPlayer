@@ -89,6 +89,11 @@
 .create-log-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 .create-log-actions .btn{margin-left:auto}
 .create-log-empty{padding:18px 10px;text-align:center;color:var(--muted);font-size:12px}
+.create-log-issue{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:11.5px;line-height:1.55;overflow-wrap:anywhere}
+.create-log-issue.error{border-color:var(--red);background:var(--loss-soft)}
+.create-log-issue.fallback{border-color:var(--amber);background:var(--amber-soft)}
+.create-log-issue strong{display:block;color:var(--text);font-size:12px}
+.create-log-issue p{margin:5px 0 0;color:var(--text);white-space:pre-wrap}
 .create-log-debug{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;color:var(--muted);font-size:11.5px}
 .create-log-debug summary{cursor:pointer;min-height:34px;align-content:center;font-weight:750}
 #createLogDetails{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55dvh;overflow:auto;font:12px/1.6 ui-monospace,SFMono-Regular,monospace;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}

@@ -84,6 +84,21 @@ const CREATE_LOG_ROLE={GK:'Gôn',Thòng:'Thòng',HV:'Hậu vệ',TVtt:'Giữa',T
 function createLogNode(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
 function createLogGenerationId(r){return typeof r?.ai?.generationId==='string'&&r.ai.generationId?r.ai.generationId:'';}
 function createLogUsable(r){return r?.status==='success'&&Array.isArray(r?.input?.players)&&r.input.players.length>=14&&['A','B'].every(side=>Array.isArray(r?.output?.teams?.[side])&&r.output.teams[side].filter(p=>!p.bench).length===7);}
+function createLogIssue(r){
+  if(r.status==='success')return r.fallback?.reason?{title:'AI chưa thành công — đã dùng thuật toán',detail:r.fallback.reason,hint:''}:null;
+  if(r.status==='running')return null;
+  const lastError=[...(r.events||[])].reverse().find(e=>e.state==='error'&&e.detail);
+  const detail=r.error?.message||lastError?.detail||({cancelled:'Lượt tạo đã bị huỷ.',interrupted:'Lượt tạo bị gián đoạn trước khi hoàn tất; yêu cầu AI có thể vẫn đang chạy.'}[r.status])||'Log này không ghi lại nguyên nhân cụ thể.';
+  let hint='';
+  // Explain old and new logs using their recorded player/Note snapshot, not
+  // today’s player profiles. Only diagnose keepers for the early top-14 error.
+  if(r.error?.kind==='solver'&&r.error?.search?.totalPartitions===0&&Array.isArray(r.error.search.top14)&&Array.isArray(r.input?.players))try{
+    const players=r.input.players.map(GPAIContext.player),top=new Set(r.error.search.top14),roles=GPAIContext.lineupRoles(players,r.input.instruction||'');
+    const keepers=players.filter((p,i)=>top.has(p.n)&&roles.allowed[i][0]);
+    if(keepers.length<2)hint=`Nhóm đá chính chỉ có ${keepers.length} người đủ điều kiện bắt gôn${keepers.length?': '+keepers.map(p=>p.n).join(', '):''}; cần 2. Chọn thêm người phù hợp hoặc chỉ định gôn trong Note cho trận này.`;
+  }catch{/* Older or incomplete snapshots retain the original error only. */}
+  return {title:r.status==='failed'?'Lý do không tạo được đội':r.status==='interrupted'?'Lượt tạo bị gián đoạn':'Thông tin lượt tạo',detail,hint};
+}
 function createLogTeam(side,rows){
   const box=createLogNode('section','create-log-team'),title=createLogNode('div','create-log-team-title',(side==='A'?'🔴':'🟡')+' Team '+side);box.appendChild(title);
   const starters=rows.filter(p=>!p.bench),bench=rows.filter(p=>p.bench);
@@ -98,6 +113,7 @@ function createRenderLogCards(records){
     const meta=createLogNode('div','create-log-meta',(r.engine||r.requestedEngine||'Chưa rõ')+' · '+(r.input?.players?.length||0)+' người'),status=createLogNode('span','create-log-status '+(r.status||''),CREATE_LOG_STATUS[r.status]||r.status||'Chưa rõ');headText.append(title,meta);head.append(headText,status);card.appendChild(head);
     if(createLogUsable(r)){const teams=createLogNode('div','create-log-teams');teams.append(createLogTeam('A',r.output.teams.A),createLogTeam('B',r.output.teams.B));card.appendChild(teams);}
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
+    const issue=createLogIssue(r);if(issue){const box=createLogNode('div','create-log-issue '+(r.status==='success'?'fallback':'error'));box.appendChild(createLogNode('strong','',issue.title));if(issue.hint)box.appendChild(createLogNode('p','',issue.hint));box.appendChild(createLogNode('p','',issue.detail));card.appendChild(box);}
     const actions=createLogNode('div','create-log-actions'),codes=createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')),button=createLogNode('button','btn sm',createLogUsable(r)?'Đặt làm trận tuần này':'Không thể dùng');
     button.type='button';button.disabled=!createLogUsable(r);if(!button.disabled)button.onclick=()=>createUseLog(r.id);actions.append(codes,button);card.appendChild(actions);list.appendChild(card);
   }
