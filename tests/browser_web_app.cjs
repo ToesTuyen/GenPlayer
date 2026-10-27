@@ -104,14 +104,15 @@ async function main(){
       assert.equal(await page.locator('#aiRun').isVisible(),false,'No duplicate create button for AI');
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-ai-dark.png'),fullPage:true});
       assert.equal(await page.locator('#aiKeyForm').isVisible(),false,'Saving closes the key popup');
-      assert.equal(await page.locator('#createAI').isVisible(),true,'Connection summary stays accessible');
+      assert.equal(await page.locator('#createAI').isVisible(),false,'Saved key controls leave the Create screen');
+      assert.equal(await page.locator('#aiKeySettings').isVisible(),false,'Saved OpenRouter key is no longer displayed');
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Moving to criteria preserves roster selections');
-      await page.locator('#aiKeySettings').click();
+      await page.evaluate(()=>aiOpenKeyDialog());
       assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();
       assert.equal(await page.evaluate(()=>selectedIdx().length),15,'Opening inline AI preserves selected roster');
-      assert.equal(await page.locator('#createAI').isVisible(),true);
+      assert.equal(await page.locator('#createAI').isVisible(),false);
       await page.locator('#aiInstruction').fill(lineupNote);
-      await page.locator('#aiKeySettings').click();await page.locator('#aiKeySkip').click();
+      await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiKeySkip').click();
       assert.equal(await page.locator('#aiInstruction').inputValue(),lineupNote);
       assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),false);
       await page.evaluate(()=>{
@@ -197,7 +198,7 @@ async function main(){
       await page.screenshot({path:path.join(reports,(mobile?'mobile':'desktop')+'-fallback.png'),animations:'disabled'});
       await page.locator('#createProcessClose').click();
       // Removing the local key must not attempt a paid request at all.
-      await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();
+      await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();
       const beforeMissing=providerCalls;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);
       assert.equal(providerCalls,beforeMissing);assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng Thuật toán/);
       assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
@@ -229,7 +230,7 @@ async function main(){
         window.firebase={firestore:Object.assign(()=>({}),{FieldValue:{arrayUnion:x=>x}})};
         STATE._lastWritten={};persist();logMatchAct('score',100,'test','preview-only');return writes;
       });assert.equal(blocked,0,'Preview cannot call Firestore set');
-      await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);await page.locator('#aiKeySkip').click();
+      await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiRemoveKey').click();await page.waitForFunction(()=>document.querySelector('#aiRun').disabled);await page.locator('#aiKeySkip').click();
       assert.equal(await page.evaluate(()=>localStorage.getItem(AI_KEYS.storageName)),null);
       // Empty Note really means no per-match requests, even with history available.
       await page.locator('#aiInstruction').fill(' ');await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);

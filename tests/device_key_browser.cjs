@@ -52,6 +52,8 @@ async function main(){
     await page.evaluate(()=>{show('home');show('screen-create');});assert.equal(await page.locator('#aiKeyDialog').isVisible(),false);await page.locator('#createNextStep').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true,'A later criteria step with no key prompts again');
     await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
     assert.equal(await page.locator('#aiKeyDialog').isVisible(),false,'Save closes the popup without generating');
+    assert.equal(await page.locator('#aiKeySettings').isVisible(),false,'Saved key control disappears');
+    assert.equal(await page.locator('#createAI').isVisible(),false,'Empty key panel disappears after save');
     assert.equal(await page.evaluate(name=>localStorage.getItem(name),storageName),secret);assert.equal(await page.locator('#aiKey').inputValue(),'');
     assert.equal(await page.evaluate(secret=>document.body.innerText.includes(secret),secret),false);
     assert.equal(await page.evaluate(secret=>JSON.stringify({state:STATE,ai:AI_STATE,players:getPlayers(),history:getHistory(),finance:getFinance()}).includes(secret),secret),false);
@@ -61,7 +63,7 @@ async function main(){
     await isolated.locator('#aiRememberKey').uncheck();await isolated.locator('#aiKey').fill(secret);await isolated.locator('#aiSaveKeyBtn').click();
     assert.equal(await isolated.evaluate(()=>AI_KEYS.has()),true);assert.equal(await isolated.evaluate(name=>localStorage.getItem(name),storageName),null);
     await isolated.reload();assert.equal(await isolated.evaluate(()=>AI_KEYS.has()),false,'Unremembered key disappears on reload');await other.close();
-    const tab=await open(ctx);assert.equal(await tab.evaluate(()=>AI_KEYS.has()),true);assert.equal(await tab.locator('#aiKeyDialog').isVisible(),false);await tab.locator('#aiKeySettings').click();
+    const tab=await open(ctx);assert.equal(await tab.evaluate(()=>AI_KEYS.has()),true);assert.equal(await tab.locator('#aiKeyDialog').isVisible(),false);await tab.evaluate(()=>aiOpenKeyDialog());
     await tab.locator('#aiRemoveKey').click();await page.waitForFunction(()=>!AI_KEYS.has());
     assert.equal(await page.evaluate(name=>localStorage.getItem(name),storageName),null,'Deletion updates the first tab');
     assert.equal(await page.locator('#aiKeyDialog').isVisible(),false,'A storage event cannot interrupt an open roster');

@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-no-feedback-fab">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-compact-rules-actions">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -66,7 +66,7 @@ function deviceSandbox(initial={},options={}){
   const store=new Map(Object.entries(initial)),elements=new Map(),events={};
   const sandbox={location:{protocol:'https:',hostname:'genplayer.example'},window:{addEventListener:(name,fn)=>events[name]=fn},AbortController,setTimeout,clearTimeout,
     localStorage:{getItem:k=>{if(options.blocked)throw new Error('blocked');return store.get(k)??null;},setItem:(k,v)=>{if(options.blocked)throw new Error('blocked');store.set(k,v);},removeItem:k=>{if(options.blocked)throw new Error('blocked');store.delete(k);}},
-    $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,style:{},open:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},showModal(){this.open=true;},close(){this.open=false;this.listeners.close?.();}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
+    $:id=>{if(!elements.has(id))elements.set(id,{value:'',checked:true,hidden:id==='aiAnalysisTools',style:{},open:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},showModal(){this.open=true;},close(){this.open=false;this.listeners.close?.();}});return elements.get(id);},fetch:options.fetch||(()=>{throw new Error('Unexpected request');})};
   sandbox.GPAIService={...S,complete:(prepared,config)=>S.complete(prepared,config,sandbox.fetch)};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/ai_client.js'),'utf8')+'\nglobalThis.qa={keys:AI_KEYS,state:AI_STATE,fetch:aiFetch,init:aiInit,save:aiSaveKey,forget:aiForgetKey,enter:aiEnterCreate,open:aiOpenKeyDialog,skip:aiSkipKeyDialog};',sandbox);
   return {...sandbox.qa,sandbox,store,elements,events};
@@ -92,7 +92,9 @@ test('blocked storage cannot claim success or silently replace an existing key',
 test('saving clears the masked input; storage deletion in another tab revokes the in-memory key',()=>{
   const x=deviceSandbox();x.init();const input=x.elements.get('aiKey');input.value=secret;x.save({preventDefault(){}});
   assert.equal(input.value,'');assert.ok(!JSON.stringify([...x.elements.values()]).includes(secret),'The key must not enter rendered UI text or placeholder');
+  assert.equal(x.elements.get('aiKeySettings').hidden,true,'Saved key control is hidden');assert.equal(x.elements.get('createAI').hidden,true,'Empty key panel is hidden');
   x.store.delete(x.keys.storageName);x.events.storage({key:x.keys.storageName});assert.equal(x.keys.has(),false);assert.equal(x.elements.get('aiRun').disabled,true);
+  assert.equal(x.elements.get('aiKeySettings').hidden,false,'Key control returns when the key is removed');assert.equal(x.elements.get('createAI').hidden,false,'Key panel returns when entry is needed');
   x.sandbox.location={protocol:'http:',hostname:'192.168.1.10'};input.value=secret;x.save({preventDefault(){}});assert.equal(x.keys.has(),true);assert.equal(input.value,'');assert.equal(x.elements.get('aiKey').disabled,false);
 });
 test('key dialog prompts on entry only without a key; skip, Escape and save clear input without calling AI',()=>{
@@ -377,8 +379,10 @@ test('Create stepper highlights only the active number and bold label',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../src/ai.css'),'utf8');
   assert.match(css,/\.create-stepper button\.on\{background:transparent;color:var\(--text\);font-weight:750\}/);
   assert.match(css,/\.create-stepper button\.on \.create-step-number\{border-color:var\(--action\);background:var\(--action\);color:#fff\}/);
-  assert.match(css,/\.create-step-actions\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next action floats at the viewport bottom without exceeding the Create content width');
-  assert.match(css,/#createRosterStep\{padding-bottom:78px\}/,'Roster reserves space behind the floating action');
+  assert.match(css,/\.create-step-actions,\.create-go-float\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next and Create actions float at the viewport bottom without exceeding the content width');
+  assert.match(css,/#createRosterStep,#createRulesStep\{padding-bottom:78px\}/,'Both wizard steps reserve space behind their floating action');
+  assert.match(css,/\.create-criteria-scroll\{max-height:220px;overflow:auto/,'Criteria use a compact independently scrollable viewport');
+  assert.match(css,/\.create-note-wrap\{[^}]*padding:10px 12px;[^}]*border-inline:2px solid/,'Note has inset spacing and a distinct boundary');
 });
 test('Create moves history to one header action and removes the space-consuming tab row',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){

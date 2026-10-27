@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-no-feedback-fab">
+<meta name="genplayer-release" content="web-app-2026-10-27-compact-rules-actions">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -964,9 +964,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-wizard-panel[hidden]{display:none!important}
 .create-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .create-panel-head .section-title{margin:0}
-#createRosterStep{padding-bottom:78px}
-.create-step-actions{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
-.create-step-actions .btn{min-width:156px}
+#screen-create{padding-bottom:100px}
+#createRosterStep,#createRulesStep{padding-bottom:78px}
+.create-step-actions,.create-go-float{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
+.create-step-actions .btn,.create-go-float .btn{min-width:156px}
 .create-step-count{display:block;margin-top:3px;font-size:11px;color:var(--muted)}
 .create-toolbar{margin:0 0 8px;gap:6px}
 .create-setup{border-block:1px solid var(--line);margin:10px 0;padding:10px 0}
@@ -974,11 +975,13 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-criteria summary::before{content:'›';color:var(--muted);font-size:20px}
 .create-criteria[open] summary::before{content:'⌄'}
 .criteria-summary-hint{margin-left:auto;color:var(--muted);font-size:11px;font-weight:400}
+.create-criteria-scroll{max-height:220px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 10px 8px 2px;border-top:1px solid var(--line2)}
 .create-rule-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;padding-left:20px;margin:8px 0;font-size:12px;line-height:1.65;color:var(--muted)}
 .create-rule-list li{padding-left:2px;min-width:0}
 .create-rule-list b{color:var(--text);font-weight:600}
 .criteria-scope,.create-note-help{font-size:11px;color:var(--muted);line-height:1.6;margin:6px 0 0}
-.create-note{margin-top:10px}
+.create-note-wrap{margin-top:10px;padding:10px 12px;border-inline:2px solid var(--line);border-radius:10px;background:var(--surface2)}
+.create-note{margin:0}
 .create-note textarea{min-height:66px}
 .create-note-status{margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:12px;line-height:1.6;color:var(--muted)}
 .create-note-status[hidden]{display:none!important}
@@ -986,7 +989,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-note-status p{margin:4px 0 0}
 .create-note-status blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;padding-left:10px;border-left:2px solid var(--amber);color:var(--text)}
 .create-note-status[data-state="warn"]{border-color:var(--amber)}
-@media(max-width:600px){.create-stepper{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);margin-bottom:10px;padding:0}.create-stepper button{gap:6px;min-height:40px;padding:5px 6px;font-size:12px}.create-step-number{flex-basis:22px;width:22px;height:22px}.create-panel-head{align-items:flex-start}.create-step-actions .btn{width:100%}.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}}
+@media(max-width:600px){.create-stepper{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);margin-bottom:10px;padding:0}.create-stepper button{gap:6px;min-height:40px;padding:5px 6px;font-size:12px}.create-step-number{flex-basis:22px;width:22px;height:22px}.create-panel-head{align-items:flex-start}.create-step-actions .btn,.create-go-float .btn{width:100%}.create-rule-list{grid-template-columns:1fr;gap:7px}.create-criteria summary{min-height:44px}.create-criteria-scroll{max-height:190px}.create-note-wrap{padding-inline:10px}}
 @media(max-width:560px){#screen-create #roster.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#roster .pl-item{gap:6px;min-width:0;min-height:50px;padding:6px}#roster .avatar{width:28px;height:28px;font-size:9px}#roster .pl-name{font-size:11.5px;line-height:1.2;overflow:visible}#roster .ovb{padding:2px 5px;font-size:9.5px}#roster .gst-badge{display:block;max-width:100%;margin:0;padding:1px 3px;overflow:hidden;text-overflow:ellipsis;font-size:8px}}
 .roster-guest-add{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:7px;border:1.5px dashed var(--line);border-radius:12px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:650;cursor:pointer}.roster-guest-add:hover,.roster-guest-add:focus-visible{border-color:var(--brand);color:var(--text);background:var(--brand-soft)}.roster-guest-add span:first-child{font-size:18px;line-height:1;color:var(--brand)}
 .roster-selection{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -1333,26 +1336,30 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <div class="create-setup">
         <details id="createCriteria" class="create-criteria">
           <summary><span>Tiêu chí tạo đội</span><span class="criteria-summary-hint">12 tiêu chí</span></summary>
-          <ol class="create-rule-list">
-            <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
-            <li><b>Top 14 đá chính — bắt buộc.</b> Trước tiên xếp điểm vị trí chính đang hiển thị từ cao xuống thấp để lấy top 14 gốc. Sau đó mới áp dụng Note: người được ghi “dự bị” ra ghế và dự bị có điểm cao nhất còn hợp lệ vào thay.</li>
-            <li><b>Khách &amp; dự bị — bắt buộc.</b> Còn đủ 14 thành viên không bị Note chỉ định dự bị thì khách dự bị; nếu thiếu, khách mạnh nhất có thể được lấy vào top 14. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 0,5.</li>
-            <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
-            <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
-            <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
-            <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
-            <li><b>Chia đều chất lượng.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; tốc độ/thể lực trung bình chênh tối đa 0,5 là bắt buộc. Chia ngôi sao (từ 8 điểm, mục tiêu lệch tối đa 1) là ưu tiên cao, không block.</li>
-            <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
-            <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
-            <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
-            <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
-          </ol>
-          <p class="criteria-scope">Cả hai cách đều kiểm tra các ngưỡng bắt buộc và ngoại lệ vị trí rõ ràng từ Note. Phong độ và yêu cầu Note khác cần đối chiếu trước khi lưu.</p>
+          <div class="create-criteria-scroll">
+            <ol class="create-rule-list">
+              <li><b>Đúng danh sách, sân 7.</b> Mỗi bên 7 đá chính; đủ người đã chọn, không trùng hoặc sót.</li>
+              <li><b>Top 14 đá chính — bắt buộc.</b> Trước tiên xếp điểm vị trí chính đang hiển thị từ cao xuống thấp để lấy top 14 gốc. Sau đó mới áp dụng Note: người được ghi “dự bị” ra ghế và dự bị có điểm cao nhất còn hợp lệ vào thay.</li>
+              <li><b>Khách &amp; dự bị — bắt buộc.</b> Còn đủ 14 thành viên không bị Note chỉ định dự bị thì khách dự bị; nếu thiếu, khách mạnh nhất có thể được lấy vào top 14. Chia khách đều; dự bị chênh tối đa 1 người. So nhóm mạnh nhất 1, 2… người mỗi bên: từng nhóm chênh trung bình tối đa 0,5.</li>
+              <li><b>Cân hàng công — bắt buộc.</b> Tổng điểm 3 vị trí tuyến trên hai đội chênh tối đa 1,5 điểm.</li>
+              <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
+              <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
+              <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
+              <li><b>Chia đều chất lượng.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; tốc độ/thể lực trung bình chênh tối đa 0,5 là bắt buộc. Chia ngôi sao (từ 8 điểm, mục tiêu lệch tối đa 1) là ưu tiên cao, không block.</li>
+              <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
+              <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
+              <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
+              <li><b>Yêu cầu riêng từ Note.</b> Chỉ lấy Note đang nhập cho lần tạo này; không tự mang chỉ định từ trận cũ sang.</li>
+            </ol>
+            <p class="criteria-scope">Cả hai cách đều kiểm tra các ngưỡng bắt buộc và ngoại lệ vị trí rõ ràng từ Note. Phong độ và yêu cầu Note khác cần đối chiếu trước khi lưu.</p>
+          </div>
         </details>
-        <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
-          <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
-        </label>
-        <p id="createNoteHelp" class="create-note-help">Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo.</p>
+        <div class="create-note-wrap">
+          <label class="ai-field create-note" for="aiInstruction">Note — yêu cầu riêng
+            <textarea id="aiInstruction" rows="2" maxlength="2000" aria-describedby="createNoteHelp" placeholder="Ví dụ: Tuyên bắt gôn; tách Quy Bong và Văn Thanh…" oninput="createNoteChanged()"></textarea>
+          </label>
+          <p id="createNoteHelp" class="create-note-help">Note hiện tại; yêu cầu chưa xác minh sẽ có cảnh báo.</p>
+        </div>
       </div>
       <section id="createAI" class="create-ai" aria-label="Key OpenRouter">
         <button class="btn alt sm ai-key-settings" type="button" id="aiKeySettings" onclick="aiOpenKeyDialog()" aria-haspopup="dialog" aria-controls="aiKeyDialog">Key OpenRouter <span id="aiConnectionSummary" class="ai-status">Chưa có key</span></button>
@@ -1369,8 +1376,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
         </div>
         <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
       </section>
+      <div class="create-go-float"><button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button></div>
       <div class="bar create-toolbar">
-        <button class="btn" id="go"><span data-ui-icon="lineup"></span>Tạo đội</button>
         <button class="btn alt sm" id="reviewProcess" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
         <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
         <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
@@ -6045,6 +6052,8 @@ function aiRenderStatus(){
   $('aiKey').placeholder=hasKey?'Nhập key mới nếu muốn thay':'sk-or-…';
   $('aiKeySkip').textContent=hasKey?'Đóng':'Bỏ qua, dùng thuật toán';
   $('aiRun').disabled=AI_STATE.busy||!hasKey;
+  $('aiKeySettings').hidden=hasKey;
+  $('createAI').hidden=hasKey&&$('aiAnalysisTools').hidden;
   aiSyncDraftAction();
 }
 async function aiRefresh(){

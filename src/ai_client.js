@@ -49,6 +49,8 @@ function aiRenderStatus(){
   $('aiKey').placeholder=hasKey?'Nhập key mới nếu muốn thay':'sk-or-…';
   $('aiKeySkip').textContent=hasKey?'Đóng':'Bỏ qua, dùng thuật toán';
   $('aiRun').disabled=AI_STATE.busy||!hasKey;
+  $('aiKeySettings').hidden=hasKey;
+  $('createAI').hidden=hasKey&&$('aiAnalysisTools').hidden;
   aiSyncDraftAction();
 }
 async function aiRefresh(){

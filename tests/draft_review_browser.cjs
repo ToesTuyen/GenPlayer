@@ -29,8 +29,8 @@ async function main(){
         const output={title:'Đánh giá bản nháp',sections:Array.from({length:6},(_,i)=>({heading:'Đánh giá '+i,body:i===0?'<img src=x onerror="window.BAD_AI=true">':'Phân tích thử dựa trên đội hình, chuỗi kết quả và bàn thắng.'}))};
         await route.fulfill({headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({model:'fake/review',choices:[{finish_reason:'stop',message:{content:JSON.stringify(output)}}]})});
       });
-      async function saveKey(){await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();}
-      async function removeKey(){await page.locator('#aiKeySettings').click();await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();}
+      async function saveKey(){await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();}
+      async function removeKey(){await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();}
       await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKeySkip').click();
       assert.equal(await page.locator('#reviewDraft').isVisible(),false);assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false);assert.equal(await page.getByText('Công cụ phân tích',{exact:true}).count(),0);
       await page.locator('#aiInstruction').fill(note);await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
