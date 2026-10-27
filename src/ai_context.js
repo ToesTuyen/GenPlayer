@@ -293,6 +293,7 @@
     }
     if(used.length!==players.length||new Set(used).size!==players.length)fail('AI bỏ sót hoặc xếp trùng cầu thủ.');
     if(Math.abs(teams.A.bench.length-teams.B.bench.length)>1)fail('Số dự bị hai đội chênh lệch quá nhiều.');
+    if(options.manualEdit)return; // Explicit user edits still enforce structure; other conflicts are reported as warnings.
     const roles=lineupRoles(players,options.instruction),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index)),starters=[...teams.A.starters,...teams.B.starters];
     if(starters.some(i=>forcedBench.has(i)))fail(`${players[starters.find(i=>forcedBench.has(i))].n}: Note hiện tại yêu cầu dự bị.`);
     const availableMembers=players.filter((p,i)=>!p.guest&&!forcedBench.has(i)).length;
@@ -302,7 +303,7 @@
   }
   function lineup(players,teams,options={}){
     validateLineupRoster(players,teams,options);
-    const guard=lineupGuard(players,options);guard.assert(teams);
+    const guard=lineupGuard(players,options);if(!options.manualEdit)guard.assert(teams);
     const evaluate=t=>{
       const ps=idx=>idx.map(i=>players[i]),mean=(idx,f)=>idx.length?ps(idx).reduce((s,p)=>s+f(p),0)/idx.length:0;
       const backs=t.starters.slice(1,4),fronts=t.starters.slice(4),scores=t.starters.map((i,k)=>positionScore(players[i],SLOTS[k]));
@@ -310,6 +311,10 @@
       return {starters:t.starters.slice(),bench:t.bench.slice(),startFit,benchOv,total:startFit+benchOv,gkFit:scores[0],gkRated:true,ratingsByRole:true,pairedBenchComparison:true,frontFit:scores.slice(4).reduce((a,b)=>a+b,0),backFit:scores.slice(1,4).reduce((a,b)=>a+b,0),defPN:mean(backs,p=>p.PN),atk:mean(fronts,p=>p.DD),def7:mean(t.starters,p=>p.PN),atk7:mean(t.starters,p=>p.DD),defOv:mean(backs,p=>positionScore(p,p.pos)),atkOv:mean(fronts,p=>positionScore(p,p.pos)),benchDef:mean(t.bench,p=>p.PN),benchAtk:mean(t.bench,p=>p.DD),pace:mean(t.starters,p=>p.TC),heat:mean(t.starters,p=>p.DN),stars:ps([...t.starters,...t.bench]).filter(p=>positionScore(p,p.pos)>=8).length};
     };
     const evA=evaluate(teams.A),evB=evaluate(teams.B),warnings=[];
+    if(options.manualEdit){
+      try{validateLineupRoster(players,teams,{...options,manualEdit:false});}catch(e){warnings.push(e.message);}
+      warnings.push(...guard.violations(teams).map(guard.describe));
+    }
     const metrics=guard.metrics(teams),rotation=guard.rotation(teams);
     for(const side of ['A','B'])Object.assign(side==='A'?evA:evB,{stars:metrics[side].totalStars,starsPaired:true,pace:metrics[side].pace,stamina:metrics[side].stamina,physicalOutfield:true});
     for(const side of ['A','B']){
@@ -320,7 +325,7 @@
       const i=teams[side].starters[k],historical=guard.roles.historical.find(x=>x.index===i&&x.slot===SLOTS[k]);
       if(historical)warnings.push(`${players[i].n}: đá Thòng theo ${historical.matches} trận tham khảo có tỉ số hòa hoặc chênh tối đa 1 bàn.`);
     }
-    const priority={strength:guard.priority.best.strength,members:guard.priority.best.members,optimal:true};
+    const priority=guard.priority.best?{strength:guard.priority.best.strength,members:guard.priority.best.members,optimal:true}:null;
     const historyRoles=guard.roles.historical.map(x=>({player:players[x.index].n,slot:x.slot,matches:x.matches,draws:x.draws,samples:x.samples}));
     return {result:{A:[...teams.A.starters,...teams.A.bench],B:[...teams.B.starters,...teams.B.bench],evA,evB,J:0},warnings,checks:{metrics,rotation,priority,historyRoles}};
   }

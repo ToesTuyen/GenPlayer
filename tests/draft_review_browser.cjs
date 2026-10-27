@@ -32,33 +32,23 @@ async function main(){
       async function saveKey(){await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();}
       async function removeKey(){await page.evaluate(()=>aiOpenKeyDialog());await page.locator('#aiRemoveKey').click();await page.locator('#aiKeySkip').click();}
       await page.goto(config.origin);await page.getByRole('button',{name:'Tạo đội',exact:true}).click();await page.locator('#createNextStep').click();await page.locator('#aiKeySkip').click();
-      assert.equal(await page.locator('#reviewDraft').isVisible(),false);assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false);assert.equal(await page.getByText('Công cụ phân tích',{exact:true}).count(),0);
+      assert.equal(await page.locator('#reviewDraft').count(),0);assert.equal(await page.locator('#aiAnalysisTools').isVisible(),false);assert.equal(await page.getByText('Công cụ phân tích',{exact:true}).count(),0);
       await page.locator('#aiInstruction').fill(note);await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
-      assert.equal(await page.locator('#reviewDraft').isVisible(),true);assert.equal(await page.locator('#aiOutput').isVisible(),false);
+      assert.equal(await page.locator('#saveWeek').isVisible(),true);assert.equal(await page.locator('#aiOutput').isVisible(),false);
       const original=await page.evaluate(()=>JSON.stringify(cstate)),originalHistory=await page.evaluate(()=>JSON.stringify(getHistory())),beforeCalls=calls;
-      await page.locator('#reviewDraft').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();assert.equal(calls,beforeCalls);assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original);
+      await page.evaluate(()=>{canEdit=true;});await page.locator('#saveWeek').click();await page.locator('#mm-save').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();assert.equal(calls,beforeCalls);assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original);assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),originalHistory);
       await saveKey();await page.evaluate(()=>{$('aiMatch').value='100';$('aiAnalysisInstruction').value='PRIVATE_OTHER_ANALYSIS';});
-      await page.locator('#createRosterStepBtn').click();await page.locator('#roster .pl-item.guest input').last().uncheck();await page.locator('#createNextStep').click();
       expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
-      await page.locator('#createResultStepBtn').click();
-      await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);
-      assert.equal(await page.locator('#reviewDraft').isDisabled(),true);assert.equal(await page.locator('#go').isDisabled(),true);assert.match(await page.locator('#reviewDraft').innerText(),/Đang đánh giá/);
-      await page.evaluate(()=>aiReviewDraft());release();await page.waitForFunction(()=>!AI_STATE.busy);
-      assert.equal(calls,beforeCalls+1,'Double invocation cannot incur another model call');assert.equal(await page.locator('#aiOutputText section').count(),6);assert.equal(await page.locator('#aiOutputText img').count(),0);assert.equal(await page.evaluate(()=>window.BAD_AI),undefined);
-      assert.equal(await page.locator('#aiMessage').isVisible(),false,'Completed review does not add a redundant explanatory banner');
-      assert.equal(await page.locator('#aiSaveReview').isVisible(),false,'Draft assessment must never overwrite a history match');
-      assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original,'Assessing or changing pending attendance cannot change the displayed draft');assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),originalHistory);
-      const pending=await page.evaluate(()=>{canEdit=true;openMatchModal('create');const data={review:mmDraft.review,subset:mmDraft.subset.length,meta:mmDraft.aiReview};closeMatchModal();return data;});
-      assert.ok(pending.review.includes('&lt;img')&&!pending.review.includes('<img'));assert.equal(pending.subset,16);assert.equal(pending.meta.model,'fake/review');
+      await page.locator('#mm-save').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);
+      assert.equal(await page.locator('#mm-save').isDisabled(),true);assert.match(await page.locator('#mm-review-status').innerText(),/Đang viết đánh giá/);
+      await page.evaluate(()=>saveMatch());release();await page.waitForFunction(()=>!STATE._savingMatch);
+      assert.equal(calls,beforeCalls+1,'Double invocation cannot incur another model call');assert.equal(await page.evaluate(()=>window.BAD_AI),undefined);
+      const saved=await page.evaluate(()=>getHistory()[0]);assert.equal(saved.subset.length,16);assert.equal(saved.aiReview.model,'fake/review');assert.ok(saved.review.includes('&lt;img')&&!saved.review.includes('<img'));
+      assert.equal(await page.evaluate(()=>getHistory().length),6,'Match and review are saved together');
       await page.screenshot({path:path.join(screenshots,'review-'+width+'.png'),fullPage:true,animations:'disabled'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
-      await removeKey();await page.locator('#createRulesStepBtn').click();await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});await page.locator('#createProcessClose').click();
-      assert.equal(await page.locator('#aiOutput').isVisible(),false);assert.equal(await page.evaluate(()=>AI_STATE.draftReview),null);assert.deepEqual(await page.evaluate(()=>aiDraftReviewFields()),{});
-      await saveKey();expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
-      await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);await page.evaluate(()=>{cstate.key+=':changed-during-review';});release();await page.waitForFunction(()=>!AI_STATE.busy);
-      assert.match(await page.locator('#aiMessage').innerText(),/Đội hình đã thay đổi/);assert.equal(await page.locator('#aiOutput').isVisible(),false);assert.equal(await page.evaluate(()=>AI_STATE.draftReview),null);
-      assert.equal(calls,beforeCalls+2);assert.equal(inputs.length,2);assert.equal(await page.evaluate(()=>JSON.stringify(getHistory())),originalHistory);await ctx.close();
+      assert.equal(inputs.length,1);await ctx.close();
     }
-    assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'review action only after draft, algorithm drafts, missing key, exact displayed lineup not selected history/attendance, private notes excluded, recent form/goals, busy/double-click, stale rejection, save snapshot, new draft clears review, desktop/mobile, no cloud writes'}));
+    assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,calls,screenshots,coverage:'automatic review on save, missing key, exact displayed lineup, private notes excluded, recent form/goals, busy/double-click, match and review saved together, desktop/mobile, no cloud writes'}));
   }finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

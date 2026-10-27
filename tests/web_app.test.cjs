@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-result-actions">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -177,6 +177,18 @@ test('AI can only select validated candidates, with all 12 criteria intact',()=>
   }
   const c=context();delete c.lineupCandidates;assert.throws(()=>prepare({task:'lineup',context:c}),/phương án hợp lệ trước khi gọi AI/);
   c.lineupCandidates=candidatesFor({...teams,A:{...teams.A,starters:[0,0,2,3,4,5,6]}});assert.throws(()=>prepare({task:'lineup',context:c}),/trùng/);
+});
+test('AI lineup editing applies only explicit swap operations to the supplied draft, without generating',()=>{
+  const original=structuredClone(teams),ctx={players:structuredClone(players),history:[],rosterNames:players.map(p=>p.n),instruction:'Đổi Cầu thủ 1 và Cầu thủ 8',editTeams:original};
+  const prepared=S.prepare({task:'lineup-edit',context:ctx}),data=JSON.parse(prepared.messages[1].content);
+  assert.equal(prepared.schema.properties.swaps.maxItems,12);assert.equal(data.teams.A.starters[1].id,'p1');assert.equal(data.teams.B.starters[1].id,'p8');assert.equal(data.candidates,undefined);
+  const answer=JSON.stringify({status:'ready',message:'Đổi hai người.',swaps:[{first:'p1',second:'p8'}]}),out=S.validateOutput(answer,prepared);
+  assert.equal(out.teams.A.starters[1],8);assert.equal(out.teams.B.starters[1],1);assert.equal(out.teams.A.starters[2],2);assert.equal(out.teams.B.starters[2],9);assert.deepEqual(ctx.editTeams,teams,'Original snapshot is never mutated');
+  const bench=S.validateOutput(JSON.stringify({status:'ready',message:'Cho dự bị.',swaps:[{first:'p1',second:'p14'}]}),prepared);
+  assert.equal(bench.teams.A.bench[0],1);assert.equal(bench.teams.A.starters[1],14);assert.ok(bench.warnings.length,'Manual edits surface violated constraints instead of silently changing other people');
+  const clarify=S.validateOutput(JSON.stringify({status:'clarify',message:'Bạn muốn thay ai?',swaps:[]}),prepared);assert.equal(clarify.status,'clarify');
+  for(const bad of [[{first:'p1',second:'p99'}],[{first:'p1',second:'p1'}],[]])assert.throws(()=>S.validateOutput(JSON.stringify({status:'ready',message:'Lỗi',swaps:bad}),prepared));
+  assert.throws(()=>S.prepare({task:'lineup-edit',context:{...ctx,instruction:''}}),/yêu cầu sửa/);
 });
 test('Nam Khắc / Trịnh Mạnh A_SW regression: free swaps are rejected, never disguised as successful AI',()=>{
   const c=context();c.history=[];c.players=Array.from({length:20},(_,i)=>player(i));c.players[1].n='Nam Khắc';c.players[8].n='Trịnh Mạnh';c.rosterNames=c.players.map(p=>p.n);
@@ -337,12 +349,36 @@ test('key input lives in a dismissible dialog reached from the criteria step, no
     assert.ok(wizardSource.includes("if(rules&&promptForKey&&!CREATE_WIZARD_KEY_PROMPTED){CREATE_WIZARD_KEY_PROMPTED=true;aiEnterCreate();}"),file+' prompt after a valid roster reaches criteria');
   }
 });
-test('Create has a contextual review button, not a generic analysis menu',()=>{
+test('Create saves with an automatic review instead of a separate review button',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
     const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     assert.ok(!html.includes('Công cụ phân tích'),file+' no generic analysis menu');
-    assert.match(html,/<button[^>]*id="reviewDraft"[^>]*\bhidden\b/);assert.ok(html.includes('onclick="aiReviewDraft()"'));
+    assert.ok(!html.includes('id="reviewDraft"'));assert.match(html,/<button[^>]*id="saveWeek"/);assert.ok(html.includes('reviewed=await aiReviewDraft()'));
   }
+});
+function autoReviewSaveSandbox(options={}){
+  const source=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8');
+  const code=source.slice(source.indexOf('async function saveMatch(){'),source.indexOf('// ============ LICH SU THI DAU ============'));
+  const elements=new Map(),saved=[],notices=[],draft={n:14,subset:[{n:'Example'}],result:{fixture:true}};
+  const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',hidden:true,disabled:false,className:''});return elements.get(id);};
+  const box={Date,setTimeout:()=>0,STATE:{_savingMatch:false},mmMode:'create',mmEditId:null,mmDraft:draft,canEdit:options.canEdit!==false,AI_KEYS:{has:()=>options.hasKey!==false},
+    $:el,aiOpenKeyDialog:()=>notices.push('key-dialog'),aiKeyMessage:s=>notices.push(s),alert:s=>notices.push(s),openAdminModal:()=>notices.push('admin'),
+    aiDraftFingerprint:()=>box.fingerprint, fingerprint:'draft-1',aiDraftReviewFields:()=>({review:'<p>Nhận định AI</p>',aiReview:{model:'test-model'}}),
+    aiReviewDraft:options.review||(()=>Promise.resolve(true)),aiMessage:s=>{el('aiMessage').textContent=s;},parseKick:()=>null,
+    freshDoc:cb=>{cb();return Promise.resolve();},getHistory:()=>[],setHistory:h=>{saved.push(h);return true;},logMatchAct(){},closeMatchModal(){box.mmMode=null;box.mmDraft=null;},show(){},fmtKick:()=>'',toast(){},document:{querySelectorAll:()=>[]}};
+  el('mm-venue').value='';vm.runInNewContext(code,box);return {box,elements,saved,notices,draft};
+}
+test('automatic match review requires login and key, and never saves when AI fails',async()=>{
+  let calls=0;const admin=autoReviewSaveSandbox({canEdit:false,review:async()=>{calls++;return true;}});await admin.box.saveMatch();assert.equal(calls,0);assert.equal(admin.saved.length,0);assert.ok(admin.notices.includes('admin'));
+  const missing=autoReviewSaveSandbox({hasKey:false,review:async()=>{calls++;return true;}});await missing.box.saveMatch();assert.equal(calls,0);assert.equal(missing.saved.length,0);assert.ok(missing.notices.includes('key-dialog'));
+  const fail=autoReviewSaveSandbox({review:async()=>{calls++;return false;}});fail.elements.get('aiMessage')?.textContent;await fail.box.saveMatch();assert.equal(fail.saved.length,0);assert.equal(fail.box.mmMode,'create');assert.match(fail.elements.get('mm-review-status').textContent,/Chưa lưu trận/);
+});
+test('automatic review saves match and review together once and cancels safely',async()=>{
+  let calls=0,release;const gate=new Promise(resolve=>{release=resolve;}),x=autoReviewSaveSandbox({review:async()=>{calls++;await gate;return true;}});
+  const pending=x.box.saveMatch();await x.box.saveMatch();assert.equal(calls,1);assert.equal(x.elements.get('mm-save').disabled,true);assert.equal(x.saved.length,0);
+  release();await pending;await Promise.resolve();assert.equal(x.saved.length,1);assert.equal(x.saved[0][0].review,'<p>Nhận định AI</p>');assert.equal(x.saved[0][0].aiReview.model,'test-model');
+  let releaseCancel;const wait=new Promise(resolve=>{releaseCancel=resolve;}),cancel=autoReviewSaveSandbox({review:async()=>{await wait;return true;}});const pendingCancel=cancel.box.saveMatch();cancel.box.closeMatchModal();releaseCancel();await pendingCancel;assert.equal(cancel.saved.length,0,'Cancelling during review must not save');
+  let releaseStale;const waitStale=new Promise(resolve=>{releaseStale=resolve;}),stale=autoReviewSaveSandbox({review:async()=>{await waitStale;return true;}});const pendingStale=stale.box.saveMatch();stale.box.fingerprint='different-draft';releaseStale();await pendingStale;assert.equal(stale.saved.length,0);assert.match(stale.elements.get('mm-review-status').textContent,/đội hình đã thay đổi/i);
 });
 test('Create uses a gated three-step wizard, one action and an embedded worker in every entry',()=>{
   for(const file of ['src/web_template.html','index.html','score-update.html','dist/index.html','dist/score-update.html']){
@@ -382,8 +418,8 @@ test('Create stepper highlights only the active number and bold label',()=>{
   const template=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../src/ai.css'),'utf8');
   assert.match(css,/\.create-stepper button\.on\{background:transparent;color:var\(--text\);font-weight:750\}/);
   assert.match(css,/\.create-stepper button\.on \.create-step-number\{border-color:var\(--action\);background:var\(--action\);color:#fff\}/);
-  assert.match(css,/\.create-step-actions,\.create-go-float\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next and Create actions float at the viewport bottom without exceeding the content width');
-  assert.match(css,/#createRosterStep,#createRulesStep\{padding-bottom:78px\}/,'Both wizard steps reserve space behind their floating action');
+  assert.match(css,/\.create-step-actions,\.create-go-float,\.create-save-float\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next, Create and Save actions float at the viewport bottom without exceeding the content width');
+  assert.match(css,/#createRosterStep,#createRulesStep,#createResultStep\{padding-bottom:78px\}/,'All wizard steps reserve space behind their floating action');
   assert.match(css,/\.create-criteria-scroll\{max-height:220px;overflow:auto/,'Criteria use a compact independently scrollable viewport');
   assert.match(css,/\.create-note-wrap\{[^}]*padding:10px 12px;[^}]*border-inline:2px solid/,'Note has inset spacing and a distinct boundary');
   assert.ok(!template.includes('<div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div>'),'Criteria step does not repeat its title inside the panel');

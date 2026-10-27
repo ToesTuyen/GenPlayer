@@ -37,7 +37,7 @@ async function aiFetch(route,body){
 function aiMessage(text,error=false){const el=$('aiMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
 function aiKeyMessage(text,error=false){const el=$('aiKeyMessage');el.hidden=!text;el.textContent=text;el.className='ai-message'+(error?' error':'');}
 function aiEnterCreate(){if(!AI_KEYS.has())aiOpenKeyDialog();}
-function aiOpenKeyDialog(){aiRenderStatus();aiKeyMessage('');const dialog=$('aiKeyDialog');if(!dialog.open)dialog.showModal();}
+function aiOpenKeyDialog(required=false){aiRenderStatus();aiKeyMessage('');$('aiKeyIntro').textContent=required?'Tính năng này cần key OpenRouter để dùng AI.':'Dùng key riêng cho AI. Bỏ qua để dùng thuật toán.';if(required)$('aiKeySkip').textContent='Đóng';const dialog=$('aiKeyDialog');if(!dialog.open)dialog.showModal();}
 function aiCloseKeyDialog(){$('aiKey').value='';if($('aiKeyDialog').open)$('aiKeyDialog').close();}
 function aiSkipKeyDialog(){aiCloseKeyDialog();aiMessage('');}
 function aiRenderStatus(){
@@ -109,9 +109,9 @@ function aiDraftFingerprint(){
   return JSON.stringify({key:cstate.key,index:cstate.idx,subset:cstate.subset,result:cstate.results[cstate.idx]});
 }
 function aiSyncDraftAction(){
-  const button=$('reviewDraft');button.hidden=!aiDraftFingerprint();
+  const button=$('saveWeek');if(!button)return;
   button.disabled=AI_STATE.busy||(typeof CREATE_STATE!=='undefined'&&CREATE_STATE.busy);
-  $('reviewDraftLabel').textContent=AI_STATE.reviewingDraft?'Đang đánh giá…':'Đánh giá';
+  const label=$('saveWeekLabel');if(label)label.textContent=AI_STATE.reviewingDraft?'Đang đánh giá…':'Lưu làm đội tuần này';
 }
 function aiDraftContext(){
   if(!aiDraftFingerprint())throw new Error('Tạo đội hình trước khi đánh giá.');
@@ -125,20 +125,17 @@ function aiDraftReviewFields(){
   return {review:aiReviewHTML(review.output),aiReview:{model:review.output.model,createdAt:review.output.createdAt}};
 }
 async function aiReviewDraft(){
-  if(AI_STATE.busy||CREATE_STATE.busy)return;
+  if(AI_STATE.busy||CREATE_STATE.busy)return false;
   let context,fingerprint;
-  try{fingerprint=aiDraftFingerprint();context=aiDraftContext();}catch(e){aiMessage(e.message,true);return;}
-  if(!AI_KEYS.has()){aiOpenKeyDialog();aiKeyMessage('Cần key để đánh giá. Bỏ qua vẫn giữ đội hình.');return;}
-  if(!confirm('Gửi đội hình, chỉ số và kết quả bóng đá tới OpenRouter để đánh giá? Có thể tính phí. Không gửi Note, tài khoản hoặc thu chi.'))return;
+  try{fingerprint=aiDraftFingerprint();if(AI_STATE.draftReview?.fingerprint===fingerprint)return true;context=aiDraftContext();}catch(e){aiMessage(e.message,true);return false;}
+  if(!AI_KEYS.has()){aiMessage('Cần key OpenRouter để viết đánh giá.',true);return false;}
   AI_STATE.busy=true;AI_STATE.reviewingDraft=true;aiRenderStatus();$('go').disabled=true;
   aiMessage('Đang đánh giá đội hình…');
   try{
     const response=await aiFetch('run',{task:'match-review',context});
-    if(fingerprint!==aiDraftFingerprint()){aiMessage('Đội hình đã thay đổi trong lúc đánh giá. Đã bỏ kết quả cũ; hãy đánh giá lại.',true);return;}
-    AI_STATE.draftReview={fingerprint,output:response.output};AI_STATE.output=response.output;
-    AI_STATE.request={task:'match-review',context,source:'draft',draftFingerprint:fingerprint};
-    aiRenderOutput();aiMessage('');
-  }catch(e){aiMessage(e.message,true);}finally{AI_STATE.busy=false;AI_STATE.reviewingDraft=false;$('go').disabled=false;aiRenderStatus();}
+    if(fingerprint!==aiDraftFingerprint()){aiMessage('Đội hình đã thay đổi trong lúc đánh giá. Đã bỏ kết quả cũ; hãy đánh giá lại.',true);return false;}
+    AI_STATE.draftReview={fingerprint,output:response.output};aiMessage('');return true;
+  }catch(e){aiMessage(e.message,true);return false;}finally{AI_STATE.busy=false;AI_STATE.reviewingDraft=false;$('go').disabled=false;aiRenderStatus();}
 }
 async function aiRun(){
   if(AI_STATE.busy||CREATE_STATE.busy)return;

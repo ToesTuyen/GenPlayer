@@ -137,7 +137,7 @@ async function main(){
       await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:60000});
       assert.equal(providerCalls,beforeProvider+1);
       assert.equal(await page.locator('#result .field .player').count(),14);
-      assert.equal(await page.locator('#reviewDraft').isVisible(),false,'The review action stays in the result step until the progress dialog is closed');
+      assert.equal(await page.locator('#reviewDraft').count(),0,'Review is automatic when saving');
       assert.equal(await page.locator('#aiOutput').isVisible(),false,'Generation does not show a generic analysis panel');
       assert.equal(await page.locator('[data-step="partition"]').getAttribute('data-state'),'done');
       assert.equal(await page.locator('[data-step="note"]').getAttribute('data-state'),'warn','Free-text Note must not be marked satisfied without verification');
@@ -162,7 +162,7 @@ async function main(){
       await page.locator('#createProcessClose').click();
       assert.equal(await page.locator('#createProcess').isVisible(),false,'View lineup closes the progress dialog');
       assert.equal(await page.locator('#result').isVisible(),true,'View lineup reveals the rendered draft');
-      assert.equal(await page.locator('#createResultStep').isVisible(),true);assert.equal(await page.locator('#createRulesStep').isVisible(),false);assert.equal(await page.locator('#reviewDraft').isVisible(),true);
+      assert.equal(await page.locator('#createResultStep').isVisible(),true);assert.equal(await page.locator('#createRulesStep').isVisible(),false);assert.equal(await page.locator('#saveWeek').isVisible(),true);
       await page.locator('#createHistoryHeaderBtn').click();
       assert.ok(await page.locator('.create-log-card').count()>=1,'Successful runs remain diagnosable');
       assert.deepEqual(await page.locator('.create-log-team-title').allTextContents(),['🔴 Team A','🟡 Team B']);

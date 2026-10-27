@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-result-actions">
+<meta name="genplayer-release" content="web-app-2026-10-27-lineup-edit">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -999,12 +999,10 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </div>
   <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   <section id="createResultStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createResultStepBtn" hidden>
-    <div class="bar create-toolbar">
-      <button class="btn alt sm" id="reviewDraft" onclick="aiReviewDraft()" hidden><span data-ui-icon="match-analysis"></span><span id="reviewDraftLabel">Đánh giá</span></button>
-      <button class="btn dark sm" id="saveWeek" style="display:none">💾 Lưu làm đội tuần này</button>
-    </div>
+    <div class="bar create-toolbar"><button class="btn alt sm" id="editLineup" type="button" onclick="createOpenEdit()"><span data-ui-icon="edit"></span>Sửa đội hình</button></div>
     <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
     <div id="result"></div>
+    <div class="create-save-float"><button class="btn" id="saveWeek" style="display:none"><span data-ui-icon="save"></span><span id="saveWeekLabel">Lưu làm đội tuần này</span></button></div>
   </section>
   <div id="aiOutput" class="ai-panel" hidden>
     <div class="ai-actions" style="margin-top:0;margin-bottom:18px"><button class="btn alt sm" onclick="aiCopy()">Sao chép nội dung</button><button class="btn sm" id="aiUseLineup" onclick="aiUseLineup()" hidden>Dùng làm bản nháp đội hình</button><button class="btn sm" id="aiSaveReview" onclick="aiSaveReview()" hidden>Lưu nhận định vào trận</button></div>
@@ -1026,6 +1024,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </div>
   </section>
 </div>
+<dialog id="lineupEditDialog" class="ai-key-dialog lineup-edit-dialog" aria-labelledby="lineupEditTitle">
+  <div class="ai-key-head"><h2 id="lineupEditTitle">Sửa đội hình</h2><button class="btn alt sm" type="button" onclick="createCloseEdit()" aria-label="Đóng cửa sổ sửa đội hình">×</button></div>
+  <p id="lineupEditSource" class="ai-footer"></p>
+  <label class="ai-field" for="lineupEditInstruction">Yêu cầu sửa<textarea id="lineupEditInstruction" rows="3" maxlength="1000" placeholder="Ví dụ: đổi Tuyên và Dũng; cho Quyền dự bị…" oninput="createEditChanged()"></textarea></label>
+  <p class="ai-footer">AI chỉ đề xuất thay đổi trên đội hình này. Có thể phát sinh phí OpenRouter; đội hình gốc không bị ghi đè.</p>
+  <div id="lineupEditStatus" class="ai-message" role="status" aria-live="polite" hidden></div>
+  <div id="lineupEditPreview" class="lineup-edit-preview" aria-live="polite" hidden></div>
+  <div class="ai-actions lineup-edit-actions"><button class="btn alt" type="button" onclick="createCloseEdit()">Hủy</button><button class="btn alt" type="button" id="lineupEditRun" onclick="createRunEdit()">Xem thay đổi</button><button class="btn" type="button" id="lineupEditApply" onclick="createApplyEdit()" hidden>Áp dụng</button></div>
+</dialog>
 <dialog id="aiKeyDialog" class="ai-key-dialog" aria-labelledby="aiKeyTitle" aria-describedby="aiKeyIntro">
   <div class="ai-key-head"><h2 id="aiKeyTitle">Kết nối OpenRouter</h2><button class="btn alt sm" type="button" onclick="aiSkipKeyDialog()" aria-label="Đóng cửa sổ nhập key">×</button></div>
   <p id="aiKeyIntro" class="ai-footer">Dùng key riêng cho AI. Bỏ qua để dùng thuật toán.</p>
@@ -1144,7 +1151,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div class="mrow"><span class="lbl">Ngày đá</span><input type="date" id="mm-date"></div>
     <div class="mrow"><span class="lbl">Giờ đá</span><input type="time" id="mm-time"></div>
     <div class="mrow"><span class="lbl">Sân</span><input type="text" id="mm-venue" placeholder="VD: Sân Mỹ Đình" maxlength="60"></div>
-    <div style="display:flex;gap:8px;margin-top:16px"><button class="btn sm" onclick="saveMatch()">💾 Lưu trận</button><button class="btn alt sm" onclick="closeMatchModal()">Hủy</button></div>
+    <p id="mm-review-info" class="ai-footer">Khi lưu, AI sẽ viết đánh giá trận bằng key OpenRouter của bạn; có thể phát sinh phí.</p>
+    <div id="mm-review-status" class="ai-message" role="status" aria-live="polite" hidden></div>
+    <div style="display:flex;gap:8px;margin-top:16px"><button class="btn sm" id="mm-save" onclick="saveMatch()">💾 Lưu trận</button><button class="btn alt sm" onclick="closeMatchModal()">Hủy</button></div>
   </div>
 </div>
 
@@ -3715,18 +3724,36 @@ function openMatchModal(mode,id){
   }
   $("mm-title").innerHTML=GPIcons.render("lineup")+" "+(mode==="edit"?"Sửa thông tin trận":"Lưu trận mới");
   $("mm-date").value=date; $("mm-time").value=time; $("mm-venue").value=venue;
+  $("mm-review-info").hidden=mode==="edit";
+  $("mm-review-status").hidden=true;$("mm-review-status").textContent="";
   $("matchModal").classList.add("on");
 }
 function closeMatchModal(){$("matchModal").classList.remove("on");mmMode=null;mmEditId=null;mmDraft=null;}
-function saveMatch(){
+async function saveMatch(){
   if(!canEdit){ alert("🔒 Tính năng này cần đăng nhập trước."); openAdminModal(); return; }
   if(STATE._savingMatch)return;   // chặn bấm 2 lần khi đang lưu (tránh tạo trùng / mất trận vừa tạo)
-  const isEdit=mmMode==="edit", id=mmEditId, draft=mmDraft;
-  const kickoff=parseKick($("mm-date").value,$("mm-time").value), venue=$("mm-venue").value.trim();
+  const isEdit=mmMode==="edit", id=mmEditId, draft=mmDraft;let originalFingerprint='';
   if(!isEdit && !draft){closeMatchModal();return;}
-  STATE._savingMatch=true;
+  if(!isEdit){
+    if(!AI_KEYS.has()){aiOpenKeyDialog(true);aiKeyMessage('Cần key OpenRouter để tự viết đánh giá trước khi lưu trận.');return;}
+    originalFingerprint=aiDraftFingerprint();
+    if(!originalFingerprint){$("mm-review-status").textContent='Không còn đội hình nháp để đánh giá. Chưa lưu trận.';$("mm-review-status").hidden=false;return;}
+    STATE._savingMatch=true;$("mm-save").disabled=true;$("mm-review-status").className='ai-message';$("mm-review-status").textContent='Đang viết đánh giá AI…';$("mm-review-status").hidden=false;
+    let reviewed=false;
+    try{reviewed=await aiReviewDraft();}catch(e){aiMessage(e.message||'Không tạo được đánh giá AI.',true);}
+    finally{STATE._savingMatch=false;$("mm-save").disabled=false;}
+    if(mmMode!=='create'||mmDraft!==draft)return; // Hủy trong lúc AI chạy không được lưu trận.
+    if(!reviewed){$("mm-review-status").className='ai-message error';$("mm-review-status").textContent=($('aiMessage').textContent||'Không tạo được đánh giá AI.')+' Chưa lưu trận; bạn có thể thử lại.';return;}
+    if(!canEdit||originalFingerprint!==aiDraftFingerprint()){$("mm-review-status").className='ai-message error';$("mm-review-status").textContent='Quyền đăng nhập hoặc đội hình đã thay đổi. Chưa lưu trận; hãy kiểm tra và thử lại.';return;}
+    Object.assign(draft,aiDraftReviewFields());
+    if(!draft.review){$("mm-review-status").className='ai-message error';$("mm-review-status").textContent='Chưa có đánh giá hợp lệ; chưa lưu trận.';return;}
+    $("mm-review-status").textContent='Đã viết đánh giá; đang lưu trận…';
+  }
+  const kickoff=parseKick($("mm-date").value,$("mm-time").value), venue=$("mm-venue").value.trim();
+  STATE._savingMatch=true;$("mm-save").disabled=true;
   const now=new Date();
   freshDoc(()=>{   // đọc cloud tươi rồi mới sửa → không đè mất trận nơi khác vừa thêm/sửa
+    if(!isEdit&&(mmMode!=='create'||mmDraft!==draft||!canEdit||originalFingerprint!==aiDraftFingerprint()))return;
     if(isEdit){
       const h=getHistory(), r=h.find(x=>x.id===id);
       if(!r){ toast("Trận không còn tồn tại (có thể vừa bị xoá nơi khác).","err"); closeMatchModal(); showHistory(); return; }
@@ -3762,10 +3789,10 @@ function saveMatch(){
     pendingLog.push(["create",nid,fmtKick(kickoff)||now.toLocaleDateString("vi-VN"),`${draft.n} cầu thủ${venue?` · 📍 ${venue}`:""}`]);
     if(setHistory(h2)){
       pendingLog.forEach(a=>logMatchAct(a[0],a[1],a[2],a[3]));
-      $("saveWeek").textContent="✅ Đã lưu!"; setTimeout(()=>$("saveWeek").textContent="💾 Lưu làm đội tuần này",1500);
+      $("saveWeekLabel").textContent="Đã lưu!"; setTimeout(()=>$("saveWeekLabel").textContent="Lưu làm đội tuần này",1500);
     }
     closeMatchModal(); show("home");
-  }).finally(()=>{ STATE._savingMatch=false; });   // luôn mở khoá bấm lại (kể cả khi đọc cloud lỗi)
+  }).finally(()=>{ STATE._savingMatch=false;$("mm-save").disabled=false; });   // luôn mở khoá bấm lại (kể cả khi đọc cloud lỗi)
 }
 
 // ============ LICH SU THI DAU ============

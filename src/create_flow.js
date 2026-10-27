@@ -117,7 +117,9 @@ function createRenderLogCards(records){
     else card.appendChild(createLogNode('div','create-log-empty',r.status==='success'?'Lượt cũ thiếu dữ liệu đội hình để dùng lại.':'Không có đội hình hoàn tất.'));
     const issue=createLogIssue(r);if(issue){const box=createLogNode('div','create-log-issue '+(r.status==='success'?'fallback':'error'));box.appendChild(createLogNode('strong','',issue.title));if(issue.hint)box.appendChild(createLogNode('p','',issue.hint));box.appendChild(createLogNode('p','',issue.detail));card.appendChild(box);}
     const actions=createLogNode('div','create-log-actions'),codes=createLogNode('div','create-log-code','Mã log: '+r.id+(createLogGenerationId(r)?'\nMã gen AI: '+createLogGenerationId(r):'')),button=createLogNode('button','btn sm',createLogUsable(r)?'Đặt làm trận tuần này':'Không thể dùng');
-    button.type='button';button.disabled=!createLogUsable(r);if(!button.disabled)button.onclick=()=>createUseLog(r.id);actions.append(codes,button);card.appendChild(actions);list.appendChild(card);
+    button.type='button';button.disabled=!createLogUsable(r);if(!button.disabled)button.onclick=()=>createUseLog(r.id);actions.appendChild(codes);
+    if(createLogUsable(r)){const edit=createLogNode('button','btn alt sm','Sửa đội hình');edit.type='button';edit.onclick=()=>createOpenEdit(r.id);actions.appendChild(edit);}
+    actions.appendChild(button);card.appendChild(actions);list.appendChild(card);
   }
 }
 function createRenderLogList(records){
@@ -144,12 +146,12 @@ async function createOpenLogs(){
   const cloud=await createCloudFetch();createRenderLogList(createMergeLogs(CREATE_LOG?.list()||[],cloud));
 }
 function createShowLog(){const r=CREATE_LOG_VIEW.find(r=>r.id===$('createLogSelect').value);$('createLogDetails').textContent=r?JSON.stringify(r,null,2):'Chưa có nhật ký tạo đội.';}
-function createDraftFromLog(r){
+function createDraftFromLog(r,manualEdit=false){
   if(!createLogUsable(r))throw new Error('Lượt này không có đội hình hoàn tất để dùng lại.');
   const players=r.input.players.map(GPAIContext.player),indices=new Map(players.map((p,i)=>[p.n,i])),teams={A:{starters:[],bench:[]},B:{starters:[],bench:[]}};
   for(const side of ['A','B'])for(const p of r.output.teams[side]){const i=indices.get(p.n);if(i===undefined)throw new Error('Thiếu cầu thủ '+p.n+' trong dữ liệu lượt tạo.');teams[side][p.bench?'bench':'starters'].push(i);}
   const history=Array.isArray(r.input.history)?r.input.history:(r.input.rotationReference?[r.input.rotationReference]:[]),now=Date.parse(r.startedAt)||Date.now();
-  const checked=GPAIContext.lineup(players,teams,{instruction:r.input.instruction||'',history,now});
+  const checked=GPAIContext.lineup(players,teams,{instruction:r.input.instruction||'',history,now,manualEdit:manualEdit||r.engine==='AI · Sửa đội'});
   return {players,result:checked.result};
 }
 function createUseLog(id){
@@ -166,6 +168,68 @@ function createExportLogs(){
   if(!CREATE_LOG)return;const body=GPCreationLog.exportRecords?GPCreationLog.exportRecords(CREATE_LOG_VIEW):CREATE_LOG.export(),url=URL.createObjectURL(new Blob([body],{type:'application/json'})),a=document.createElement('a');
   a.href=url;a.download='genplayer-gen-log-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+let CREATE_EDIT=null;
+function createOpenEdit(logId=''){
+  if(AI_STATE.busy||CREATE_STATE.busy)return;
+  let players,result,note='',uiNote='',fingerprint=null;
+  try{
+    if(logId){const record=CREATE_LOG_VIEW.find(r=>r.id===logId);const draft=createDraftFromLog(record,true);players=draft.players;result=draft.result;note=record.input?.instruction||'';uiNote=note;}
+    else{fingerprint=aiDraftFingerprint();if(!fingerprint)throw new Error('Chưa có đội hình để sửa.');players=cstate.subset.map(GPAIContext.player);result=structuredClone(cstate.results[cstate.idx]);uiNote=CREATE_STATE.draftNote||'';note=cstate.editNote||uiNote;}
+    const teams={A:{starters:result.evA.starters.slice(),bench:result.evA.bench.slice()},B:{starters:result.evB.starters.slice(),bench:result.evB.bench.slice()}};
+    GPAIContext.validateLineupRoster(players,teams,{manualEdit:true});
+    const history=getHistory().filter(r=>r.result&&Array.isArray(r.subset)).slice(0,500).map(GPAIContext.compactLegacy);
+    CREATE_EDIT={players,teams,note,uiNote,history,fingerprint,logId,proposal:null,busy:false};
+    $('lineupEditInstruction').value='';$('lineupEditSource').textContent=logId?'Đội hình từ log '+logId+' · Bản gốc được giữ nguyên.':'Đội hình đang xem · Bản gốc được giữ đến khi áp dụng.';
+    $('lineupEditStatus').hidden=true;$('lineupEditPreview').hidden=true;$('lineupEditApply').hidden=true;$('lineupEditRun').disabled=false;
+    $('lineupEditDialog').showModal();
+  }catch(e){alert('Không mở được đội hình để sửa: '+e.message);}
+}
+function createCloseEdit(){const dialog=$('lineupEditDialog');if(dialog.open)dialog.close();CREATE_EDIT=null;}
+function createEditChanged(){if(!CREATE_EDIT)return;CREATE_EDIT.proposal=null;$('lineupEditPreview').hidden=true;$('lineupEditApply').hidden=true;$('lineupEditStatus').hidden=true;}
+function createEditPositions(teams,players){
+  const positions=new Map();for(const side of ['A','B']){teams[side].starters.forEach((i,k)=>positions.set(i,'Team '+side+' · '+(CREATE_LOG_ROLE[GPAIContext.SLOTS[k]]||GPAIContext.SLOTS[k])));teams[side].bench.forEach(i=>positions.set(i,'Team '+side+' · dự bị'));}return positions;
+}
+async function createRunEdit(){
+  const edit=CREATE_EDIT,instruction=$('lineupEditInstruction').value.trim();if(!edit||edit.busy||AI_STATE.busy||CREATE_STATE.busy)return;
+  const status=$('lineupEditStatus');status.hidden=false;status.className='ai-message';
+  if(!instruction){status.className='ai-message error';status.textContent='Nhập yêu cầu sửa đội hình.';return;}
+  if(!AI_KEYS.has()){aiOpenKeyDialog(true);aiKeyMessage('Cần key OpenRouter để sửa đội hình bằng AI.');return;}
+  edit.proposal=null;$('lineupEditPreview').hidden=true;$('lineupEditApply').hidden=true;edit.busy=true;AI_STATE.busy=true;aiRenderStatus();$('lineupEditRun').disabled=true;status.textContent='AI đang xem yêu cầu sửa…';
+  try{
+    const context={players:edit.players,rosterNames:edit.players.map(p=>p.n),history:edit.history,instruction,editBaseInstruction:edit.note.slice(0,Math.max(0,1998-instruction.length)),editTeams:edit.teams};
+    const response=await aiFetch('run',{task:'lineup-edit',context}),out=response.output;
+    if(CREATE_EDIT!==edit||$('lineupEditInstruction').value.trim()!==instruction)return;
+    if(out.status==='clarify'){status.textContent=out.message;return;}
+    if(out.status!=='ready'||!out.result||!out.teams)throw new Error('AI chưa trả được phương án sửa hợp lệ.');
+    const before=createEditPositions(edit.teams,edit.players),after=createEditPositions(out.teams,edit.players),preview=$('lineupEditPreview');preview.replaceChildren();
+    preview.appendChild(createLogNode('strong','','Thay đổi đề xuất'));
+    const changes=edit.players.flatMap((p,i)=>before.get(i)!==after.get(i)?[`${p.n}: ${before.get(i)} → ${after.get(i)}`]:[]);
+    if(!changes.length)throw new Error('Đề xuất không thay đổi đội hình.');
+    const list=createLogNode('ul');for(const text of changes)list.appendChild(createLogNode('li','',text));preview.appendChild(list);
+    if(out.warnings?.length){const box=createLogNode('div','lineup-edit-warning');box.appendChild(createLogNode('strong','','Cần xem lại tiêu chí'));for(const warning of out.warnings)box.appendChild(createLogNode('p','',warning));preview.appendChild(box);}
+    edit.proposal={output:out,instruction,context};preview.hidden=false;$('lineupEditApply').hidden=false;status.textContent='Kiểm tra thay đổi rồi bấm Áp dụng.';
+  }catch(e){if(CREATE_EDIT===edit){status.className='ai-message error';status.textContent=e.message+' Chưa áp dụng thay đổi.';}}
+  finally{edit.busy=false;AI_STATE.busy=false;aiRenderStatus();if(CREATE_EDIT===edit)$('lineupEditRun').disabled=false;}
+}
+function createApplyEdit(){
+  const edit=CREATE_EDIT,proposal=edit?.proposal;if(!edit||!proposal||edit.busy||AI_STATE.busy||CREATE_STATE.busy)return;
+  const status=$('lineupEditStatus');
+  if(!edit.logId&&edit.fingerprint!==aiDraftFingerprint()){status.hidden=false;status.className='ai-message error';status.textContent='Đội hình đã thay đổi; hãy mở lại cửa sổ sửa.';return;}
+  try{
+    const {output,instruction,context}=proposal,note=[context.editBaseInstruction,instruction].filter(Boolean).join('; '),checked=GPAIContext.lineup(edit.players,output.teams,{instruction:note,history:edit.history,manualEdit:true});
+    const warnings=[...new Set(checked.warnings)],report='<p>Đội hình sửa theo yêu cầu · Chưa lưu trận.</p>'+(warnings.length?'<ul>'+warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'');
+    render(checked.result,edit.players,'result',report,true);
+    cstate={key:'edited:'+Date.now(),results:[checked.result],idx:0,subset:edit.players,inputKey:'',editNote:note};AI_STATE.draftReview=null;AI_STATE.output=null;AI_STATE.request=null;$('aiOutput').hidden=true;
+    CREATE_STATE.draftNote=edit.uiNote;CREATE_STATE.draftEngine='AI · Sửa đội';CREATE_STATE.hasReport=false;$('reviewProcessRules').style.display='none';
+    $('saveWeek').style.display='inline-block';$('status').textContent='';createNoteChanged();aiSyncDraftAction();
+    try{
+      const now=Date.now(),input=GPCreationLog.snapshot({...context,instruction:note},now),id=CREATE_LOG?.begin(document.querySelector('meta[name="genplayer-release"]')?.content||'');
+      if(id){CREATE_LOG.patch(id,{status:'success',endedAt:new Date(now).toISOString(),engine:'AI · Sửa đội',requestedEngine:'AI · Sửa đội',input,ai:{decision:'edited',generationId:output.generationId,model:output.model,usage:output.usage},validation:{limits:GPAIContext.LINEUP_LIMITS,checks:checked.checks,warnings},output:{groupKey:GPAIContext.lineupGroupKey(edit.players,output.teams),teams:GPAIContext.compactLegacy({id:'draft',kickoff:now,subset:edit.players,result:checked.result}).teams}});createCloudPush(id).catch(()=>{});}
+    }catch{/* The edited draft remains usable even if its log cannot be stored. */}
+    createCloseEdit();createRevealDraft();
+  }catch(e){status.hidden=false;status.className='ai-message error';status.textContent=e.message+' Chưa áp dụng thay đổi.';}
+}
+if(typeof window!=='undefined')$('lineupEditDialog').addEventListener('cancel',event=>{event.preventDefault();createCloseEdit();});
 if(typeof window!=='undefined')window.addEventListener('pagehide',()=>{if(CREATE_STATE.busy){createLogPatch({status:'interrupted',error:{message:'Trang đã đóng hoặc tải lại khi đang xử lý; yêu cầu provider có thể vẫn đang chạy.'}});createCloudPush().catch(()=>{});}});
 function createNoteChanged(){
   const box=$('createNoteStatus'),note=CREATE_STATE.draftNote;

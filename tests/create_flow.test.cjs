@@ -13,12 +13,12 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
     orderBy(){return this;},limit(){return this;},
     get:async()=>({docs:[...cloudDocs.entries()].sort((a,b)=>String(b[1].startedAt).localeCompare(String(a[1].startedAt))).map(([id,data])=>({id,data:()=>structuredClone(data)}))})
   };
-  function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},hidden:false,classList:{toggle(){}},addEventListener(){},setAttribute(){},focus(){},showModal(){},close(){},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(){},appendChild(){},prepend(){},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
+  function element(id){if(!elements.has(id))elements.set(id,{textContent:'',value:'',style:{},dataset:{},children:[],hidden:false,classList:{toggle(){}},addEventListener(){},setAttribute(){},focus(){},showModal(){this.open=true;},close(){this.open=false;},scrollIntoView(){},querySelectorAll(){return [];},replaceChildren(...children){this.children=children;},appendChild(child){this.children.push(child);},append(...children){this.children.push(...children);},prepend(child){this.children.unshift(child);},querySelector(sel){if(id==='createProcessSteps'){const key=sel.match(/data-step="([^"]+)"/)[1];if(!steps.has(key))steps.set(key,element('step-'+key));return steps.get(key);}return element(id+sel);}});return elements.get(id);}
   const sandbox={GPAIContext:C,GPCreationLog:L,localStorage:shared,Date,performance:{now:()=>0},requestAnimationFrame:fn=>fn(),setTimeout,clearTimeout,
     $:element,document:{querySelector:()=>({content:'test-release'}),createElement:()=>element('node-'+Math.random())},
     STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
     AI_STATE:{busy:false},AI_KEYS:{has:()=>mode!=='algorithm'},cstate:{results:[],idx:0},
-    aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,
+    aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,structuredClone,getHistory:()=>[],
     selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',canEdit:!!options.canEdit,alert:message=>alerts.push(message),openAdminModal:()=>alerts.push('OPEN_ADMIN'),
     render:(r,players)=>renders.push({r,players}),
     aiFetch:async(action,request)=>{
@@ -26,6 +26,10 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
       requests.push(request);
       if(mode==='network')throw Object.assign(new Error('Fixture network unavailable'),{kind:'network'});
       const prepared=S.prepare(request);
+      if(request.task==='lineup-edit'){
+        const raw={status:'ready',message:'Đổi hai người.',swaps:[{first:'p1',second:options.invalidEdit?'p99':'p8'}]};
+        return {output:{...S.validateOutput(JSON.stringify(raw),prepared),generationId:'gen-edit-fixture',model:'fake/model',usage:{cost:0}}};
+      }
       const raw={title:'Fixture',sections:[0,1,2].map(i=>({heading:'Section '+i,body:'Controlled test, not real analysis.'})),candidateId:mode==='invalid'?'c99':'c0',flipTeams:false,swaps:mode==='swaps'?[{first:'p1',second:'p8'}]:[]};
       try{return {output:{...S.validateOutput(mode==='json'?'not-json':JSON.stringify(raw),prepared),generationId:'gen-fixture',model:'fake/model',usage:{cost:0.003}}};}
       catch(e){e.aiMeta={generationId:'gen-fixture',model:'fake/model',usage:{cost:0.003}};throw e;}
@@ -33,10 +37,11 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   };
   // Retain the actual VM global, including cstate assignments from createTeams.
   const scope={...sandbox,solver:O.solve};vm.createContext(scope);
+  scope.aiDraftFingerprint=()=>scope.cstate.results?.length?JSON.stringify({subset:scope.cstate.subset,result:scope.cstate.results[scope.cstate.idx]}):null;
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft,openEdit:createOpenEdit,runEdit:createRunEdit,applyEdit:createApplyEdit,setLogView:records=>{CREATE_LOG_VIEW=records;}};
   `,scope);
   return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,...scope.flow};
 }
@@ -93,6 +98,25 @@ test('a successful generation log restores the exact two teams for scheduling',a
     assert.equal(JSON.stringify(names(side,'bench')),JSON.stringify(record.output.teams[side].filter(p=>p.bench).map(p=>p.n)));
   }
   assert.equal(record.ai.generationId,'gen-fixture');
+});
+
+test('AI editing previews explicit swaps and preserves the source history without regenerating',async()=>{
+  const x=controller('valid');await x.run();const source=x.log.list()[0],before=JSON.stringify(x.scope.cstate),sourceBefore=JSON.stringify(source);
+  x.openEdit();assert.equal(x.elements.get('lineupEditDialog').open,true);x.elements.get('lineupEditInstruction').value='Đổi Flow 0 và Flow 7';await x.runEdit();
+  assert.equal(JSON.stringify(x.scope.cstate),before,'Preview does not mutate the draft');assert.equal(x.elements.get('lineupEditApply').hidden,false);
+  assert.equal(x.requests.at(-1).task,'lineup-edit');assert.equal(x.requests.length,2,'One edit call, no regeneration');
+  x.applyEdit();assert.notEqual(JSON.stringify(x.scope.cstate),before);assert.equal(x.elements.get('lineupEditDialog').open,false);
+  const latest=x.log.list(),original=latest.find(r=>r.id===source.id);assert.equal(JSON.stringify(original),sourceBefore);assert.equal(latest.length,2);assert.equal(latest[0].engine,'AI · Sửa đội');
+  assert.equal(x.state.draftNote,'','Edit instruction does not falsely mark the generation note stale');
+  const teams=latest[0].output.teams;assert.ok(teams.A.length&&teams.B.length);
+  x.setLogView([source]);x.openEdit(source.id);x.elements.get('lineupEditInstruction').value='Đổi Flow 0 và Flow 7';await x.runEdit();x.applyEdit();
+  assert.equal(JSON.stringify(x.log.list().find(r=>r.id===source.id)),sourceBefore,'Editing a history item does not overwrite it');
+});
+
+test('invalid AI edit leaves the existing draft untouched',async()=>{
+  const x=controller('valid',roster(),storage(),{invalidEdit:true});await x.run();const before=JSON.stringify(x.scope.cstate);x.openEdit();
+  x.elements.get('lineupEditInstruction').value='Đổi hai người';await x.runEdit();
+  assert.equal(JSON.stringify(x.scope.cstate),before);assert.equal(x.elements.get('lineupEditApply').hidden,true);assert.match(x.elements.get('lineupEditStatus').textContent,/Chưa áp dụng/);assert.equal(x.log.list().length,1);
 });
 
 test('scheduling a generated lineup is blocked before draft loading when admin is logged out',async()=>{
