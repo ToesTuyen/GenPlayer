@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-star-priority">
+<meta name="genplayer-release" content="web-app-2026-10-27-compact-criteria">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -954,7 +954,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <section id="createRulesStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createRulesStepBtn" hidden>
       <div class="create-panel-head">
         <div><div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div><span id="createStepCount" class="create-step-count"></span></div>
-        <button class="btn alt sm" id="toggleRoster" type="button" onclick="toggleRoster()">← Sửa cầu thủ</button>
       </div>
       <div class="create-setup">
         <details id="createCriteria" class="create-criteria">
@@ -2528,10 +2527,6 @@ function buildRoster(){
   const addGuestButton=document.createElement("button");addGuestButton.type="button";addGuestButton.className="roster-guest-add";addGuestButton.innerHTML='<span aria-hidden="true">＋</span><span>Người ngoài</span>';addGuestButton.onclick=openGuestModal;roster.appendChild(addGuestButton);
   $("result").innerHTML=""; $("status").textContent=""; $("saveWeek").style.display="none"; updateCount();
   createSetWizardStep("roster");
-}
-function toggleRoster(){
-  createSetWizardStep("roster");
-  document.querySelector(".create-stepper")?.scrollIntoView({behavior:"auto",block:"start"});
 }
 // ---- Người ngoài (khách): chỉ dùng cho trận, sao chép điểm từ 1 cầu thủ có sẵn ----
 function openGuestModal(){

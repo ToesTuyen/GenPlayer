@@ -38,7 +38,7 @@ async function main(){
       const original=await page.evaluate(()=>JSON.stringify(cstate)),originalHistory=await page.evaluate(()=>JSON.stringify(getHistory())),beforeCalls=calls;
       await page.locator('#reviewDraft').click();assert.equal(await page.locator('#aiKeyDialog').isVisible(),true);await page.locator('#aiKeySkip').click();assert.equal(calls,beforeCalls);assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),original);
       await saveKey();await page.evaluate(()=>{$('aiMatch').value='100';$('aiAnalysisInstruction').value='PRIVATE_OTHER_ANALYSIS';});
-      await page.locator('#toggleRoster').click();await page.locator('#roster .pl-item.guest input').last().uncheck();await page.locator('#createNextStep').click();
+      await page.locator('#createRosterStepBtn').click();await page.locator('#roster .pl-item.guest input').last().uncheck();await page.locator('#createNextStep').click();
       expectedTeams=await page.evaluate(()=>aiDraftContext().match.teams);gate=new Promise(r=>release=r);
       await page.locator('#reviewDraft').click();await page.waitForFunction(()=>AI_STATE.reviewingDraft);
       assert.equal(await page.locator('#reviewDraft').isDisabled(),true);assert.equal(await page.locator('#go').isDisabled(),true);assert.match(await page.locator('#reviewDraft').innerText(),/Đang đánh giá/);

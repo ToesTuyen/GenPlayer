@@ -41,7 +41,7 @@ async function main(){
       assert.match(await page.locator('#result').innerText(),/chuyển sang thuật toán/);
       assert.equal(await page.locator('[data-step="balance"]').getAttribute('data-state'),'done');
       const draft=await page.evaluate(()=>{const r=cstate.results[cstate.idx];GPAIContext.lineup(cstate.subset,{A:r.evA,B:r.evB});return JSON.stringify(cstate);});
-      await page.locator('#createProcessClose').click();await page.locator('#toggleRoster').click();
+      await page.locator('#createProcessClose').click();await page.locator('#createRosterStepBtn').click();
       // Simulate updated member ratings in memory, leaving old draft/storage alone.
       // The two registered keepers stay in goal. Three outfield 10s among
       // otherwise all-1 players cannot be distributed evenly in both lines.

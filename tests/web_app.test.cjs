@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-star-priority">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-27-compact-criteria">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -344,6 +344,8 @@ test('Create uses a gated two-step wizard, one action and an embedded worker in 
     assert.match(create,/id="createRulesStepBtn"[^>]*aria-controls="createRulesStep"[^>]*disabled/);
     assert.ok(create.includes('id="createRosterStep"'));assert.ok(create.includes('id="createRulesStep"'));
     assert.ok(create.includes('id="createNextStep"'),file+' gates criteria behind a valid roster');
+    assert.ok(!create.includes('id="toggleRoster"'),file+' criteria has no redundant edit-player button');
+    assert.ok(!create.includes('Sửa cầu thủ'),file+' criteria has no redundant edit-player label');
     assert.match(create,/<input type="checkbox" id="selectAll"/);
     assert.ok(!/id="(?:all|none)"/.test(create));
     assert.ok(!create.includes('Tạo đội bằng AI'));assert.ok(!create.includes('Tạo đội (Thuật Toán)'));
