@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-history-lineups">
+<meta name="genplayer-release" content="web-app-2026-10-27-history-login">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -6172,13 +6172,14 @@ function createDraftFromLog(r){
   return {players,result:checked.result};
 }
 function createUseLog(id){
+  if(!canEdit){alert('🔒 Đặt làm trận tuần này cần đăng nhập admin.');openAdminModal();return;}
   const record=CREATE_LOG_VIEW.find(r=>r.id===id);let draft;
   try{draft=createDraftFromLog(record);}catch(e){alert('Không nạp được đội hình: '+e.message);return;}
   cstate={key:'history:'+record.id,results:[draft.result],idx:0,subset:draft.players,inputKey:''};
   AI_STATE.draftReview=null;$('aiOutput').hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=record.input?.instruction||'';CREATE_STATE.draftEngine=record.engine||'Lịch sử';CREATE_STATE.hasReport=false;$('reviewProcess').style.display='none';createNoteChanged();
   render(draft.result,draft.players,'result','',true);$('status').textContent='Đã nạp đội hình từ '+record.id;$('saveWeek').style.display='inline-block';$('roster').style.display='none';$('toggleRoster').style.display='';$('toggleRoster').textContent='👥 Hiện danh sách';
-  createRevealDraft();$('saveWeek').click();
+  createRevealDraft();openMatchModal('create');
 }
 function createExportLogs(){
   if(!CREATE_LOG)return;const body=GPCreationLog.exportRecords?GPCreationLog.exportRecords(CREATE_LOG_VIEW):CREATE_LOG.export(),url=URL.createObjectURL(new Blob([body],{type:'application/json'})),a=document.createElement('a');
@@ -6422,6 +6423,6 @@ async function createTeams(){
 
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
-if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v10",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
+if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v11",{updateViaCache:"none"})); // public static app only; local preview must stay fresh
 </script>
 </body></html>

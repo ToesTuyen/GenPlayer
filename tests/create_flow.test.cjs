@@ -7,7 +7,7 @@ const context=p=>({players:p,rosterNames:p.map(p=>p.n),history:[],instruction:''
 const group=(p,r)=>C.lineupGroupKey(p,{A:r.evA,B:r.evB});
 function storage(){const data=new Map([['gp_history','PROTECTED_HISTORY'],['gp_openrouter_key','PRIVATE_DEVICE_KEY']]);return {data,getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};}
 function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
-  const elements=new Map(),steps=new Map(),renders=[],requests=[];
+  const elements=new Map(),steps=new Map(),renders=[],requests=[],alerts=[];
   const cloudDocs=options.cloudDocs||new Map(),cloudCollection={
     doc:id=>({set:async payload=>{cloudDocs.set(id,structuredClone(payload));}}),
     orderBy(){return this;},limit(){return this;},
@@ -19,7 +19,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
     STATE:options.cloud?{cloud:true,docRef:{parent:cloudCollection}}:{cloud:false,docRef:null},firebase:options.cloud?{firestore:()=>({})}:undefined,aiIsPreview:()=>!options.cloud,
     AI_STATE:{busy:false},AI_KEYS:{has:()=>mode!=='algorithm'},cstate:{results:[],idx:0},
     aiMessage(){},aiTaskChanged(){},aiSyncDraftAction(){},aiRenderStatus(){},updateCount(){},fitMatch(){},esc:s=>s,
-    selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',
+    selectedIdx:()=>p.map((_,i)=>i),aiContextSnapshot:()=>context(p),confirm:()=>mode!=='cancel',canEdit:!!options.canEdit,alert:message=>alerts.push(message),openAdminModal:()=>alerts.push('OPEN_ADMIN'),
     render:(r,players)=>renders.push({r,players}),
     aiFetch:async(action,request)=>{
       if(action==='status')return {};
@@ -36,9 +36,9 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog};
   `,scope);
-  return {scope,elements,renders,requests,storage:shared,cloudDocs,...scope.flow};
+  return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,...scope.flow};
 }
 
 test('solver supplies distinct starting groups, ignoring color flips, role-only changes and reserve order',()=>{
@@ -85,6 +85,12 @@ test('a successful generation log restores the exact two teams for scheduling',a
     assert.equal(JSON.stringify(names(side,'bench')),JSON.stringify(record.output.teams[side].filter(p=>p.bench).map(p=>p.n)));
   }
   assert.equal(record.ai.generationId,'gen-fixture');
+});
+
+test('scheduling a generated lineup is blocked before draft loading when admin is logged out',async()=>{
+  const x=controller('valid');await x.run();const before=JSON.stringify(x.scope.cstate),record=x.log.list()[0];
+  x.useLog(record.id);
+  assert.equal(JSON.stringify(x.scope.cstate),before);assert.match(x.alerts[0],/cần đăng nhập admin/);assert.equal(x.alerts[1],'OPEN_ADMIN');
 });
 
 test('algorithm generations remain different after reload using only sanitized own logs',async()=>{
