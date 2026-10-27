@@ -204,11 +204,10 @@ async function main(){
       assert.equal(await page.evaluate(()=>cstate.idx),1,'Repeated Create cycles algorithm alternatives without another paid call');
       await page.locator('#createProcessClose').click();
       await page.locator('#aiKeySettings').click();await page.locator('#aiKey').fill(secret);await page.locator('#aiSaveKeyBtn').click();
-      const beforeCancel=await page.evaluate(()=>JSON.stringify(cstate)),callsBeforeCancel=providerCalls;
+      const callsBeforeNew=providerCalls;
       acceptDialogs=false;await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy);acceptDialogs=true;
-      assert.match(await page.locator('#createProcessSummary').innerText(),/Đã huỷ/);
-      assert.equal(providerCalls,callsBeforeCancel,'Declining data sharing cannot call the provider');
-      assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),beforeCancel,'Cancellation preserves the previous draft');
+      assert.match(await page.locator('#createProcessSummary').innerText(),/Hoàn tất bằng AI/);
+      assert.equal(providerCalls,callsBeforeNew+1,'Create calls AI without a confirmation popup');
       await page.locator('#createProcessClose').click();
       await page.evaluate(()=>openAITask('match-review',100));
       assert.equal(await page.locator('#aiAnalysisInstructionField').isVisible(),true);

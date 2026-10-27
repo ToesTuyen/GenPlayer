@@ -286,12 +286,6 @@ async function createTeams(){
     }catch(e){fallback=e.message;}
     if(engine==='AI'){
       requestedAI=true;createLogPatch({requestedEngine:'AI'});
-      if(!confirm('Gửi dữ liệu bóng đá và Note trực tiếp tới OpenRouter bằng key của bạn? Có thể tính phí. Không gửi tài khoản hoặc thu chi.')){
-        CREATE_STATE.cancelled=true;
-        createStep('engine','skip','Đã huỷ, không gọi AI.');
-        for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
-        await createFinish(false,'Đã huỷ. Giữ nguyên danh sách và bản nháp trước đó.');return;
-      }
       await createCompleteStep('engine','done','Dùng key cá nhân, gọi trực tiếp OpenRouter qua HTTPS.');
     }else{createLogPatch({requestedEngine:'Thuật toán',fallback:{reason:fallback,from:'AI',to:'Thuật toán'}});await createCompleteStep('engine','warn',fallback+' Dùng thuật toán.');}
     $('createProcessEngine').textContent=engine;

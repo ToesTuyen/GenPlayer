@@ -118,8 +118,9 @@ test('exhausted group exclusions return an explicit stop instead of reusing an o
   assert.equal(result.code,'no-new-lineup');assert.match(result.error,/không gọi AI/i);assert.ok(seen.size>0);
 });
 
-test('cancelled send creates a terminal log without provider calls or draft mutation',async()=>{
-  const x=controller('cancel');await x.run();assert.equal(x.requests.length,0);assert.equal(x.renders.length,0);assert.equal(x.log.list()[0].status,'cancelled');
+test('AI lineup creation proceeds without a confirmation popup',async()=>{
+  const x=controller('valid');x.scope.confirm=()=>{throw new Error('Unexpected confirmation popup');};await x.run();
+  assert.equal(x.state.success,true);assert.equal(x.requests.length,1);assert.equal(x.renders.length,1);assert.equal(x.log.list()[0].status,'success');
 });
 
 test('local journal is bounded, sanitizes secrets and never reads unrelated storage',()=>{
