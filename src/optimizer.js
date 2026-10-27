@@ -209,7 +209,9 @@
       stats.validPartitions++;
       const m=guard.metrics({A:eA,B:eB});
       const d=k=>Math.abs(eA[k]-eB[k]);
-      const J = W.stars*m.difference.totalStars
+      // Ngôi sao là ưu tiên cao, nhưng không phải điều kiện loại. Chấm cả
+      // đội hình chính, nhóm dự bị đối ứng và tổng đội để tránh chỉ cân một nơi.
+      const J = W.stars*(m.difference.stars+m.difference.benchStars+m.difference.totalStars)
               + W.startFit*d('startFit')
               + W.total*m.difference.total
               + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
@@ -229,7 +231,7 @@
       consider({J,A,B,evA:eA,evB:eB});
     });
     if(!top.length){
-      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','stars','pace','stamina','rotation'];
+      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','pace','stamina','rotation'];
       const diagnostics=Object.values(rejections).sort((a,b)=>b.count-a.count||order.indexOf(a.code)-order.indexOf(b.code));
       const duplicate=diagnostics.find(x=>x.code==='duplicate');
       if(duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Đã duyệt '+stats.totalPartitions+' cách chia; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước.',code:'no-new-lineup',diagnostics,search:{...stats,nearest}};

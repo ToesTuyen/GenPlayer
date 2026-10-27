@@ -29,10 +29,10 @@ test('starting and combined strength each have a hard 2-point cap; one cannot co
   assert.throws(()=>C.lineup(p,t),/Tổng sức mạnh/,'Start gap 1.6 plus paired bench gap 0.5 exceeds total cap');
 });
 
-test('stars must be spread even when all numeric totals, lines and physical averages match',()=>{
+test('star imbalance is a high-priority soft target and never blocks an otherwise valid lineup',()=>{
   const p=roster(),t=teams();rate(p[4],8);rate(p[5],8);rate(p[6],2);
-  assert.throws(()=>C.lineup(p,t),/Số ngôi sao/);
-  rate(p[5],4);rate(p[6],6);assert.doesNotThrow(()=>C.lineup(p,t),'An odd single star may differ by one');
+  assert.ok(C.lineupMetrics(p,t).difference.stars>1);assert.doesNotThrow(()=>C.lineup(p,t));
+  rate(p[5],4);rate(p[6],6);assert.doesNotThrow(()=>C.lineup(p,t));
 });
 
 test('pace and stamina have independent 0.5 caps outside goal, including the matched total pool',()=>{

@@ -262,7 +262,7 @@
       const m=metrics(teams),d=m.difference;
       for(const group of m.benchGroups)if(group.gap>LINEUP_LIMITS.benchMeanDifference+epsilon)out.push({kind:'reserve',gap:group.gap,count:group.count,limit:LINEUP_LIMITS.benchMeanDifference});
       for(const key of ['start','total'])if(d[key]>LINEUP_LIMITS.strengthDifference+epsilon)out.push({kind:'strength',key,gap:d[key],limit:LINEUP_LIMITS.strengthDifference});
-      for(const key of ['stars','benchStars','totalStars'])if(d[key]>LINEUP_LIMITS.starDifference)out.push({kind:'stars',key,gap:d[key],limit:LINEUP_LIMITS.starDifference});
+      // Ngôi sao là ưu tiên cao trong hàm xếp hạng, không phải điều kiện loại.
       for(const [key,limit] of [['pace',LINEUP_LIMITS.paceDifference],['totalPace',LINEUP_LIMITS.paceDifference],['stamina',LINEUP_LIMITS.staminaDifference],['totalStamina',LINEUP_LIMITS.staminaDifference]])if(d[key]>limit+epsilon)out.push({kind:key.includes('Stamina')||key==='stamina'?'stamina':'pace',key,gap:d[key],limit});
       const r=rotation(teams);
       if(r.checked&&r.maxTogether>LINEUP_LIMITS.previousTeammates)out.push({kind:'rotation',count:r.maxTogether,limit:LINEUP_LIMITS.previousTeammates});
@@ -277,7 +277,6 @@
       if(v.kind==='bench')return `${players[v.bench].n}: không được dự bị khi điểm ${v.slot} cao hơn ${players[v.starter].n} từ ${LINEUP_LIMITS.benchAdvantage} điểm (đối chiếu cả hai đội).`;
       if(v.kind==='reserve')return `Sức mạnh dự bị: nhóm ${v.count} người mạnh nhất mỗi bên chênh trung bình ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.benchMeanDifference}; không lấy người yếu kéo trung bình xuống để bù nhóm mạnh.`;
       if(v.kind==='strength')return `${v.key==='start'?'Đội hình chính':'Tổng sức mạnh (cùng số dự bị)'} chênh ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.strengthDifference}.`;
-      if(v.kind==='stars')return `Số ngôi sao (điểm tổng từ ${LINEUP_LIMITS.starThreshold}) chênh ${v.gap}, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.starDifference} ở ${v.key==='stars'?'đội hình chính':v.key==='benchStars'?'dự bị cùng số người':'tổng đội cùng số người'}.`;
       if(v.kind==='rotation')return `Có ${v.count} đồng đội cũ cùng bên, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.previousTeammates}; phải trộn đội, không chỉ đổi màu A/B.`;
       return `${v.kind==='pace'?'Tốc độ':'Thể lực'} trung bình chênh ${v.gap.toFixed(2)}, vượt ngưỡng bắt buộc ${v.limit} (${v.key.startsWith('bench')?'dự bị cùng số người':v.key.startsWith('total')?'ngoài sân và dự bị cùng số người':'6 cầu thủ ngoài sân'}).`;
     }

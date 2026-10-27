@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-top14-note-order">
+<meta name="genplayer-release" content="web-app-2026-10-27-star-priority">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -1354,7 +1354,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
             <li><b>Cân hàng thủ — bắt buộc.</b> Tổng điểm thòng và 2 hậu vệ hai đội chênh tối đa 1,5 điểm; không lấy công hoặc gôn bù thủ.</li>
             <li><b>Gôn có thể chênh nhẹ.</b> Không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.</li>
             <li><b>Đúng vị trí — bắt buộc.</b> Chỉ dùng vị trí chính/phụ; không tự kéo tiền đạo vào giữa. Đủ tiền vệ trung tâm chính thì mỗi bên một người đá giữa, chia đều cả người dự bị. Ngoại lệ vị trí phải được chỉ định rõ trong Note.</li>
-            <li><b>Chia đều chất lượng — bắt buộc.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; ngôi sao (từ 8 điểm) chênh tối đa 1 ở chính, dự bị và tổng đội. Tốc độ/thể lực trung bình ngoài sân và ngoài sân cộng cùng số dự bị chênh tối đa 0,5; không tính gôn hoặc người dư.</li>
+            <li><b>Chia đều chất lượng.</b> Điểm chính và tổng lực chênh tối đa 2 điểm; tốc độ/thể lực trung bình chênh tối đa 0,5 là bắt buộc. Chia ngôi sao (từ 8 điểm, mục tiêu lệch tối đa 1) là ưu tiên cao, không block.</li>
             <li><b>Xoay tua đội hình — bắt buộc.</b> Mỗi bên tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua; không chỉ đổi màu A/B. Giữ đúng sở trường. Thiếu lịch sử sẽ báo chưa đối chiếu được.</li>
             <li><b>Xét phong độ.</b> AI đọc kết quả gần đây, chuỗi thắng/thua và bàn ghi nhận. Nghỉ không tính thua; không tự đổi điểm.</li>
             <li><b>So kè đúng vai trò.</b> Đối chiếu đội hình chính và từng tuyến; không cộng người dự bị dư thành lợi thế.</li>
@@ -2324,7 +2324,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const m=metrics(teams),d=m.difference;
       for(const group of m.benchGroups)if(group.gap>LINEUP_LIMITS.benchMeanDifference+epsilon)out.push({kind:'reserve',gap:group.gap,count:group.count,limit:LINEUP_LIMITS.benchMeanDifference});
       for(const key of ['start','total'])if(d[key]>LINEUP_LIMITS.strengthDifference+epsilon)out.push({kind:'strength',key,gap:d[key],limit:LINEUP_LIMITS.strengthDifference});
-      for(const key of ['stars','benchStars','totalStars'])if(d[key]>LINEUP_LIMITS.starDifference)out.push({kind:'stars',key,gap:d[key],limit:LINEUP_LIMITS.starDifference});
+      // Ngôi sao là ưu tiên cao trong hàm xếp hạng, không phải điều kiện loại.
       for(const [key,limit] of [['pace',LINEUP_LIMITS.paceDifference],['totalPace',LINEUP_LIMITS.paceDifference],['stamina',LINEUP_LIMITS.staminaDifference],['totalStamina',LINEUP_LIMITS.staminaDifference]])if(d[key]>limit+epsilon)out.push({kind:key.includes('Stamina')||key==='stamina'?'stamina':'pace',key,gap:d[key],limit});
       const r=rotation(teams);
       if(r.checked&&r.maxTogether>LINEUP_LIMITS.previousTeammates)out.push({kind:'rotation',count:r.maxTogether,limit:LINEUP_LIMITS.previousTeammates});
@@ -2339,7 +2339,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       if(v.kind==='bench')return `${players[v.bench].n}: không được dự bị khi điểm ${v.slot} cao hơn ${players[v.starter].n} từ ${LINEUP_LIMITS.benchAdvantage} điểm (đối chiếu cả hai đội).`;
       if(v.kind==='reserve')return `Sức mạnh dự bị: nhóm ${v.count} người mạnh nhất mỗi bên chênh trung bình ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.benchMeanDifference}; không lấy người yếu kéo trung bình xuống để bù nhóm mạnh.`;
       if(v.kind==='strength')return `${v.key==='start'?'Đội hình chính':'Tổng sức mạnh (cùng số dự bị)'} chênh ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.strengthDifference}.`;
-      if(v.kind==='stars')return `Số ngôi sao (điểm tổng từ ${LINEUP_LIMITS.starThreshold}) chênh ${v.gap}, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.starDifference} ở ${v.key==='stars'?'đội hình chính':v.key==='benchStars'?'dự bị cùng số người':'tổng đội cùng số người'}.`;
       if(v.kind==='rotation')return `Có ${v.count} đồng đội cũ cùng bên, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.previousTeammates}; phải trộn đội, không chỉ đổi màu A/B.`;
       return `${v.kind==='pace'?'Tốc độ':'Thể lực'} trung bình chênh ${v.gap.toFixed(2)}, vượt ngưỡng bắt buộc ${v.limit} (${v.key.startsWith('bench')?'dự bị cùng số người':v.key.startsWith('total')?'ngoài sân và dự bị cùng số người':'6 cầu thủ ngoài sân'}).`;
     }
@@ -2699,7 +2698,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       stats.validPartitions++;
       const m=guard.metrics({A:eA,B:eB});
       const d=k=>Math.abs(eA[k]-eB[k]);
-      const J = W.stars*m.difference.totalStars
+      // Ngôi sao là ưu tiên cao, nhưng không phải điều kiện loại. Chấm cả
+      // đội hình chính, nhóm dự bị đối ứng và tổng đội để tránh chỉ cân một nơi.
+      const J = W.stars*(m.difference.stars+m.difference.benchStars+m.difference.totalStars)
               + W.startFit*d('startFit')
               + W.total*m.difference.total
               + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
@@ -2719,7 +2720,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       consider({J,A,B,evA:eA,evB:eB});
     });
     if(!top.length){
-      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','stars','pace','stamina','rotation'];
+      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','pace','stamina','rotation'];
       const diagnostics=Object.values(rejections).sort((a,b)=>b.count-a.count||order.indexOf(a.code)-order.indexOf(b.code));
       const duplicate=diagnostics.find(x=>x.code==='duplicate');
       if(duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Đã duyệt '+stats.totalPartitions+' cách chia; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước.',code:'no-new-lineup',diagnostics,search:{...stats,nearest}};
@@ -2999,7 +3000,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const m=metrics(teams),d=m.difference;
       for(const group of m.benchGroups)if(group.gap>LINEUP_LIMITS.benchMeanDifference+epsilon)out.push({kind:'reserve',gap:group.gap,count:group.count,limit:LINEUP_LIMITS.benchMeanDifference});
       for(const key of ['start','total'])if(d[key]>LINEUP_LIMITS.strengthDifference+epsilon)out.push({kind:'strength',key,gap:d[key],limit:LINEUP_LIMITS.strengthDifference});
-      for(const key of ['stars','benchStars','totalStars'])if(d[key]>LINEUP_LIMITS.starDifference)out.push({kind:'stars',key,gap:d[key],limit:LINEUP_LIMITS.starDifference});
+      // Ngôi sao là ưu tiên cao trong hàm xếp hạng, không phải điều kiện loại.
       for(const [key,limit] of [['pace',LINEUP_LIMITS.paceDifference],['totalPace',LINEUP_LIMITS.paceDifference],['stamina',LINEUP_LIMITS.staminaDifference],['totalStamina',LINEUP_LIMITS.staminaDifference]])if(d[key]>limit+epsilon)out.push({kind:key.includes('Stamina')||key==='stamina'?'stamina':'pace',key,gap:d[key],limit});
       const r=rotation(teams);
       if(r.checked&&r.maxTogether>LINEUP_LIMITS.previousTeammates)out.push({kind:'rotation',count:r.maxTogether,limit:LINEUP_LIMITS.previousTeammates});
@@ -3014,7 +3015,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       if(v.kind==='bench')return `${players[v.bench].n}: không được dự bị khi điểm ${v.slot} cao hơn ${players[v.starter].n} từ ${LINEUP_LIMITS.benchAdvantage} điểm (đối chiếu cả hai đội).`;
       if(v.kind==='reserve')return `Sức mạnh dự bị: nhóm ${v.count} người mạnh nhất mỗi bên chênh trung bình ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.benchMeanDifference}; không lấy người yếu kéo trung bình xuống để bù nhóm mạnh.`;
       if(v.kind==='strength')return `${v.key==='start'?'Đội hình chính':'Tổng sức mạnh (cùng số dự bị)'} chênh ${v.gap.toFixed(2)} điểm, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.strengthDifference}.`;
-      if(v.kind==='stars')return `Số ngôi sao (điểm tổng từ ${LINEUP_LIMITS.starThreshold}) chênh ${v.gap}, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.starDifference} ở ${v.key==='stars'?'đội hình chính':v.key==='benchStars'?'dự bị cùng số người':'tổng đội cùng số người'}.`;
       if(v.kind==='rotation')return `Có ${v.count} đồng đội cũ cùng bên, vượt ngưỡng bắt buộc ${LINEUP_LIMITS.previousTeammates}; phải trộn đội, không chỉ đổi màu A/B.`;
       return `${v.kind==='pace'?'Tốc độ':'Thể lực'} trung bình chênh ${v.gap.toFixed(2)}, vượt ngưỡng bắt buộc ${v.limit} (${v.key.startsWith('bench')?'dự bị cùng số người':v.key.startsWith('total')?'ngoài sân và dự bị cùng số người':'6 cầu thủ ngoài sân'}).`;
     }
@@ -3278,7 +3278,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       stats.validPartitions++;
       const m=guard.metrics({A:eA,B:eB});
       const d=k=>Math.abs(eA[k]-eB[k]);
-      const J = W.stars*m.difference.totalStars
+      // Ngôi sao là ưu tiên cao, nhưng không phải điều kiện loại. Chấm cả
+      // đội hình chính, nhóm dự bị đối ứng và tổng đội để tránh chỉ cân một nơi.
+      const J = W.stars*(m.difference.stars+m.difference.benchStars+m.difference.totalStars)
               + W.startFit*d('startFit')
               + W.total*m.difference.total
               + W.cong*d('atk7') + W.thu*d('def7')        // CÔNG/THỦ toàn đội — ngang nhau
@@ -3298,7 +3300,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       consider({J,A,B,evA:eA,evB:eB});
     });
     if(!top.length){
-      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','stars','pace','stamina','rotation'];
+      const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','pace','stamina','rotation'];
       const diagnostics=Object.values(rejections).sort((a,b)=>b.count-a.count||order.indexOf(a.code)-order.indexOf(b.code));
       const duplicate=diagnostics.find(x=>x.code==='duplicate');
       if(duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Đã duyệt '+stats.totalPartitions+' cách chia; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước.',code:'no-new-lineup',diagnostics,search:{...stats,nearest}};
@@ -3341,7 +3343,7 @@ const LINEUP_RULES=Object.freeze([
   'Cân hàng thủ RIÊNG BẮT BUỘC: chênh tổng điểm thòng và 2 hậu vệ tối đa 1.5 điểm; xét cả hỗ trợ phòng ngự, không chỉ cân tổng điểm.',
   'Gôn có thể chênh nhẹ; không lấy gôn mạnh bù cho tuyến trên hoặc hàng thủ yếu.',
   'Đúng vị trí BẮT BUỘC: chỉ xếp vai trò trong allowedRoles, không tự đổi tiền đạo thành tiền vệ trung tâm. Đủ hai tiền vệ trung tâm chính thì mỗi bên có một người ở giữa; chia đều tổng số tiền vệ trung tâm chính cả đá chính và dự bị, chênh tối đa một người. Vị trí khác hồ sơ chỉ được phép khi có chỉ định rõ trong Note hiện tại, hoặc riêng vị trí Thòng có lịch sử đã đá Thòng ở trận hòa/chênh tối đa 1 bàn và code chỉ mở khi hồ sơ hiện tại không lấp đủ đội hình; không kéo người giỏi ngoài sân vào gôn.',
-  'Chia đều chất lượng BẮT BUỘC: đội hình chính và tổng sức mạnh cộng cùng số dự bị đều chênh tối đa 2 điểm; ngôi sao (điểm tổng từ 8) chênh tối đa 1 trong đội hình chính, dự bị ghép bằng số và tổng đội; tốc độ và thể lực trung bình đều chênh tối đa 0.5 ở 6 người ngoài sân và nhóm ngoài sân cộng cùng số dự bị. Sức mạnh dự bị có kiểm tra riêng; thể chất của họ tính khi ghép tổng đội. Không dùng gôn để bù thể chất ngoài sân.',
+  'Chia đều chất lượng BẮT BUỘC: đội hình chính và tổng sức mạnh cộng cùng số dự bị đều chênh tối đa 2 điểm; tốc độ và thể lực trung bình đều chênh tối đa 0.5 ở 6 người ngoài sân và nhóm ngoài sân cộng cùng số dự bị. Sức mạnh dự bị có kiểm tra riêng; thể chất của họ tính khi ghép tổng đội. Không dùng gôn để bù thể chất ngoài sân. Cân ngôi sao (điểm tổng từ 8, mục tiêu lệch tối đa 1) là ƯU TIÊN CAO, không block phương án.',
   'Xoay tua BẮT BUỘC khi có trận trước hợp lệ: mỗi đội mới tối đa 4 người từng đá chính chung một đội trận gần nhất đã qua, kiểm tra cả hai màu cũ, không chỉ đổi màu A/B. Đổi nhóm đồng đội nhưng giữ đúng vị trí chính/phụ; không ép người chỉ có một vai trò sang sai vị trí. Thiếu lịch sử phải báo chưa đối chiếu được, không bịa.',
   'Xét phong độ: kết quả gần đây, chuỗi thắng/thua và bàn đã nhập; vắng mặt không tính thua, không tự đổi chỉ số.',
   'So kè đúng vai trò: so đội hình chính và từng tuyến; không cộng dự bị dư thành lợi thế.',
@@ -3394,7 +3396,8 @@ function prepare(body,now=Date.now()){
     data.slots=C.SLOTS;data.previousMatches=c.history.filter(m=>m.score&&m.kickoff<=now).slice(0,3);
     data.rules=LINEUP_RULES.slice();
     data.assignmentSlots=Object.fromEntries(['A','B'].flatMap(side=>[...ROLE_CODES.map((code,k)=>[side+'_'+code,{team:side,position:C.SLOTS[k],bench:false}]),[side+'_BENCH',{team:side,position:'',bench:true}]]));
-    data.lineupRequirements={playerIds:data.players.map(p=>p.id),requiredStarterSlots:SLOT_CODES.filter(code=>!code.endsWith('_BENCH')),startersPerTeam:7,benchPerTeam:{min:Math.floor((data.players.length-14)/2),max:Math.ceil((data.players.length-14)/2)},mandatoryQuality:{...C.LINEUP_LIMITS,compareBenchAcrossBothTeams:true,outfieldOnly:true}};
+    const {starThreshold,starDifference,...mandatoryLimits}=C.LINEUP_LIMITS;
+    data.lineupRequirements={playerIds:data.players.map(p=>p.id),requiredStarterSlots:SLOT_CODES.filter(code=>!code.endsWith('_BENCH')),startersPerTeam:7,benchPerTeam:{min:Math.floor((data.players.length-14)/2),max:Math.ceil((data.players.length-14)/2)},mandatoryQuality:{...mandatoryLimits,compareBenchAcrossBothTeams:true,outfieldOnly:true},starBalance:{mandatory:false,priority:'high',threshold:starThreshold,targetDifference:starDifference}};
     const priority=guard.priority.best;
     data.lineupRequirements.starterPriority={fixedDisplayedTop14:true,displayedDecimals:1,lowerRatedReplacement:false,basePlayerIds:guard.priority.baseFixed.map(i=>'p'+i),noteBenchOverrides:guard.priority.forcedBench.map(i=>'p'+i),noteRoleOverrides:roles.overrides.map(x=>({playerId:'p'+x.index,slot:x.slot})),finalPlayerIds:guard.priority.fixed.map(i=>'p'+i),members:priority.members,primaryRatingTotal:+priority.strength.toFixed(1)};
     data.lineupRequirements.reserveStrength={strongestPrefixes:true,meanDifference:C.LINEUP_LIMITS.benchMeanDifference,ignoreWeakestUnpairedExtra:true};
@@ -6555,7 +6558,7 @@ async function createTeams(){
     createStep('reserves','active','So lần lượt các nhóm dự bị mạnh nhất mỗi bên…');await createYield();
     await createCompleteStep('reserves','done',m.benchCount?`Nhóm mạnh nhất 1→${m.benchCount} người: chênh trung bình ${m.benchGroups.map(g=>g.gap.toFixed(2)).join(' / ')} (tối đa ${limits.benchMeanDifference} mỗi nhóm). Không lấy người yếu bù nhóm mạnh; không cộng người dư.`:'Không có cặp dự bị để so; người dư không cộng lợi thế.');
     createStep('quality','active','Kiểm tra các ngưỡng tổng lực và thể chất…');await createYield();
-    await createCompleteStep('quality','done',`Chênh điểm chính ${d.start.toFixed(2)}, tổng lực ${d.total.toFixed(2)} (tối đa ${limits.strengthDifference}); ngôi sao chính/dự bị/tổng ${d.stars}/${d.benchStars}/${d.totalStars} (tối đa ${limits.starDifference}); tốc độ ${Math.max(d.pace,d.totalPace).toFixed(2)}/${limits.paceDifference}, thể lực ${Math.max(d.stamina,d.totalStamina).toFixed(2)}/${limits.staminaDifference}. Thể chất kiểm tra ngoài sân và ngoài sân cộng cùng số dự bị.`);
+    await createCompleteStep('quality','done',`Chênh điểm chính ${d.start.toFixed(2)}, tổng lực ${d.total.toFixed(2)} (bắt buộc tối đa ${limits.strengthDifference}); tốc độ ${Math.max(d.pace,d.totalPace).toFixed(2)}/${limits.paceDifference}, thể lực ${Math.max(d.stamina,d.totalStamina).toFixed(2)}/${limits.staminaDifference}. Ngôi sao chính/dự bị/tổng lệch ${d.stars}/${d.benchStars}/${d.totalStars}: ưu tiên cao, không block.`);
     createStep('positions','active','Đối chiếu vị trí và chất lượng người dự bị…');await createYield();
     const positionWarnings=check.warnings.filter(w=>!w.startsWith('Chênh '));
     await createCompleteStep('positions',positionWarnings.length?'warn':'done',positionWarnings.length?positionWarnings.join(' '):'Đã lấy top 14 gốc theo điểm hiển thị, áp dụng ngoại lệ Note cho trận này, rồi xếp vị trí chính/phụ và cân hai đội.');

@@ -31,7 +31,7 @@ Người mạnh theo chỗ   | Bắt buộc   | Dự bị không hơn starter c�
 Cân dự bị             | Bắt buộc   | Mọi nhóm 1..N dự bị mạnh nhất lệch TB <=0,5      | Bất kỳ prefix dự bị nào vượt 0,5
 Sức mạnh đá chính     | Bắt buộc   | Chênh tổng điểm 7 người tối đa 2                  | Chênh lớn hơn 2
 Tổng sức mạnh         | Bắt buộc   | Đá chính + cùng số dự bị, chênh tối đa 2          | Chênh lớn hơn 2
-Ngôi sao              | Bắt buộc   | Điểm vị trí chính >=8; lệch tối đa 1              | Chính, dự bị hoặc tổng lệch >1 sao
+Ngôi sao              | Ưu tiên cao | Điểm vị trí chính >=8; mục tiêu lệch tối đa 1    | Không block; dùng để xếp hạng phương án
 Tốc độ                | Bắt buộc   | TB ngoài sân và pool đối ứng lệch tối đa 0,5      | Một trong hai phép so vượt 0,5
 Thể lực               | Bắt buộc   | TB ngoài sân và pool đối ứng lệch tối đa 0,5      | Một trong hai phép so vượt 0,5
 Khác trận trước       | Bắt buộc   | Tối đa 4 đồng đội cũ tiếp tục cùng bên            | Có từ 5 đồng đội cũ cùng bên
@@ -118,42 +118,39 @@ II. CÁC TRƯỜNG HỢP CÓ THỂ KHIẾN KHÔNG GEN ĐƯỢC ĐỘI
 14. Tổng lực gồm dự bị vượt 2 điểm
     - Đội chính cân nhưng khi cộng cùng số dự bị đối ứng lại lệch >2.
 
-15. Ngôi sao bị dồn
-    - Số người từ 8 điểm trở lên lệch quá 1 ở đội chính, dự bị đối ứng hoặc tổng đối ứng.
-
-16. Tốc độ bị dồn
+15. Tốc độ bị dồn
     - Trung bình 6 cầu thủ ngoài sân hoặc pool ngoài sân + dự bị đối ứng lệch >0,5.
     - Điểm tốc độ của thủ môn không được dùng để che chênh ngoài sân.
 
-17. Thể lực bị dồn
+16. Thể lực bị dồn
     - Cách kiểm tra giống tốc độ; chỉ cần một phép so vượt 0,5 là block.
 
-18. Tiền vệ trung tâm chính bị dồn một bên
+17. Tiền vệ trung tâm chính bị dồn một bên
     - Tính cả đá chính và dự bị; số TVTT chính hai đội lệch quá 1.
 
-19. Khách bị dồn một bên
+18. Khách bị dồn một bên
     - Tổng số khách ở hai đội lệch quá 1, kể cả khách dự bị.
 
-20. Không đạt yêu cầu xoay tua
+19. Không đạt yêu cầu xoay tua
     - Có từ 5 cầu thủ từng cùng bên ở trận gần nhất tiếp tục cùng bên.
     - Đổi màu Team A/Team B không được tính là một đội hình mới.
 
-21. Vai trò lịch sử không đủ điều kiện làm ngoại lệ
+20. Vai trò lịch sử không đủ điều kiện làm ngoại lệ
     - Chỉ vai trò Thòng từng xuất hiện trong trận có tỉ số hòa hoặc lệch tối đa 1 bàn mới được tham khảo.
     - Trận chưa có tỉ số hoặc thắng/thua đậm không mở ngoại lệ vị trí.
 
-22. Đã dùng hết nhóm đội hình hợp lệ
+21. Đã dùng hết nhóm đội hình hợp lệ
     - Những nhóm đá chính giống lượt gen trước với cùng input bị loại.
     - Khi không còn nhóm mới, hệ thống dừng thay vì trả lại đội cũ.
 
-23. Một phương án vi phạm nhiều điều kiện cùng lúc
+22. Một phương án vi phạm nhiều điều kiện cùng lúc
     - Ví dụ vừa lệch công, vừa lệch dự bị, vừa lệch tốc độ.
     - Phương án chỉ được giữ khi vượt qua tất cả điều kiện bắt buộc đồng thời.
 
-24. Dữ liệu vị trí hoặc chỉ số không hợp lệ
+23. Dữ liệu vị trí hoặc chỉ số không hợp lệ
     - Thiếu vị trí, điểm ngoài 0..10, tên trùng hoặc dữ liệu cầu thủ lỗi có thể làm bước chuẩn hóa dừng trước solver.
 
-25. Web Worker hoặc giới hạn thời gian
+24. Web Worker hoặc giới hạn thời gian
     - Bộ giải chạy quá 90 giây hoặc trình duyệt không mở được Worker thì dừng vì lỗi kỹ thuật.
     - Đây không phải block chuyên môn nhưng kết quả vẫn không được tạo.
 
