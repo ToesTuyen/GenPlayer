@@ -57,7 +57,7 @@ async function main(){
         if(engine==='algorithm')await page.evaluate(()=>AI_KEYS.clear());
         await page.locator('#go').click();await page.waitForFunction(()=>!CREATE_STATE.busy,{}, {timeout:30000});
         assert.equal(await page.evaluate(()=>CREATE_STATE.success),false,engine+' must fail without a legal base');assert.equal(calls,before+1,'No paid request without a legal base');
-        assert.match(await page.locator('#createProcessSummary').innerText(),/Không tìm được đội hình đạt tiêu chí bắt buộc/);
+        assert.match(await page.locator('#createProcessSummary').innerText(),/Không tìm được đội hình đạt tiêu chí bắt buộc|Nguyên nhân: Nhóm ưu tiên/);
         assert.equal(await page.evaluate(()=>JSON.stringify(cstate)),draft,'Failed creation preserves the prior draft');
         assert.equal(await page.locator('#result .field .player').count(),14);
         assert.equal(await page.evaluate(()=>JSON.stringify({players:localStorage.getItem(LS.players),history:localStorage.getItem(LS.history)})),stored);

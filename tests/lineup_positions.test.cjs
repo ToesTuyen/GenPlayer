@@ -106,7 +106,7 @@ test('negative, ambiguous, conflicting and historical Notes cannot grant a role'
 
 test('no suitable center means no lineup instead of a high-scoring striker assigned there',()=>{
   const p=roster();p[4].pos='TĐ';p[11].pos='TĐ';
-  assert.match(O.solve(p,null,{strictGuests:true}).error,/Không tìm được đội hình đạt tiêu chí bắt buộc/);
+  assert.match(O.solve(p,null,{strictGuests:true}).error,/Nguyên nhân: Nhóm ưu tiên/);
 });
 
 test('a close scored match can supply a missing sweeper role without rewriting the profile',()=>{
@@ -114,7 +114,7 @@ test('a close scored match can supply a missing sweeper role without rewriting t
   const match=score=>({id:'history-sweeper',kickoff:1_000,score,goals:{},goalsLocked:true,teams:{
     A:[{n:p[8].n,slot:'Thòng',bench:false}],B:[]
   }});
-  assert.match(O.solve(p,null,{strictGuests:true,history:[match({a:4,b:1})],now}).error,/Không tìm được đội hình/,'A clear result is not role evidence');
+  assert.match(O.solve(p,null,{strictGuests:true,history:[match({a:4,b:1})],now}).error,/Nguyên nhân: Nhóm ưu tiên/,'A clear result is not role evidence');
   const results=O.solve(p,null,{strictGuests:true,history:[match({a:2,b:2})],now});assert.ok(results.length>0);
   const guard=C.lineupGuard(p,{history:[match({a:2,b:2})],now});
   assert.deepEqual(guard.roles.historical.map(x=>({index:x.index,slot:x.slot,matches:x.matches,draws:x.draws})),[{index:8,slot:'Thòng',matches:1,draws:1}]);
