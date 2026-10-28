@@ -9,6 +9,6 @@
     "prestart": "npm run build",
     "start": "node scripts/serve_web.cjs",
     "pretest": "npm run build",
-    "test": "node --test tests/web_app.test.cjs tests/lineup_quality.test.cjs tests/lineup_positions.test.cjs tests/lineup_hard_limits.test.cjs tests/lineup_priority.test.cjs tests/create_flow.test.cjs && node tests/ui_icons.test.cjs && node tests/match_comparison.test.cjs"
+    "test": "node --test tests/web_app.test.cjs tests/lineup_quality.test.cjs tests/lineup_positions.test.cjs tests/lineup_hard_limits.test.cjs tests/lineup_priority.test.cjs tests/create_flow.test.cjs tests/pitch_export.test.cjs && node tests/ui_icons.test.cjs && node tests/match_comparison.test.cjs"
   }
 }
