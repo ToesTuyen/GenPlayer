@@ -40,7 +40,7 @@
 :root[data-theme] :is(.action-panel,.card-box,.m-row,.spot-card,.pcard,.pm-panel,.history-item,.mc,.fin-row,.fin-kpi,.pstat-kpi,.pstat-card,.ai-panel){background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:var(--sh-sm);backdrop-filter:none}
 :root[data-theme] :is(.m-row,.pcard,.mc,.pstat-card):hover{background:var(--surface);border-color:var(--brand);transform:none}
 .action-panel::before,.fin-kpi::after,.pstat-kpi::after{display:none}
-.ap-title{font-size:20px;font-weight:700;letter-spacing:0}
+.ap-title{font-size:20px;font-weight:700;letter-spacing:0;margin-bottom:10px}
 .ap-sub{color:var(--muted);line-height:1.5;margin-bottom:8px}
 :root[data-theme] .action-panel{padding:12px}
 .ap-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
