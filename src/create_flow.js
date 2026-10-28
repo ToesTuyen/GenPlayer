@@ -336,7 +336,11 @@ async function createFinish(success,message){
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
   const cloudWarning=cloud.state==='failed'?'Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'';
-  $('createProcessSummary').textContent=message+(cloudWarning?'\n'+cloudWarning:'');
+  const summary=$('createProcessSummary'),summaryText=message+(cloudWarning?'\n'+cloudWarning:'');
+  summary.textContent=summaryText;
+  if(!success&&/^Nguyên nhân:/m.test(summaryText)&&/^Giải pháp:/m.test(summaryText)){
+    summary.innerHTML=esc(summaryText).replace(/^Nguyên nhân:/m,'<strong class="process-cause">Nguyên nhân:</strong>').replace(/^Giải pháp:/m,'<strong class="process-solution">Giải pháp:</strong>');
+  }
   $('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();

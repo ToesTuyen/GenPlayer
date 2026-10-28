@@ -1067,6 +1067,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .process-steps [data-state="active"] .process-step-title{color:var(--brand)}
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-line}
+.process-summary .process-cause{color:var(--danger);font-weight:700}
+.process-summary .process-solution{color:var(--success);font-weight:700}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
 .create-tab-panel[hidden]{display:none!important}
 .create-log-page{max-width:900px;margin:0 auto}
@@ -6913,7 +6915,11 @@ async function createFinish(success,message){
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
   const cloudWarning=cloud.state==='failed'?'Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'';
-  $('createProcessSummary').textContent=message+(cloudWarning?'\n'+cloudWarning:'');
+  const summary=$('createProcessSummary'),summaryText=message+(cloudWarning?'\n'+cloudWarning:'');
+  summary.textContent=summaryText;
+  if(!success&&/^Nguyên nhân:/m.test(summaryText)&&/^Giải pháp:/m.test(summaryText)){
+    summary.innerHTML=esc(summaryText).replace(/^Nguyên nhân:/m,'<strong class="process-cause">Nguyên nhân:</strong>').replace(/^Giải pháp:/m,'<strong class="process-solution">Giải pháp:</strong>');
+  }
   $('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();

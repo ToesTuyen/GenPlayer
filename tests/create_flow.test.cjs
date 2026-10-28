@@ -208,6 +208,8 @@ test('missing keeper explains the shortage and actionable choices without redund
   assert.match(detail,/\nGiải pháp: Chọn thêm thủ môn/);assert.match(detail,/cầu thủ đã chọn sẽ bắt gôn/i);
   assert.doesNotMatch(detail,/chưa gọi AI|chưa sửa trận|chưa lưu hoặc sửa trận/i);
   assert.equal(x.elements.get('createProcessSummary').hidden,false,'Failure is shown in the bottom note');
+  assert.match(x.elements.get('createProcessSummary').innerHTML,/<strong class="process-cause">Nguyên nhân:<\/strong>/);
+  assert.match(x.elements.get('createProcessSummary').innerHTML,/<strong class="process-solution">Giải pháp:<\/strong>/);
   assert.match(x.elements.get('step-search.process-step-detail').textContent,/bên dưới/);
   assert.doesNotMatch(detail,/Log cloud đã lưu/i);
   assert.equal(x.requests.length,0);assert.equal(x.log.list()[0].status,'failed');
