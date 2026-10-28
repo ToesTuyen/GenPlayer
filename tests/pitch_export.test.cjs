@@ -26,9 +26,19 @@ test('downloads the complete opaque PNG directly without a preview',async()=>{
 });
 test('opens the native share sheet on iPhone with the PNG immediately',async()=>{
   const t=setup(true),p=t.context.pitchTest;Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'horizontal'});const pending=p.pitchExport();assert.equal(t.shared.length,1,'share must start in the click activation before awaiting');await pending;assert.equal(t.shared[0].files[0].name,'doi-hinh-ngang.png');assert.equal(t.downloads.length,0);
+  assert.match(t.els.pitchExportStatus.textContent,/Lưu hình ảnh/);assert.equal(t.els.pitchExportButton.disabled,false);
+});
+test('Android downloads directly even if the browser supports sharing',async()=>{
+  const t=setup(),p=t.context.pitchTest;t.context.navigator.userAgent='Mozilla/5.0 (Linux; Android 11; SM-A505F)';Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});await p.pitchExport();assert.equal(t.downloads[0].name,'doi-hinh-doc.png');assert.equal(t.shared.length,0);assert.match(t.els.pitchExportStatus.textContent,/Tải xuống/);
+});
+test('iPad desktop-style user agent uses the iOS native sheet',async()=>{
+  const t=setup(),p=t.context.pitchTest;t.context.navigator.platform='MacIntel';t.context.navigator.maxTouchPoints=5;Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});await p.pitchExport();assert.equal(t.shared.length,1);assert.equal(t.downloads.length,0);
+});
+test('iOS share promises that never settle do not block the viewer',async()=>{
+  const t=setup(true),p=t.context.pitchTest;t.context.navigator.share=()=>new Promise(()=>{});Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});await p.pitchExport();assert.equal(t.els.pitchExportButton.disabled,false);assert.equal(p.PITCH_EXPORT.busy,false);
 });
 test('falls back to download if sharing files is unsupported',async()=>{
-  const t=setup(true),p=t.context.pitchTest;t.context.navigator.canShare=()=>false;Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});await p.pitchExport();assert.equal(t.downloads[0].name,'doi-hinh-doc.png');assert.equal(t.shared.length,0);
+  const t=setup(true),p=t.context.pitchTest;t.context.navigator.canShare=()=>false;Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});await p.pitchExport();assert.equal(t.downloads[0].name,'doi-hinh-doc.png');assert.equal(t.shared.length,0);assert.match(t.els.pitchExportStatus.textContent,/Tệp/);
 });
 test('vertical PNG puts each substitute on a separate line and draws form indicators',async()=>{
   const t=setup(),p=t.context.pitchTest;for(let i=16;i<22;i++)t.data.sel.push({n:'Player '+i});t.data.res.evA.bench=[14,16,18,20];t.data.res.evB.bench=[15,17,19,21];t.data.showHeat=true;Object.assign(p.PITCH_VIEW,{node:{},data:t.data,orientation:'vertical'});

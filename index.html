@@ -1,7 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-unified">
+<meta name="genplayer-release" content="web-app-2026-10-28-platform-save">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -4963,11 +4963,18 @@ async function pitchExport(){
   try{
     const image=pitchImageCanvas(PITCH_VIEW.data,orientation),dataUrl=image.toDataURL('image/png');
     if(!dataUrl.startsWith('data:image/png;base64,'))throw new Error('Không tạo được ảnh PNG.');
-    const name='doi-hinh-'+(orientation==='vertical'?'doc':'ngang')+'.png',mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    const name='doi-hinh-'+(orientation==='vertical'?'doc':'ngang')+'.png',ua=navigator.userAgent||'',isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),isAndroid=/Android/i.test(ua);
     let file=null,canShare=false;
-    if(mobile&&typeof File==='function'&&navigator.share&&navigator.canShare){const binary=atob(dataUrl.split(',')[1]),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);file=new File([bytes],name,{type:'image/png'});try{canShare=navigator.canShare({files:[file]});}catch(e){}}
-    if(canShare){await navigator.share({files:[file],title:'Đội hình'});}
-    else{const link=document.createElement('a');link.href=dataUrl;link.download=name;link.style.display='none';document.body.appendChild(link);link.click();link.remove();}
+    if(isIOS&&typeof File==='function'&&navigator.share&&navigator.canShare){const binary=atob(dataUrl.split(',')[1]),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);file=new File([bytes],name,{type:'image/png'});try{canShare=navigator.canShare({files:[file]});}catch(e){}}
+    if(canShare){
+      status.textContent='Trên iPhone, chọn “Lưu hình ảnh” trong bảng của máy để lưu vào Ảnh.';status.hidden=false;
+      // Some iOS versions never settle the share promise after Save Image.
+      // Do not keep the viewer locked while the operating-system sheet is open.
+      Promise.resolve(navigator.share({files:[file],title:'Đội hình'})).catch(e=>{if(e?.name==='AbortError')status.textContent='Đã hủy lưu ảnh.';else status.textContent='Không mở được bảng lưu ảnh. Vui lòng thử lại.';status.hidden=false;});
+    }else{
+      const link=document.createElement('a');link.href=dataUrl;link.download=name;link.style.display='none';document.body.appendChild(link);link.click();link.remove();
+      status.textContent=isIOS?'Trình duyệt không hỗ trợ bảng lưu Ảnh. Hãy mở Tệp → Tải xuống để xem ảnh.':isAndroid?'Ảnh được gửi tới trình tải xuống. Nếu chưa thấy trong Thư viện, mở Tệp → Tải xuống.':'Ảnh được gửi tới trình tải xuống.';status.hidden=false;
+    }
   }catch(e){if(e?.name!=='AbortError'){status.textContent=(e&&e.message)||'Không lưu được ảnh. Vui lòng thử lại.';status.hidden=false;}}
   finally{PITCH_EXPORT.busy=false;button.disabled=false;label.textContent='Lưu hình';}
 }
