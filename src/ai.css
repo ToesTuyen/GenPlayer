@@ -72,6 +72,7 @@
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
 .process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-line}
 .process-summary .process-cause{color:var(--danger);font-weight:700}
+:root[data-theme="light"] .process-summary .process-cause{color:#983d44}
 .process-summary .process-solution{color:var(--success);font-weight:700}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
 .create-tab-panel[hidden]{display:none!important}
