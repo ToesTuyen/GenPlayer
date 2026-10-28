@@ -1,12 +1,11 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-image">
+<meta name="genplayer-release" content="web-app-2026-10-28-iphone-image">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#f4f6f5">
-<script defer src="assets/vendor/html2canvas-1.4.1.min.js"></script>
 <script>window.GP_APP_CONFIG=null;</script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("gp_theme")==="dark"?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}</script>
 <style>
@@ -1067,8 +1066,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <dialog id="pitchExportDialog" class="pitch-export-dialog" aria-labelledby="pitchExportTitle">
   <div class="pitch-export-head"><strong id="pitchExportTitle">Ảnh đội hình</strong><button class="btn alt sm" type="button" onclick="closePitchExport()" aria-label="Đóng ảnh đội hình">×</button></div>
   <img id="pitchExportPreview" class="pitch-export-preview" alt="Ảnh sơ đồ đội hình">
-  <div class="pitch-export-actions"><button class="btn alt sm" id="pitchShareButton" type="button" onclick="pitchShareImage()" hidden>Lưu vào Ảnh / Chia sẻ</button><a class="btn sm" id="pitchDownload" download>Tải ảnh PNG</a></div>
-  <div id="pitchExportMessage" class="pitch-export-message" role="status" aria-live="polite">Trên iPhone, chọn Lưu vào Ảnh hoặc tải PNG về Tệp.</div>
+  <div class="pitch-export-actions"><button class="btn alt sm" id="pitchShareButton" type="button" onclick="pitchShareImage()" hidden>Chia sẻ ảnh</button><a class="btn alt sm" id="pitchDownload" download>Tải về Tệp</a></div>
+  <div id="pitchExportMessage" class="pitch-export-message" role="status" aria-live="polite">Trên iPhone, nhấn giữ ảnh rồi chọn Thêm vào Ảnh.</div>
 </dialog>
 <dialog id="lineupEditDialog" class="ai-key-dialog lineup-edit-dialog" aria-labelledby="lineupEditTitle">
   <div class="ai-key-head"><h2 id="lineupEditTitle">Sửa đội hình</h2><button class="btn alt sm" type="button" onclick="createCloseEdit()" aria-label="Đóng cửa sổ sửa đội hình">×</button></div>
@@ -2604,34 +2603,93 @@ function pitchViewSetZoom(value,keepCenter=true){
 function pitchViewZoom(direction){pitchViewSetZoom(PITCH_VIEW.zoom*(direction>0?1.25:0.8));}
 function pitchViewFit(){const viewport=$("pitchViewViewport");pitchViewSetZoom(Math.min((viewport.clientWidth-16)/PITCH_VIEW.width,(viewport.clientHeight-16)/PITCH_VIEW.height),false);viewport.scrollLeft=0;viewport.scrollTop=0;}
 const PITCH_EXPORT={url:null,file:null,busy:false};
+// Draw an opaque PNG locally. This avoids screenshotting DOM/SVG inside a
+// cloned dialog, which can produce black images in iOS Safari.
+function pitchImageCanvas(data,orientation){
+  const vertical=orientation==='vertical',w=vertical?600:960,fieldTop=vertical?48:42,fieldH=vertical?680:440;
+  const {res,sel}=data,A=res.evA,B=res.evB,canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
+  if(!ctx)throw new Error('Trình duyệt không hỗ trợ tạo ảnh.');
+  const dark=document.documentElement.dataset.theme==='dark',background=dark?'#151e2e':'#ffffff',text=dark?'#e8eef3':'#445b52';
+  const list=ev=>(ev.bench||[]).slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`${sel[i].n} ${ov(sel[i]).toFixed(1)}`);
+  const benchA=list(A),benchB=list(B);
+  function wrap(s,max){let lines=[],line='';for(const word of String(s).split(/\s+/)){const next=line?line+' '+word:word;if(line&&ctx.measureText(next).width>max){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);return lines;}
+  ctx.font='14px sans-serif';const benchLines=ev=>wrap(ev.join('   •   '),w/2-36),linesA=benchLines(benchA),linesB=benchLines(benchB);
+  const benchH=Math.max(68,38+Math.max(linesA.length,linesB.length)*20),height=fieldTop+fieldH+benchH;
+  canvas.width=w*2;canvas.height=height*2;ctx.scale(2,2);ctx.fillStyle=background;ctx.fillRect(0,0,w,height);
+  function txt(s,x,y,font,color,align='center'){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(String(s),x,y);}
+  if(vertical){
+    ctx.fillStyle=KIT_A.body;ctx.fillRect(12,9,30,28);ctx.fillStyle=KIT_B.body;ctx.fillRect(w-42,9,30,28);
+    txt('A',27,23,'bold 16px sans-serif','#fff');txt('TEAM A',52,23,'bold 17px sans-serif',text,'left');
+    txt('VS',w/2,23,'bold 14px sans-serif',text);txt('TEAM B',w-52,23,'bold 17px sans-serif',text,'right');txt('B',w-27,23,'bold 16px sans-serif','#182b39');
+  }else{
+    ctx.fillStyle=KIT_A.body;ctx.fillRect(0,0,w/2,fieldTop);ctx.fillStyle=KIT_B.body;ctx.fillRect(w/2,0,w/2,fieldTop);
+    txt('●  TEAM A  ▶',18,fieldTop/2,'bold 18px sans-serif','#fff','left');txt('◀  TEAM B  ●',w-18,fieldTop/2,'bold 18px sans-serif','#182b39','right');
+  }
+  ctx.fillStyle='#294238';ctx.fillRect(0,fieldTop,w,fieldH);
+  ctx.fillStyle='rgba(255,255,255,.035)';for(let n=0;n<6;n+=2)ctx.fillRect(0,fieldTop+n*fieldH/6,w,fieldH/6);
+  ctx.strokeStyle='rgba(255,255,255,.60)';ctx.lineWidth=2;ctx.beginPath();
+  if(vertical){
+    ctx.moveTo(0,fieldTop+fieldH/2);ctx.lineTo(w,fieldTop+fieldH/2);ctx.moveTo(w/2+45,fieldTop+fieldH/2);ctx.arc(w/2,fieldTop+fieldH/2,45,0,Math.PI*2);
+    ctx.rect(w*.27,fieldTop,w*.46,fieldH*.13);ctx.rect(w*.27,fieldTop+fieldH*.87,w*.46,fieldH*.13);
+  }else{
+    ctx.moveTo(w/2,fieldTop);ctx.lineTo(w/2,fieldTop+fieldH);ctx.moveTo(w/2+45,fieldTop+fieldH/2);ctx.arc(w/2,fieldTop+fieldH/2,45,0,Math.PI*2);
+    ctx.rect(0,fieldTop+fieldH/2-90,54,180);ctx.rect(w-54,fieldTop+fieldH/2-90,54,180);
+  }ctx.stroke();
+  function shirt(x,y,kit){
+    ctx.save();ctx.translate(x-20,y-18);ctx.scale(.4,.4);ctx.beginPath();ctx.moveTo(30,8);ctx.lineTo(12,18);ctx.lineTo(4,40);ctx.lineTo(20,48);ctx.lineTo(26,40);ctx.lineTo(26,84);ctx.lineTo(74,84);ctx.lineTo(74,40);ctx.lineTo(80,48);ctx.lineTo(96,40);ctx.lineTo(88,18);ctx.lineTo(70,8);ctx.quadraticCurveTo(50,25,30,8);ctx.closePath();ctx.fillStyle=kit.body;ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(30,8);ctx.lineTo(12,18);ctx.lineTo(4,40);ctx.lineTo(20,48);ctx.lineTo(26,38);ctx.closePath();ctx.fillStyle=kit.sleeve;ctx.fill();
+    ctx.beginPath();ctx.moveTo(70,8);ctx.lineTo(88,18);ctx.lineTo(96,40);ctx.lineTo(80,48);ctx.lineTo(74,38);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(35,9);ctx.quadraticCurveTo(50,23,65,9);ctx.strokeStyle=kit.trim;ctx.lineWidth=4;ctx.stroke();ctx.restore();
+  }
+  function player(ev,index,x,y,kit){
+    const p=sel[ev.starters[index]];if(!p)return;shirt(x,y,kit);const slot=lineupSlots(ev)[index],rating=matchLineupRating(ev,p,slot),value=rating===undefined?ov(p):rating;
+    ctx.font='bold 13px sans-serif';const lines=wrap(vertical?shortName(p.n):p.n,vertical?100:112);
+    lines.forEach((line,i)=>txt(line,x,y+27+i*15,'bold 13px sans-serif','#ffffff'));
+    if(!vertical)txt((POSNAME[slot]||slot)+' · '+(value===null?'Chưa chấm':Number(value).toFixed(1)),x,y+27+lines.length*15,'11px sans-serif','#e5eee9');
+  }
+  if(vertical){
+    for(const [ev,kit,side] of [[A,KIT_A,'A'],[B,KIT_B,'B']]){
+      const six=ev.starters.length===6,X=six?[50,50,18,82,30,70]:[50,50,18,82,50,30,70];
+      const Y=side==='A'?(six?[8,22,22,22,45,45]:[8,22,22,22,35,45,45]):(six?[92,78,78,78,55,55]:[92,78,78,78,65,55,55]);
+      for(let i=0;i<ev.starters.length;i++)player(ev,i,w*X[i]/100,fieldTop+fieldH*Y[i]/100,kit);
+    }
+  }else{
+    for(const [ev,kit,side] of [[A,KIT_A,'A'],[B,KIT_B,'B']]){
+      const mirror=x=>side==='A'?x:w-x,center=fieldTop+fieldH/2,six=ev.starters.length===6;
+      player(ev,0,mirror(55),center,kit);
+      [2,1,3].forEach((index,i)=>player(ev,index,mirror(195),fieldTop+fieldH*[.18,.5,.82][i],kit));
+      if(six){[4,5].forEach((index,i)=>player(ev,index,mirror(405),fieldTop+fieldH*[.25,.75][i],kit));}
+      else{player(ev,4,mirror(320),center,kit);[5,6].forEach((index,i)=>player(ev,index,mirror(405),fieldTop+fieldH*[.25,.75][i],kit));}
+    }
+  }
+  const by=fieldTop+fieldH;ctx.fillStyle=background;ctx.fillRect(0,by,w,benchH);ctx.strokeStyle=dark?'#354354':'#dce5df';ctx.beginPath();ctx.moveTo(w/2,by);ctx.lineTo(w/2,height);ctx.stroke();
+  for(const [label,lines,x] of [['Dự bị A:',linesA,16],['Dự bị B:',linesB,w/2+16]]){
+    txt(label,x,by+18,'bold 14px sans-serif',text,'left');lines.forEach((line,i)=>txt(line,x,by+40+i*20,'14px sans-serif',text,'left'));
+  }
+  return canvas;
+}
 async function pitchExport(){
   if(PITCH_EXPORT.busy||!PITCH_VIEW.node)return;
-  const button=$('pitchExportButton'),status=$('pitchExportStatus'),node=PITCH_VIEW.node,width=PITCH_VIEW.width,height=PITCH_VIEW.height,orientation=PITCH_VIEW.orientation;
+  const button=$('pitchExportButton'),status=$('pitchExportStatus'),orientation=PITCH_VIEW.orientation;
   PITCH_EXPORT.busy=true;button.disabled=true;button.textContent='Đang tạo ảnh…';status.hidden=true;
   try{
-    if(typeof html2canvas!=='function')throw new Error('Chưa tải được công cụ tạo ảnh. Hãy tải lại trang và thử lại.');
-    const image=await html2canvas(node,{backgroundColor:null,scale:2,logging:false,width,height,onclone(doc){
-      // Move only the cloned pitch out of the scroll viewport, so a zoomed or
-      // partially off-screen pitch is exported in full even on a small phone.
-      const content=doc.querySelector('#pitchViewCanvas .pitch-view-content');
-      if(content){doc.body.appendChild(content);Object.assign(content.style,{position:'absolute',left:'0px',top:'0px',width:width+'px',height:height+'px',transform:'none'});}
-    }});
+    const image=pitchImageCanvas(PITCH_VIEW.data,orientation),preview=image.toDataURL('image/png');
     const blob=await new Promise((resolve,reject)=>image.toBlob(b=>b?resolve(b):reject(new Error('Không tạo được ảnh PNG.')), 'image/png'));
     if(PITCH_EXPORT.url)URL.revokeObjectURL(PITCH_EXPORT.url);
     PITCH_EXPORT.url=URL.createObjectURL(blob);
     const name='doi-hinh-'+(orientation==='vertical'?'doc':'ngang')+'.png';
     PITCH_EXPORT.file=typeof File==='function'?new File([blob],name,{type:'image/png'}):null;
-    $('pitchExportPreview').src=PITCH_EXPORT.url;$('pitchDownload').href=PITCH_EXPORT.url;$('pitchDownload').download=name;
+    $('pitchExportPreview').src=preview;$('pitchDownload').href=PITCH_EXPORT.url;$('pitchDownload').download=name;
     let canShare=false;try{canShare=!!(PITCH_EXPORT.file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[PITCH_EXPORT.file]}));}catch(e){}
     $('pitchShareButton').hidden=!canShare;
-    $('pitchExportMessage').textContent=canShare?'Chọn Lưu vào Ảnh / Chia sẻ, hoặc tải PNG về Tệp.':'Chọn Tải ảnh PNG để lưu về máy.';
+    $('pitchExportMessage').textContent=canShare?'Trên iPhone: nhấn giữ ảnh và chọn Thêm vào Ảnh. Hoặc dùng Chia sẻ ảnh.':'Trên iPhone: nhấn giữ ảnh rồi chọn Thêm vào Ảnh. Hoặc tải PNG về Tệp.';
     const dialog=$('pitchExportDialog');if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
   }catch(e){status.textContent=(e&&e.message)||'Không tạo được ảnh. Vui lòng thử lại.';status.hidden=false;}
   finally{PITCH_EXPORT.busy=false;button.disabled=false;button.textContent='Lưu ảnh';}
 }
 async function pitchShareImage(){
   if(!PITCH_EXPORT.file||!navigator.share)return;
-  try{await navigator.share({files:[PITCH_EXPORT.file],title:'Đội hình'});}catch(e){if(e&&e.name!=='AbortError')$('pitchExportMessage').textContent='Không mở được chia sẻ. Bạn có thể chọn Tải ảnh PNG.';}
+  try{await navigator.share({files:[PITCH_EXPORT.file],title:'Đội hình'});}catch(e){if(e&&e.name!=='AbortError')$('pitchExportMessage').textContent='Không mở được bảng chia sẻ. Hãy nhấn giữ ảnh rồi chọn Thêm vào Ảnh, hoặc tải về Tệp.';}
 }
 function pitchExportCleanup(){if(PITCH_EXPORT.url)URL.revokeObjectURL(PITCH_EXPORT.url);PITCH_EXPORT.url=null;PITCH_EXPORT.file=null;$('pitchExportPreview').removeAttribute('src');$('pitchDownload').removeAttribute('href');}
 function closePitchExport(){const d=$('pitchExportDialog');if(d.open&&typeof d.close==='function')d.close();else{d.removeAttribute('open');pitchExportCleanup();}}
