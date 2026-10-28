@@ -60,6 +60,7 @@ assert.ok(pitchStart>=0&&pitchEnd>pitchStart);assert.ok(source.includes('id="pit
 assert.match(source,/\.pitch-view-content \.player\.pop\{animation:none!important;opacity:1;transform:none\}/,'The viewer must show all players immediately without the staggered entrance animation');
 assert.match(source,/\.pitch-view-content\.match\{border-radius:14px;overflow:hidden\}/,'The horizontal pitch and team headers share one rounded frame');
 assert.match(source,/\.pitch-view-content\.match \.field\{height:300px;border-radius:0\}/,'The field must not round its internal corners');
+assert.match(source,/\.matchwrap \.field\{border-radius:0\}/,'The compact pitch must be rounded only by its enclosing frame');
 assert.match(source,/\.pitch-view-content\.match \.player \.name\{font-size:10px\}/);
 assert.match(source,/class="pitch-view-progress" role="progressbar" aria-label="Đang mở sơ đồ"/,'Show honest indeterminate progress while the view is prepared');
 const toolbar=source.match(/<div class="pitch-view-toolbar">([\s\S]*?)<\/div>/)[1];assert.equal((toolbar.match(/<button\b/g)||[]).length,3);assert.match(toolbar,/Thu nhỏ/);assert.match(toolbar,/Xoay/);assert.match(toolbar,/Lưu hình/);
