@@ -1,6 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-28-iphone-image">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-fullscreen">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -417,17 +418,20 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pitch-expand:focus-visible{outline:3px solid #fff;outline-offset:2px}
 html.pitch-view-open{overflow:hidden}
 .pitch-view-dialog{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:var(--bg);color:var(--text)}
+.pitch-view-dialog:fullscreen,.pitch-view-dialog:-webkit-full-screen{width:100%;height:100%;max-width:none;max-height:none}
 .pitch-view-dialog[open]{display:flex;flex-direction:column}
 .pitch-view-dialog::backdrop{background:rgba(0,0,0,.75)}
 .pitch-view-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
 .pitch-view-title{font-size:15px;font-weight:800;margin-right:auto}
 .pitch-view-toolbar .btn{min-width:38px;padding:6px 9px}
+.pitch-view-toolbar .pitch-icon{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.pitch-view-toolbar .pitch-icon svg{width:17px;height:17px;flex:none}
 .pitch-view-orientation{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface3)}
 .pitch-view-orientation button{border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;padding:6px 9px;cursor:pointer}
 .pitch-view-orientation button[aria-pressed="true"]{background:var(--brand);color:#fff}
 .pitch-view-zoom{font-size:12px;min-width:42px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
 .pitch-view-hint{padding:7px 12px;color:var(--muted);font-size:11px;text-align:center}
-.pitch-view-viewport{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));display:flex}
+.pitch-view-viewport{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));display:flex}
 .pitch-view-canvas{position:relative;flex:none;margin:auto}
 .pitch-view-content{position:absolute;left:0;top:0;transform-origin:top left}
 .pitch-view-content .player.pop{animation:none!important;opacity:1;transform:none}
@@ -441,7 +445,7 @@ html.pitch-view-open{overflow:hidden}
 .pitch-export-actions{justify-content:flex-end}
 .pitch-export-actions a{text-decoration:none;display:inline-flex;align-items:center}
 .pitch-export-message{font-size:12px;color:var(--muted);margin-top:8px}
-@media(max-width:520px){.pitch-view-toolbar{gap:5px}.pitch-view-title{font-size:13px}.pitch-view-toolbar .btn{min-width:35px;padding:5px 7px}.pitch-view-zoom{font-size:11px;min-width:35px}}
+@media(max-width:520px),(max-height:520px){.pitch-view-toolbar{gap:3px;flex-wrap:nowrap;padding:calc(5px + env(safe-area-inset-top,0px)) max(5px,env(safe-area-inset-right,0px)) 5px max(5px,env(safe-area-inset-left,0px));justify-content:center}.pitch-view-title,.pitch-view-hint:not([role]){display:none}.pitch-view-toolbar .btn{min-width:32px;padding:5px}.pitch-view-toolbar .pitch-action-label{display:none}.pitch-view-orientation button{padding:6px}.pitch-view-zoom{font-size:10px;min-width:30px}}
 .mhead{display:flex;overflow:hidden}
 .mh{flex:1;font-weight:800;font-size:13px;padding:9px 14px;letter-spacing:.2px}
 .mh.l{text-align:left}.mh.r{text-align:right}
@@ -1459,7 +1463,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </section>
 </div>
 <dialog id="pitchViewDialog" class="pitch-view-dialog" aria-labelledby="pitchViewTitle">
-  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><div class="pitch-view-orientation" aria-label="Hướng sơ đồ"><button id="pitchViewHorizontal" type="button" onclick="pitchViewOrientation('horizontal')" aria-pressed="true">Ngang</button><button id="pitchViewVertical" type="button" onclick="pitchViewOrientation('vertical')" aria-pressed="false">Dọc</button></div><button class="btn alt sm" type="button" onclick="pitchViewZoom(-1)" aria-label="Thu nhỏ sơ đồ">−</button><span class="pitch-view-zoom" id="pitchViewZoomLabel" aria-live="polite">100%</span><button class="btn alt sm" type="button" onclick="pitchViewZoom(1)" aria-label="Phóng to sơ đồ">+</button><button class="btn alt sm" type="button" onclick="pitchViewFit()">Toàn sân</button><button class="btn alt sm" id="pitchExportButton" type="button" onclick="pitchExport()">Lưu ảnh</button><button class="btn alt sm" type="button" onclick="closePitchView()" aria-label="Đóng sơ đồ">Đóng</button></div>
+  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><div class="pitch-view-orientation" aria-label="Hướng sơ đồ"><button id="pitchViewHorizontal" type="button" onclick="pitchViewOrientation('horizontal')" aria-pressed="true">Ngang</button><button id="pitchViewVertical" type="button" onclick="pitchViewOrientation('vertical')" aria-pressed="false">Dọc</button></div><button class="btn alt sm" type="button" onclick="pitchViewZoom(-1)" aria-label="Thu nhỏ sơ đồ">−</button><span class="pitch-view-zoom" id="pitchViewZoomLabel" aria-live="polite">100%</span><button class="btn alt sm" type="button" onclick="pitchViewZoom(1)" aria-label="Phóng to sơ đồ">+</button><button class="btn alt sm pitch-icon" type="button" onclick="pitchViewFit()" aria-label="Xem toàn sân" title="Toàn sân"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span class="pitch-action-label">Toàn sân</span></button><button class="btn alt sm pitch-icon" id="pitchExportButton" type="button" onclick="pitchExport()" aria-label="Lưu ảnh" title="Lưu ảnh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg><span class="pitch-action-label">Lưu ảnh</span></button><button class="btn alt sm pitch-icon" type="button" onclick="closePitchView()" aria-label="Đóng sơ đồ" title="Đóng sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg><span class="pitch-action-label">Đóng</span></button></div>
   <div class="pitch-view-hint">Chọn ngang hoặc dọc · Kéo để xem khi phóng to</div>
   <div id="pitchExportStatus" class="pitch-view-hint" role="status" aria-live="polite" hidden></div>
   <div class="pitch-view-viewport" id="pitchViewViewport" tabindex="0" aria-label="Sơ đồ đội hình, có thể cuộn"><div class="pitch-view-canvas" id="pitchViewCanvas"></div></div>
@@ -4815,14 +4819,21 @@ window.addEventListener("resize",fitMatch);
 
 // Full-screen view is a read-only clone: opening or zooming never changes the match.
 const PITCH_DATA=new WeakMap();
-const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null,orientation:'horizontal'};
+const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null,orientation:'horizontal',autoFit:true};
 function pitchExpandButton(kind){return `<button class="pitch-expand" type="button" onclick="event.stopPropagation();openPitchView(this,'${kind}')" aria-label="Phóng to sơ đồ đội hình" title="Phóng to sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>`;}
 function openPitchView(button,kind){
   const dialog=$("pitchViewDialog"),data=PITCH_DATA.get(button);if(dialog.open||!data)return;
   PITCH_VIEW.data=data;
   if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
   document.documentElement.classList.add("pitch-view-open");
-  pitchViewOrientation(kind);
+  // iPhone Safari has no element fullscreen API; the fixed dialog remains a
+  // viewport-filling fallback. Never take over a pre-existing fullscreen view.
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const request=dialog.requestFullscreen||dialog.webkitRequestFullscreen;
+    if(request)try{Promise.resolve(request.call(dialog)).then(()=>{if(!dialog.open)pitchViewExitFullscreen();}).catch(()=>{});}catch(e){}
+  }
+  const preferred=kind==='horizontal'&&window.innerWidth<=520&&window.innerHeight>window.innerWidth?'vertical':kind;
+  pitchViewOrientation(preferred);
 }
 function pitchViewOrientation(kind){
   if(!PITCH_VIEW.data||PITCH_EXPORT.busy)return;
@@ -4839,7 +4850,15 @@ function pitchViewOrientation(kind){
   }
   $('pitchViewCanvas').replaceChildren(content);PITCH_VIEW.node=content;
   $('pitchViewHorizontal').setAttribute('aria-pressed',String(kind==='horizontal'));$('pitchViewVertical').setAttribute('aria-pressed',String(kind==='vertical'));
-  PITCH_VIEW.width=content.offsetWidth;PITCH_VIEW.height=content.offsetHeight;pitchViewFit();
+  pitchViewSizeVertical();PITCH_VIEW.width=content.offsetWidth;PITCH_VIEW.height=content.offsetHeight;pitchViewFit();
+}
+function pitchViewSizeVertical(){
+  const content=PITCH_VIEW.node,pitch=content?.querySelector?.('.vpitch');if(!pitch)return;
+  pitch.style.height='';
+  if(window.innerWidth<=520&&window.innerHeight>window.innerWidth){
+    const viewport=$('pitchViewViewport'),scale=(viewport.clientWidth-8)/content.offsetWidth;
+    if(scale>0){const available=(viewport.clientHeight-8)/scale-(content.offsetHeight-pitch.offsetHeight);if(available>pitch.offsetHeight)pitch.style.height=Math.min(available,pitch.offsetWidth*1.8)+'px';}
+  }
 }
 function pitchViewSetZoom(value,keepCenter=true){
   if(!PITCH_VIEW.node||!PITCH_VIEW.width||!PITCH_VIEW.height)return;
@@ -4849,8 +4868,8 @@ function pitchViewSetZoom(value,keepCenter=true){
   $("pitchViewZoomLabel").textContent=Math.round(zoom*100)+"%";
   if(keepCenter){viewport.scrollLeft=x*zoom-viewport.clientWidth/2;viewport.scrollTop=y*zoom-viewport.clientHeight/2;}
 }
-function pitchViewZoom(direction){pitchViewSetZoom(PITCH_VIEW.zoom*(direction>0?1.25:0.8));}
-function pitchViewFit(){const viewport=$("pitchViewViewport");pitchViewSetZoom(Math.min((viewport.clientWidth-16)/PITCH_VIEW.width,(viewport.clientHeight-16)/PITCH_VIEW.height),false);viewport.scrollLeft=0;viewport.scrollTop=0;}
+function pitchViewZoom(direction){PITCH_VIEW.autoFit=false;pitchViewSetZoom(PITCH_VIEW.zoom*(direction>0?1.25:0.8));}
+function pitchViewFit(){const viewport=$("pitchViewViewport");PITCH_VIEW.autoFit=true;pitchViewSetZoom(Math.min((viewport.clientWidth-8)/PITCH_VIEW.width,(viewport.clientHeight-8)/PITCH_VIEW.height),false);viewport.scrollLeft=0;viewport.scrollTop=0;}
 const PITCH_EXPORT={url:null,file:null,busy:false};
 // Draw an opaque PNG locally. This avoids screenshotting DOM/SVG inside a
 // cloned dialog, which can produce black images in iOS Safari.
@@ -4919,8 +4938,8 @@ function pitchImageCanvas(data,orientation){
 }
 async function pitchExport(){
   if(PITCH_EXPORT.busy||!PITCH_VIEW.node)return;
-  const button=$('pitchExportButton'),status=$('pitchExportStatus'),orientation=PITCH_VIEW.orientation;
-  PITCH_EXPORT.busy=true;button.disabled=true;button.textContent='Đang tạo ảnh…';status.hidden=true;
+  const button=$('pitchExportButton'),label=button.querySelector?.('.pitch-action-label')||button,status=$('pitchExportStatus'),orientation=PITCH_VIEW.orientation;
+  PITCH_EXPORT.busy=true;button.disabled=true;label.textContent='Đang tạo ảnh…';status.hidden=true;
   try{
     const image=pitchImageCanvas(PITCH_VIEW.data,orientation),preview=image.toDataURL('image/png');
     const blob=await new Promise((resolve,reject)=>image.toBlob(b=>b?resolve(b):reject(new Error('Không tạo được ảnh PNG.')), 'image/png'));
@@ -4934,7 +4953,7 @@ async function pitchExport(){
     $('pitchExportMessage').textContent=canShare?'Trên iPhone: nhấn giữ ảnh và chọn Thêm vào Ảnh. Hoặc dùng Chia sẻ ảnh.':'Trên iPhone: nhấn giữ ảnh rồi chọn Thêm vào Ảnh. Hoặc tải PNG về Tệp.';
     const dialog=$('pitchExportDialog');if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
   }catch(e){status.textContent=(e&&e.message)||'Không tạo được ảnh. Vui lòng thử lại.';status.hidden=false;}
-  finally{PITCH_EXPORT.busy=false;button.disabled=false;button.textContent='Lưu ảnh';}
+  finally{PITCH_EXPORT.busy=false;button.disabled=false;label.textContent='Lưu ảnh';}
 }
 async function pitchShareImage(){
   if(!PITCH_EXPORT.file||!navigator.share)return;
@@ -4943,11 +4962,12 @@ async function pitchShareImage(){
 function pitchExportCleanup(){if(PITCH_EXPORT.url)URL.revokeObjectURL(PITCH_EXPORT.url);PITCH_EXPORT.url=null;PITCH_EXPORT.file=null;$('pitchExportPreview').removeAttribute('src');$('pitchDownload').removeAttribute('href');}
 function closePitchExport(){const d=$('pitchExportDialog');if(d.open&&typeof d.close==='function')d.close();else{d.removeAttribute('open');pitchExportCleanup();}}
 $('pitchExportDialog').addEventListener('close',pitchExportCleanup);
-function pitchViewCleanup(){document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;PITCH_VIEW.data=null;}
+function pitchViewExitFullscreen(){const dialog=$('pitchViewDialog');if(document.fullscreenElement!==dialog&&document.webkitFullscreenElement!==dialog)return;const exit=document.exitFullscreen||document.webkitExitFullscreen;if(exit)try{Promise.resolve(exit.call(document)).catch(()=>{});}catch(e){}}
+function pitchViewCleanup(){pitchViewExitFullscreen();document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;PITCH_VIEW.data=null;}
 function closePitchView(){if(PITCH_EXPORT.busy)return;const dialog=$("pitchViewDialog");if(dialog.open&&typeof dialog.close==='function')dialog.close();else{dialog.removeAttribute('open');pitchViewCleanup();}}
 $("pitchViewDialog").addEventListener("close",pitchViewCleanup);
 $("pitchViewDialog").addEventListener("cancel",e=>{if(PITCH_EXPORT.busy)e.preventDefault();});
-window.addEventListener("resize",()=>{if($("pitchViewDialog").open)pitchViewSetZoom(PITCH_VIEW.zoom);});
+window.addEventListener("resize",()=>{if($("pitchViewDialog").open){if(PITCH_VIEW.autoFit){pitchViewSizeVertical();PITCH_VIEW.width=PITCH_VIEW.node.offsetWidth;PITCH_VIEW.height=PITCH_VIEW.node.offsetHeight;pitchViewFit();}else pitchViewSetZoom(PITCH_VIEW.zoom);}});
 
 // ============ TAO DOI ============
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
