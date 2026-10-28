@@ -58,6 +58,9 @@ assert.ok(source.includes('matchKeeperRating(A,basis.incompleteGk?A.gkFit:ovAt(p
 const pitchStart=source.indexOf('const PITCH_DATA='),pitchEnd=source.indexOf('// ============ TAO DOI ============',pitchStart);
 assert.ok(pitchStart>=0&&pitchEnd>pitchStart);assert.ok(source.includes('id="pitchViewScreen"'));assert.ok(source.includes("pitchExpandButton('horizontal')"));assert.ok(source.includes("pitchExpandButton('vertical')"));
 assert.match(source,/\.pitch-view-content \.player\.pop\{animation:none!important;opacity:1;transform:none\}/,'The viewer must show all players immediately without the staggered entrance animation');
+assert.match(source,/\.pitch-view-content\.match\{border-radius:14px;overflow:hidden\}/,'The horizontal pitch and team headers share one rounded frame');
+assert.match(source,/\.pitch-view-content\.match \.field\{height:300px;border-radius:0\}/,'The field must not round its internal corners');
+assert.match(source,/\.pitch-view-content\.match \.player \.name\{font-size:10px\}/);
 assert.match(source,/class="pitch-view-progress" role="progressbar" aria-label="Đang mở sơ đồ"/,'Show honest indeterminate progress while the view is prepared');
 const toolbar=source.match(/<div class="pitch-view-toolbar">([\s\S]*?)<\/div>/)[1];assert.equal((toolbar.match(/<button\b/g)||[]).length,3);assert.match(toolbar,/Thu nhỏ/);assert.match(toolbar,/Xoay/);assert.match(toolbar,/Lưu hình/);
 const classes=new Set(),viewport={clientWidth:400,clientHeight:650,scrollLeft:0,scrollTop:0},canvas={style:{},children:[],replaceChildren(...nodes){this.children=nodes;}};

@@ -1,7 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-instant">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-rounded">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -437,7 +437,12 @@ html.pitch-view-open,html.pitch-view-open body{overflow:hidden}
 .pitch-view-canvas{position:relative;flex:none;margin:auto}
 .pitch-view-content{position:absolute;left:0;top:0;transform-origin:top left}
 .pitch-view-content .player.pop{animation:none!important;opacity:1;transform:none}
-.pitch-view-content.match .field{height:300px}
+.pitch-view-content.match{border-radius:14px;overflow:hidden}
+.pitch-view-content.match .field{height:300px;border-radius:0}
+.pitch-view-content.match .mh{font-size:11px}
+.pitch-view-content.match .player .name{font-size:10px}
+.pitch-view-content.match .player .sub{font-size:8px}
+.pitch-view-content.match .benchcol,.pitch-view-content.match .subchip{font-size:9px}
 .pitch-view-vertical{width:440px;box-sizing:border-box;padding:10px;background:var(--surface);border-radius:12px}
 .pitch-view-vertical .lu-head{padding:4px 8px;margin-bottom:10px}
 .pitch-view-vertical .vpitch{width:100%;max-width:none}
