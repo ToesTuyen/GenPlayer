@@ -122,7 +122,18 @@ test('shortage diagnosis catches shared players across two role types',()=>{
   const p=roster();p[5].pos2=['TĐ'];p[6].pos2=['TV'];p[12].pos='HV';p[13].pos='HV';
   const blocked=O.solve(p,null,{strictGuests:true}),missing=blocked.search.missingPositions;
   assert.ok(missing);assert.ok(missing.roles.TV&&missing.roles['TĐ']);
-  assert.equal(missing.eligible.length,2);assert.equal(missing.needed,3);assert.equal(missing.missing,1);
+  assert.equal(missing.eligible.length,2);assert.equal(missing.needed,4);assert.equal(missing.missing,2);
+});
+
+test('missing strikers explain guest-reserve priority and give match-only Note examples',()=>{
+  const p=roster();p[6].pos='HV';p[13].pos='HV';p[14].n='Khach1';p[15].n='Khach2';p[14].pos='TĐ';p[15].pos='TĐ';
+  const blocked=O.solve(p,null,{strictGuests:true});
+  assert.match(blocked.error,/cần 2 tiền đạo.*chỉ có 0 người.*thiếu ít nhất 2 người/);
+  assert.match(blocked.error,/có 14 thành viên.*Khach1, Khach2.*xếp dự bị theo quy tắc khách/);
+  assert.match(blocked.error,/Khach1 đá tiền đạo; Khach2 đá tiền đạo/);
+  const withNote=C.lineupGuard(p,{instruction:'Khach1 đá tiền đạo; Khach2 đá tiền đạo'});
+  assert.deepEqual(withNote.roles.overrides.map(o=>({name:p[o.index].n,slot:o.slot})),[{name:'Khach1',slot:'TĐ'},{name:'Khach2',slot:'TĐ'}],'Note authorizes both guests only for this lineup');
+  assert.equal(p[14].pos,'TĐ');assert.equal(p[14].guest,true);
 });
 
 test('a close scored match can supply a missing sweeper role without rewriting the profile',()=>{
