@@ -1,7 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-rounded">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-form-export">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -446,6 +446,8 @@ html.pitch-view-open,html.pitch-view-open body{overflow:hidden}
 .pitch-view-vertical{width:440px;box-sizing:border-box;padding:10px;background:var(--surface);border-radius:12px}
 .pitch-view-vertical .lu-head{padding:4px 8px;margin-bottom:10px}
 .pitch-view-vertical .vpitch{width:100%;max-width:none}
+.pitch-view-vertical .vp-mark .heat{position:absolute;top:-5px;right:1px;margin:0}
+.pitch-view-vertical .benchcol .subchip{display:table;margin:4px 0}
 @media(max-width:520px),(max-height:520px){.pitch-view-toolbar{padding:calc(5px + env(safe-area-inset-top,0px)) max(5px,env(safe-area-inset-right,0px)) 5px max(5px,env(safe-area-inset-left,0px))}.pitch-view-toolbar .btn{padding:5px 8px;font-size:12px}}
 .mhead{display:flex;overflow:hidden}
 .mh{flex:1;font-weight:800;font-size:13px;padding:11px 20px;letter-spacing:.2px}
@@ -1262,7 +1264,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 :root[data-theme] .fc.l{background:var(--loss-soft);color:var(--danger);border:1px solid var(--line);box-shadow:none}
 :root[data-theme] .gc-line{stroke:var(--gold)}
 :root[data-theme] .gc-dot.sc{fill:var(--gold);stroke:var(--amber)}
-:root[data-theme] :is(.field,.vpitch){background-color:#294238;background-image:repeating-linear-gradient(0deg,transparent 0 16.66%,rgba(255,255,255,.035) 16.66% 33.33%);border-color:#425c50;box-shadow:none}
+:root[data-theme] :is(.field,.vpitch){background-color:#294938;background-image:repeating-linear-gradient(0deg,transparent 0 16.66%,rgba(255,255,255,.035) 16.66% 33.33%);border-color:#425c50;box-shadow:none}
 :root[data-theme] .benchrow{background:var(--surface2);border-color:var(--line)}
 :root[data-theme] :is(.subchip,.subs-lbl,.vsub){color:var(--muted)}
 :root[data-theme] .subchip{background:var(--surface);border-color:var(--line)}
@@ -4634,7 +4636,7 @@ function vpitch(r){
   const X =six?{0:50,1:50,2:18,3:82,4:30,5:70}:{0:50,1:50,2:18,3:82,4:50,5:30,6:70};
   const YA=six?{0:92,1:78,2:78,3:78,4:55,5:55}:{0:92,1:78,2:78,3:78,4:65,5:55,6:55};
   const YB=six?{0:8,1:22,2:22,3:22,4:45,5:45}:{0:8,1:22,2:22,3:22,4:35,5:45,6:45};
-  const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
+  const mark=(p,x,y,kit)=>p?`<div class="vp-mark" style="left:${x}%;top:${y}%">${r.showHeat?heatHTML(p.n,playerStats(p.n).form,'mini'):''}${jersey(kit)}<span class="vp-nm">${esc(shortName(p.n))}</span></div>`:"";
   let h="";
   for(let c=0;c<slots.length;c++){h+=mark(sel[eA.starters[c]],X[c],YB[c],KIT_A);h+=mark(sel[eB.starters[c]],X[c],YA[c],KIT_B);}
   return `<div class="vpitch"><div class="vp-box top"></div><div class="vp-box bot"></div><div class="vp-mid"></div><div class="vp-circle"></div>${h}</div>`;
@@ -4663,7 +4665,7 @@ function renderSpotlight(h){
     <div class="pitch-frame vertical">${pitchExpandButton('vertical')}${vpitch(r)}</div>
     ${benchStrip(eB,KIT_B,"bot")}
   </div>`;
-  const pitchData={res:r.result,sel,showHeat:false};pitchData.verticalSource=pitchViewVerticalContent(pitchData);
+  const pitchData={res:r.result,sel,showHeat:!r.score};pitchData.verticalSource=pitchViewVerticalContent(pitchData);
   PITCH_DATA.set(box.querySelector('.pitch-expand'),pitchData);
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");setTimeout(()=>{toggleHistory(id);const wrap=document.getElementById("mcd-"+id);if(wrap)wrap.scrollIntoView({behavior:"smooth",block:"center"});},30);}
@@ -4822,9 +4824,9 @@ const PITCH_DATA=new WeakMap();
 const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null,orientation:'horizontal',autoFit:true,deviceOrientation:null,returnFocus:null,loading:false,renderId:0};
 function pitchExpandButton(kind){return `<button class="pitch-expand" type="button" onclick="event.stopPropagation();openPitchView(this,'${kind}')" aria-label="Phóng to sơ đồ đội hình" title="Phóng to sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>`;}
 function pitchViewPreferred(fallback){return window.innerWidth&&window.innerHeight?(window.innerHeight>=window.innerWidth?'vertical':'horizontal'):fallback;}
-function pitchViewVerticalContent({res,sel}){
+function pitchViewVerticalContent({res,sel,showHeat}){
   const A=res.evA,B=res.evB,content=document.createElement('div');content.className='pitch-view-vertical pitch-view-content';
-  content.innerHTML=`<div class="lu-head"><span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span><span class="lu-vs">VS</span><span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span></div>${vpitch({subset:sel,result:res})}<div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
+  content.innerHTML=`<div class="lu-head"><span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span><span class="lu-vs">VS</span><span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span></div>${vpitch({subset:sel,result:res,showHeat})}<div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
   return content;
 }
 function openPitchView(button,kind){
@@ -4884,7 +4886,7 @@ function pitchImageCanvas(data,orientation){
   const list=ev=>(ev.bench||[]).slice().sort((a,b)=>ov(sel[b])-ov(sel[a])).map(i=>`${sel[i].n} ${ov(sel[i]).toFixed(1)}`);
   const benchA=list(A),benchB=list(B);
   function wrap(s,max){let lines=[],line='';for(const word of String(s).split(/\s+/)){const next=line?line+' '+word:word;if(line&&ctx.measureText(next).width>max){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);return lines;}
-  ctx.font='14px sans-serif';const benchLines=ev=>wrap(ev.join('   •   '),w/2-36),linesA=benchLines(benchA),linesB=benchLines(benchB);
+  ctx.font='14px sans-serif';const benchLines=ev=>vertical?ev.flatMap(name=>wrap(name,w/2-36)):wrap(ev.join('   •   '),w/2-36),linesA=benchLines(benchA),linesB=benchLines(benchB);
   const benchH=Math.max(68,38+Math.max(linesA.length,linesB.length)*20),height=fieldTop+fieldH+benchH;
   canvas.width=w*2;canvas.height=height*2;ctx.scale(2,2);ctx.fillStyle=background;ctx.fillRect(0,0,w,height);
   function txt(s,x,y,font,color,align='center'){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(String(s),x,y);}
@@ -4896,7 +4898,7 @@ function pitchImageCanvas(data,orientation){
     ctx.fillStyle=KIT_A.body;ctx.fillRect(0,0,w/2,fieldTop);ctx.fillStyle=KIT_B.body;ctx.fillRect(w/2,0,w/2,fieldTop);
     txt('●  TEAM A  ▶',18,fieldTop/2,'bold 18px sans-serif','#fff','left');txt('◀  TEAM B  ●',w-18,fieldTop/2,'bold 18px sans-serif','#182b39','right');
   }
-  ctx.fillStyle='#294238';ctx.fillRect(0,fieldTop,w,fieldH);
+  ctx.fillStyle='#294938';ctx.fillRect(0,fieldTop,w,fieldH);
   ctx.fillStyle='rgba(255,255,255,.035)';for(let n=0;n<6;n+=2)ctx.fillRect(0,fieldTop+n*fieldH/6,w,fieldH/6);
   ctx.strokeStyle='rgba(255,255,255,.60)';ctx.lineWidth=2;ctx.beginPath();
   if(vertical){
@@ -4912,8 +4914,22 @@ function pitchImageCanvas(data,orientation){
     ctx.beginPath();ctx.moveTo(70,8);ctx.lineTo(88,18);ctx.lineTo(96,40);ctx.lineTo(80,48);ctx.lineTo(74,38);ctx.closePath();ctx.fill();
     ctx.beginPath();ctx.moveTo(35,9);ctx.quadraticCurveTo(50,23,65,9);ctx.strokeStyle=kit.trim;ctx.lineWidth=4;ctx.stroke();ctx.restore();
   }
+  function formHeat(name,x,y){
+    const tier=heatTier(playerStats(name).form,playerAbsentStreak(name)).k;
+    ctx.save();ctx.translate(x+25,y-5);
+    if(tier==='cool'||tier==='out'){
+      if(tier==='cool'){ctx.fillStyle='#a94e22';ctx.beginPath();ctx.arc(0,4,3.5,0,Math.PI*2);ctx.fill();}
+      ctx.fillStyle='rgba(190,195,200,.45)';ctx.beginPath();ctx.arc(0,-5,2,0,Math.PI*2);ctx.arc(1,-11,1.5,0,Math.PI*2);ctx.fill();
+    }else{
+      const scale=tier==='blaze'?1.25:tier==='fire'?1:.75;ctx.scale(scale,scale);
+      ctx.fillStyle='#de3c0b';ctx.beginPath();ctx.moveTo(0,8);ctx.quadraticCurveTo(-10,7,-7,-2);ctx.quadraticCurveTo(-5,-8,-3,-6);ctx.quadraticCurveTo(-1,-11,1,-16);ctx.quadraticCurveTo(2,-10,4,-7);ctx.quadraticCurveTo(9,-4,8,2);ctx.quadraticCurveTo(8,8,0,8);ctx.fill();
+      ctx.fillStyle='#ff8624';ctx.beginPath();ctx.moveTo(0,7);ctx.quadraticCurveTo(-6,6,-4,0);ctx.quadraticCurveTo(-2,-3,1,-10);ctx.quadraticCurveTo(2,-4,5,-1);ctx.quadraticCurveTo(7,6,0,7);ctx.fill();
+      ctx.fillStyle='#ffe35a';ctx.beginPath();ctx.moveTo(0,7);ctx.quadraticCurveTo(-3,6,-2,2);ctx.quadraticCurveTo(0,-2,1,-4);ctx.quadraticCurveTo(3,0,3,3);ctx.quadraticCurveTo(3,7,0,7);ctx.fill();
+    }
+    ctx.restore();
+  }
   function player(ev,index,x,y,kit){
-    const p=sel[ev.starters[index]];if(!p)return;shirt(x,y,kit);const slot=lineupSlots(ev)[index],rating=matchLineupRating(ev,p,slot),value=rating===undefined?ov(p):rating;
+    const p=sel[ev.starters[index]];if(!p)return;shirt(x,y,kit);if(data.showHeat)formHeat(p.n,x,y);const slot=lineupSlots(ev)[index],rating=matchLineupRating(ev,p,slot),value=rating===undefined?ov(p):rating;
     ctx.font='bold 13px sans-serif';const lines=wrap(vertical?shortName(p.n):p.n,vertical?100:112);
     lines.forEach((line,i)=>txt(line,x,y+27+i*15,'bold 13px sans-serif','#ffffff'));
     if(!vertical)txt((POSNAME[slot]||slot)+' · '+(value===null?'Chưa chấm':Number(value).toFixed(1)),x,y+27+lines.length*15,'11px sans-serif','#e5eee9');
