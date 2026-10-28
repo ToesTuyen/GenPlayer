@@ -358,16 +358,26 @@ test('Create saves with an automatic review instead of a separate review button'
 });
 function autoReviewSaveSandbox(options={}){
   const source=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8');
-  const code=source.slice(source.indexOf('async function saveMatch(){'),source.indexOf('// ============ LICH SU THI DAU ============'));
+  const code=source.slice(source.indexOf('function validCreateMatchDate('),source.indexOf('// ============ LICH SU THI DAU ============'));
   const elements=new Map(),saved=[],notices=[],draft={n:14,subset:[{n:'Example'}],result:{fixture:true}};
   const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',hidden:true,disabled:false,className:''});return elements.get(id);};
   const box={Date,setTimeout:()=>0,STATE:{_savingMatch:false},mmMode:'create',mmEditId:null,mmDraft:draft,canEdit:options.canEdit!==false,AI_KEYS:{has:()=>options.hasKey!==false},
     $:el,aiOpenKeyDialog:()=>notices.push('key-dialog'),aiKeyMessage:s=>notices.push(s),alert:s=>notices.push(s),openAdminModal:()=>notices.push('admin'),
     aiDraftFingerprint:()=>box.fingerprint, fingerprint:'draft-1',aiDraftReviewFields:()=>({review:'<p>Nhận định AI</p>',aiReview:{model:'test-model'}}),
-    aiReviewDraft:options.review||(()=>Promise.resolve(true)),aiMessage:s=>{el('aiMessage').textContent=s;},parseKick:()=>null,
+    aiReviewDraft:options.review||(()=>Promise.resolve(true)),aiMessage:s=>{el('aiMessage').textContent=s;},parseKick:()=>null,todayStr:()=>box.today,today:'2026-10-28',
     freshDoc:cb=>{cb();return Promise.resolve();},getHistory:()=>[],setHistory:h=>{saved.push(h);return true;},logMatchAct(){},closeMatchModal(){box.mmMode=null;box.mmDraft=null;},show(){},fmtKick:()=>'',toast(){},document:{querySelectorAll:()=>[]}};
-  el('mm-venue').value='';vm.runInNewContext(code,box);return {box,elements,saved,notices,draft};
+  el('mm-venue').value='';el('mm-date').value=box.today;vm.runInNewContext(code,box);return {box,elements,saved,notices,draft};
 }
+test('new matches reject past or missing dates before AI and saving, and recheck after review',async()=>{
+  for(const date of ['','2026-10-27','2026-02-30']){
+    let calls=0;const x=autoReviewSaveSandbox({review:async()=>{calls++;return true;}});x.elements.get('mm-date').value=date;await x.box.saveMatch();
+    assert.equal(calls,0,date+' must not call AI');assert.equal(x.saved.length,0);assert.match(x.elements.get('mm-review-status').textContent,/hôm nay hoặc ngày trong tương lai/);
+  }
+  for(const date of ['2026-10-28','2026-10-29']){const x=autoReviewSaveSandbox();x.elements.get('mm-date').value=date;await x.box.saveMatch();assert.equal(x.saved.length,1,date+' allowed');}
+  let release;const gate=new Promise(resolve=>{release=resolve;}),x=autoReviewSaveSandbox({review:async()=>{await gate;return true;}});
+  const pending=x.box.saveMatch();x.elements.get('mm-date').value='2026-10-27';release();await pending;assert.equal(x.saved.length,0,'date changed during review must not save');
+  const edit=autoReviewSaveSandbox();edit.box.mmMode='edit';edit.box.mmEditId=1;edit.box.getHistory=()=>[{id:1,kickoff:null}];edit.elements.get('mm-date').value='2026-10-27';await edit.box.saveMatch();assert.equal(edit.saved.length,1,'existing matches remain editable');
+});
 test('automatic match review requires login and key, and never saves when AI fails',async()=>{
   let calls=0;const admin=autoReviewSaveSandbox({canEdit:false,review:async()=>{calls++;return true;}});await admin.box.saveMatch();assert.equal(calls,0);assert.equal(admin.saved.length,0);assert.ok(admin.notices.includes('admin'));
   const missing=autoReviewSaveSandbox({hasKey:false,review:async()=>{calls++;return true;}});await missing.box.saveMatch();assert.equal(calls,0);assert.equal(missing.saved.length,0);assert.ok(missing.notices.includes('key-dialog'));

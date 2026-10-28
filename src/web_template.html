@@ -3935,18 +3935,27 @@ function openMatchModal(mode,id){
     mmDraft={subset:cstate.subset, result:cstate.results[cstate.idx], n:cstate.subset.length,...aiDraftReviewFields()};
   }
   $("mm-title").innerHTML=GPIcons.render("lineup")+" "+(mode==="edit"?"Sửa thông tin trận":"Lưu trận mới");
+  $("mm-date").min=mode==="create"?todayStr():""; $("mm-date").required=mode==="create";
   $("mm-date").value=date; $("mm-time").value=time; $("mm-venue").value=venue;
   $("mm-review-info").hidden=mode==="edit";
   $("mm-review-status").hidden=true;$("mm-review-status").textContent="";
   $("matchModal").classList.add("on");
 }
 function closeMatchModal(){$("matchModal").classList.remove("on");mmMode=null;mmEditId=null;mmDraft=null;}
+function validCreateMatchDate(date){
+  const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(date), today=todayStr();
+  const parsed=match&&new Date(+match[1],+match[2]-1,+match[3]);
+  const valid=!!(parsed&&parsed.getFullYear()===+match[1]&&parsed.getMonth()===+match[2]-1&&parsed.getDate()===+match[3]&&date>=today);
+  if(!valid){$("mm-date").min=today;$("mm-review-status").className='ai-message error';$("mm-review-status").textContent='Ngày đá không hợp lệ. Hãy chọn hôm nay hoặc ngày trong tương lai.';$("mm-review-status").hidden=false;}
+  return valid;
+}
 async function saveMatch(){
   if(!canEdit){ alert("🔒 Tính năng này cần đăng nhập trước."); openAdminModal(); return; }
   if(STATE._savingMatch)return;   // chặn bấm 2 lần khi đang lưu (tránh tạo trùng / mất trận vừa tạo)
   const isEdit=mmMode==="edit", id=mmEditId, draft=mmDraft;let originalFingerprint='';
   if(!isEdit && !draft){closeMatchModal();return;}
   if(!isEdit){
+    if(!validCreateMatchDate($("mm-date").value))return;
     if(!AI_KEYS.has()){aiOpenKeyDialog(true);aiKeyMessage('Cần key OpenRouter để tự viết đánh giá trước khi lưu trận.');return;}
     originalFingerprint=aiDraftFingerprint();
     if(!originalFingerprint){$("mm-review-status").textContent='Không còn đội hình nháp để đánh giá. Chưa lưu trận.';$("mm-review-status").hidden=false;return;}
@@ -3961,11 +3970,14 @@ async function saveMatch(){
     if(!draft.review){$("mm-review-status").className='ai-message error';$("mm-review-status").textContent='Chưa có đánh giá hợp lệ; chưa lưu trận.';return;}
     $("mm-review-status").textContent='Đã viết đánh giá; đang lưu trận…';
   }
-  const kickoff=parseKick($("mm-date").value,$("mm-time").value), venue=$("mm-venue").value.trim();
+  const matchDate=$("mm-date").value;
+  if(!isEdit&&!validCreateMatchDate(matchDate))return;
+  const kickoff=parseKick(matchDate,$("mm-time").value), venue=$("mm-venue").value.trim();
   STATE._savingMatch=true;$("mm-save").disabled=true;
   const now=new Date();
   freshDoc(()=>{   // đọc cloud tươi rồi mới sửa → không đè mất trận nơi khác vừa thêm/sửa
     if(!isEdit&&(mmMode!=='create'||mmDraft!==draft||!canEdit||originalFingerprint!==aiDraftFingerprint()))return;
+    if(!isEdit&&!validCreateMatchDate(matchDate))return;
     if(isEdit){
       const h=getHistory(), r=h.find(x=>x.id===id);
       if(!r){ toast("Trận không còn tồn tại (có thể vừa bị xoá nơi khác).","err"); closeMatchModal(); showHistory(); return; }
