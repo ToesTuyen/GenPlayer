@@ -62,7 +62,7 @@ test('weakest reserve cannot hide two stronger reserves concentrated on one side
 
 test('a raw displayed top-14 cut is never replaced by lower-rated specialists',()=>{
   const p=roster(16);p.forEach(x=>x.guest=false);p[14].pos='Thòng';p[15].pos='Thòng';rate(p[14],8);rate(p[15],8);
-  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/Nguyên nhân: Nhóm ưu tiên gồm 2 thủ môn và 12 cầu thủ/);assert.match(blocked.error,/\nGiải pháp: Kiểm tra lại danh sách/);
+  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/Nguyên nhân: Nhóm ưu tiên/);assert.match(blocked.error,/\nGiải pháp: Kiểm tra lại danh sách/);
   p[14].pos2=['TV'];p[15].pos2=['TĐ'];
   const r=O.solve(p,null,{strictGuests:true});assert.ok(r.length>0);
   const fixed=C.lineupGuard(p).priority.fixed;

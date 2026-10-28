@@ -109,6 +109,22 @@ test('no suitable center means no lineup instead of a high-scoring striker assig
   assert.match(O.solve(p,null,{strictGuests:true}).error,/Nguyên nhân: Nhóm ưu tiên/);
 });
 
+test('position shortage identifies the actual missing striker and eligible player',()=>{
+  const p=roster();p[13].pos='HV';
+  const blocked=O.solve(p,null,{strictGuests:true});
+  assert.equal(blocked.code,'no-valid-lineup');assert.match(blocked.error,/cần 2 tiền đạo/);
+  assert.match(blocked.error,/chỉ có 1 người.*\(Position 6\); còn thiếu ít nhất 1 người/);
+  assert.match(blocked.error,/\nGiải pháp:/);assert.equal(blocked.search.missingPositions.roles['TĐ'],2);
+  assert.deepEqual(blocked.search.missingPositions.eligible,['Position 6']);
+});
+
+test('shortage diagnosis catches shared players across two role types',()=>{
+  const p=roster();p[5].pos2=['TĐ'];p[6].pos2=['TV'];p[12].pos='HV';p[13].pos='HV';
+  const blocked=O.solve(p,null,{strictGuests:true}),missing=blocked.search.missingPositions;
+  assert.ok(missing);assert.ok(missing.roles.TV&&missing.roles['TĐ']);
+  assert.equal(missing.eligible.length,2);assert.equal(missing.needed,3);assert.equal(missing.missing,1);
+});
+
 test('a close scored match can supply a missing sweeper role without rewriting the profile',()=>{
   const p=roster();p[8].pos='HV';p[8].pos2=[];const before=JSON.stringify(p),now=2_000;
   const match=score=>({id:'history-sweeper',kickoff:1_000,score,goals:{},goalsLocked:true,teams:{
