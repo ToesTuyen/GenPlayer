@@ -1,7 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-fast">
+<meta name="genplayer-release" content="web-app-2026-10-28-result-layout">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -997,6 +997,9 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .create-wizard-panel[hidden]{display:none!important}
 #screen-create{padding-bottom:100px}
 #createRosterStep,#createRulesStep,#createResultStep{padding-bottom:78px}
+#createBuildTab[data-create-step="result"] #createWizardCard{padding:12px}
+#createBuildTab[data-create-step="result"] .create-stepper{max-width:none;margin:0 0 12px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+#createBuildTab[data-create-step="result"] #createResultStep{padding-bottom:0}
 .create-step-actions,.create-go-float,.create-save-float{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
 .create-step-actions .btn,.create-go-float .btn,.create-save-float .btn{min-width:156px}
 .create-save-float{gap:8px}
@@ -1366,7 +1369,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 <!-- ====== TAO DOI ====== -->
 <div id="screen-create" class="screen">
   <section id="createBuildTab" class="create-tab-panel" data-create-step="roster">
-  <div class="card-box">
+  <div id="createWizardCard" class="card-box">
     <div class="create-stepper" role="tablist" aria-label="Các bước tạo đội">
       <button id="createRosterStepBtn" class="on" type="button" role="tab" aria-selected="true" aria-controls="createRosterStep" onclick="createSetWizardStep('roster')"><span class="create-step-number">1</span><span>Chọn cầu thủ</span></button>
       <span class="create-step-line" aria-hidden="true"></span>
@@ -1430,7 +1433,6 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="btn alt sm" id="reviewProcessRules" onclick="createReviewProcess()" style="display:none"><span data-ui-icon="match-analysis"></span>Xem tiêu chí</button>
       <div class="status" id="status"></div>
     </section>
-  </div>
   <div id="aiMessage" class="ai-message" role="status" aria-live="polite" hidden></div>
   <section id="createResultStep" class="create-wizard-panel" role="tabpanel" aria-labelledby="createResultStepBtn" hidden>
     <aside id="createNoteStatus" class="create-note-status" aria-live="polite" data-ui-no-icons hidden></aside>
@@ -1442,6 +1444,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     <div id="aiOutputText" class="ai-result" data-ui-no-icons></div><div id="aiWarnings" class="ai-warnings"></div><div id="aiOutputMeta" class="ai-meta"></div>
     <div id="aiLineupPreview"></div>
   </div>
+  </div><!-- end createWizardCard -->
   </section>
   <section id="createHistoryTab" class="create-tab-panel" hidden>
     <div class="card-box create-log-page">

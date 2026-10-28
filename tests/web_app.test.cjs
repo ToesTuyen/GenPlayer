@@ -32,7 +32,7 @@ test('public release preserves legacy storage and Firebase, and only replaces Ge
   const config=JSON.parse(fs.readFileSync(path.join(root,'firebase_config.json'),'utf8'));
   for(const entry of entries){
     const html=fs.readFileSync(path.join(root,entry),'utf8');
-    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-28-pitch-fast">/);
+    assert.match(html,/<meta name="genplayer-release" content="web-app-2026-10-28-result-layout">/);
     assert.ok(html.includes('window.GP_APP_CONFIG=null;'),'Static public entry must not be baked as a local preview');
     assert.ok(html.includes('sw.js?v=genplayer-v15'));
     assert.ok(html.includes("kind:'generationLog'"));
@@ -390,6 +390,8 @@ test('Create uses a gated three-step wizard, one action and an embedded worker i
     assert.match(create,/id="createRulesStepBtn"[^>]*aria-controls="createRulesStep"[^>]*disabled/);
     assert.match(create,/id="createResultStepBtn"[^>]*aria-controls="createResultStep"[^>]*disabled/);
     assert.ok(create.includes('id="createRosterStep"'));assert.ok(create.includes('id="createRulesStep"'));assert.ok(create.includes('id="createResultStep"'));
+    const card=create.slice(create.indexOf('<div id="createWizardCard"'),create.indexOf('<!-- end createWizardCard -->'));
+    assert.ok(card.includes('class="create-stepper"')&&card.includes('id="createResultStep"')&&card.includes('id="result"')&&card.includes('id="aiOutput"'),file+' stepper, lineup and assessment share one wizard card');
     assert.ok(create.indexOf('id="createResultStep"')<create.indexOf('id="result"'),'Lineup is inside the result step');
     const resultPanel=create.slice(create.indexOf('<section id="createResultStep"'),create.indexOf('<div id="aiOutput"'));assert.ok(!resultPanel.includes('Xem tiêu chí'),'No checklist button in results');assert.ok(create.includes('id="reviewProcessRules"'),'The checklist remains in the criteria step');assert.match(resultPanel,/<div class="create-save-float">[\s\S]*id="editLineup"[\s\S]*id="saveWeek"/,'Edit is next to Save in the floating result actions');
     assert.ok(create.includes('id="createNextStep"'),file+' gates criteria behind a valid roster');
@@ -419,7 +421,9 @@ test('Create stepper highlights only the active number and bold label',()=>{
   assert.match(css,/\.create-stepper button\.on\{background:transparent;color:var\(--text\);font-weight:750\}/);
   assert.match(css,/\.create-stepper button\.on \.create-step-number\{border-color:var\(--action\);background:var\(--action\);color:#fff\}/);
   assert.match(css,/\.create-step-actions,\.create-go-float,\.create-save-float\{position:fixed;[^}]*bottom:calc\(10px \+ env\(safe-area-inset-bottom,0px\)\);[^}]*width:min\(calc\(100% - 32px\),888px\)/,'Next, Create and Save actions float at the viewport bottom without exceeding the content width');
-  assert.match(css,/#createRosterStep,#createRulesStep,#createResultStep\{padding-bottom:78px\}/,'All wizard steps reserve space behind their floating action');
+  assert.match(css,/#createRosterStep,#createRulesStep,#createResultStep\{padding-bottom:78px\}/,'Wizard steps reserve space behind floating actions by default');
+  assert.match(css,/#createBuildTab\[data-create-step="result"\] #createResultStep\{padding-bottom:0\}/,'Result card avoids redundant internal whitespace; screen reserves bottom space');
+  assert.match(css,/#screen-create\{padding-bottom:100px\}/,'Result content remains accessible above the floating actions');
   assert.match(css,/\.create-criteria-scroll\{max-height:220px;overflow:auto/,'Criteria use a compact independently scrollable viewport');
   assert.match(css,/\.create-note-wrap\{[^}]*padding:10px 12px;[^}]*border-inline:2px solid/,'Note has inset spacing and a distinct boundary');
   assert.ok(!template.includes('<div class="section-title"><span data-ui-icon="match-analysis"></span> Tiêu chí &amp; tạo đội</div>'),'Criteria step does not repeat its title inside the panel');

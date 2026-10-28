@@ -9,6 +9,9 @@
 .create-wizard-panel[hidden]{display:none!important}
 #screen-create{padding-bottom:100px}
 #createRosterStep,#createRulesStep,#createResultStep{padding-bottom:78px}
+#createBuildTab[data-create-step="result"] #createWizardCard{padding:12px}
+#createBuildTab[data-create-step="result"] .create-stepper{max-width:none;margin:0 0 12px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+#createBuildTab[data-create-step="result"] #createResultStep{padding-bottom:0}
 .create-step-actions,.create-go-float,.create-save-float{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:28;width:min(calc(100% - 32px),888px);transform:translateX(-50%);display:flex;justify-content:flex-end;padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--sh);backdrop-filter:blur(14px)}
 .create-step-actions .btn,.create-go-float .btn,.create-save-float .btn{min-width:156px}
 .create-save-float{gap:8px}
