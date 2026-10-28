@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-28-pitch-orientation">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-instant">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -430,6 +430,7 @@ html.pitch-view-open{overflow:hidden}
 .pitch-view-viewport{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));display:flex}
 .pitch-view-canvas{position:relative;flex:none;margin:auto}
 .pitch-view-content{position:absolute;left:0;top:0;transform-origin:top left}
+.pitch-view-content .player.pop{animation:none!important;opacity:1;transform:none}
 .pitch-view-vertical{width:440px;box-sizing:border-box;padding:10px;background:var(--surface);border-radius:12px}
 .pitch-view-vertical .vpitch{width:100%;max-width:none}
 @media(max-width:520px){.pitch-view-toolbar{gap:5px}.pitch-view-title{font-size:13px}.pitch-view-toolbar .btn{min-width:35px;padding:5px 7px}.pitch-view-zoom{font-size:11px;min-width:35px}}
@@ -2536,7 +2537,7 @@ function render(res,sel,target,review,showHeat,matchId){
   <div class="report"><h2>${GPIcons.render("match-analysis")} ${hasRev?"Đánh giá trận":"Ưu – nhược điểm"}</h2>${narrative}
   ${sokeTable(A,B,sel)}
   ${_statTable}</div>`;
-  PITCH_DATA.set(box.querySelector('.pitch-expand'),{res,sel,showHeat});
+  PITCH_DATA.set(box.querySelector('.pitch-expand'),{res,sel,showHeat,horizontalSource:box.querySelector('.match')});
   fitMatch();
 }
 function fitMatch(){
@@ -2561,13 +2562,15 @@ function openPitchView(button,kind){
 }
 function pitchViewOrientation(kind){
   if(!PITCH_VIEW.data)return;
-  const {res,sel,showHeat}=PITCH_VIEW.data,A=res.evA,B=res.evB,content=document.createElement('div');
+  const {res,sel,showHeat,horizontalSource}=PITCH_VIEW.data,A=res.evA,B=res.evB;
+  const content=kind==='horizontal'&&horizontalSource?horizontalSource.cloneNode(true):document.createElement('div');
   if(kind==='vertical'){
     content.className='pitch-view-vertical pitch-view-content';
     content.innerHTML=`<div class="lu-head"><span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span><span class="lu-vs">VS</span><span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span></div>${vpitch({subset:sel,result:res})}<div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
   }else{
     content.className='match pitch-view-content';
-    content.innerHTML=`<div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div><div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div><div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
+    content.style.transform='none';
+    if(!horizontalSource)content.innerHTML=`<div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div><div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div><div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
   }
   $('pitchViewCanvas').replaceChildren(content);PITCH_VIEW.node=content;
   $('pitchViewHorizontal').setAttribute('aria-pressed',String(kind==='horizontal'));$('pitchViewVertical').setAttribute('aria-pressed',String(kind==='vertical'));

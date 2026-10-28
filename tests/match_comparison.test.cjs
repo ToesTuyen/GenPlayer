@@ -57,6 +57,7 @@ assert.ok(source.includes('matchLineupRating(ev,sel[ev.starters[c]],slots[c])'))
 assert.ok(source.includes('matchKeeperRating(A,basis.incompleteGk?A.gkFit:ovAt(pa,SL[c]))'));
 const pitchStart=source.indexOf('const PITCH_DATA='),pitchEnd=source.indexOf('// ============ TAO DOI ============',pitchStart);
 assert.ok(pitchStart>=0&&pitchEnd>pitchStart);assert.ok(source.includes('id="pitchViewDialog"'));assert.ok(source.includes("pitchExpandButton('horizontal')"));assert.ok(source.includes("pitchExpandButton('vertical')"));
+assert.match(source,/\.pitch-view-content \.player\.pop\{animation:none!important;opacity:1;transform:none\}/,'The viewer must show all players immediately without the staggered entrance animation');
 const classes=new Set(),viewport={clientWidth:400,clientHeight:650,scrollLeft:0,scrollTop:0},canvas={style:{},children:[],replaceChildren(...nodes){this.children=nodes;}},label={textContent:''};
 const dialog={open:false,events:{},showModal(){this.open=true;},close(){this.open=false;this.events.close();},addEventListener(n,fn){this.events[n]=fn;}};
 const orientationButton=()=>({attrs:{},setAttribute(k,v){this.attrs[k]=v;}});
@@ -66,4 +67,6 @@ vm.runInNewContext(source.slice(pitchStart,pitchEnd)+'\nglobalThis.testPitch={PI
 pitchContext.testPitch.PITCH_DATA.set(button,{res:{evA:{},evB:{}},sel:[]});
 pitchContext.testPitch.openPitchView(button,'horizontal');assert.equal(dialog.open,true);assert.ok(classes.has('pitch-view-open'));assert.equal(label.textContent,'46%');assert.equal(horizontal.attrs['aria-pressed'],'true');assert.match(canvas.children[0].innerHTML,/players/);
 pitchContext.testPitch.pitchViewZoom(1);assert.equal(label.textContent,'58%');pitchContext.testPitch.pitchViewOrientation('vertical');assert.equal(vertical.attrs['aria-pressed'],'true');assert.equal(horizontal.attrs['aria-pressed'],'false');assert.match(canvas.children[0].innerHTML,/vpitch/);assert.ok(parseFloat(canvas.style.width)<=viewport.clientWidth);pitchContext.testPitch.pitchViewOrientation('horizontal');assert.match(canvas.children[0].innerHTML,/field/);pitchContext.testPitch.closePitchView();assert.equal(dialog.open,false);assert.equal(classes.has('pitch-view-open'),false);assert.equal(canvas.children.length,0);
+let cloneCalls=0;const original={style:{transform:'scale(.45)'},cloneNode(){cloneCalls++;return {style:{transform:'scale(.45)'},offsetWidth:832,offsetHeight:460,innerHTML:'existing player and form'};}};
+pitchContext.testPitch.PITCH_DATA.set(button,{res:{evA:{},evB:{}},sel:[],horizontalSource:original});pitchContext.testPitch.openPitchView(button,'horizontal');assert.equal(cloneCalls,1);assert.equal(canvas.children[0].innerHTML,'existing player and form');assert.notEqual(canvas.children[0],original);assert.equal(original.style.transform,'scale(.45)');pitchContext.testPitch.closePitchView();
 console.log('Legacy comparisons preserved; known/unrated keepers, opt-in paired bench and role ratings: OK');
