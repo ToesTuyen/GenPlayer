@@ -1058,7 +1058,7 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
 .process-steps li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
 .process-step-icon{flex:0 0 20px;width:20px;height:20px;border:1px solid var(--line);border-radius:50%;margin-top:1px;display:grid;place-items:center;color:var(--muted);font-size:13px;font-weight:700;box-sizing:border-box}
 .process-step-title{display:block;font-size:13px;font-weight:600;line-height:1.6}
-.process-step-detail{display:block;font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere}
+.process-step-detail{display:block;font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere;white-space:pre-line}
 .process-steps [data-state="done"] .process-step-icon{background:var(--brand-soft);color:var(--success);border-color:var(--success)}
 .process-steps [data-state="warn"] .process-step-icon{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
 .process-steps [data-state="error"] .process-step-icon{background:var(--loss-soft);color:var(--red);border-color:var(--red)}
@@ -2730,8 +2730,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const top14=guard.priority.fixed.map(i=>players[i].n);
       const conflicts=guard.priority.conflictingNote.map(i=>players[i].n);
       const keepers=guard.priority.keeperCandidates.map(i=>players[i].n),shortage=keepers.length<2;
-      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Cần 2 thủ môn, mỗi đội 1 người. Trong danh sách đã chọn có ${keepers.length} thủ môn hợp lệ${keepers.length?' ('+keepers.join(', ')+')':''}, còn thiếu ${2-keepers.length}. Hãy chọn thêm thủ môn đã đăng ký hoặc ghi vào Note tên cầu thủ đã chọn sẽ bắt gôn, ví dụ: “Nguyễn Danh Tuyên bắt gôn”.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message,code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
+      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Nguyên nhân: Cần 2 thủ môn, mỗi đội 1 người. Trong danh sách đã chọn có ${keepers.length} thủ môn hợp lệ${keepers.length?' ('+keepers.join(', ')+')':''}, còn thiếu ${2-keepers.length}.\nGiải pháp: Chọn thêm thủ môn đã đăng ký hoặc ghi vào Note tên cầu thủ đã chọn sẽ bắt gôn, ví dụ: “Nguyễn Danh Tuyên bắt gôn”.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
+      return {error:(message.startsWith('Nguyên nhân:')?'':'Không tìm được đội hình đạt tiêu chí bắt buộc. ')+message,code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
     }
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
     const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
@@ -3346,8 +3346,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       const top14=guard.priority.fixed.map(i=>players[i].n);
       const conflicts=guard.priority.conflictingNote.map(i=>players[i].n);
       const keepers=guard.priority.keeperCandidates.map(i=>players[i].n),shortage=keepers.length<2;
-      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Cần 2 thủ môn, mỗi đội 1 người. Trong danh sách đã chọn có ${keepers.length} thủ môn hợp lệ${keepers.length?' ('+keepers.join(', ')+')':''}, còn thiếu ${2-keepers.length}. Hãy chọn thêm thủ môn đã đăng ký hoặc ghi vào Note tên cầu thủ đã chọn sẽ bắt gôn, ví dụ: “Nguyễn Danh Tuyên bắt gôn”.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message,code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
+      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Nguyên nhân: Cần 2 thủ môn, mỗi đội 1 người. Trong danh sách đã chọn có ${keepers.length} thủ môn hợp lệ${keepers.length?' ('+keepers.join(', ')+')':''}, còn thiếu ${2-keepers.length}.\nGiải pháp: Chọn thêm thủ môn đã đăng ký hoặc ghi vào Note tên cầu thủ đã chọn sẽ bắt gôn, ví dụ: “Nguyễn Danh Tuyên bắt gôn”.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
+      return {error:(message.startsWith('Nguyên nhân:')?'':'Không tìm được đội hình đạt tiêu chí bắt buộc. ')+message,code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
     }
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
     const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
@@ -6912,7 +6912,9 @@ async function createFinish(success,message){
   $('reviewProcessRules').style.display='';createSyncWizard();
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
-  $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;
+  const cloudWarning=cloud.state==='failed'?'Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'';
+  $('createProcessSummary').textContent=(success?message:'')+(success&&cloudWarning?' ':'')+cloudWarning;
+  $('createProcessSummary').hidden=!success&&!cloudWarning;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
   $('createProcessSteps').scrollTop=0;

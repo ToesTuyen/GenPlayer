@@ -62,7 +62,7 @@
 .process-steps li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
 .process-step-icon{flex:0 0 20px;width:20px;height:20px;border:1px solid var(--line);border-radius:50%;margin-top:1px;display:grid;place-items:center;color:var(--muted);font-size:13px;font-weight:700;box-sizing:border-box}
 .process-step-title{display:block;font-size:13px;font-weight:600;line-height:1.6}
-.process-step-detail{display:block;font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere}
+.process-step-detail{display:block;font-size:12px;color:var(--muted);line-height:1.55;overflow-wrap:anywhere;white-space:pre-line}
 .process-steps [data-state="done"] .process-step-icon{background:var(--brand-soft);color:var(--success);border-color:var(--success)}
 .process-steps [data-state="warn"] .process-step-icon{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
 .process-steps [data-state="error"] .process-step-icon{background:var(--loss-soft);color:var(--red);border-color:var(--red)}

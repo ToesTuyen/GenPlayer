@@ -335,7 +335,9 @@ async function createFinish(success,message){
   $('reviewProcessRules').style.display='';createSyncWizard();
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
-  $('createProcessSummary').textContent=message+(cloud.state==='saved'?' Log cloud đã lưu.':cloud.state==='failed'?' Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'');$('createProcessSummary').hidden=false;
+  const cloudWarning=cloud.state==='failed'?'Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'';
+  $('createProcessSummary').textContent=(success?message:'')+(success&&cloudWarning?' ':'')+cloudWarning;
+  $('createProcessSummary').hidden=!success&&!cloudWarning;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
   $('createProcessSteps').scrollTop=0;
