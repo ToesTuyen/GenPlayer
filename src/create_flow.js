@@ -91,6 +91,7 @@ const CREATE_LOG_ROLE={GK:'Gôn',Thòng:'Thòng',HV:'Hậu vệ',TVtt:'Giữa',T
 function createLogNode(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
 function createLogGenerationId(r){return typeof r?.ai?.generationId==='string'&&r.ai.generationId?r.ai.generationId:'';}
 function createLogUsable(r){return r?.status==='success'&&Array.isArray(r?.input?.players)&&r.input.players.length>=14&&['A','B'].every(side=>Array.isArray(r?.output?.teams?.[side])&&r.output.teams[side].filter(p=>!p.bench).length===7);}
+function createCleanFailureDetail(detail){return String(detail).replace(/\s*Chưa gọi AI; chưa sửa trận\./gi,'').replace(/\s*Chưa lưu hoặc sửa trận nào\./gi,'').replace(/\s*Chưa gọi AI\./gi,'').replace(/\s*Không tự nới tiêu chí; chưa sửa trận\./gi,'').replace(/; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước\./gi,'.').trim();}
 function createLogIssue(r){
   if(r.status==='success')return r.fallback?.reason?{title:'AI chưa thành công — đã dùng thuật toán',detail:r.fallback.reason,hint:''}:null;
   if(r.status==='running')return null;
@@ -104,7 +105,7 @@ function createLogIssue(r){
     const keepers=players.filter((p,i)=>top.has(p.n)&&roles.allowed[i][0]);
     if(keepers.length<2)hint=`Nhóm đá chính chỉ có ${keepers.length} người đủ điều kiện bắt gôn${keepers.length?': '+keepers.map(p=>p.n).join(', '):''}; cần 2. Chọn thêm người phù hợp hoặc chỉ định gôn trong Note cho trận này.`;
   }catch{/* Older or incomplete snapshots retain the original error only. */}
-  return {title:r.status==='failed'?'Lý do không tạo được đội':r.status==='interrupted'?'Lượt tạo bị gián đoạn':'Thông tin lượt tạo',detail,hint};
+  return {title:r.status==='failed'?'Lý do không tạo được đội':r.status==='interrupted'?'Lượt tạo bị gián đoạn':'Thông tin lượt tạo',detail:createCleanFailureDetail(detail),hint};
 }
 function createLogTeam(side,rows){
   const box=createLogNode('section','create-log-team'),title=createLogNode('div','create-log-team-title',(side==='A'?'🔴':'🟡')+' Team '+side);box.appendChild(title);
@@ -422,7 +423,7 @@ async function createTeams(){
       });
     };
     localResults=validCandidates(await createSolveInWorker(subset,context.instruction,context.history,lineupNow,[...seenGroups]));
-    if(!localResults.length)throw new Error(noCandidate+' Chưa gọi AI.');
+    if(!localResults.length)throw new Error(noCandidate);
     const allowedGroups=new Set(localResults.map(r=>GPAIContext.lineupGroupKey(subset,{A:r.evA,B:r.evB})));
     createLogPatch({selection:{excludedCount:seenGroups.size,candidateCount:localResults.length,candidateGroups:[...allowedGroups],starterPolicy:'keepers-first-v1'}});
     if(engine==='AI'){
@@ -496,7 +497,7 @@ async function createTeams(){
     createLogPatch({error:{kind:e.kind||'unknown',code:e.code,message:e.message,diagnostics:e.diagnostics,search:e.search},engine});
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
-    $('status').textContent=e.message+' Giữ nguyên bản nháp trước đó (nếu có).';
-    await createFinish(false,e.message+' Chưa lưu hoặc sửa trận nào.');
+    $('status').textContent=e.message;
+    await createFinish(false,e.message);
   }
 }

@@ -122,8 +122,8 @@
       const top14=guard.priority.fixed.map(i=>players[i].n);
       const conflicts=guard.priority.conflictingNote.map(i=>players[i].n);
       const keepers=guard.priority.keeperCandidates.map(i=>players[i].n),shortage=keepers.length<2;
-      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Chưa đủ 2 thủ môn hợp lệ: hiện có ${keepers.length}${keepers.length?' ('+keepers.join(', ')+')':''}. Chọn thêm thủ môn đã đăng ký hoặc chỉ định rõ người bắt gôn trong Note.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message+' Chưa gọi AI; chưa sửa trận.',code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
+      const message=conflicts.length?`Note vừa yêu cầu ${conflicts.join(', ')} dự bị vừa yêu cầu đá vị trí cụ thể. Hãy giữ một chỉ định.`:guard.priority.forcedKeepers.length>2?'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.':top14.length<14?'Sau khi áp dụng Note dự bị, không còn đủ 14 cầu thủ để đá chính.':shortage?`Cần 2 thủ môn, mỗi đội 1 người. Trong danh sách đã chọn có ${keepers.length} thủ môn hợp lệ${keepers.length?' ('+keepers.join(', ')+')':''}, còn thiếu ${2-keepers.length}. Hãy chọn thêm thủ môn đã đăng ký hoặc ghi vào Note tên cầu thủ đã chọn sẽ bắt gôn, ví dụ: “Nguyễn Danh Tuyên bắt gôn”.`:'Nhóm 2 thủ môn và 12 cầu thủ sau khi áp dụng Note và xếp điểm không phủ đủ các vị trí còn lại. Không tự bỏ qua Note hoặc thay người khác.';
+      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc. '+message,code:'no-valid-lineup',diagnostics:[{code:shortage&&!conflicts.length?'keeper':'selection',count:1,message}],search:{totalPartitions:0,roleAssignments:0,hardChecked:0,validPartitions:0,baseTop14:guard.priority.baseFixed.map(i=>players[i].n),top14}};
     }
     // uu tien vi tri dang ky: +chinh, +phu nhe, -vi tri khong dang ky (chi khi co set p.pos)
     const PRI=4.5, SEC=1.0, OFF=3.0, GKLOCK=50, GUEST_PEN=4.0;   // PRI cao: ƯU TIÊN MẠNH vị trí CHÍNH (tiền đạo giỏi đá tiền đạo, ko bị kéo về gôn vì TM cao). GUEST_PEN: phạt khách -> dự bị
@@ -234,9 +234,9 @@
       const order=['guests','keeper','position','centers','selection','balance','bench','reserve','strength','pace','stamina','rotation'];
       const diagnostics=Object.values(rejections).sort((a,b)=>b.count-a.count||order.indexOf(a.code)-order.indexOf(b.code));
       const duplicate=diagnostics.find(x=>x.code==='duplicate');
-      if(duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Đã duyệt '+stats.totalPartitions+' cách chia; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước.',code:'no-new-lineup',diagnostics,search:{...stats,nearest}};
+      if(duplicate)return {error:'Chưa tìm được nhóm đá chính khác với các lượt đã xem mà vẫn đạt đủ tiêu chí. Đã duyệt '+stats.totalPartitions+' cách chia.',code:'no-new-lineup',diagnostics,search:{...stats,nearest}};
       const blocking=nearest?.violations?.length?nearest.violations:diagnostics.slice(0,3);
-      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc sau khi duyệt '+stats.totalPartitions+' cách chia. Phương án gần đạt nhất còn vướng: '+blocking.slice(0,4).map(x=>x.message).join(' ')+' Không tự nới tiêu chí; chưa sửa trận.',code:'no-valid-lineup',diagnostics,search:{...stats,nearest}};
+      return {error:'Không tìm được đội hình đạt tiêu chí bắt buộc sau khi duyệt '+stats.totalPartitions+' cách chia. Phương án gần đạt nhất còn vướng: '+blocking.slice(0,4).map(x=>x.message).join(' '),code:'no-valid-lineup',diagnostics,search:{...stats,nearest}};
     }
     return top;   // mang da sap xep tang dan theo J (top[0] = can nhat)
   }

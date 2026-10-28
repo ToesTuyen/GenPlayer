@@ -197,7 +197,19 @@ test('exhausted group exclusions return an explicit stop instead of reusing an o
     result=O.solve(p,null,{strictGuests:true,excludeGroups:[...seen]});if(result.error)break;
     for(const r of result){assert.ok(!seen.has(group(p,r)));seen.add(group(p,r));}
   }
-  assert.equal(result.code,'no-new-lineup');assert.match(result.error,/không gọi AI/i);assert.ok(seen.size>0);
+  assert.equal(result.code,'no-new-lineup');assert.match(result.error,/đã duyệt/i);assert.doesNotMatch(result.error,/không gọi AI/i);assert.ok(seen.size>0);
+});
+
+test('missing keeper explains the shortage and actionable choices without redundant notes',async()=>{
+  const p=roster(16);for(const player of p){player.pos='HV';player.pos2=[];}p[0].pos='GK';
+  const x=controller('valid',p);await x.run();
+  const summary=x.elements.get('createProcessSummary').textContent;
+  assert.match(summary,/Cần 2 thủ môn, mỗi đội 1 người/);assert.match(summary,/còn thiếu 1/);
+  assert.match(summary,/chọn thêm thủ môn/i);assert.match(summary,/cầu thủ đã chọn sẽ bắt gôn/i);
+  assert.doesNotMatch(summary,/chưa gọi AI|chưa sửa trận|chưa lưu hoặc sửa trận/i);
+  assert.equal(x.requests.length,0);assert.equal(x.log.list()[0].status,'failed');
+  const old=x.logIssue({status:'failed',error:{message:'Thiếu thủ môn. Chưa gọi AI; chưa sửa trận.'}});
+  assert.equal(old.detail,'Thiếu thủ môn.');
 });
 
 test('AI lineup creation proceeds without a confirmation popup',async()=>{

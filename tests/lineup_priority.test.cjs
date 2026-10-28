@@ -20,9 +20,9 @@ test('two highest-rated primary keepers start before the highest-rated remaining
 test('a secondary registered keeper can fill a shortage, otherwise the exact shortage is reported',()=>{
   const p=roster(16);p.forEach(x=>{x.guest=false;});p[7].pos='TĐ';p[7].pos2=[];p[14].pos='HV';p[14].pos2=[];p[6].pos2=['GK'];
   assert.deepEqual(C.lineupGuard(p).priority.keepers,[0,6]);p[6].pos2=[];
-  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.diagnostics[0].code,'keeper');assert.match(blocked.error,/Chưa đủ 2 thủ môn hợp lệ: hiện có 1 \(Priority 0\)/);
+  const blocked=O.solve(p,null,{strictGuests:true});assert.equal(blocked.diagnostics[0].code,'keeper');assert.match(blocked.error,/có 1 thủ môn hợp lệ \(Priority 0\), còn thiếu 1/);
   const forced=C.lineupGuard(p,{instruction:'Priority 6 bắt gôn'});assert.deepEqual(forced.priority.keepers,[6,0]);
-  p[0].TM=0;const none=O.solve(p,null,{strictGuests:true});assert.match(none.error,/hiện có 0/);
+  p[0].TM=0;const none=O.solve(p,null,{strictGuests:true});assert.match(none.error,/có 0 thủ môn hợp lệ, còn thiếu 2/);
 });
 
 test('the displayed top 14 are fixed before team balancing',()=>{

@@ -158,7 +158,7 @@ function validateOutput(raw,prepared){
   const clean={title:out.title,sections:out.sections.map(s=>({heading:s.heading,body:s.body}))};
   if(prepared.task==='lineup'){
     const players=prepared.context.rosterNames.map(n=>prepared.context.players.find(p=>p.n===n));
-    try{const options={instruction:prepared.context.instruction,history:prepared.context.history,now:prepared.context.lineupTime},plan=planTeams(out,players,prepared.context.lineupCandidates,options),evaluated=C.lineup(players,plan.teams,options);Object.assign(clean,{teams:plan.teams,result:evaluated.result,warnings:[...evaluated.warnings,...plan.skipped],checks:evaluated.checks,plan:plan.plan,subset:players});}catch(e){const error=new AppError(502,e.message+' Chưa thay đổi dữ liệu.','lineup');error.aiProposal=proposalMetadata(out);throw error;}
+    try{const options={instruction:prepared.context.instruction,history:prepared.context.history,now:prepared.context.lineupTime},plan=planTeams(out,players,prepared.context.lineupCandidates,options),evaluated=C.lineup(players,plan.teams,options);Object.assign(clean,{teams:plan.teams,result:evaluated.result,warnings:[...evaluated.warnings,...plan.skipped],checks:evaluated.checks,plan:plan.plan,subset:players});}catch(e){const error=new AppError(502,e.message,'lineup');error.aiProposal=proposalMetadata(out);throw error;}
   }
   if(prepared.task==='player-form'){
     if(!['increase','keep','decrease','insufficient'].includes(out.verdict)||!Array.isArray(out.suggestions)||out.suggestions.length>4)throw new AppError(502,'AI trả về đề xuất điểm không hợp lệ.');
