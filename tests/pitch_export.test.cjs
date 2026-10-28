@@ -1,6 +1,10 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8');
+test('pitch colour is consistent between the viewer and exported PNG',()=>{
+  const theme=fs.readFileSync(path.join(__dirname,'../src/theme.css'),'utf8');
+  assert.match(theme,/background-color:#295038/);assert.match(source,/ctx\.fillStyle='#295038'/);
+});
 function setup(mobile=false){
   const start=source.indexOf('const PITCH_DATA='),end=source.indexOf('// ============ TAO DOI ============',start);
   const els={pitchExportButton:{disabled:false,textContent:''},pitchExportStatus:{hidden:false,textContent:''}},shared=[],drawn=[],textOps=[],colors=[],heatNames=[],canvases=[],downloads=[];

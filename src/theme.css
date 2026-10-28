@@ -96,7 +96,7 @@
 :root[data-theme] .fc.l{background:var(--loss-soft);color:var(--danger);border:1px solid var(--line);box-shadow:none}
 :root[data-theme] .gc-line{stroke:var(--gold)}
 :root[data-theme] .gc-dot.sc{fill:var(--gold);stroke:var(--amber)}
-:root[data-theme] :is(.field,.vpitch){background-color:#294938;background-image:repeating-linear-gradient(0deg,transparent 0 16.66%,rgba(255,255,255,.035) 16.66% 33.33%);border-color:#425c50;box-shadow:none}
+:root[data-theme] :is(.field,.vpitch){background-color:#295038;background-image:repeating-linear-gradient(0deg,transparent 0 16.66%,rgba(255,255,255,.035) 16.66% 33.33%);border-color:#425c50;box-shadow:none}
 :root[data-theme] .benchrow{background:var(--surface2);border-color:var(--line)}
 :root[data-theme] :is(.subchip,.subs-lbl,.vsub){color:var(--muted)}
 :root[data-theme] .subchip{background:var(--surface);border-color:var(--line)}
