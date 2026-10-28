@@ -203,11 +203,13 @@ test('exhausted group exclusions return an explicit stop instead of reusing an o
 test('missing keeper explains the shortage and actionable choices without redundant notes',async()=>{
   const p=roster(16);for(const player of p){player.pos='HV';player.pos2=[];}p[0].pos='GK';
   const x=controller('valid',p);await x.run();
-  const detail=x.elements.get('step-search.process-step-detail').textContent;
+  const detail=x.elements.get('createProcessSummary').textContent;
   assert.match(detail,/Nguyên nhân: Cần 2 thủ môn, mỗi đội 1 người/);assert.match(detail,/còn thiếu 1/);
   assert.match(detail,/\nGiải pháp: Chọn thêm thủ môn/);assert.match(detail,/cầu thủ đã chọn sẽ bắt gôn/i);
   assert.doesNotMatch(detail,/chưa gọi AI|chưa sửa trận|chưa lưu hoặc sửa trận/i);
-  assert.equal(x.elements.get('createProcessSummary').hidden,true,'Failure is shown once in the relevant step');
+  assert.equal(x.elements.get('createProcessSummary').hidden,false,'Failure is shown in the bottom note');
+  assert.match(x.elements.get('step-search.process-step-detail').textContent,/bên dưới/);
+  assert.doesNotMatch(detail,/Log cloud đã lưu/i);
   assert.equal(x.requests.length,0);assert.equal(x.log.list()[0].status,'failed');
   const old=x.logIssue({status:'failed',error:{message:'Thiếu thủ môn. Chưa gọi AI; chưa sửa trận.'}});
   assert.equal(old.detail,'Thiếu thủ môn.');

@@ -70,7 +70,7 @@
 .process-steps [data-state="active"]{background:var(--brand-soft);border-radius:8px}
 .process-steps [data-state="active"] .process-step-title{color:var(--brand)}
 .process-steps [data-state="pending"],.process-steps [data-state="skip"]{color:var(--faint)}
-.process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.process-summary{margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-line}
 .process-actions{display:flex;justify-content:flex-end;margin-top:12px}
 .create-tab-panel[hidden]{display:none!important}
 .create-log-page{max-width:900px;margin:0 auto}

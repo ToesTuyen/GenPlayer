@@ -283,8 +283,8 @@ function createNoteChanged(){
   for(const p of cstate.subset||[])if(typeof p.matchGkRating==='number'){const detail=document.createElement('p');detail.textContent=`Chỉ trận này: ${p.n} bắt gôn ${p.matchGkRating.toFixed(1)} như ${p.matchGkSource}.`;box.appendChild(detail);}
 }
 const createYield=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-function createStep(id,state,detail=''){
-  try{CREATE_LOG?.event(CREATE_RUN_ID,id,state,detail);}catch{}
+function createStep(id,state,detail='',logDetail=detail){
+  try{CREATE_LOG?.event(CREATE_RUN_ID,id,state,logDetail);}catch{}
   if(state==='active'&&CREATE_STATE.steps.get(id)!=='active')CREATE_STATE.startedAt.set(id,performance.now());
   CREATE_STATE.steps.set(id,state);
   const row=$('createProcessSteps').querySelector('[data-step="'+id+'"]');
@@ -336,8 +336,8 @@ async function createFinish(success,message){
   $('roster').querySelectorAll('input').forEach(c=>c.disabled=false);updateCount();
   $('createProcessTitle').textContent=success?'Đã tạo đội hình nháp':'Chưa tạo được đội';
   const cloudWarning=cloud.state==='failed'?'Log chỉ lưu trên máy này vì cloud chưa xác nhận.':'';
-  $('createProcessSummary').textContent=(success?message:'')+(success&&cloudWarning?' ':'')+cloudWarning;
-  $('createProcessSummary').hidden=!success&&!cloudWarning;
+  $('createProcessSummary').textContent=message+(cloudWarning?'\n'+cloudWarning:'');
+  $('createProcessSummary').hidden=false;
   $('createProcessClose').disabled=false;$('createProcessClose').textContent=success?'Xem đội hình':'Đóng';
   $('createProcessClose').focus();
   $('createProcessSteps').scrollTop=0;
@@ -497,7 +497,7 @@ async function createTeams(){
     await createFinish(true,`Hoàn tất bằng ${engine}. ${warnings?warnings+' mục cần lưu ý.':'Đã kiểm tra xong.'}`);
   }catch(e){
     createLogPatch({error:{kind:e.kind||'unknown',code:e.code,message:e.message,diagnostics:e.diagnostics,search:e.search},engine});
-    for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error',e.message);
+    for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error','Xem nguyên nhân và hướng xử lý bên dưới.',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
     $('status').textContent=e.message;
     await createFinish(false,e.message);
