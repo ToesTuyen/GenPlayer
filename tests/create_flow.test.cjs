@@ -40,7 +40,7 @@ function controller(mode='algorithm',p=roster(),shared=storage(),options={}){
   vm.runInContext(fs.readFileSync(require.resolve('../src/create_flow.js'),'utf8')+`
     createCompleteStep=async(id,state,detail)=>createStep(id,state,detail);
     createSolveInWorker=async(p,instruction,history,now,excludeGroups)=>solver(p,null,{strictGuests:true,instruction,history,now,excludeGroups});
-    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft,openEdit:createOpenEdit,runEdit:createRunEdit,applyEdit:createApplyEdit,setLogView:records=>{CREATE_LOG_VIEW=records;},openLogs:createOpenLogs,loadMoreLogs:createLoadMoreLogs,setTab:createSetTab,visibleLogs:()=>CREATE_LOG_VIEW};
+    globalThis.flow={run:createTeams,state:CREATE_STATE,log:CREATE_LOG,cloudPush:createCloudPush,cloudFetch:createCloudFetch,draftFromLog:createDraftFromLog,useLog:createUseLog,logIssue:createLogIssue,formatFailure:createFormatFailure,renderLogCards:createRenderLogCards,setStep:createSetWizardStep,reveal:createRevealDraft,openEdit:createOpenEdit,runEdit:createRunEdit,applyEdit:createApplyEdit,setLogView:records=>{CREATE_LOG_VIEW=records;},openLogs:createOpenLogs,loadMoreLogs:createLoadMoreLogs,setTab:createSetTab,visibleLogs:()=>CREATE_LOG_VIEW};
   `,scope);
   return {scope,elements,renders,requests,alerts,storage:shared,cloudDocs,cloudReads,...scope.flow};
 }
@@ -215,6 +215,19 @@ test('missing keeper explains the shortage and actionable choices without redund
   assert.equal(x.requests.length,0);assert.equal(x.log.list()[0].status,'failed');
   const old=x.logIssue({status:'failed',error:{message:'Thiếu thủ môn. Chưa gọi AI; chưa sửa trận.'}});
   assert.equal(old.detail,'Thiếu thủ môn.');
+});
+
+test('every solver diagnostic and input failure has a cause and a relevant possible remedy',()=>{
+  const x=controller(),expectations={guests:/khách/i,keeper:/thủ môn/i,position:/vị trí/i,centers:/tiền vệ trung tâm/i,selection:/ưu tiên/i,balance:/hàng công và hàng thủ/i,bench:/dự bị/i,reserve:/nhóm mạnh nhất/i,strength:/tổng lực/i,pace:/tốc độ/i,stamina:/thể lực/i,rotation:/trận gần nhất/i,duplicate:/Lịch sử/i};
+  for(const [code,tip] of Object.entries(expectations)){
+    const formatted=x.formatFailure({message:'Phương án gần đạt nhất còn vướng.',search:{nearest:{violations:[{code}]}}});
+    assert.match(formatted,/^Nguyên nhân: /);assert.match(formatted,/\nGiải pháp: /);assert.match(formatted,tip,code);
+  }
+  const multi=x.formatFailure({message:'Công và dự bị đều lệch.',search:{nearest:{violations:[{code:'balance'},{code:'reserve'}]}}});
+  assert.match(multi,/hàng công và hàng thủ/);assert.match(multi,/nhóm mạnh nhất/);
+  assert.match(x.formatFailure({message:'Cần chọn từ 14 đến 24 người (7 vs 7).'}),/Giải pháp: Chọn từ 14 đến 24/);
+  assert.match(x.formatFailure({message:'Note chỉ định hơn hai người bắt gôn; mỗi đội chỉ có một thủ môn.'}),/Giải pháp: Sửa Note/);
+  assert.match(x.formatFailure({message:'Không rõ lỗi.'}),/Giải pháp: Kiểm tra danh sách, Note/);
 });
 
 test('AI lineup creation proceeds without a confirmation popup',async()=>{

@@ -92,6 +92,41 @@ function createLogNode(tag,className,text){const el=document.createElement(tag);
 function createLogGenerationId(r){return typeof r?.ai?.generationId==='string'&&r.ai.generationId?r.ai.generationId:'';}
 function createLogUsable(r){return r?.status==='success'&&Array.isArray(r?.input?.players)&&r.input.players.length>=14&&['A','B'].every(side=>Array.isArray(r?.output?.teams?.[side])&&r.output.teams[side].filter(p=>!p.bench).length===7);}
 function createCleanFailureDetail(detail){return String(detail).replace(/\s*Chưa gọi AI; chưa sửa trận\./gi,'').replace(/\s*Chưa lưu hoặc sửa trận nào\./gi,'').replace(/\s*Chưa gọi AI\./gi,'').replace(/\s*Không tự nới tiêu chí; chưa sửa trận\./gi,'').replace(/; không gọi AI hoặc nới ngưỡng; giữ nguyên bản nháp trước\./gi,'.').trim();}
+function createFormatFailure(error){
+  const cause=createCleanFailureDetail(error?.message||'Chưa xác định được nguyên nhân cụ thể.');
+  if(/^Nguyên nhân:/.test(cause)&&/\nGiải pháp:/.test(cause))return cause;
+  let solutions=[];
+  if(/Cần chọn từ 14 đến 24|Cần ít nhất 14|Tối đa 24/i.test(cause))solutions.push('Chọn từ 14 đến 24 cầu thủ, kể cả dự bị và khách.');
+  else if(/vừa yêu cầu.*dự bị.*vị trí/i.test(cause))solutions.push('Sửa Note để mỗi cầu thủ chỉ có một chỉ định phù hợp.');
+  else if(/chỉ định hơn hai người bắt gôn/i.test(cause))solutions.push('Sửa Note, chỉ định tối đa 2 người bắt gôn.');
+  else if(/chỉ định vị trí đá chính cho hơn 14 cầu thủ/i.test(cause))solutions.push('Sửa Note để chỉ định tối đa 14 người đá chính.');
+  else if(/không còn đủ 14 cầu thủ/i.test(cause))solutions.push('Bớt yêu cầu dự bị trong Note hoặc chọn thêm người tham gia.');
+  else if(error?.code==='no-new-lineup')solutions.push('Thay đổi danh sách người tham gia hoặc xem lại phương án đã tạo trong Lịch sử.');
+  else if(/vượt quá 90 giây/i.test(cause))solutions.push('Giảm số người được chọn và thử lại.');
+  else if(/không mở được bộ xử lý thuật toán/i.test(cause))solutions.push('Kiểm tra trình duyệt có hỗ trợ Web Worker, sau đó tải lại trang và thử lại.');
+  else{
+    const advice={
+      guests:'Kiểm tra phân loại khách, danh sách tham gia và các yêu cầu vị trí trong Note.',
+      keeper:'Chọn thêm thủ môn phù hợp hoặc chỉ định rõ người đã chọn bắt gôn trong Note.',
+      position:'Kiểm tra vị trí đăng ký; chọn thêm người phù hợp hoặc ghi rõ vị trí trong Note.',
+      centers:'Kiểm tra số tiền vệ trung tâm và điều chỉnh danh sách để chia được hai bên.',
+      selection:'Kiểm tra danh sách, vị trí và Note của nhóm ưu tiên đá chính.',
+      balance:'Điều chỉnh danh sách hoặc Note về vị trí để có thể cân riêng hàng công và hàng thủ.',
+      bench:'Kiểm tra người dự bị, người đá chính và điểm ở vị trí phù hợp.',
+      reserve:'Kiểm tra danh sách dự bị để chia được các nhóm mạnh nhất tương ứng.',
+      strength:'Điều chỉnh danh sách hoặc Note để cân đội hình chính và tổng lực.',
+      pace:'Kiểm tra tốc độ của những người đã chọn và cách phân bổ dự bị.',
+      stamina:'Kiểm tra thể lực của những người đã chọn và cách phân bổ dự bị.',
+      rotation:'Kiểm tra đội hình trận gần nhất và điều chỉnh danh sách hoặc Note để trộn đội.',
+      duplicate:'Thay đổi danh sách người tham gia hoặc xem lại phương án trong Lịch sử.'
+    };
+    const nearest=error?.search?.nearest?.violations,items=Array.isArray(nearest)&&nearest.length?nearest:error?.diagnostics;
+    if(Array.isArray(items))for(const item of items.slice(0,4)){const tip=advice[item?.code];if(tip&&!solutions.includes(tip))solutions.push(tip);}
+    if(solutions.length)solutions.unshift('Có thể thử các cách sau; sau khi điều chỉnh, hãy tạo lại để kiểm tra các điều kiện còn lại.');
+  }
+  if(!solutions.length)solutions.push('Kiểm tra danh sách, Note và thử lại; nếu vẫn lỗi, dùng mã log để kiểm tra chi tiết.');
+  return 'Nguyên nhân: '+cause+'\nGiải pháp: '+solutions.join(' ');
+}
 function createLogIssue(r){
   if(r.status==='success')return r.fallback?.reason?{title:'AI chưa thành công — đã dùng thuật toán',detail:r.fallback.reason,hint:''}:null;
   if(r.status==='running')return null;
@@ -504,6 +539,6 @@ async function createTeams(){
     for(const [id,state] of CREATE_STATE.steps)if(state==='active')createStep(id,'error','Xem nguyên nhân và hướng xử lý bên dưới.',e.message);
     for(const [id,state] of CREATE_STATE.steps)if(state==='pending')createStep(id,'skip');
     $('status').textContent=e.message;
-    await createFinish(false,e.message);
+    await createFinish(false,createFormatFailure(e));
   }
 }
