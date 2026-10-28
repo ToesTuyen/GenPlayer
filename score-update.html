@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="genplayer-release" content="web-app-2026-10-27-keepers-first">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-orientation">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -409,8 +409,12 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pred{background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.32);border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:832px;text-align:center;font-size:14px;line-height:1.55;color:#a7f3c4}
 .matchwrap{width:100%;max-width:832px;margin:0 auto;overflow:hidden;border-radius:var(--r);box-shadow:var(--sh)}
 .match{width:832px;transform-origin:top left}
-.pitch-view-action{max-width:832px;margin:0 auto 7px;display:flex;justify-content:flex-end}
-.pitch-view-action .btn{gap:5px}
+.pitch-frame{position:relative;max-width:832px;margin:0 auto}
+.pitch-frame.vertical{max-width:440px}
+.pitch-expand{position:absolute;z-index:3;right:8px;top:40px;width:38px;height:38px;padding:8px;display:grid;place-items:center;border:1px solid #ffffff60;border-radius:10px;background:#142c25d9;color:#fff;cursor:pointer;box-shadow:0 2px 8px #0004}
+.pitch-frame.vertical .pitch-expand{top:8px}
+.pitch-expand svg{width:20px;height:20px}
+.pitch-expand:focus-visible{outline:3px solid #fff;outline-offset:2px}
 html.pitch-view-open{overflow:hidden}
 .pitch-view-dialog{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:var(--bg);color:var(--text)}
 .pitch-view-dialog[open]{display:flex;flex-direction:column}
@@ -418,6 +422,9 @@ html.pitch-view-open{overflow:hidden}
 .pitch-view-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
 .pitch-view-title{font-size:15px;font-weight:800;margin-right:auto}
 .pitch-view-toolbar .btn{min-width:38px;padding:6px 9px}
+.pitch-view-orientation{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface3)}
+.pitch-view-orientation button{border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;padding:6px 9px;cursor:pointer}
+.pitch-view-orientation button[aria-pressed="true"]{background:var(--brand);color:#fff}
 .pitch-view-zoom{font-size:12px;min-width:42px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
 .pitch-view-hint{padding:7px 12px;color:var(--muted);font-size:11px;text-align:center}
 .pitch-view-viewport{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));display:flex}
@@ -1443,8 +1450,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   </section>
 </div>
 <dialog id="pitchViewDialog" class="pitch-view-dialog" aria-labelledby="pitchViewTitle">
-  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><button class="btn alt sm" type="button" onclick="pitchViewZoom(-1)" aria-label="Thu nhỏ sơ đồ">−</button><span class="pitch-view-zoom" id="pitchViewZoomLabel" aria-live="polite">100%</span><button class="btn alt sm" type="button" onclick="pitchViewZoom(1)" aria-label="Phóng to sơ đồ">+</button><button class="btn alt sm" type="button" onclick="pitchViewFit()">Toàn sân</button><button class="btn alt sm" type="button" onclick="closePitchView()" aria-label="Đóng sơ đồ">Đóng</button></div>
-  <div class="pitch-view-hint">Kéo để xem các phần của sân · Xoay ngang điện thoại để xem rộng hơn</div>
+  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><div class="pitch-view-orientation" aria-label="Hướng sơ đồ"><button id="pitchViewHorizontal" type="button" onclick="pitchViewOrientation('horizontal')" aria-pressed="true">Ngang</button><button id="pitchViewVertical" type="button" onclick="pitchViewOrientation('vertical')" aria-pressed="false">Dọc</button></div><button class="btn alt sm" type="button" onclick="pitchViewZoom(-1)" aria-label="Thu nhỏ sơ đồ">−</button><span class="pitch-view-zoom" id="pitchViewZoomLabel" aria-live="polite">100%</span><button class="btn alt sm" type="button" onclick="pitchViewZoom(1)" aria-label="Phóng to sơ đồ">+</button><button class="btn alt sm" type="button" onclick="pitchViewFit()">Toàn sân</button><button class="btn alt sm" type="button" onclick="closePitchView()" aria-label="Đóng sơ đồ">Đóng</button></div>
+  <div class="pitch-view-hint">Chọn ngang hoặc dọc · Kéo để xem khi phóng to</div>
   <div class="pitch-view-viewport" id="pitchViewViewport" tabindex="0" aria-label="Sơ đồ đội hình, có thể cuộn"><div class="pitch-view-canvas" id="pitchViewCanvas"></div></div>
 </dialog>
 <dialog id="lineupEditDialog" class="ai-key-dialog lineup-edit-dialog" aria-labelledby="lineupEditTitle">
@@ -4635,10 +4642,10 @@ function renderSpotlight(h){
     </div>
     <div class="lu-meta">${when}${r.format?` · ${esc(r.format)}`:""}${r.venue?` · 📍 ${esc(r.venue)}`:""}</div>
     ${benchStrip(eA,KIT_A,"top")}
-    <div class="pitch-view-action"><button class="btn alt sm" type="button" onclick="event.stopPropagation();openPitchView(this,'vertical')" aria-label="Phóng to sơ đồ trận sắp tới">${GPIcons.render("search")} Phóng to sơ đồ</button></div>
-    ${vpitch(r)}
+    <div class="pitch-frame vertical">${pitchExpandButton('vertical')}${vpitch(r)}</div>
     ${benchStrip(eB,KIT_B,"bot")}
   </div>`;
+  PITCH_DATA.set(box.querySelector('.pitch-expand'),{res:r.result,sel,showHeat:false});
 }
 function openHistory(id){const r=getHistory().find(x=>x.id===id);if(r)histTab=r.score?"done":"upcoming";show("screen-history");setTimeout(()=>{toggleHistory(id);const wrap=document.getElementById("mcd-"+id);if(wrap)wrap.scrollIntoView({behavior:"smooth",block:"center"});},30);}
 
@@ -4770,15 +4777,15 @@ function render(res,sel,target,review,showHeat,matchId){
   const _statTable=`<h2>${GPIcons.render("match-analysis")} Chỉ số đánh giá</h2><table class="stat compare-stat"><tr><th>Chỉ số</th><th>Team A</th><th>Team B</th><th>Ưu thế</th></tr>${_statRows}</table><div class="compare-summary">${GPIcons.render("scales")} <b>Bên nào hơn?</b> — 🔴 Team A dẫn <b>${_aW}</b> chỉ số · 🟡 Team B dẫn <b>${_bW}</b>${_tie?` · hoà ${_tie}`:""}.<br>• ${basis.incompleteGk?"Đội hình ngoài sân":"Đội hình ra sân (chính)"}: ${_vv(basis.startA-basis.startB)}<br>• ${totalSummary}: ${_vv(basis.totalA-basis.totalB)}${comparisonNote?`<br><span class="muted">${comparisonNote}</span>`:""}</div>`;
   box.innerHTML=`
   ${predBlock}
-  <div class="pitch-view-action"><button class="btn alt sm" type="button" onclick="openPitchView(this,'horizontal')" aria-label="Phóng to sơ đồ đội hình">${GPIcons.render("search")} Phóng to sơ đồ</button></div>
-  <div class="matchwrap"><div class="match">
+  <div class="pitch-frame">${pitchExpandButton('horizontal')}<div class="matchwrap"><div class="match">
    <div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div>
    <div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div>
    <div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>
-  </div></div>
+  </div></div></div>
   <div class="report"><h2>${GPIcons.render("match-analysis")} ${hasRev?"Đánh giá trận":"Ưu – nhược điểm"}</h2>${narrative}
   ${sokeTable(A,B,sel)}
   ${_statTable}</div>`;
+  PITCH_DATA.set(box.querySelector('.pitch-expand'),{res,sel,showHeat});
   fitMatch();
 }
 function fitMatch(){
@@ -4791,23 +4798,29 @@ function fitMatch(){
 window.addEventListener("resize",fitMatch);
 
 // Full-screen view is a read-only clone: opening or zooming never changes the match.
-const PITCH_VIEW={node:null,width:0,height:0,zoom:1};
+const PITCH_DATA=new WeakMap();
+const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null};
+function pitchExpandButton(kind){return `<button class="pitch-expand" type="button" onclick="event.stopPropagation();openPitchView(this,'${kind}')" aria-label="Phóng to sơ đồ đội hình" title="Phóng to sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>`;}
 function openPitchView(button,kind){
-  const dialog=$("pitchViewDialog"),canvas=$("pitchViewCanvas");if(dialog.open)return;
-  let content;
-  if(kind==="vertical"){
-    const source=button.closest(".spot-lineup");if(!source||!source.querySelector(".vpitch"))return;
-    content=document.createElement("div");content.className="pitch-view-vertical";
-    for(const selector of [".lu-head",".lu-meta",".vp-sub.top",".vpitch",".vp-sub.bot"]){const part=source.querySelector(selector);if(part)content.appendChild(part.cloneNode(true));}
+  const dialog=$("pitchViewDialog"),data=PITCH_DATA.get(button);if(dialog.open||!data)return;
+  PITCH_VIEW.data=data;
+  if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+  document.documentElement.classList.add("pitch-view-open");
+  pitchViewOrientation(kind);
+}
+function pitchViewOrientation(kind){
+  if(!PITCH_VIEW.data)return;
+  const {res,sel,showHeat}=PITCH_VIEW.data,A=res.evA,B=res.evB,content=document.createElement('div');
+  if(kind==='vertical'){
+    content.className='pitch-view-vertical pitch-view-content';
+    content.innerHTML=`<div class="lu-head"><span class="lu-team"><span class="lu-logo" style="background:${KIT_A.body};color:#fff">A</span>Team A</span><span class="lu-vs">VS</span><span class="lu-team r">Team B<span class="lu-logo" style="background:${KIT_B.body};color:#11224f">B</span></span></div>${vpitch({subset:sel,result:res})}<div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
   }else{
-    const source=button.closest(".pitch-view-action")?.nextElementSibling?.querySelector(".match");if(!source)return;
-    content=source.cloneNode(true);content.style.transform="none";
+    content.className='match pitch-view-content';
+    content.innerHTML=`<div class="mhead"><div class="mh l" style="background:${KIT_A.body};color:#fff">🔴 TEAM A ▶</div><div class="mh r" style="background:${KIT_B.body};color:#11224f">◀ TEAM B 🟡</div></div><div class="field"><div class="mk vhalf"></div><div class="mk ccircle"></div><div class="mk boxL"></div><div class="mk boxR"></div><div class="mk goalL"></div><div class="mk goalR"></div>${teamCols(A,KIT_A,sel,false,showHeat)}${teamCols(B,KIT_B,sel,true,showHeat)}</div><div class="benchrow"><div class="benchcol l"><span class="subs-lbl">Dự bị A:</span>${subsItems(A,sel)}</div><div class="benchcol"><span class="subs-lbl">Dự bị B:</span>${subsItems(B,sel)}</div></div>`;
   }
-  content.classList.add("pitch-view-content");canvas.replaceChildren(content);PITCH_VIEW.node=content;
-  dialog.showModal();document.documentElement.classList.add("pitch-view-open");
-  PITCH_VIEW.width=content.offsetWidth;PITCH_VIEW.height=content.offsetHeight;
-  const viewport=$("pitchViewViewport"),fit=Math.min((viewport.clientWidth-16)/PITCH_VIEW.width,(viewport.clientHeight-16)/PITCH_VIEW.height);
-  pitchViewSetZoom(Math.max(1,fit),false);viewport.scrollLeft=0;viewport.scrollTop=0;
+  $('pitchViewCanvas').replaceChildren(content);PITCH_VIEW.node=content;
+  $('pitchViewHorizontal').setAttribute('aria-pressed',String(kind==='horizontal'));$('pitchViewVertical').setAttribute('aria-pressed',String(kind==='vertical'));
+  PITCH_VIEW.width=content.offsetWidth;PITCH_VIEW.height=content.offsetHeight;pitchViewFit();
 }
 function pitchViewSetZoom(value,keepCenter=true){
   if(!PITCH_VIEW.node||!PITCH_VIEW.width||!PITCH_VIEW.height)return;
@@ -4819,8 +4832,9 @@ function pitchViewSetZoom(value,keepCenter=true){
 }
 function pitchViewZoom(direction){pitchViewSetZoom(PITCH_VIEW.zoom*(direction>0?1.25:0.8));}
 function pitchViewFit(){const viewport=$("pitchViewViewport");pitchViewSetZoom(Math.min((viewport.clientWidth-16)/PITCH_VIEW.width,(viewport.clientHeight-16)/PITCH_VIEW.height),false);viewport.scrollLeft=0;viewport.scrollTop=0;}
-function closePitchView(){if($("pitchViewDialog").open)$("pitchViewDialog").close();}
-$("pitchViewDialog").addEventListener("close",()=>{document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;});
+function pitchViewCleanup(){document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;PITCH_VIEW.data=null;}
+function closePitchView(){const dialog=$("pitchViewDialog");if(dialog.open&&typeof dialog.close==='function')dialog.close();else{dialog.removeAttribute('open');pitchViewCleanup();}}
+$("pitchViewDialog").addEventListener("close",pitchViewCleanup);
 window.addEventListener("resize",()=>{if($("pitchViewDialog").open)pitchViewSetZoom(PITCH_VIEW.zoom);});
 
 // ============ TAO DOI ============
