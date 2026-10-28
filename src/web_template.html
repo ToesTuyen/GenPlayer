@@ -1,7 +1,7 @@
 <!doctype html><html lang="vi" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="genplayer-release" content="web-app-2026-10-28-result-layout">
+<meta name="genplayer-release" content="web-app-2026-10-28-pitch-screen">
 <title>FC Haha — Chia đội bóng sân 7</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -416,11 +416,9 @@ body.is-admin .ab-admin{color:#22e07a;border-color:rgba(34,224,122,.4);backgroun
 .pitch-frame.vertical .pitch-expand{top:8px}
 .pitch-expand svg{width:20px;height:20px}
 .pitch-expand:focus-visible{outline:3px solid #fff;outline-offset:2px}
-html.pitch-view-open{overflow:hidden}
-.pitch-view-dialog{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:var(--bg);color:var(--text)}
-.pitch-view-dialog:fullscreen,.pitch-view-dialog:-webkit-full-screen{width:100%;height:100%;max-width:none;max-height:none}
-.pitch-view-dialog[open]{display:flex;flex-direction:column}
-.pitch-view-dialog::backdrop{background:rgba(0,0,0,.75)}
+html.pitch-view-open,html.pitch-view-open body{overflow:hidden}
+.pitch-view-screen{position:fixed;z-index:1000;inset:0;width:100vw;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--text)}
+.pitch-view-screen[hidden]{display:none}
 .pitch-view-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:none;padding:calc(6px + env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
 .pitch-view-title{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .pitch-view-toolbar .btn{min-width:38px;padding:6px 9px}
@@ -431,7 +429,9 @@ html.pitch-view-open{overflow:hidden}
 .pitch-view-canvas{position:relative;flex:none;margin:auto}
 .pitch-view-content{position:absolute;left:0;top:0;transform-origin:top left}
 .pitch-view-content .player.pop{animation:none!important;opacity:1;transform:none}
+.pitch-view-content.match .field{height:300px}
 .pitch-view-vertical{width:440px;box-sizing:border-box;padding:10px;background:var(--surface);border-radius:12px}
+.pitch-view-vertical .lu-head{padding:4px 8px;margin-bottom:10px}
 .pitch-view-vertical .vpitch{width:100%;max-width:none}
 .pitch-export-dialog{width:min(94vw,850px);max-height:92vh;max-height:92dvh;margin:auto;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text)}
 .pitch-export-dialog::backdrop{background:rgba(0,0,0,.7)}
@@ -443,7 +443,7 @@ html.pitch-view-open{overflow:hidden}
 .pitch-export-message{font-size:12px;color:var(--muted);margin-top:8px}
 @media(max-width:520px),(max-height:520px){.pitch-view-toolbar{padding:calc(5px + env(safe-area-inset-top,0px)) max(5px,env(safe-area-inset-right,0px)) 5px max(5px,env(safe-area-inset-left,0px))}.pitch-view-toolbar .btn{padding:5px 8px;font-size:12px}}
 .mhead{display:flex;overflow:hidden}
-.mh{flex:1;font-weight:800;font-size:13px;padding:9px 14px;letter-spacing:.2px}
+.mh{flex:1;font-weight:800;font-size:13px;padding:11px 20px;letter-spacing:.2px}
 .mh.l{text-align:left}.mh.r{text-align:right}
 .field{position:relative;height:384px;overflow:hidden;border-radius:10px;background:linear-gradient(160deg,#1f8043,#14562d);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 16.66%,rgba(0,0,0,.05) 16.66% 33.33%);box-shadow:inset 0 0 60px rgba(0,0,0,.28);display:flex;align-items:stretch;padding:6px 2px}
 .mk{position:absolute;border:2px solid #ffffff9c}
@@ -466,8 +466,8 @@ html.pitch-view-open{overflow:hidden}
 .player.pop{animation:pop .5s cubic-bezier(.2,.7,.3,1) both}
 @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.82)}to{opacity:1;transform:none}}
 .jersey{filter:drop-shadow(0 2px 3px #0006)}
-.name{color:#fff;font-weight:700;font-size:10px;margin-top:1px;text-align:center;line-height:1.1;text-shadow:0 1px 3px #000b}
-.sub{color:#f4fff7;font-size:8px;margin-top:0;text-shadow:0 1px 3px #000b;opacity:.95}
+.name{color:#fff;font-weight:700;font-size:12px;margin-top:1px;text-align:center;line-height:1.1;text-shadow:0 1px 3px #000b}
+.sub{color:#f4fff7;font-size:10px;margin-top:0;text-shadow:0 1px 3px #000b;opacity:.95}
 .star{color:#ffe14d}
 .benchrow{display:flex}
 .benchcol{flex:1;background:var(--surface);padding:9px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
@@ -1057,11 +1057,12 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
     </div>
   </section>
 </div>
-<dialog id="pitchViewDialog" class="pitch-view-dialog" aria-labelledby="pitchViewTitle">
-  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><button class="btn alt sm pitch-icon" type="button" onclick="closePitchView()" aria-label="Thu nhỏ sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l6 6M10 4v6H4M20 20l-6-6M14 20v-6h6"/></svg><span>Thu nhỏ</span></button><button class="btn alt sm pitch-icon" id="pitchExportButton" type="button" onclick="pitchExport()" aria-label="Lưu hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg><span class="pitch-action-label">Lưu hình</span></button></div>
+<section id="pitchViewScreen" class="pitch-view-screen" role="region" aria-labelledby="pitchViewTitle" hidden>
+  <div class="pitch-view-toolbar"><span class="pitch-view-title" id="pitchViewTitle">Sơ đồ đội hình</span><button class="btn alt sm pitch-icon" type="button" onclick="closePitchView()" aria-label="Thu nhỏ sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l6 6M10 4v6H4M20 20l-6-6M14 20v-6h6"/></svg><span>Thu nhỏ</span></button><button class="btn alt sm pitch-icon" type="button" onclick="pitchViewRotate()" aria-label="Xoay sơ đồ ngang hoặc dọc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-5L3 9m0-5v5h5M4 13a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/></svg><span>Xoay</span></button><button class="btn alt sm pitch-icon" id="pitchExportButton" type="button" onclick="pitchExport()" aria-label="Lưu hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg><span class="pitch-action-label">Lưu hình</span></button></div>
   <div id="pitchExportStatus" class="pitch-view-hint" role="status" aria-live="polite" hidden></div>
+  <div id="pitchViewScrollHint" class="pitch-view-hint" hidden>Kéo ngang để xem hết sân</div>
   <div class="pitch-view-viewport" id="pitchViewViewport" tabindex="0" aria-label="Sơ đồ đội hình, có thể cuộn"><div class="pitch-view-canvas" id="pitchViewCanvas"></div></div>
-</dialog>
+</section>
 <dialog id="pitchExportDialog" class="pitch-export-dialog" aria-labelledby="pitchExportTitle">
   <div class="pitch-export-head"><strong id="pitchExportTitle">Ảnh đội hình</strong><button class="btn alt sm" type="button" onclick="closePitchExport()" aria-label="Đóng ảnh đội hình">×</button></div>
   <img id="pitchExportPreview" class="pitch-export-preview" alt="Ảnh sơ đồ đội hình">
@@ -2567,7 +2568,7 @@ window.addEventListener("resize",fitMatch);
 
 // Full-screen view is a read-only clone: opening or zooming never changes the match.
 const PITCH_DATA=new WeakMap();
-const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null,orientation:'horizontal',autoFit:true};
+const PITCH_VIEW={node:null,width:0,height:0,zoom:1,data:null,orientation:'horizontal',autoFit:true,deviceOrientation:null,returnFocus:null};
 function pitchExpandButton(kind){return `<button class="pitch-expand" type="button" onclick="event.stopPropagation();openPitchView(this,'${kind}')" aria-label="Phóng to sơ đồ đội hình" title="Phóng to sơ đồ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>`;}
 function pitchViewPreferred(fallback){return window.innerWidth&&window.innerHeight?(window.innerHeight>=window.innerWidth?'vertical':'horizontal'):fallback;}
 function pitchViewVerticalContent({res,sel}){
@@ -2576,18 +2577,13 @@ function pitchViewVerticalContent({res,sel}){
   return content;
 }
 function openPitchView(button,kind){
-  const dialog=$("pitchViewDialog"),data=PITCH_DATA.get(button);if(dialog.open||!data)return;
-  PITCH_VIEW.data=data;
-  if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+  const screen=$("pitchViewScreen"),data=PITCH_DATA.get(button);if(!screen.hidden||!data)return;
+  PITCH_VIEW.data=data;PITCH_VIEW.returnFocus=button;PITCH_VIEW.deviceOrientation=pitchViewPreferred(kind);
+  $('pitchExportStatus').hidden=true;screen.hidden=false;
   document.documentElement.classList.add("pitch-view-open");
-  pitchViewOrientation(pitchViewPreferred(kind));
-  // iPhone Safari has no element fullscreen API; the fixed dialog remains a
-  // viewport-filling fallback. Never take over a pre-existing fullscreen view.
-  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
-    const request=dialog.requestFullscreen||dialog.webkitRequestFullscreen;
-    if(request)try{Promise.resolve(request.call(dialog)).then(()=>{if(!dialog.open)pitchViewExitFullscreen();}).catch(()=>{});}catch(e){}
-  }
+  pitchViewOrientation(PITCH_VIEW.deviceOrientation);
 }
+function pitchViewRotate(){pitchViewOrientation(PITCH_VIEW.orientation==='horizontal'?'vertical':'horizontal');}
 function pitchViewOrientation(kind){
   if(!PITCH_VIEW.data||PITCH_EXPORT.busy)return;
   PITCH_VIEW.orientation=kind;
@@ -2618,7 +2614,7 @@ function pitchViewSetZoom(value,keepCenter=true){
   const canvas=$("pitchViewCanvas");canvas.style.width=(PITCH_VIEW.width*zoom)+"px";canvas.style.height=(PITCH_VIEW.height*zoom)+"px";PITCH_VIEW.node.style.transform=`scale(${zoom})`;
   if(keepCenter){viewport.scrollLeft=x*zoom-viewport.clientWidth/2;viewport.scrollTop=y*zoom-viewport.clientHeight/2;}
 }
-function pitchViewFit(){const viewport=$("pitchViewViewport");PITCH_VIEW.autoFit=true;pitchViewSetZoom(Math.min((viewport.clientWidth-8)/PITCH_VIEW.width,(viewport.clientHeight-8)/PITCH_VIEW.height),false);viewport.scrollLeft=0;viewport.scrollTop=0;}
+function pitchViewFit(){const viewport=$("pitchViewViewport"),portrait=window.innerHeight>window.innerWidth;let scale=Math.min((viewport.clientWidth-8)/PITCH_VIEW.width,(viewport.clientHeight-8)/PITCH_VIEW.height);if(portrait&&PITCH_VIEW.orientation==='horizontal')scale=Math.max(scale,.8);PITCH_VIEW.autoFit=true;pitchViewSetZoom(scale,false);$('pitchViewScrollHint').hidden=!(PITCH_VIEW.orientation==='horizontal'&&PITCH_VIEW.width*PITCH_VIEW.zoom>viewport.clientWidth);viewport.scrollLeft=0;viewport.scrollTop=0;}
 const PITCH_EXPORT={url:null,file:null,busy:false};
 // Draw an opaque PNG locally. This avoids screenshotting DOM/SVG inside a
 // cloned dialog, which can produce black images in iOS Safari.
@@ -2711,12 +2707,8 @@ async function pitchShareImage(){
 function pitchExportCleanup(){if(PITCH_EXPORT.url)URL.revokeObjectURL(PITCH_EXPORT.url);PITCH_EXPORT.url=null;PITCH_EXPORT.file=null;$('pitchExportPreview').removeAttribute('src');$('pitchDownload').removeAttribute('href');}
 function closePitchExport(){const d=$('pitchExportDialog');if(d.open&&typeof d.close==='function')d.close();else{d.removeAttribute('open');pitchExportCleanup();}}
 $('pitchExportDialog').addEventListener('close',pitchExportCleanup);
-function pitchViewExitFullscreen(){const dialog=$('pitchViewDialog');if(document.fullscreenElement!==dialog&&document.webkitFullscreenElement!==dialog)return;const exit=document.exitFullscreen||document.webkitExitFullscreen;if(exit)try{Promise.resolve(exit.call(document)).catch(()=>{});}catch(e){}}
-function pitchViewCleanup(){pitchViewExitFullscreen();document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;PITCH_VIEW.data=null;}
-function closePitchView(){if(PITCH_EXPORT.busy)return;const dialog=$("pitchViewDialog");if(dialog.open&&typeof dialog.close==='function')dialog.close();else{dialog.removeAttribute('open');pitchViewCleanup();}}
-$("pitchViewDialog").addEventListener("close",pitchViewCleanup);
-$("pitchViewDialog").addEventListener("cancel",e=>{if(PITCH_EXPORT.busy)e.preventDefault();});
-window.addEventListener("resize",()=>{if($("pitchViewDialog").open&&PITCH_VIEW.node){const preferred=pitchViewPreferred(PITCH_VIEW.orientation);if(preferred!==PITCH_VIEW.orientation&&!PITCH_EXPORT.busy)pitchViewOrientation(preferred);else{pitchViewSizeVertical();PITCH_VIEW.width=PITCH_VIEW.node.offsetWidth;PITCH_VIEW.height=PITCH_VIEW.node.offsetHeight;pitchViewFit();}}});
+function closePitchView(){if(PITCH_EXPORT.busy)return;const button=PITCH_VIEW.returnFocus;$("pitchViewScreen").hidden=true;document.documentElement.classList.remove("pitch-view-open");$("pitchViewCanvas").replaceChildren();PITCH_VIEW.node=null;PITCH_VIEW.data=null;PITCH_VIEW.returnFocus=null;if(button?.isConnected)try{button.focus({preventScroll:true});}catch(e){button.focus();}}
+window.addEventListener("resize",()=>{if(!$("pitchViewScreen").hidden&&PITCH_VIEW.node){const preferred=pitchViewPreferred(PITCH_VIEW.orientation);if(preferred!==PITCH_VIEW.deviceOrientation&&!PITCH_EXPORT.busy){PITCH_VIEW.deviceOrientation=preferred;pitchViewOrientation(preferred);}else{pitchViewSizeVertical();PITCH_VIEW.width=PITCH_VIEW.node.offsetWidth;PITCH_VIEW.height=PITCH_VIEW.node.offsetHeight;pitchViewFit();}}});
 
 // ============ TAO DOI ============
 let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
