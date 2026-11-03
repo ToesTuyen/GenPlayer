@@ -2984,7 +2984,7 @@ function statsPanel(name){
         <div class="ps-wld"><span class="w">${st.w} T</span><span class="d">${st.d} H</span><span class="l">${st.l} B</span></div></div>
       <div class="ps-row"><span>Tỉ lệ thắng</span><b>${st.winRate}%</b></div>
       <div class="ps-row"><span>⚽ Bàn thắng</span><b>${g.total}${g.matches?` <span class="ps-sub">(${g.matches} trận)</span>`:""}</b></div>
-      <div class="ps-row"><span>Phong độ gần đây</span><span class="ps-form">${st.form.map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join("")}</span></div>
+      <div class="ps-row"><span>Phong độ gần đây</span><span class="ps-form" title="Trận gần nhất ở bên phải">${st.form.slice().reverse().map(f=>`<span class="fc ${FCHIP[f][1]}">${FCHIP[f][0]}</span>`).join("")}</span></div>
     </div>`;
 }
 // ---- bảng xếp hạng (BXH) ----

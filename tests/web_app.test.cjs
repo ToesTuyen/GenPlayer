@@ -138,6 +138,15 @@ test('form counts five team matches, absences, oldest-first results and real str
   const f=C.form(players[0].n,h);assert.equal(f.recent.played,4);assert.equal(f.recent.absent,1);assert.equal(f.goalsRecorded,8);assert.equal(f.winStreak,4);assert.equal(f.recent.resultsOldestFirst.at(-1),null);
   h[1].score={a:1,b:3};assert.equal(C.form(players[0].n,h).lossStreak,1);
 });
+test('player profile shows oldest-to-newest form without changing streak calculation',()=>{
+  const src=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8'),start=src.indexOf('function teamOfIdx(r,idx){'),end=src.indexOf('// ---- bảng xếp hạng',start);
+  const scores=[[0,1],[1,1],[2,0],[3,0],[4,0]],history=scores.map(([a,b],i)=>({id:10-i,score:{a,b},subset:[{n:'Doan Ha'},{n:'Khác'}],result:{evA:{starters:[0],bench:[]},evB:{starters:[1],bench:[]}}}));
+  const ctx={getHistory:()=>history,playerGoals:()=>({total:0,matches:0}),GPIcons:{render:()=>''}};vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
+  const stats=ctx.playerStats('Doan Ha');assert.deepEqual([...stats.form],['L','D','W','W','W']);assert.equal(stats.lossStreak,1);
+  const panel=ctx.statsPanel('Doan Ha'),form=panel.match(/<span class="ps-form"[^>]*>(.*?)<\/span><\/div>/)?.[1];
+  assert.ok(form);assert.deepEqual([...form.matchAll(/<span class="fc [^"]+">([THB])<\/span>/g)].map(m=>m[1]),['T','T','T','H','B']);
+  assert.deepEqual([...ctx.playerStats('Doan Ha').form],['L','D','W','W','W'],'Display must not reverse the underlying form');
+});
 test('target match never counted in its own pre-match form',()=>{
   const c=context();c.match=c.history[0];const p=prepare({task:'match-review',context:c});const d=JSON.parse(p.messages[1].content);assert.equal(d.players[0].form.played,4);
 });
