@@ -15,6 +15,18 @@ test('saved-match AI edits preserve membership, remove absent players and add on
   assert.throws(()=>S.validateOutput(JSON.stringify(removal),make('Đổi Flow 1 và Flow 8')),/chưa nêu rõ tên/);
   const duplicate=swap();duplicate.A.starters[0]='p8';assert.throws(()=>S.validateOutput(JSON.stringify(duplicate),q),/trùng cầu thủ/);
 });
+test('Hưng can leave and the existing reserve can replace him without confusing Duy Hùng',()=>{
+  const all=players();all[8].n='Hưng';all[11].n='Duy Hùng';all[15].n='B quyền';
+  const prepare=instruction=>S.prepare({task:'match-lineup-edit',context:{players:all,rosterNames:all.slice(0,16).map(p=>p.n),history:[],instruction,editTeams:teams()}});
+  const proposal={status:'ready',message:'Hưng nghỉ, B quyền vào thay.',A:{starters:['p0','p1','p2','p3','p4','p5','p6'],bench:['p14']},B:{starters:['p7','p15','p9','p10','p11','p12','p13'],bench:[]}};
+  const out=S.validateOutput(JSON.stringify(proposal),prepare('Hưng nghỉ, thay dự bị vào'));
+  assert.ok(!out.subset.some(p=>p.n==='Hưng'));assert.ok(out.subset.some(p=>p.n==='Duy Hùng'));assert.equal(out.subset[out.teams.B.starters[1]].n,'B quyền');
+  assert.throws(()=>S.validateOutput(JSON.stringify(proposal),prepare('Duy Hùng nghỉ, thay dự bị vào')),/Hưng.*chưa nêu rõ tên/);
+  assert.throws(()=>S.validateOutput(JSON.stringify(proposal),prepare('Hùng nghỉ, thay dự bị vào')),/Hưng.*chưa nêu rõ tên/);
+  assert.throws(()=>S.validateOutput(JSON.stringify(proposal),prepare('Hung nghi, thay du bi vao')),/Hưng.*chưa nêu rõ tên/,'Ambiguous unaccented name must not silently choose');
+  const both=structuredClone(proposal);both.B.starters[4]='p14';both.A.bench=[];
+  assert.doesNotThrow(()=>S.validateOutput(JSON.stringify(both),prepare('Hưng và Duy Hùng nghỉ, thay dự bị vào')));
+});
 function fixture(){
   const p=players(),t=teams(),result=C.lineup(p.slice(0,16),t,{manualEdit:true}).result;
   let doc={history:[{id:123,kickoff:1000,subset:structuredClone(p.slice(0,16)),result,n:16,score:{a:3,b:2},goals:{'Flow 2':1},review:'<p>Old review</p>',venue:'Old venue'},{id:456,score:{a:1,b:0},other:'untouched'}]};

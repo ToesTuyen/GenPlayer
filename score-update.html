@@ -3651,7 +3651,7 @@ function prepare(body,now=Date.now()){
     c.editTeams=teams;c.originalNames=c.rosterNames.slice();c.lineupTime=now;
     data.players=c.players.map((p,i)=>({id:'p'+i,n:p.n,pos:p.pos,pos2:p.pos2,guest:p.guest,inMatch:original.includes(i)}));
     data.teams=Object.fromEntries(['A','B'].map(side=>[side,{starters:teams[side].starters.map((i,k)=>({id:'p'+i,name:c.players[i].n,slot:C.SLOTS[k]})),bench:teams[side].bench.map(i=>({id:'p'+i,name:c.players[i].n}))}]));
-    data.rules='Chỉ thay đổi theo yêu cầu; không tự chia lại. Người nghỉ bị loại hẳn khỏi hai đội; nếu nghỉ ở đội hình chính phải thay bằng người được chỉ định hoặc dự bị phù hợp. Chỉ thêm người ngoài trận khi yêu cầu gọi rõ tên. Mỗi đội đủ 7 đá chính, đúng thứ tự GK, Thòng, HV, HV, TVtt, TV, TĐ. Nếu không đủ người, không rõ tên hoặc không thể thực hiện thì trả clarify và giữ nguyên đội hình. Dự bị có thể lệch số lượng. Không dùng mã nội bộ trong lời giải thích.';
+    data.rules='Chỉ thay đổi theo yêu cầu; không tự chia lại. Người nghỉ bị loại hẳn khỏi hai đội; nếu nghỉ ở đội hình chính phải thay bằng người được chỉ định hoặc dự bị phù hợp cùng đội. Nếu yêu cầu thay dự bị và đội đó chỉ có một dự bị, đưa người đó vào, nêu rõ tên và giữ nguyên những người khác. Chỉ thêm người ngoài trận khi yêu cầu gọi rõ tên. Tên có dấu khác nhau là người khác nhau: Hưng không phải Duy Hùng; chỉ hỏi lại khi tên thực sự mơ hồ. Mỗi đội đủ 7 đá chính, đúng thứ tự GK, Thòng, HV, HV, TVtt, TV, TĐ. Nếu không đủ người, không rõ tên hoặc không thể thực hiện thì trả clarify và giữ nguyên đội hình. Dự bị có thể lệch số lượng. Không dùng mã nội bộ trong lời giải thích.';
   }else if(task==='lineup-edit'){
     if(c.rosterNames.length<14||!c.instruction)throw new AppError(400,'Cần đội hình và yêu cầu sửa cụ thể.');
     c.editBaseInstruction=typeof body.context.editBaseInstruction==='string'?body.context.editBaseInstruction.slice(0,2000):'';
@@ -3699,6 +3699,28 @@ function proposalMetadata(out){
   const id=(v,re)=>typeof v==='string'&&re.test(v)?v:'[invalid id]';
   return {candidateId:id(out.candidateId,/^c\d{1,2}$/),flipTeams:typeof out.flipTeams==='boolean'?out.flipTeams:null,swaps:Array.isArray(out.swaps)?out.swaps.slice(0,24).map(s=>({first:id(s?.first,/^p\d{1,2}$/),second:id(s?.second,/^p\d{1,2}$/)})):null};
 }
+// Resolve exact Vietnamese spelling before accent-insensitive aliases. Longer
+// overlapping names take precedence; genuinely ambiguous short names are not
+// accepted as authorization to remove or add a player.
+function matchEditMentionedPlayers(pool,instruction){
+  const normal=s=>s.normalize('NFC').toLocaleLowerCase('vi').replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
+  const fold=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+  const note=normal(instruction),plain=fold(note),groups=new Map();
+  const collect=(text,alias,index,strict)=>{
+    if(alias.length<2)return;
+    const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),re=new RegExp('(?:^| )'+escaped+'(?= |$)','gu');
+    for(const m of text.matchAll(re)){const start=m.index+(m[0][0]===' '?1:0),end=start+alias.length,key=start+':'+end;
+      if(!groups.has(key))groups.set(key,{start,end,candidates:[]});groups.get(key).candidates.push({index,strict});}
+  };
+  pool.forEach((p,index)=>{const words=normal(p.n).split(' ');for(let k=0;k<words.length;k++){const alias=words.slice(k).join(' ');collect(note,alias,index,true);collect(plain,fold(alias),index,false);}});
+  const result=new Set(),occupied=[];
+  for(const group of [...groups.values()].sort((a,b)=>(b.end-b.start)-(a.end-a.start)||a.start-b.start)){
+    if(occupied.some(x=>group.start<x.end&&group.end>x.start))continue;
+    const strict=group.candidates.filter(c=>c.strict),indices=new Set((strict.length?strict:group.candidates).map(c=>c.index));
+    if(indices.size===1){result.add(indices.values().next().value);occupied.push(group);}
+  }
+  return result;
+}
 function validateOutput(raw,prepared){
   let out;try{out=JSON.parse(raw);}catch{throw new AppError(502,'Model không trả JSON hợp lệ. Chưa áp dụng thay đổi nào.','output');}
   if(prepared.task==='match-lineup-edit'){
@@ -3710,10 +3732,9 @@ function validateOutput(raw,prepared){
       globalTeams[side]={};for(const key of ['starters','bench'])globalTeams[side][key]=t[key].map(id=>{if(typeof id!=='string'||!/^p(?:0|[1-9]\d*)$/.test(id)||+id.slice(1)>=pool.length)throw new AppError(502,'AI chọn cầu thủ không có trong danh sách.','output');const i=+id.slice(1);used.push(i);return i;});
     }
     if(used.length<14||used.length>24||new Set(used).size!==used.length)throw new AppError(502,'Đội hình thiếu người, thừa người hoặc trùng cầu thủ. Chưa áp dụng thay đổi nào.','output');
-    const normal=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(),names=pool.map(p=>normal(p.n)),note=' '+normal(prepared.context.instruction)+' ';
-    const mentioned=i=>names[i].split(' ').some((_,k)=>{const alias=names[i].split(' ').slice(k).join(' ');return alias.length>=2&&names.filter(n=>n===alias||n.endsWith(' '+alias)).length===1&&note.includes(' '+alias+' ');});
+    const mentioned=matchEditMentionedPlayers(pool,prepared.context.instruction);
     const before=new Set(prepared.context.originalNames),after=new Set(used.map(i=>pool[i].n));
-    for(let i=0;i<pool.length;i++)if(before.has(pool[i].n)!==after.has(pool[i].n)&&!mentioned(i))throw new AppError(502,'AI đề xuất thêm hoặc bỏ '+pool[i].n+' nhưng yêu cầu chưa nêu rõ tên. Hãy ghi rõ và thử lại.','output');
+    for(let i=0;i<pool.length;i++)if(before.has(pool[i].n)!==after.has(pool[i].n)&&!mentioned.has(i))throw new AppError(502,'AI đề xuất thêm hoặc bỏ '+pool[i].n+' nhưng yêu cầu chưa nêu rõ tên. Hãy ghi rõ và thử lại.','output');
     const remap=new Map(used.map((i,k)=>[i,k])),players=used.map(i=>pool[i]),teams=Object.fromEntries(['A','B'].map(s=>[s,{starters:globalTeams[s].starters.map(i=>remap.get(i)),bench:globalTeams[s].bench.map(i=>remap.get(i))}]));
     try{const checked=C.lineup(players,teams,{instruction:prepared.context.instruction,history:prepared.context.history,now:prepared.context.lineupTime,manualEdit:true,allowUnevenBench:true});return {status:'ready',message:out.message,teams,subset:players,result:checked.result,warnings:[...new Set(checked.warnings)]};}catch(e){throw new AppError(502,e.message+' Chưa áp dụng thay đổi nào.','lineup');}
   }
