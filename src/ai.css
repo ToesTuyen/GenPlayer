@@ -112,7 +112,7 @@
 @media(prefers-reduced-motion:reduce){.process-steps [data-state="active"] .process-step-icon{animation:none}}
 @media(max-width:600px){.roster-select-all{min-height:44px}.create-process{padding:14px}.process-head h2{font-size:17px}.create-log-card{padding:8px}.create-log-teams{gap:6px}.create-log-team{padding:6px}.create-log-player{display:block}.create-log-player span{display:block}.create-log-player span:last-child{margin-top:1px}.create-log-actions .btn{flex:1;min-width:0;padding-inline:7px}}
 #createAI[hidden],#createAI [hidden],#aiMessage[hidden],#mm-review-info[hidden],#mm-review-status[hidden],#aiKeyDialog [hidden],#aiOutput[hidden],#aiOutput [hidden],#createBuildTab[data-create-step="roster"] #aiOutput,#createBuildTab[data-create-step="rules"] #aiOutput[data-draft-output="true"]{display:none!important}
-#lineupEditDialog [hidden]{display:none!important}
+#lineupEditDialog [hidden],#matchLineupEditDialog [hidden]{display:none!important}
 .lineup-edit-dialog textarea{min-height:86px}
 .lineup-edit-preview{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:12px;line-height:1.55}
 .lineup-edit-preview strong{display:block;color:var(--text)}

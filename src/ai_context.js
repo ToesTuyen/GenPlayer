@@ -323,7 +323,7 @@
       for(const i of [...t.starters,...t.bench]){if(!Number.isInteger(i)||i<0||i>=players.length)fail('AI trả về cầu thủ ngoài danh sách.');used.push(i);}
     }
     if(used.length!==players.length||new Set(used).size!==players.length)fail('AI bỏ sót hoặc xếp trùng cầu thủ.');
-    if(Math.abs(teams.A.bench.length-teams.B.bench.length)>1)fail('Số dự bị hai đội chênh lệch quá nhiều.');
+    if(Math.abs(teams.A.bench.length-teams.B.bench.length)>1&&!options.allowUnevenBench)fail('Số dự bị hai đội chênh lệch quá nhiều.');
     if(options.manualEdit)return; // Explicit user edits still enforce structure; other conflicts are reported as warnings.
     const roles=lineupRoles(players,options.instruction),forcedBench=new Set(roles.benchOverrides||[]),forcedStart=new Set((roles.overrides||[]).map(x=>x.index)),starters=[...teams.A.starters,...teams.B.starters];
     if(starters.some(i=>forcedBench.has(i)))fail(`${players[starters.find(i=>forcedBench.has(i))].n}: Note hiện tại yêu cầu dự bị.`);

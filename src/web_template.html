@@ -1080,6 +1080,15 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
   <div id="lineupEditPreview" class="lineup-edit-preview" aria-live="polite" hidden></div>
   <div class="ai-actions lineup-edit-actions"><button class="btn alt" type="button" onclick="createCloseEdit()">Hủy</button><button class="btn alt" type="button" id="lineupEditRun" onclick="createRunEdit()">Xem thay đổi</button><button class="btn" type="button" id="lineupEditApply" onclick="createApplyEdit()" hidden>Áp dụng</button></div>
 </dialog>
+<dialog id="matchLineupEditDialog" class="ai-key-dialog lineup-edit-dialog" aria-labelledby="matchLineupEditTitle">
+  <div class="ai-key-head"><h2 id="matchLineupEditTitle">Sửa đội hình trận</h2><button class="btn alt sm" type="button" onclick="matchLineupClose()" aria-label="Đóng">×</button></div>
+  <p id="matchLineupSource" class="ai-footer"></p>
+  <label class="ai-field" for="matchLineupInstruction">Yêu cầu sửa<textarea id="matchLineupInstruction" rows="3" maxlength="1000" placeholder="Ví dụ: Quyết nghỉ, cho Mạnh Khắc thay; đổi Tuyên và Dũng…" oninput="matchLineupChanged()"></textarea></label>
+  <p class="ai-footer">AI chỉ đề xuất; bạn xem trước rồi xác nhận. Có thể phát sinh phí OpenRouter.</p>
+  <div id="matchLineupStatus" class="ai-message" role="status" aria-live="polite" hidden></div>
+  <div id="matchLineupPreview" class="lineup-edit-preview" aria-live="polite" hidden></div>
+  <div class="ai-actions lineup-edit-actions"><button class="btn alt" type="button" onclick="matchLineupClose()">Hủy</button><button class="btn alt" type="button" id="matchLineupRun" onclick="matchLineupRun()">Xem thay đổi</button><button class="btn" type="button" id="matchLineupApply" onclick="matchLineupApply()" hidden>Lưu thay đổi</button></div>
+</dialog>
 <dialog id="aiKeyDialog" class="ai-key-dialog" aria-labelledby="aiKeyTitle" aria-describedby="aiKeyIntro">
   <div class="ai-key-head"><h2 id="aiKeyTitle">Kết nối OpenRouter</h2><button class="btn alt sm" type="button" onclick="aiSkipKeyDialog()" aria-label="Đóng cửa sổ nhập key">×</button></div>
   <p id="aiKeyIntro" class="ai-footer">Dùng key riêng cho AI. Bỏ qua để dùng thuật toán.</p>
@@ -2053,6 +2062,7 @@ const MLOG_ACT={
   archive: {ic:GPIcons.render("backup"), lb:"Chuyển vào backup",  cls:"ml-arch"},
   delete:  {ic:GPIcons.render("trash"), lb:"Xoá trận",            cls:"ml-del"},
   edittime:{ic:GPIcons.render("clock"), lb:"Sửa giờ/sân",         cls:"ml-edit"},
+  lineup_edit:{ic:GPIcons.render("lineup"), lb:"Sửa đội hình", cls:"ml-edit"},
   score:   {ic:GPIcons.render("match-score"), lb:"Nhập tỉ số",    cls:"ml-score"},
   goal_save:{ic:GPIcons.render("goal-record"), lb:"Lưu bàn thắng",cls:"ml-goal"},
   goal_approve:{ic:GPIcons.render("check-circle"), lb:"Duyệt bàn thắng",cls:"ml-goal"},
@@ -2534,7 +2544,7 @@ function render(res,sel,target,review,showHeat,matchId){
   }
   const predBlock=hasRev?"":`<div class="pred">🔮 <b>Dự đoán:</b> ${pred}</div>`;
   const narrative=hasRev
-    ? `<div class="ai-review">${review}</div>`
+    ? `${matchId!=null&&getHistory().find(r=>String(r.id)===String(matchId))?.reviewStale?'<p class="ai-message error">Đội hình đã thay đổi; nhận định bên dưới là bản cũ và cần cập nhật.</p>':''}<div class="ai-review">${review}</div>`
     : `<div class="persuade">${intro}</div><div class="cards">${card(A,B,CAtxt,"Team A",A,sel)}${card(B,A,CBtxt,"Team B",B,sel)}</div>`;
   // 📊 bảng chỉ số: tô đậm ô đội THẮNG từng mục (higher=tốt hơn cho mọi chỉ số) + cột Ưu thế + kết luận bên nào hơn
   let _aW=0,_bW=0,_tie=0;
@@ -4038,6 +4048,8 @@ function mountHistoryActions(list){
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(goals);
     if(canEdit){
+      const lineup=document.createElement("button");lineup.className="btn alt sm";lineup.textContent="✏️ Sửa đội hình";
+      lineup.onclick=e=>{e.stopPropagation();matchLineupOpen(r.id);};bar.append(lineup);
       const edit=document.createElement("button"); edit.className="btn alt sm"; edit.textContent="📋 Sửa trận";
       edit.onclick=e=>{e.stopPropagation();openMatchModal("edit",r.id);};
       const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};
@@ -4138,6 +4150,7 @@ function delHistory(id){
 
 /*__AI_CLIENT__*/
 /*__CREATE_FLOW__*/
+/*__MATCH_LINEUP_EDIT__*/
 localLoad(); initCloud(); setCloudBadge(); applyThemeUI(); applyRoleUI(); aiInit(); show("home");
 GPUIIcons.mount(document.body);
 if("serviceWorker" in navigator&&!window.GP_APP_CONFIG?.dataMode) addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=genplayer-v15",{updateViaCache:"none"})); // public static app only; local preview must stay fresh

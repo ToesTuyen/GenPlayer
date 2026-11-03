@@ -192,7 +192,7 @@ async function aiSaveReview(){
       const snap=await tx.get(STATE.docRef),history=snap.data()?.history;if(!Array.isArray(history))throw new Error('Không đọc được lịch sử.');
       const r=history.find(m=>String(m.id)===String(request.matchId));if(!r)throw new Error('Trận đã bị xóa.');
       if(aiMatchFingerprint(GPAIContext.compactLegacy(r),r.subset)!==request.matchSnapshot)throw new Error('Đội hình/kết quả đã thay đổi. Hãy tạo nhận định mới để không lưu bản cũ.');
-      r.review=aiReviewHTML(output);r.aiReview={model:output.model,createdAt:output.createdAt};tx.update(STATE.docRef,{history});
+      r.review=aiReviewHTML(output);r.aiReview={model:output.model,createdAt:output.createdAt};delete r.reviewStale;tx.update(STATE.docRef,{history});
     });aiMessage('Đã lưu nhận định.');
   }catch(e){aiMessage(e.message,true);}
 }
