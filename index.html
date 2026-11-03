@@ -7274,6 +7274,14 @@ function matchLineupTeams(record){
   if(!Array.isArray(record.subset)||!record.result?.evA||!record.result?.evB)throw new Error('Trận này không có đủ dữ liệu đội hình.');
   return Object.fromEntries(['A','B'].map(side=>[side,{starters:record.result['ev'+side].starters.slice(),bench:record.result['ev'+side].bench.slice()}]));
 }
+// Object field order is not meaningful in Firestore. Compare only the data
+// the proposed edit relies on; other fields are kept from the transaction's
+// fresh record and must not generate a false conflict.
+function matchLineupFingerprint(record){
+  const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(k=>value[k]!==undefined).map(k=>[k,canonical(value[k])])):value;
+  const teams=matchLineupTeams(record);
+  return JSON.stringify(canonical({subset:record.subset,teams,score:record.score||null,goals:record.goals||{},goalsLocked:!!record.goalsLocked,goalsFinalized:!!record.goalsFinalized}));
+}
 function matchLineupOpen(id){
   try{
     const record=getHistory().find(r=>String(r.id)===String(id));if(!record)throw new Error('Không tìm thấy trận.');
@@ -7281,7 +7289,7 @@ function matchLineupOpen(id){
     GPAIContext.validateLineupRoster(players,teams,{manualEdit:true,allowUnevenBench:true});
     const pool=record.subset.slice(),names=new Set(pool.map(p=>p.n));
     for(const p of getPlayers())if(!names.has(p.n)){pool.push(p);names.add(p.n);}
-    MATCH_LINEUP_EDIT={id:record.id,fingerprint:JSON.stringify(record),record:structuredClone(record),players,pool:pool.map(GPAIContext.player),rawPool:pool,teams,proposal:null,busy:false};
+    MATCH_LINEUP_EDIT={id:record.id,fingerprint:matchLineupFingerprint(record),record:structuredClone(record),players,pool:pool.map(GPAIContext.player),rawPool:pool,teams,proposal:null,busy:false};
     $('matchLineupSource').textContent=(fmtKick(record.kickoff)||record.label||'Trận đấu')+(record.score?' · Trận đã có tỉ số: thay đổi sẽ ảnh hưởng thống kê cầu thủ.':'')+' · Chỉ cập nhật trận này.';
     $('matchLineupInstruction').value='';$('matchLineupStatus').hidden=true;$('matchLineupPreview').hidden=true;$('matchLineupApply').hidden=true;$('matchLineupRun').disabled=false;
     $('matchLineupEditDialog').showModal();
@@ -7331,7 +7339,7 @@ async function matchLineupApply(){
     await firebase.firestore().runTransaction(async tx=>{
       const snap=await tx.get(STATE.docRef),history=snap.data()?.history;if(!Array.isArray(history))throw new Error('Không đọc được lịch sử trên cloud.');
       const index=history.findIndex(r=>String(r.id)===String(edit.id));if(index<0)throw new Error('Trận đã bị xóa.');
-      const current=history[index];if(JSON.stringify(current)!==edit.fingerprint)throw new Error('Trận đã thay đổi ở thiết bị khác. Hãy mở lại và thực hiện lại.');
+      const current=history[index];if(matchLineupFingerprint(current)!==edit.fingerprint)throw new Error('Đội hình, tỉ số hoặc bàn thắng đã thay đổi kể từ khi mở. Hãy mở lại để kiểm tra trước khi sửa.');
       matchLineupCheckGoals(current,subset,out.teams);
       history[index]={...current,subset,result:checked.result,n:subset.length,...(current.review?{reviewStale:true}:{})};
       tx.update(STATE.docRef,{history});

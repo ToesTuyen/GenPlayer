@@ -49,7 +49,17 @@ test('saved-match AI editing requires the local key before making a request or a
   const x=fixture(),before=x.getDoc();let prompts=0,calls=0;x.ctx.canEdit=false;x.ctx.AI_KEYS.has=()=>false;x.ctx.aiOpenKeyDialog=()=>{prompts++;};x.ctx.aiFetch=async()=>{calls++;};
   x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();assert.equal(prompts,1);assert.equal(calls,0);assert.deepEqual(x.getDoc(),before);
 });
-test('saved-match edits reject changes to goalscorer side and concurrent updates',async()=>{
-  const x=fixture();x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();const changed=x.getDoc();changed.history[0].venue='Changed elsewhere';x.setDoc(changed);await x.ctx.matchLineupApply();assert.equal(x.getDoc().history[0].venue,'Changed elsewhere');assert.match(x.el('matchLineupStatus').textContent,/thiết bị khác/);assert.equal(x.logs.length,0);
+test('saved-match edits ignore field ordering and preserve unrelated concurrent changes',async()=>{
+  const x=fixture();x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();const changed=x.getDoc();
+  const reorder=v=>Array.isArray(v)?v.map(reorder):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,x])=>[k,reorder(x)])):v;
+  changed.history[0]=reorder(changed.history[0]);changed.history[0].venue='Changed elsewhere';changed.history[0].review='<p>New review</p>';changed.history[1].other='also changed';x.setDoc(changed);
+  await x.ctx.matchLineupApply();const after=x.getDoc();assert.equal(after.history[0].venue,'Changed elsewhere');assert.equal(after.history[0].review,'<p>New review</p>');assert.equal(after.history[0].reviewStale,true);assert.equal(after.history[1].other,'also changed');assert.equal(after.history[0].subset[after.history[0].result.evA.starters[1]].n,'Flow 8');assert.equal(x.logs.length,1);
+});
+test('saved-match edits reject actual lineup, score, goals and goal-lock changes',async()=>{
+  for(const change of [r=>{r.result.evA.starters[1]=3;},r=>{r.score.a=4;},r=>{r.goals['Flow 2']=2;},r=>{r.goalsLocked=true;},r=>{r.subset[1].KT=9; }]){
+    const x=fixture();x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();const changed=x.getDoc();change(changed.history[0]);x.setDoc(changed);await x.ctx.matchLineupApply();assert.deepEqual(x.getDoc(),changed);assert.match(x.el('matchLineupStatus').textContent,/đã thay đổi kể từ khi mở/);assert.equal(x.logs.length,0);
+  }
+});
+test('saved-match edits reject changes to goalscorer side',async()=>{
   const y=fixture(),d=y.getDoc();d.history[0].goals={'Flow 1':1};y.setDoc(d);y.ctx.matchLineupOpen(123);y.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await y.ctx.matchLineupRun();assert.match(y.el('matchLineupStatus').textContent,/đã có bàn thắng/);assert.equal(y.el('matchLineupApply').hidden,true);assert.deepEqual(y.getDoc(),d);
 });
