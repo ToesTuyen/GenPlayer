@@ -29,9 +29,13 @@ function fixture(){
   return {ctx,el,logs,getDoc:()=>structuredClone(doc),setDoc:v=>{doc=v;}};
 }
 test('saved-match edit previews without writing then atomically changes only target lineup',async()=>{
-  const x=fixture(),before=x.getDoc();x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();
+  const x=fixture(),before=x.getDoc();x.ctx.canEdit=false;x.ctx.matchLineupOpen(123);assert.equal(x.el('matchLineupEditDialog').open,true,'No login is required');x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();
   assert.deepEqual(x.getDoc(),before);assert.equal(x.el('matchLineupApply').hidden,false);
   await x.ctx.matchLineupApply();const after=x.getDoc();assert.deepEqual(after.history[1],before.history[1]);assert.deepEqual(after.history[0].score,before.history[0].score);assert.deepEqual(after.history[0].goals,before.history[0].goals);assert.equal(after.history[0].review,before.history[0].review);assert.equal(after.history[0].reviewStale,true);assert.equal(after.history[0].subset[after.history[0].result.evA.starters[1]].n,'Flow 8');assert.equal(x.logs.length,1);
+});
+test('saved-match AI editing requires the local key before making a request or applying',async()=>{
+  const x=fixture(),before=x.getDoc();let prompts=0,calls=0;x.ctx.canEdit=false;x.ctx.AI_KEYS.has=()=>false;x.ctx.aiOpenKeyDialog=()=>{prompts++;};x.ctx.aiFetch=async()=>{calls++;};
+  x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();assert.equal(prompts,1);assert.equal(calls,0);assert.deepEqual(x.getDoc(),before);
 });
 test('saved-match edits reject changes to goalscorer side and concurrent updates',async()=>{
   const x=fixture();x.ctx.matchLineupOpen(123);x.el('matchLineupInstruction').value='Đổi Flow 1 và Flow 8';await x.ctx.matchLineupRun();const changed=x.getDoc();changed.history[0].venue='Changed elsewhere';x.setDoc(changed);await x.ctx.matchLineupApply();assert.equal(x.getDoc().history[0].venue,'Changed elsewhere');assert.match(x.el('matchLineupStatus').textContent,/thiết bị khác/);assert.equal(x.logs.length,0);

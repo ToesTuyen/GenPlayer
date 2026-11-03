@@ -4047,9 +4047,9 @@ function mountHistoryActions(list){
     const goals=document.createElement("button"); goals.className="btn alt sm"; goals.innerHTML=GPIcons.render(locked?"lock":"goal-record")+" "+(locked?"Bàn thắng đã chốt":"Bàn thắng"); goals.title=locked?(isAdmin?"Bàn thắng đã chốt — admin có thể mở lại khi cần.":"Bàn thắng đã được admin chốt."):(isAdmin?"Rà soát hoặc chốt bàn thắng":"Nhập bàn thắng chung; admin sẽ rà soát và chốt.");
     goals.onclick=e=>{e.stopPropagation();openGoalModal(r.id);};
     bar.append(goals);
+    const lineup=document.createElement("button");lineup.className="btn alt sm";lineup.textContent="✏️ Sửa đội hình";
+    lineup.onclick=e=>{e.stopPropagation();matchLineupOpen(r.id);};bar.append(lineup);
     if(canEdit){
-      const lineup=document.createElement("button");lineup.className="btn alt sm";lineup.textContent="✏️ Sửa đội hình";
-      lineup.onclick=e=>{e.stopPropagation();matchLineupOpen(r.id);};bar.append(lineup);
       const edit=document.createElement("button"); edit.className="btn alt sm"; edit.textContent="📋 Sửa trận";
       edit.onclick=e=>{e.stopPropagation();openMatchModal("edit",r.id);};
       const del=document.createElement("button");del.className="iconbtn";del.title="Xoá";del.textContent="🗑️";del.onclick=e=>{e.stopPropagation();delHistory(r.id);};

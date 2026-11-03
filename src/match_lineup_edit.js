@@ -13,7 +13,6 @@ function matchLineupTeams(record){
   return Object.fromEntries(['A','B'].map(side=>[side,{starters:record.result['ev'+side].starters.slice(),bench:record.result['ev'+side].bench.slice()}]));
 }
 function matchLineupOpen(id){
-  if(!canEdit){openAdminModal();return;}
   try{
     const record=getHistory().find(r=>String(r.id)===String(id));if(!record)throw new Error('Không tìm thấy trận.');
     const teams=matchLineupTeams(record),players=record.subset.map(GPAIContext.player);
@@ -60,7 +59,7 @@ async function matchLineupRun(){
 }
 async function matchLineupApply(){
   const edit=MATCH_LINEUP_EDIT,proposal=edit?.proposal,status=$('matchLineupStatus');if(!edit||!proposal||edit.busy||edit.saving||AI_STATE.busy)return;
-  if(!canEdit){status.hidden=false;status.className='ai-message error';status.textContent='Phiên đăng nhập đã hết. Hãy đăng nhập lại.';return;}
+  if(!AI_KEYS.has()){status.hidden=false;status.className='ai-message error';status.textContent='Cần key OpenRouter để sửa đội hình.';aiOpenKeyDialog(true);return;}
   if(aiIsPreview()||!(STATE.cloud&&STATE.docRef)){status.hidden=false;status.className='ai-message error';status.textContent='Chưa kết nối cloud; không lưu để tránh mất dữ liệu.';return;}
   edit.saving=true;$('matchLineupApply').disabled=true;$('matchLineupRun').disabled=true;status.hidden=false;status.className='ai-message';status.textContent='Đang lưu thay đổi…';
   try{
