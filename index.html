@@ -1830,8 +1830,8 @@ table.edit input[type=text]:focus{outline:0;border-color:var(--blue);box-shadow:
       <button class="pm-close" onclick="closeGuest()">✕</button>
     </div>
     <div class="gst-body">
-      <label class="gst-lb">Tên người ngoài</label>
-      <input id="gst-name" class="gst-in" placeholder="VD: Khách 1, bạn của Tuấn…" onkeydown="if(event.key==='Enter')addGuest()">
+      <label class="gst-lb" for="gst-friend">Bạn của ai (không bắt buộc)</label>
+      <input id="gst-friend" class="gst-in" placeholder="VD: Quyền, Tuyên…" maxlength="60" onkeydown="if(event.key==='Enter')addGuest()">
       <label class="gst-lb">Đá giống ai (sao chép điểm)</label>
       <select id="gst-like" class="gst-in"></select>
       <div class="gst-hint">Người ngoài chỉ dùng cho <b>trận này</b> — không thêm vào danh sách cầu thủ, không lưu DB.</div>
@@ -4751,7 +4751,7 @@ function shortName(n){
   // Tên khách là một nhãn hoàn chỉnh. Không cắt hai từ cuối, nếu không
   // "Khách (Mạnh Tiến)" sẽ bị hiển thị thành "Mạnh Tiến)" trên sân.
   // Áp dụng cho mọi biến thể khách: "Khách (bạn ...)", "Khách (Mạnh Khắc)"...
-  if(/^Khách\s*\(/i.test(s))return s;
+  if(/^Khách(?:\s+\d+)?(?:\s*\(|$)/iu.test(s))return s;
   const w=s.split(/\s+/);return w.slice(-2).join(" ");
 }
 function vpitch(r){
@@ -5107,18 +5107,19 @@ function closePitchView(){if(PITCH_EXPORT.busy)return;const button=PITCH_VIEW.re
 window.addEventListener("resize",()=>{if(!$("pitchViewScreen").hidden&&PITCH_VIEW.node){const preferred=pitchViewPreferred(PITCH_VIEW.orientation);if(preferred!==PITCH_VIEW.deviceOrientation&&!PITCH_EXPORT.busy){PITCH_VIEW.deviceOrientation=preferred;pitchViewOrientation(preferred);}else{pitchViewSizeVertical();PITCH_VIEW.width=PITCH_VIEW.node.offsetWidth;PITCH_VIEW.height=PITCH_VIEW.node.offsetHeight;pitchViewFit();}}});
 
 // ============ TAO DOI ============
-let curPlayers=[], guestPlayers=[], cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
-function buildRoster(){
+let curPlayers=[], guestPlayers=[], guestSerial=0, cstate={key:"",results:[],idx:0,subset:null};   // guestPlayers = người ngoài (khách), CHỈ dùng cho trận, KHÔNG vào STATE.players/DB
+function buildRoster(selectedNames=null){
   curPlayers=getPlayers().concat(guestPlayers).sort((a,b)=>ov(b)-ov(a)); cstate={key:"",results:[],idx:0,subset:null};
   AI_STATE.draftReview=null;$("aiOutput").hidden=true;$("aiAnalysisTools").hidden=true;aiSyncDraftAction();
   CREATE_STATE.draftNote=null;CREATE_STATE.hasReport=false;$("createNoteStatus").hidden=true;$("reviewProcessRules").style.display="none";
   const roster=$("roster"); roster.innerHTML="";
   curPlayers.forEach((p,i)=>{
-    const el=document.createElement("label"); el.className="pl-item on"+(p.guest?" guest":"");
+    const chosen=!selectedNames||selectedNames.has(p.n);
+    const el=document.createElement("label"); el.className="pl-item "+(chosen?"on":"off")+(p.guest?" guest":"");
     const gtag=p.guest?`<span class="gst-badge">khách · giống ${esc(p.likeOf||"")}</span>`:"";
     const grm=p.guest?`<span class="gst-rm" title="Bỏ người ngoài" onclick="event.preventDefault();event.stopPropagation();removeGuest('${encodeURIComponent(p.n)}')">✕</span>`:"";
-    el.tabIndex=0;el.setAttribute("role","checkbox");el.setAttribute("aria-checked","true");el.setAttribute("aria-label",`Chọn ${p.n}`);
-    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span class="pl-title">${esc(p.n)}</span>${gtag}</span><span class="ovb">${ov(p).toFixed(1)}</span>${grm}<input type="checkbox" data-i="${i}" tabindex="-1" aria-hidden="true" checked>`;
+    el.tabIndex=0;el.setAttribute("role","checkbox");el.setAttribute("aria-checked",String(chosen));el.setAttribute("aria-label",`Chọn ${p.n}`);
+    el.innerHTML=`<span class="avatar" style="background:${avColor(p.n)}">${initials(p.n)}</span><span class="pl-name"><span class="pl-title">${esc(p.n)}</span>${gtag}</span><span class="ovb">${ov(p).toFixed(1)}</span>${grm}<input type="checkbox" data-i="${i}" tabindex="-1" aria-hidden="true" ${chosen?"checked":""}>`;
     const box=el.querySelector("input");
     box.addEventListener("change",e=>{el.classList.toggle("off",!e.target.checked);el.classList.toggle("on",e.target.checked);el.setAttribute("aria-checked",String(e.target.checked));updateCount();});
     el.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;e.preventDefault();box.click();});
@@ -5133,21 +5134,21 @@ function openGuestModal(){
   const sel=$("gst-like"); if(!sel)return;
   const pls=getPlayers().slice().sort((a,b)=>ov(b)-ov(a));
   sel.innerHTML=pls.map(p=>`<option value="${esc(p.n)}">${esc(p.n)} · ${POS_LABEL[posCodeOf(p)]||"?"} · ${ov(p).toFixed(1)}</option>`).join("");
-  $("gst-name").value=""; $("guestModal").classList.add("on"); setTimeout(()=>$("gst-name").focus(),30);
+  $("gst-friend").value=""; $("guestModal").classList.add("on"); setTimeout(()=>$("gst-friend").focus(),30);
 }
 function closeGuest(){$("guestModal").classList.remove("on");}
 function addGuest(){
-  const name=$("gst-name").value.trim();
-  if(!name){alert("Nhập tên người ngoài");return;}
-  if(getPlayers().some(p=>p.n===name)||guestPlayers.some(g=>g.n===name)){alert("Tên này đã tồn tại — chọn tên khác");return;}
   const src=getPlayers().find(p=>p.n===$("gst-like").value);
   if(!src){alert("Chọn 1 cầu thủ để sao chép điểm");return;}
+  const friend=$("gst-friend").value.trim().replace(/\s+/g," "), selected=new Set(selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean));
+  for(const p of getPlayers().concat(guestPlayers)){const match=/^khách\s+(\d+)(?:\s*\(|$)/iu.exec(p.n||"");if(match)guestSerial=Math.max(guestSerial,Number(match[1]));}
+  const name=`Khách ${++guestSerial}`+(friend?` (${friend})`:"");
   const KEYS=["KT","CH","DD","PN","TC","TL","DN","TD","OD","TM"];
   const g={n:name,guest:true,likeOf:src.n,pos:src.pos||"",pos2:Array.isArray(src.pos2)?[...src.pos2]:[],desc:`Người ngoài — đá giống ${src.n}`};
   KEYS.forEach(k=>g[k]=+src[k]||0);   // sao chép điểm
-  guestPlayers.push(g); closeGuest(); buildRoster();
+  guestPlayers.push(g); selected.add(name); closeGuest(); buildRoster(selected);
 }
-function removeGuest(enc){const n=decodeURIComponent(enc);guestPlayers=guestPlayers.filter(g=>g.n!==n);buildRoster();}
+function removeGuest(enc){const n=decodeURIComponent(enc),selected=new Set(selectedIdx().map(i=>curPlayers[i]?.n).filter(Boolean));guestPlayers=guestPlayers.filter(g=>g.n!==n);selected.delete(n);buildRoster(selected);}
 function selectedIdx(){return [...$("roster").querySelectorAll("input:checked")].map(c=>+c.dataset.i);}
 function updateCount(){
   const n=selectedIdx().length,all=$("selectAll");

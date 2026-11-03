@@ -417,7 +417,7 @@ test('Create uses a gated three-step wizard, one action and an embedded worker i
 test('Create roster uses compact two-column tappable cards without visible per-player checkboxes',()=>{
   const template=fs.readFileSync(path.join(__dirname,'../src/web_template.html'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../src/ai.css'),'utf8');
   assert.ok(template.includes('el.setAttribute("role","checkbox")'));
-  assert.ok(template.includes('el.setAttribute("aria-checked","true")'));
+  assert.ok(template.includes('el.setAttribute("aria-checked",String(chosen))'));
   assert.ok(template.includes('class="pl-title"'));
   assert.ok(!template.includes('Người có mặt hôm nay'));
   assert.ok(template.includes('className="roster-guest-add"'));
